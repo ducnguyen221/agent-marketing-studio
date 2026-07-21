@@ -1,0 +1,267 @@
+## model.yml — star schema canonical dùng chung cho MỌI instance
+##
+## Một mô hình, nhiều instance: kênh thật (Duc Nguyen AI…) và bộ mẫu khoá học (KPIM)
+## dùng chung file này. Sửa schema ở đây = sửa cho tất cả.
+## Giá trị enum ở enums.yml · ánh xạ sang hệ tên khác ở crosswalk.yml.
+version: 1
+updated: 2026-07-21
+
+tables:
+
+  # ────────────────────────────────────────────────────────────────────────
+  dim_campaign:
+    grain: 1 dòng = 1 chiến dịch
+    key: campaign_id
+    columns:
+      campaign_id:        { type: string, required: true }
+      campaign_name:      { type: string, required: true }
+      brand:              { type: string, required: true, note: "slug instance, vd ducnguyen-ai" }
+      big_idea:           { type: string, note: "1 câu — 52.02 §1.2" }
+      objective:          { type: string, required: true }
+      product_or_topic:   { type: string }
+      persona_primary:    { type: string }
+      persona_secondary:  { type: string, multi: true }
+      funnel_goal:        { type: enum, enum: funnel_stage }
+      start_date:         { type: date, required: true }
+      end_date:           { type: date, required: true }
+      channels:           { type: enum, enum: platform, multi: true }
+      pillars:            { type: string, multi: true }
+      primary_kpi:        { type: string, required: true }
+      secondary_kpi:      { type: string }
+      budget:             { type: decimal, note: "để trống nếu không chi tiền" }
+      currency:           { type: string, default: VND }
+      compliance_notes:   { type: string, note: "ràng buộc tuân thủ — bắt buộc với case ngân hàng" }
+      status:             { type: string }
+      owner:              { type: string, required: true }
+
+  # ────────────────────────────────────────────────────────────────────────
+  dim_asset:
+    grain: 1 dòng = 1 asset (KHÔNG gộp 2 asset vào 1 dòng)
+    key: asset_id
+    id_convention: "{BRAND}-{CAMPAIGN}-W{tuần}-{LOẠI}{số}  vd DNA-C01-W1-HERO, DNA-C01-W1-SHORT2"
+    columns:
+      # -- định danh
+      asset_id:           { type: string, required: true }
+      campaign_id:        { type: string, required: true, fk: dim_campaign }
+      parent_asset_id:    { type: string, fk: dim_asset, note: "Short/FB dẫn về hero nào" }
+      research_brief_id:  { type: string, note: "51.01 §8.2" }
+      series_id:          { type: string }
+      episode_no:         { type: int }
+      week_no:            { type: int }
+      # -- phân loại
+      pillar_primary:     { type: string, required: true, fk: dim_pillar }
+      pillar_secondary:   { type: string, fk: dim_pillar }
+      persona_target:     { type: string }
+      format:             { type: enum, enum: format, required: true }
+      platform:           { type: enum, enum: platform, required: true, note: "nền tảng CHÍNH" }
+      distribution_platforms:
+        type: enum
+        enum: platform
+        multi: true
+        separator: ";"
+        note: >
+          Nơi asset thực sự được phát (vd Short đăng cả YouTube lẫn FB Reel).
+          fact_metrics_daily có khoá (asset_id, platform, date) nên một asset đo được
+          trên nhiều nền tảng mà không cần nhân dòng ở dim_asset.
+      funnel_stage:       { type: enum, enum: funnel_stage, required: true }
+      funnel_goal_raw:    { type: string, note: "nguyên văn cột 'Mục tiêu funnel' trong kế hoạch — giữ để truy vết" }
+      function_role:      { type: string, note: "vai trò chống lặp — 51.01 §11.3" }
+      # -- nội dung / packaging
+      title_draft:        { type: string, required: true }
+      title_variant_a:    { type: string }
+      title_variant_b:    { type: string }
+      title_final:        { type: string }
+      ab_test_winner:     { type: string }
+      hook:               { type: string }
+      script_path:        { type: string }
+      description_path:   { type: string }
+      thumbnail_brief:    { type: string }
+      thumbnail_file:     { type: string }
+      hashtags:           { type: string, multi: true, validate: hashtag_count_by_format }
+      hashtag_count:      { type: int, derived: true }
+      cta_type:           { type: enum, enum: cta_type }
+      has_commercial_cta: { type: bool, default: false }
+      # -- quy trình
+      status:             { type: enum, enum: status, required: true, default: idea }
+      owner:              { type: string, required: true }
+      # ★ BA CỔNG DUYỆT — người tick trực tiếp trong Excel (x / X / TRUE / ✓ / 1).
+      #   CLI `campaign_excel.py list --stage` chỉ trả asset đã tick đúng cổng,
+      #   nên agent KHÔNG THỂ nhảy bước dù có cố. Cổng là dữ liệu, không phải lời hứa.
+      approve_topic:      { type: bool, owner: human, gate: draft,   note: "duyệt chủ đề → cho phép viết nháp" }
+      approve_content:    { type: bool, owner: human, gate: media,   note: "duyệt nội dung → cho phép làm media" }
+      approve_final:      { type: bool, owner: human, gate: publish, note: "duyệt lần cuối → cho phép đăng" }
+      approved_by:        { type: string, required_when: "status >= approved" }
+      approved_at:        { type: datetime, required_when: "status >= approved" }
+      tos_score:          { type: decimal, range: [0, 5], note: "≥4.0 → campaign đầy đủ" }
+      hrs_score:          { type: decimal, range: [0, 5], note: "≥3 → BẮT BUỘC gắn nhãn chưa kiểm chứng" }
+      verification_open:  { type: int, default: 0, note: "số chỗ [KIỂM CHỨNG] chưa đóng; >0 thì cấm publish" }
+      qa_passed:          { type: bool, default: false }
+      blocked_reason:     { type: string }
+      # -- thời gian
+      planned_publish_date: { type: date, required: true }
+      planned_publish_time: { type: time }
+      timezone:             { type: string, default: "Asia/Ho_Chi_Minh" }
+      actual_publish_datetime: { type: datetime }
+      # -- sau khi đăng
+      platform_native_id: { type: string, note: "YouTube videoId / FB {page}_{post} — khoá kéo analytics" }
+      live_url:           { type: string }
+      playlist_id:        { type: string }
+      # -- tái chế
+      recycle_source_id:  { type: string, fk: dim_asset }
+      recycle_due_date:   { type: date }
+      doc_ref:            { type: string, note: "mục trong tài liệu kế hoạch gốc, vd §3.1.A — để truy ngược" }
+
+  # ────────────────────────────────────────────────────────────────────────
+  dim_pillar:
+    grain: 1 dòng = 1 pillar của instance
+    key: pillar_code
+    note: Giá trị nằm ở <instance>/01_brand/pillars.csv — mỗi kênh một hệ pillar riêng.
+    columns:
+      pillar_code:        { type: string, required: true }
+      pillar_name:        { type: string, required: true }
+      goal:               { type: string }
+      target_share:       { type: decimal, note: "tỷ trọng kỳ vọng, 0–1" }
+      crosswalk_personal: { type: string, note: "ánh xạ sang hệ pillar 1..6 của 52.01" }
+      crosswalk_course:   { type: string, note: "ánh xạ sang content_pillar của KPIM Bank" }
+
+  # ────────────────────────────────────────────────────────────────────────
+  dim_kpi_target:
+    grain: 1 dòng = 1 mục tiêu cho (campaign × kênh × pillar × chỉ số × kỳ)
+    key: [campaign_id, platform, pillar_code, metric_name, period]
+    columns:
+      campaign_id:     { type: string, fk: dim_campaign, required: true }
+      platform:        { type: enum, enum: platform }
+      pillar_code:     { type: string, fk: dim_pillar }
+      format:          { type: enum, enum: format }
+      metric_name:     { type: string, required: true }
+      period:          { type: string, required: true, note: "vd 2026-07 hoặc W29" }
+      target_value:    { type: decimal, required: true }
+      unit:            { type: string }
+      baseline_median: { type: decimal, note: "median 10 nội dung gần nhất CÙNG định dạng — 51.01 §3.3" }
+      baseline_source: { type: string, note: "để trống = chưa đủ mẫu; KHÔNG được điền số đoán" }
+      baseline_n:      { type: int, note: "số mẫu tính median; <10 thì dashboard hiện 'chưa đủ mẫu'" }
+
+  # ────────────────────────────────────────────────────────────────────────
+  fact_metrics_daily:
+    grain: 1 dòng = 1 asset × 1 nền tảng × 1 ngày
+    key: [asset_id, platform, date]
+    note: >
+      Cả hai đường nạp (from_export.py đọc file export tay, from_api_*.py gọi API)
+      đều phải ghi về ĐÚNG bảng này. 17 trường đo theo 51.01 §12.6.
+    columns:
+      asset_id:              { type: string, fk: dim_asset, required: true }
+      platform:              { type: enum, enum: platform, required: true }
+      date:                  { type: date, required: true }
+      source:                { type: enum, values: [api, manual_export, sidecar_backfill], required: true }
+      # -- discovery / packaging
+      impressions:           { type: int }
+      ctr:                   { type: decimal }
+      reach:                 { type: int }
+      reach_organic:         { type: int }
+      reach_paid:            { type: int }
+      # -- consumption
+      views:                 { type: int }
+      engaged_views:         { type: int, note: "Shorts: KHÔNG dùng view thô — YouTube đổi cách đếm 31/03/2025" }
+      avg_view_duration_sec: { type: decimal }
+      avg_percentage_viewed: { type: decimal }
+      watch_time_min:        { type: decimal }
+      retention_30s:         { type: decimal, note: "guardrail của luật winner" }
+      # -- engagement
+      likes:                 { type: int }
+      comments:              { type: int }
+      shares:                { type: int }
+      engagement_total:      { type: int }
+      poll_votes:            { type: int }
+      # -- conversion / retention
+      subscribers_gained:    { type: int }
+      related_video_clicks:  { type: int }
+      returning_viewers:     { type: int }
+      # -- click / business
+      clicks_total:          { type: int }
+      cta_clicks:            { type: int }
+      leads:                 { type: int }
+      cost:                  { type: decimal }
+
+  # ────────────────────────────────────────────────────────────────────────
+  fact_lead:
+    grain: 1 dòng = 1 lead
+    key: lead_id
+    note: Nạp bằng append từ 7 nguồn có schema lệch nhau — đó là bài luyện của S05.
+    columns:
+      lead_id:          { type: string, required: true }
+      source:           { type: enum, enum: lead_source, required: true }
+      source_raw:       { type: string, note: "giá trị gốc trước chuẩn hoá — giữ để truy vết" }
+      created_at:       { type: datetime, required: true }
+      campaign_id:      { type: string, fk: dim_campaign }
+      asset_id:         { type: string, fk: dim_asset }
+      pillar_code:      { type: string, fk: dim_pillar }
+      need_type:        { type: string }
+      product_interest: { type: string }
+      region:           { type: string }
+      branch:           { type: string }
+      lead_status:      { type: string }
+      priority_score:   { type: decimal }
+      lead_segment:     { type: enum, enum: lead_segment }
+      next_action:      { type: string }
+      is_duplicate_of:  { type: string, fk: fact_lead }
+
+  # ────────────────────────────────────────────────────────────────────────
+  dim_date:
+    grain: 1 dòng = 1 ngày
+    key: date
+    generated: true
+
+relationships:
+  - { from: dim_asset.campaign_id,          to: dim_campaign.campaign_id,  cardinality: many_to_one }
+  - { from: dim_asset.pillar_primary,       to: dim_pillar.pillar_code,    cardinality: many_to_one }
+  - { from: dim_asset.parent_asset_id,      to: dim_asset.asset_id,        cardinality: many_to_one, self: true }
+  - { from: fact_metrics_daily.asset_id,    to: dim_asset.asset_id,        cardinality: many_to_one }
+  - { from: fact_metrics_daily.date,        to: dim_date.date,             cardinality: many_to_one }
+  - { from: fact_lead.asset_id,             to: dim_asset.asset_id,        cardinality: many_to_one }
+  - { from: fact_lead.campaign_id,          to: dim_campaign.campaign_id,  cardinality: many_to_one }
+  - { from: dim_kpi_target.campaign_id,     to: dim_campaign.campaign_id,  cardinality: many_to_one }
+
+## Luật cổng — campaign_excel.py đọc chính khối này, KHÔNG hardcode trong code.
+## Đọc: "asset đủ điều kiện vào stage X khi status thuộc from_status VÀ cổng requires_gate đã tick".
+stages:
+  topics:
+    from_status: [idea]
+    requires_gate: null
+    to_status: drafted
+    produces: "chủ đề + góc nhìn + detail_prompt"
+  draft:
+    from_status: [drafted]
+    requires_gate: approve_topic
+    to_status: need_review
+    produces: "nội dung nháp đa kênh (04_Content)"
+  media:
+    from_status: [need_review, approved]
+    requires_gate: approve_content
+    to_status: approved
+    produces: "thumbnail brief · script · media prompt"
+  publish:
+    from_status: [approved, scheduled]
+    requires_gate: approve_final
+    to_status: published
+    produces: "đăng thật hoặc dry-run + platform_native_id"
+    extra_guard: "verification_open == 0 VÀ autonomy == full (nếu mode=live)"
+  measure:
+    from_status: [published]
+    requires_gate: null
+    to_status: measured
+    produces: "fact_metrics_daily + 08_Metrics_Summary"
+
+## Measure lõi — build_pbip.py sinh DAX từ đây
+measures:
+  engagement_rate:      { formula: "engagement_total / reach",            format: percent }
+  ctr_calc:             { formula: "clicks_total / impressions",          format: percent }
+  cta_rate:             { formula: "cta_clicks / reach",                  format: percent }
+  subs_per_1000_engaged:
+    formula: "subscribers_gained / engaged_views * 1000"
+    format: decimal
+    note: ★ NORTH STAR — 51.01 §3.1. Chỉ tính khi engaged_views > 0.
+  kpi_variance:         { formula: "actual - target_value",               depends: dim_kpi_target }
+  vs_median:
+    formula: "actual / baseline_median - 1"
+    guard: "baseline_n >= 10, ngược lại trả BLANK và hiện 'chưa đủ mẫu'"
+    note: KHÔNG được thay baseline thiếu bằng số đoán.

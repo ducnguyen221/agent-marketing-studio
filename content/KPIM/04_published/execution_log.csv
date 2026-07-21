@@ -1,0 +1,142 @@
+﻿run_id,post_id,channel,processed_timestamp,status,error_message,draft_link
+RUN-2026-0001,P-Q1-01,facebook,2026-07-20 06:05:00,drafted,,https://drive.kpim.example/drafts/P-Q1-01-facebook.docx
+RUN-2026-0002,P-Q1-02,facebook,2026-07-20 06:08:00,drafted,,https://drive.kpim.example/drafts/P-Q1-02-facebook.docx
+RUN-2026-0003,P-Q1-03,facebook,2026-07-20 06:11:00,drafted,,https://drive.kpim.example/drafts/P-Q1-03-facebook.docx
+RUN-2026-0004,P-Q1-03,youtube,2026-07-20 06:12:00,drafted,,https://drive.kpim.example/drafts/P-Q1-03-youtube.docx
+RUN-2026-0005,P-Q1-04,facebook,2026-07-20 06:16:00,drafted,,https://drive.kpim.example/drafts/P-Q1-04-facebook.docx
+RUN-2026-0006,P-Q1-05,facebook,2026-07-20 06:20:00,drafted,,https://drive.kpim.example/drafts/P-Q1-05-facebook.docx
+RUN-2026-0007,P-Q1-05,youtube,2026-07-20 06:23:00,drafted,,https://drive.kpim.example/drafts/P-Q1-05-youtube.docx
+RUN-2026-0008,P-Q1-06,facebook,2026-07-20 06:26:00,drafted,,https://drive.kpim.example/drafts/P-Q1-06-facebook.docx
+RUN-2026-0009,P-Q1-07,facebook,2026-07-20 06:29:00,drafted,,https://drive.kpim.example/drafts/P-Q1-07-facebook.docx
+RUN-2026-0010,P-Q1-08,facebook,2026-07-20 06:32:00,pending,,
+RUN-2026-0011,P-Q1-08,youtube,2026-07-20 06:33:00,drafted,,https://drive.kpim.example/drafts/P-Q1-08-youtube.docx
+RUN-2026-0012,P-Q1-09,facebook,2026-07-20 06:37:00,drafted,,https://drive.kpim.example/drafts/P-Q1-09-facebook.docx
+RUN-2026-0013,P-Q1-09,youtube,2026-07-20 06:41:00,drafted,,https://drive.kpim.example/drafts/P-Q1-09-youtube.docx
+RUN-2026-0014,P-Q1-10,facebook,2026-07-20 06:43:00,drafted,,https://drive.kpim.example/drafts/P-Q1-10-facebook.docx
+RUN-2026-0015,P-Q1-10,youtube,2026-07-20 06:47:00,drafted,,https://drive.kpim.example/drafts/P-Q1-10-youtube.docx
+RUN-2026-0016,P-Q1-11,facebook,2026-07-20 06:48:00,drafted,,https://drive.kpim.example/drafts/P-Q1-11-facebook.docx
+RUN-2026-0017,P-Q1-12,facebook,2026-07-20 06:51:00,drafted,,https://drive.kpim.example/drafts/P-Q1-12-facebook.docx
+RUN-2026-0018,P-Q1-12,youtube,2026-07-20 06:55:00,drafted,,https://drive.kpim.example/drafts/P-Q1-12-youtube.docx
+RUN-2026-0019,P-Q1-13,facebook,2026-07-20 06:58:00,drafted,,https://drive.kpim.example/drafts/P-Q1-13-facebook.docx
+RUN-2026-0020,P-Q1-14,facebook,2026-07-20 07:01:00,error,API trả 429 Too Many Requests — thử lại sau,
+RUN-2026-0021,P-Q1-14,youtube,2026-07-20 07:05:00,drafted,,https://drive.kpim.example/drafts/P-Q1-14-youtube.docx
+RUN-2026-0022,P-Q1-15,facebook,2026-07-20 07:08:00,drafted,,https://drive.kpim.example/drafts/P-Q1-15-facebook.docx
+RUN-2026-0023,P-Q1-16,facebook,2026-07-20 07:09:00,drafted,,https://drive.kpim.example/drafts/P-Q1-16-facebook.docx
+RUN-2026-0024,P-Q1-17,facebook,2026-07-20 07:12:00,skipped,Thiếu media_link — không tạo được nội dung đăng,
+RUN-2026-0025,P-Q1-17,youtube,2026-07-20 07:16:00,skipped,Thiếu media_link — không tạo được nội dung đăng,
+RUN-2026-0026,P-Q1-18,facebook,2026-07-20 07:20:00,need_review,approval_status = Draft,
+RUN-2026-0027,P-Q1-19,facebook,2026-07-20 07:23:00,need_review,approval_status = Need Revision,
+RUN-2026-0028,P-Q1-19,youtube,2026-07-20 07:26:00,need_review,approval_status = Need Revision,
+RUN-2026-0029,P-Q1-20,facebook,2026-07-20 07:29:00,need_review,approval_status = Draft,
+RUN-2026-0030,P-Q1-21,facebook,2026-07-20 07:32:00,need_review,approval_status = Rejected,
+RUN-2026-0031,P-Q1-22,facebook,2026-07-20 07:33:00,need_review,approval_status = Draft,
+RUN-2026-0032,P-Q1-23,facebook,2026-07-20 07:37:00,drafted,,https://drive.kpim.example/drafts/P-Q1-23-facebook.docx
+RUN-2026-0033,P-Q1-24,facebook,2026-07-20 07:41:00,need_review,approval_status = Need Review,
+RUN-2026-0034,P-Q1-25,facebook,2026-07-20 07:44:00,need_review,approval_status = Need Revision,
+RUN-2026-0035,P-Q2-01,facebook,2026-07-20 07:46:00,pending,,
+RUN-2026-0036,P-Q2-02,facebook,2026-07-20 07:48:00,drafted,,https://drive.kpim.example/drafts/P-Q2-02-facebook.docx
+RUN-2026-0037,P-Q2-03,facebook,2026-07-20 07:51:00,drafted,,https://drive.kpim.example/drafts/P-Q2-03-facebook.docx
+RUN-2026-0038,P-Q2-03,youtube,2026-07-20 07:55:00,drafted,,https://drive.kpim.example/drafts/P-Q2-03-youtube.docx
+RUN-2026-0039,P-Q2-04,facebook,2026-07-20 07:57:00,drafted,,https://drive.kpim.example/drafts/P-Q2-04-facebook.docx
+RUN-2026-0040,P-Q2-05,facebook,2026-07-20 08:02:00,drafted,,https://drive.kpim.example/drafts/P-Q2-05-facebook.docx
+RUN-2026-0041,P-Q2-05,youtube,2026-07-20 08:03:00,drafted,,https://drive.kpim.example/drafts/P-Q2-05-youtube.docx
+RUN-2026-0042,P-Q2-06,facebook,2026-07-20 08:06:00,drafted,,https://drive.kpim.example/drafts/P-Q2-06-facebook.docx
+RUN-2026-0043,P-Q2-07,facebook,2026-07-20 08:09:00,drafted,,https://drive.kpim.example/drafts/P-Q2-07-facebook.docx
+RUN-2026-0044,P-Q2-08,facebook,2026-07-20 08:14:00,drafted,,https://drive.kpim.example/drafts/P-Q2-08-facebook.docx
+RUN-2026-0045,P-Q2-08,youtube,2026-07-20 08:16:00,drafted,,https://drive.kpim.example/drafts/P-Q2-08-youtube.docx
+RUN-2026-0046,P-Q2-09,facebook,2026-07-20 08:20:00,drafted,,https://drive.kpim.example/drafts/P-Q2-09-facebook.docx
+RUN-2026-0047,P-Q2-09,youtube,2026-07-20 08:22:00,drafted,,https://drive.kpim.example/drafts/P-Q2-09-youtube.docx
+RUN-2026-0048,P-Q2-09,facebook,2026-07-20 08:26:00,error,post_id trùng — đã xử lý ở run trước trong cùng batch: P-Q2-09,
+RUN-2026-0049,P-Q2-09,youtube,2026-07-20 08:29:00,error,post_id trùng — đã xử lý ở run trước trong cùng batch: P-Q2-09,
+RUN-2026-0050,P-Q2-10,facebook,2026-07-20 08:31:00,drafted,,https://drive.kpim.example/drafts/P-Q2-10-facebook.docx
+RUN-2026-0051,P-Q2-10,youtube,2026-07-20 08:34:00,drafted,,https://drive.kpim.example/drafts/P-Q2-10-youtube.docx
+RUN-2026-0052,P-Q2-11,facebook,2026-07-20 08:38:00,drafted,,https://drive.kpim.example/drafts/P-Q2-11-facebook.docx
+RUN-2026-0053,P-Q2-12,facebook,2026-07-20 08:39:00,pending,,
+RUN-2026-0054,P-Q2-12,youtube,2026-07-20 08:42:00,drafted,,https://drive.kpim.example/drafts/P-Q2-12-youtube.docx
+RUN-2026-0055,P-Q2-13,facebook,2026-07-20 08:47:00,drafted,,https://drive.kpim.example/drafts/P-Q2-13-facebook.docx
+RUN-2026-0056,P-Q2-14,facebook,2026-07-20 08:50:00,drafted,,https://drive.kpim.example/drafts/P-Q2-14-facebook.docx
+RUN-2026-0057,P-Q2-14,youtube,2026-07-20 08:53:00,drafted,,https://drive.kpim.example/drafts/P-Q2-14-youtube.docx
+RUN-2026-0058,P-Q2-15,facebook,2026-07-20 08:55:00,drafted,,https://drive.kpim.example/drafts/P-Q2-15-facebook.docx
+RUN-2026-0059,P-Q2-16,facebook,2026-07-20 08:59:00,need_review,approval_status = Need Review,
+RUN-2026-0060,P-Q2-16,youtube,2026-07-20 09:01:00,need_review,approval_status = Need Review,
+RUN-2026-0061,P-Q2-17,facebook,2026-07-20 09:03:00,drafted,,https://drive.kpim.example/drafts/P-Q2-17-facebook.docx
+RUN-2026-0062,P-Q2-18,facebook,2026-07-20 09:07:00,need_review,approval_status = Draft,
+RUN-2026-0063,P-Q2-18,youtube,2026-07-20 09:11:00,need_review,approval_status = Draft,
+RUN-2026-0064,P-Q2-19,facebook,2026-07-20 09:14:00,drafted,,https://drive.kpim.example/drafts/P-Q2-19-facebook.docx
+RUN-2026-0065,P-Q2-20,facebook,2026-07-20 09:15:00,need_review,approval_status = Need Revision,
+RUN-2026-0066,P-Q2-21,facebook,2026-07-20 09:20:00,need_review,approval_status = Need Review,
+RUN-2026-0067,P-Q2-22,facebook,2026-07-20 09:23:00,drafted,,https://drive.kpim.example/drafts/P-Q2-22-facebook.docx
+RUN-2026-0068,P-Q2-23,facebook,2026-07-20 09:24:00,need_review,approval_status = Rejected,
+RUN-2026-0069,P-Q2-24,facebook,2026-07-20 09:29:00,need_review,approval_status = Need Revision,
+RUN-2026-0070,P-Q2-25,facebook,2026-07-20 09:30:00,drafted,,https://drive.kpim.example/drafts/P-Q2-25-facebook.docx
+RUN-2026-0071,P-Q3-01,facebook,2026-07-20 09:35:00,drafted,,https://drive.kpim.example/drafts/P-Q3-01-facebook.docx
+RUN-2026-0072,P-Q3-02,facebook,2026-07-20 09:38:00,drafted,,https://drive.kpim.example/drafts/P-Q3-02-facebook.docx
+RUN-2026-0073,P-Q3-03,facebook,2026-07-20 09:39:00,drafted,,https://drive.kpim.example/drafts/P-Q3-03-facebook.docx
+RUN-2026-0074,P-Q3-03,youtube,2026-07-20 09:42:00,drafted,,https://drive.kpim.example/drafts/P-Q3-03-youtube.docx
+RUN-2026-0075,P-Q3-04,facebook,2026-07-20 09:46:00,drafted,,https://drive.kpim.example/drafts/P-Q3-04-facebook.docx
+RUN-2026-0076,P-Q3-05,facebook,2026-07-20 09:48:00,drafted,,https://drive.kpim.example/drafts/P-Q3-05-facebook.docx
+RUN-2026-0077,P-Q3-05,youtube,2026-07-20 09:51:00,drafted,,https://drive.kpim.example/drafts/P-Q3-05-youtube.docx
+RUN-2026-0078,P-Q3-05,facebook,2026-07-20 09:54:00,error,post_id trùng — đã xử lý ở run trước trong cùng batch: P-Q3-05,
+RUN-2026-0079,P-Q3-05,youtube,2026-07-20 09:59:00,error,post_id trùng — đã xử lý ở run trước trong cùng batch: P-Q3-05,
+RUN-2026-0080,P-Q3-06,facebook,2026-07-20 10:00:00,pending,,
+RUN-2026-0081,P-Q3-07,facebook,2026-07-20 10:04:00,drafted,,https://drive.kpim.example/drafts/P-Q3-07-facebook.docx
+RUN-2026-0082,P-Q3-08,facebook,2026-07-20 10:08:00,drafted,,https://drive.kpim.example/drafts/P-Q3-08-facebook.docx
+RUN-2026-0083,P-Q3-08,youtube,2026-07-20 10:10:00,drafted,,https://drive.kpim.example/drafts/P-Q3-08-youtube.docx
+RUN-2026-0084,P-Q3-09,facebook,2026-07-20 10:14:00,drafted,,https://drive.kpim.example/drafts/P-Q3-09-facebook.docx
+RUN-2026-0085,P-Q3-09,youtube,2026-07-20 10:15:00,drafted,,https://drive.kpim.example/drafts/P-Q3-09-youtube.docx
+RUN-2026-0086,P-Q3-10,facebook,2026-07-20 10:19:00,drafted,,https://drive.kpim.example/drafts/P-Q3-10-facebook.docx
+RUN-2026-0087,P-Q3-10,youtube,2026-07-20 10:22:00,drafted,,https://drive.kpim.example/drafts/P-Q3-10-youtube.docx
+RUN-2026-0088,P-Q3-11,facebook,2026-07-20 10:26:00,pending,,
+RUN-2026-0089,P-Q3-11,youtube,2026-07-20 10:29:00,drafted,,https://drive.kpim.example/drafts/P-Q3-11-youtube.docx
+RUN-2026-0090,P-Q3-12,facebook,2026-07-20 10:30:00,drafted,,https://drive.kpim.example/drafts/P-Q3-12-facebook.docx
+RUN-2026-0091,P-Q3-12,youtube,2026-07-20 10:34:00,drafted,,https://drive.kpim.example/drafts/P-Q3-12-youtube.docx
+RUN-2026-0092,P-Q3-13,facebook,2026-07-20 10:36:00,pending,,
+RUN-2026-0093,P-Q3-14,facebook,2026-07-20 10:39:00,drafted,,https://drive.kpim.example/drafts/P-Q3-14-facebook.docx
+RUN-2026-0094,P-Q3-14,youtube,2026-07-20 10:43:00,drafted,,https://drive.kpim.example/drafts/P-Q3-14-youtube.docx
+RUN-2026-0095,P-Q3-15,facebook,2026-07-20 10:46:00,drafted,,https://drive.kpim.example/drafts/P-Q3-15-facebook.docx
+RUN-2026-0096,P-Q3-16,facebook,2026-07-20 10:50:00,skipped,Thiếu media_link — không tạo được nội dung đăng,
+RUN-2026-0097,P-Q3-16,youtube,2026-07-20 10:53:00,skipped,Thiếu media_link — không tạo được nội dung đăng,
+RUN-2026-0098,P-Q3-17,facebook,2026-07-20 10:54:00,need_review,approval_status = Need Review,
+RUN-2026-0099,P-Q3-18,facebook,2026-07-20 10:59:00,drafted,,https://drive.kpim.example/drafts/P-Q3-18-facebook.docx
+RUN-2026-0100,P-Q3-18,youtube,2026-07-20 11:00:00,drafted,,https://drive.kpim.example/drafts/P-Q3-18-youtube.docx
+RUN-2026-0101,P-Q3-19,facebook,2026-07-20 11:04:00,drafted,,https://drive.kpim.example/drafts/P-Q3-19-facebook.docx
+RUN-2026-0102,P-Q3-20,facebook,2026-07-20 11:07:00,skipped,Thiếu media_link — không tạo được nội dung đăng,
+RUN-2026-0103,P-Q3-21,facebook,2026-07-20 11:11:00,error,Timeout khi tải media lên kho tạm,
+RUN-2026-0104,P-Q3-22,facebook,2026-07-20 11:14:00,need_review,approval_status = Need Review,
+RUN-2026-0105,P-Q3-23,facebook,2026-07-20 11:15:00,need_review,approval_status = Need Review,
+RUN-2026-0106,P-Q3-24,facebook,2026-07-20 11:18:00,need_review,approval_status = Draft,
+RUN-2026-0107,P-Q3-25,facebook,2026-07-20 11:23:00,need_review,approval_status = Draft,
+RUN-2026-0108,P-Q4-01,facebook,2026-07-20 11:24:00,drafted,,https://drive.kpim.example/drafts/P-Q4-01-facebook.docx
+RUN-2026-0109,P-Q4-02,facebook,2026-07-20 11:29:00,drafted,,https://drive.kpim.example/drafts/P-Q4-02-facebook.docx
+RUN-2026-0110,P-Q4-03,facebook,2026-07-20 11:31:00,drafted,,https://drive.kpim.example/drafts/P-Q4-03-facebook.docx
+RUN-2026-0111,P-Q4-03,youtube,2026-07-20 11:34:00,drafted,,https://drive.kpim.example/drafts/P-Q4-03-youtube.docx
+RUN-2026-0112,P-Q4-04,facebook,2026-07-20 11:36:00,drafted,,https://drive.kpim.example/drafts/P-Q4-04-facebook.docx
+RUN-2026-0113,P-Q4-05,facebook,2026-07-20 11:40:00,drafted,,https://drive.kpim.example/drafts/P-Q4-05-facebook.docx
+RUN-2026-0114,P-Q4-05,youtube,2026-07-20 11:42:00,drafted,,https://drive.kpim.example/drafts/P-Q4-05-youtube.docx
+RUN-2026-0115,P-Q4-06,facebook,2026-07-20 11:46:00,drafted,,https://drive.kpim.example/drafts/P-Q4-06-facebook.docx
+RUN-2026-0116,P-Q4-07,facebook,2026-07-20 11:50:00,pending,,
+RUN-2026-0117,P-Q4-08,facebook,2026-07-20 11:52:00,drafted,,https://drive.kpim.example/drafts/P-Q4-08-facebook.docx
+RUN-2026-0118,P-Q4-08,youtube,2026-07-20 11:55:00,drafted,,https://drive.kpim.example/drafts/P-Q4-08-youtube.docx
+RUN-2026-0119,P-Q4-09,facebook,2026-07-20 11:58:00,drafted,,https://drive.kpim.example/drafts/P-Q4-09-facebook.docx
+RUN-2026-0120,P-Q4-09,youtube,2026-07-20 12:01:00,drafted,,https://drive.kpim.example/drafts/P-Q4-09-youtube.docx
+RUN-2026-0121,P-Q4-10,facebook,2026-07-20 12:04:00,drafted,,https://drive.kpim.example/drafts/P-Q4-10-facebook.docx
+RUN-2026-0122,P-Q4-10,youtube,2026-07-20 12:06:00,drafted,,https://drive.kpim.example/drafts/P-Q4-10-youtube.docx
+RUN-2026-0123,P-Q4-11,facebook,2026-07-20 12:09:00,drafted,,https://drive.kpim.example/drafts/P-Q4-11-facebook.docx
+RUN-2026-0124,P-Q4-12,facebook,2026-07-20 12:12:00,drafted,,https://drive.kpim.example/drafts/P-Q4-12-facebook.docx
+RUN-2026-0125,P-Q4-12,youtube,2026-07-20 12:17:00,drafted,,https://drive.kpim.example/drafts/P-Q4-12-youtube.docx
+RUN-2026-0126,P-Q4-13,facebook,2026-07-20 12:20:00,drafted,,https://drive.kpim.example/drafts/P-Q4-13-facebook.docx
+RUN-2026-0127,P-Q4-14,facebook,2026-07-20 12:22:00,drafted,,https://drive.kpim.example/drafts/P-Q4-14-facebook.docx
+RUN-2026-0128,P-Q4-14,youtube,2026-07-20 12:25:00,error,API trả 429 Too Many Requests — thử lại sau,
+RUN-2026-0129,P-Q4-15,facebook,2026-07-20 12:28:00,drafted,,https://drive.kpim.example/drafts/P-Q4-15-facebook.docx
+RUN-2026-0130,P-Q4-16,facebook,2026-07-20 12:30:00,need_review,approval_status = Draft,
+RUN-2026-0131,P-Q4-17,facebook,2026-07-20 12:35:00,need_review,approval_status = Need Review,
+RUN-2026-0132,P-Q4-17,youtube,2026-07-20 12:36:00,need_review,approval_status = Need Review,
+RUN-2026-0133,P-Q4-18,facebook,2026-07-20 12:40:00,drafted,,https://drive.kpim.example/drafts/P-Q4-18-facebook.docx
+RUN-2026-0134,P-Q4-19,facebook,2026-07-20 12:44:00,need_review,approval_status = Draft,
+RUN-2026-0135,P-Q4-19,youtube,2026-07-20 12:47:00,need_review,approval_status = Draft,
+RUN-2026-0136,P-Q4-20,facebook,2026-07-20 12:48:00,need_review,approval_status = Need Review,
+RUN-2026-0137,P-Q4-21,facebook,2026-07-20 12:52:00,need_review,approval_status = Need Revision,
+RUN-2026-0138,P-Q4-22,facebook,2026-07-20 12:56:00,skipped,Thiếu media_link — không tạo được nội dung đăng,
+RUN-2026-0139,P-Q4-23,facebook,2026-07-20 12:57:00,need_review,approval_status = Draft,
+RUN-2026-0140,P-Q4-24,facebook,2026-07-20 13:00:00,skipped,Thiếu media_link — không tạo được nội dung đăng,
+RUN-2026-0141,P-Q4-25,facebook,2026-07-20 13:03:00,need_review,approval_status = Rejected,

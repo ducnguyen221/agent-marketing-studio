@@ -1,0 +1,171 @@
+## crosswalk.yml — ánh xạ định danh giữa 4 hệ tên đang tồn tại
+##
+## Vì sao cần: cùng một khái niệm đang có 4 tên khác nhau ở 4 nơi. Không có bảng này thì
+## không nối được dữ liệu kênh thật với học liệu, và mỗi lần viết Power Query lại đoán lại.
+##
+##   canonical  = marketing-agent (tên chuẩn, snake_case, dùng trong mọi script/model)
+##   mka101     = tài liệu khoá MKA-101 (dataset brief + practice lab)
+##   kpim_xlsx  = KPIM_Bank_Marketing_Plan.xlsx (sheet Campaign / Post)
+##   fb_export  = Facebook export tiếng Việt (Post Summary / Post Daily)
+version: 1
+updated: 2026-07-21
+
+fields:
+
+  asset_id:
+    canonical: asset_id
+    mka101:    post_id
+    kpim_xlsx: post_code            # sheet Post — vd P-Q1-01
+    fb_export: null                 # không có; nối gián tiếp qua platform_native_id
+    note: Khoá chính của dim_asset. Ổn định, không đổi khi chèn/xoá nội dung.
+
+  platform_native_id:
+    canonical: platform_native_id
+    mka101:    null
+    kpim_xlsx: [fb_post_id, yt_video_id]
+    fb_export: "ID bài viết"
+    note: >
+      Khoá nối thật giữa kế hoạch và số liệu nền tảng. Đã kiểm chứng khớp 60/60 giữa
+      Post[fb_post_id] và "ID bài viết" của cả 2 file CSV.
+
+  campaign_id:
+    canonical: campaign_id
+    mka101:    campaign_id
+    kpim_xlsx: campaign_id
+    fb_export: null
+
+  pillar_code:
+    canonical: pillar_code
+    mka101:    content_group
+    kpim_xlsx: content_pillar
+    fb_export: "Nhãn tùy chỉnh"
+    parse_rule: >
+      fb_export lưu dạng "<quarter>|<pillar>" (vd "Q1|Product") — 24 giá trị = 4 quý × 6 pillar.
+      Tách bằng dấu "|": phần trái → quarter, phần phải → pillar_code.
+
+  format:
+    canonical: format
+    mka101:    format
+    kpim_xlsx: format               # Ảnh · Video · Thước phim · Liên kết
+    fb_export: "Loại bài viết"
+    value_map:                      # KPIM Bank (tiếng Việt) → enum canonical
+      "Ảnh":         fb_post
+      "Video":       long_video
+      "Thước phim":  fb_reel
+      "Liên kết":    fb_post
+
+  channel:
+    canonical: platform
+    mka101:    channel
+    kpim_xlsx: [on_facebook, on_youtube]   # 2 cột cờ Y/null → phải unpivot thành nhiều dòng
+    fb_export: null                        # ngầm định = facebook
+    note: kpim_xlsx dùng 2 cột cờ; canonical dùng 1 dòng / 1 platform.
+
+  planned_publish_date:
+    canonical: planned_publish_date
+    mka101:    publish_date
+    kpim_xlsx: planned_date         # ISO YYYY-MM-DD nhưng lưu dạng TEXT
+    fb_export: null
+
+  actual_publish_datetime:
+    canonical: actual_publish_datetime
+    mka101:    publish_date
+    kpim_xlsx: null                 # không phân biệt planned vs actual
+    fb_export: "Thời gian đăng"     # ĐỊNH DẠNG MỸ MM/DD/YYYY HH:mm — phải ép kiểu tường minh
+
+  date:
+    canonical: date
+    mka101:    date
+    kpim_xlsx: null
+    fb_export: "Ngày"
+    note: >
+      BẪY: ở Post Summary cột "Ngày" là hằng số "Trọn đời" (lifetime), KHÔNG phải ngày.
+      Chỉ Post Daily mới có "Ngày" là ngày thật (MM/DD/YYYY). Trục thời gian của Summary
+      phải lấy từ "Thời gian đăng".
+
+  impressions:
+    canonical: impressions
+    mka101:    impression
+    kpim_xlsx: null
+    fb_export: "Lượt xem"
+
+  reach:
+    canonical: reach
+    mka101:    reach
+    kpim_xlsx: null
+    fb_export: "Số người tiếp cận"
+
+  engagement_total:
+    canonical: engagement_total
+    mka101:    engagement
+    kpim_xlsx: null
+    fb_export: "Cảm xúc, bình luận và lượt chia sẻ"
+    derived: likes + comments + shares
+
+  likes:    { canonical: likes,    mka101: null, kpim_xlsx: null, fb_export: "Cảm xúc" }
+  comments: { canonical: comments, mka101: null, kpim_xlsx: null, fb_export: "Bình luận" }
+  shares:   { canonical: shares,   mka101: null, kpim_xlsx: null, fb_export: "Lượt chia sẻ" }
+
+  clicks_total:
+    canonical: clicks_total
+    mka101:    click
+    kpim_xlsx: null
+    fb_export: "Tổng lượt click"
+
+  cta_clicks:
+    canonical: cta_clicks
+    mka101:    cta_click
+    kpim_xlsx: null
+    fb_export: "Lượt click vào liên kết"
+
+  cta_label:
+    canonical: cta_label
+    mka101:    null
+    kpim_xlsx: cta                  # nhãn CTA của kế hoạch, KHÁC cta_clicks (số đo)
+    fb_export: null
+    note: Đừng nhầm cta (nhãn kế hoạch) với cta_click (số đo thực tế).
+
+  cost:
+    canonical: cost
+    mka101:    cost
+    kpim_xlsx: budget_vnd           # CHỈ có ở cấp campaign, không có cấp post
+    fb_export: null
+    gap: true
+    note: Không nguồn nào có chi phí cấp post → CPL/CPM cấp post phải phân bổ hoặc sinh bù.
+
+  approval_status:
+    canonical: status
+    mka101:    approval_status
+    kpim_xlsx: status               # hiện 60/60 đều "Đã đăng" → không lọc được
+    fb_export: null
+    value_map:                      # course-facing → canonical
+      "Draft":         drafted
+      "Need Review":   need_review
+      "Approved":      approved
+      "Need Revision": drafted
+      "Rejected":      rejected
+      "Đã đăng":       published
+
+  owner:
+    canonical: owner
+    mka101:    owner
+    kpim_xlsx: owner
+    fb_export: null
+
+## Cột chỉ tồn tại ở một phía — ghi lại để biết chỗ nào phải sinh bù
+gaps:
+  canonical_only:
+    - [parent_asset_id,  "Short/FB nào dẫn về hero nào — không hệ nào có"]
+    - [research_brief_id, "Nối asset ↔ nguồn nghiên cứu (51.01 §8.2)"]
+    - [tos_score,        "Topic Opportunity Score — quyết định có sản xuất không"]
+    - [hrs_score,        "Hype Risk Score — cờ bắt buộc gắn nhãn khi ≥3"]
+    - [baseline_median,  "Chưa tồn tại ở đâu; chỉ có sau khi collector chạy ≥10 nội dung/định dạng"]
+    - [live_url,         "Link sau khi đăng"]
+    - [approved_by, approved_at]
+  fb_export_only_empty:
+    note: >
+      Post Summary có 95 cột nhưng 56 cột RỖNG HOÀN TOÀN — loại ở bước làm sạch:
+      21 cột "Phần trăm số lượt xem ≥15 giây ở quãng 0–20", 11 cột phân bố đối tượng (M/F × tuổi),
+      10 cột phân bố quốc gia, 4 cột "Số Giây xem trung bình từ …", nhóm "≥1 phút từ …",
+      Thu nhập ước tính từ Sao, phản hồi tiêu cực, Mô tả, Bình luận về dữ liệu.
+      Đây chính là bài làm sạch của buổi S04 — giữ nguyên trong học liệu, đừng dọn sẵn.

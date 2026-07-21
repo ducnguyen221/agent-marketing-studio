@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>marketing-agent — Chạy chiến dịch marketing end-to-end bằng AI, người vẫn cầm cương</title>
+<meta name="description" content="marketing-agent là engine mã nguồn mở chạy một chiến dịch marketing từ brief tới báo cáo: lịch nội dung, AI viết nháp, ba cổng phê duyệt trong Excel, đăng kênh và đo kết quả. Nội dung và dữ liệu của bạn nằm ngoài git.">
+<meta name="theme-color" content="#2f6df6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0f13" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="marketing-agent · Chiến dịch marketing end-to-end bằng AI, người vẫn cầm cương">
+<meta property="og:description" content="Một chiến dịch = một workbook 13 sheet. AI dựng lịch và viết nháp, bạn tick ba cổng duyệt, script mới được đăng. Mã nguồn mở, giấy phép MIT.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ducnguyen.vn/marketing-agent/">
+<meta property="og:image" content="https://ducnguyen.vn/marketing-agent/og-image.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="marketing-agent · Chiến dịch marketing end-to-end bằng AI, người vẫn cầm cương">
+<meta name="twitter:image" content="https://ducnguyen.vn/marketing-agent/og-image.svg">
+<link rel="icon" href="logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-tint:#f7f9fc;
+    --surface:#ffffff;
+    --surface-2:#f4f6fa;
+    --surface-3:#eef1f6;
+    --border:#e4e8ef;
+    --border-strong:#d3d9e3;
+    --text:#14161b;
+    --muted:#565d69;
+    --faint:#868d99;
+    --accent:#2f6df6;
+    --accent-ink:#1b4fd0;
+    --accent-weak:#e9f0fe;
+    --accent-glow:rgba(47,109,246,.16);
+    --ok:#0f9d58;
+    --ok-weak:#e4f5ec;
+    --warn:#c9820a;
+    --code-bg:#0f1116;
+    --code-text:#e8ebf1;
+    --code-border:#20242e;
+    --radius:16px;
+    --radius-sm:11px;
+    --shadow-sm:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.04);
+    --shadow-md:0 8px 24px -8px rgba(16,24,40,.12), 0 2px 6px rgba(16,24,40,.05);
+    --shadow-lg:0 30px 70px -24px rgba(20,40,90,.28);
+    --mono:"JetBrains Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+    --font:"Be Vietnam Pro",-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+    --maxw:1160px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0e0f13;
+      --bg-tint:#111318;
+      --surface:#16181d;
+      --surface-2:#1b1e24;
+      --surface-3:#22262e;
+      --border:#282c34;
+      --border-strong:#343a44;
+      --text:#e9ebef;
+      --muted:#a4abb6;
+      --faint:#727984;
+      --accent:#5b8cff;
+      --accent-ink:#8fb0ff;
+      --accent-weak:#182338;
+      --accent-glow:rgba(91,140,255,.20);
+      --ok:#3ec38a;
+      --ok-weak:#12271d;
+      --warn:#e0a032;
+      --code-bg:#0a0c10;
+      --code-text:#e4e8f0;
+      --code-border:#20242e;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+      --shadow-md:0 10px 28px -10px rgba(0,0,0,.6);
+      --shadow-lg:0 34px 80px -28px rgba(0,0,0,.75);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;background:var(--bg)}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  /* Tech network background (canvas) — sits behind all content, both themes */
+  #netbg{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:.9}
+  body{
+    margin:0;background:transparent;color:var(--text);
+    font-family:var(--font);line-height:1.6;font-size:16px;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{margin:0;letter-spacing:-.02em;line-height:1.1}
+  p{margin:0}
+  ::selection{background:var(--accent);color:#fff}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--accent);
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+
+  /* ---------- header ---------- */
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:color-mix(in srgb,var(--bg) 82%,transparent);
+    backdrop-filter:saturate(180%) blur(14px);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid transparent;transition:border-color .25s;
+  }
+  header.site.scrolled{border-bottom-color:var(--border)}
+  .nav{display:flex;align-items:center;gap:20px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.01em}
+  .brand img{width:30px;height:30px;border-radius:8px;display:block}
+  .nav-links{display:flex;gap:26px;margin-left:auto}
+  .nav-links a{font-size:14.5px;font-weight:500;color:var(--muted);transition:color .18s}
+  .nav-links a:hover{color:var(--text)}
+  .nav .gh{margin-left:22px}
+  @media (max-width:820px){.nav-links{display:none}.nav .gh{margin-left:auto}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+    font-family:var(--font);font-size:15px;font-weight:600;
+    padding:11px 18px;border-radius:11px;border:1px solid transparent;cursor:pointer;
+    transition:transform .12s ease, background .18s, border-color .18s, box-shadow .18s;
+  }
+  .btn svg{width:18px;height:18px;flex:none}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px -6px var(--accent-glow)}
+  .btn-primary:hover{background:var(--accent-ink);box-shadow:0 10px 24px -8px var(--accent-glow)}
+  .btn-ghost{background:var(--surface-2);color:var(--text);border-color:var(--border)}
+  .btn-ghost:hover{background:var(--surface-3);border-color:var(--border-strong)}
+  .btn-sm{padding:8px 14px;font-size:14px;border-radius:9px}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:72px 0 40px;overflow:hidden}
+  .hero::before{
+    content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+    background:
+      radial-gradient(120% 90% at 82% -10%, var(--accent-glow), transparent 55%),
+      radial-gradient(90% 70% at 8% 0%, color-mix(in srgb,var(--accent) 8%,transparent), transparent 50%);
+  }
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center}
+  .hero-badge{
+    display:inline-flex;align-items:center;gap:9px;
+    padding:6px 12px 6px 8px;border-radius:999px;
+    background:var(--surface-2);border:1px solid var(--border);
+    font-size:13px;font-weight:600;color:var(--muted);margin-bottom:22px;
+  }
+  .hero-badge b{color:var(--text)}
+  .hero-badge .tick{
+    display:inline-flex;width:20px;height:20px;border-radius:50%;
+    background:var(--ok-weak);color:var(--ok);align-items:center;justify-content:center;
+  }
+  .hero-badge .tick svg{width:12px;height:12px}
+  .hero h1{font-size:clamp(2.15rem,5.4vw,3.5rem);font-weight:800}
+  .hero h1 .hl{color:var(--accent);position:relative;white-space:nowrap}
+  .hero .lead{margin-top:20px;font-size:clamp(1.02rem,2.2vw,1.22rem);color:var(--muted);max-width:33ch;line-height:1.55}
+  .hero-cta{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+  .tech-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:30px}
+  .tb{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:12.5px;font-weight:600;font-family:var(--mono);
+    padding:6px 11px;border-radius:8px;background:var(--surface-2);
+    border:1px solid var(--border);color:var(--muted);
+  }
+  .tb .g{width:7px;height:7px;border-radius:2px;background:var(--accent)}
+  .tb.local .g{background:var(--ok)}
+
+  /* ---------- hero preview panel ---------- */
+  .preview{
+    position:relative;border-radius:var(--radius);
+    background:var(--surface);border:1px solid var(--border);
+    box-shadow:var(--shadow-lg);overflow:hidden;
+  }
+  .preview::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+  @media (prefers-color-scheme:dark){.preview::after{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}}
+  .pv-top{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;
+    border-bottom:1px solid var(--border);background:var(--surface-2);
+  }
+  .pv-live{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .pv-live .rec{width:9px;height:9px;border-radius:50%;background:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,.5);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,72,77,.45)}70%{box-shadow:0 0 0 7px rgba(229,72,77,0)}100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
+  @media (prefers-reduced-motion:reduce){.pv-live .rec{animation:none}}
+  .pv-src{margin-left:auto;font-size:11.5px;font-family:var(--mono);color:var(--faint)}
+  .pv-body{padding:16px 16px 18px;display:flex;flex-direction:column;gap:13px}
+  .line{display:flex;gap:11px;align-items:flex-start}
+  .who{
+    flex:none;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;margin-top:2px;
+    font-family:var(--mono);letter-spacing:.01em;
+  }
+  .who.you{background:var(--accent-weak);color:var(--accent-ink)}
+  .who.s1{background:var(--surface-3);color:var(--muted)}
+  .who.s2{background:var(--ok-weak);color:var(--ok)}
+  .say{font-size:14.5px;line-height:1.5}
+  .say .orig{color:var(--text)}
+  .say .tr{display:block;margin-top:4px;color:var(--muted);font-size:13.5px}
+  .say .tr b{color:var(--accent);font-weight:600;font-family:var(--mono);font-size:12px;margin-right:5px}
+  .typing{display:inline-flex;gap:4px;align-items:center;padding:5px 2px}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--faint);animation:blink 1.4s infinite both}
+  .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.typing i{animation:none;opacity:.5}}
+
+  /* ---------- section shell ---------- */
+  section{padding:72px 0}
+  .sec-head{max-width:640px;margin-bottom:40px}
+  .sec-head h2{font-size:clamp(1.7rem,3.6vw,2.4rem);font-weight:800;margin-top:14px}
+  .sec-head p{margin-top:14px;color:var(--muted);font-size:1.05rem;line-height:1.6}
+
+  /* ---------- feature bento ---------- */
+  .bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  .feat{
+    grid-column:span 2;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:24px;box-shadow:var(--shadow-sm);transition:transform .2s ease, box-shadow .2s ease, border-color .2s;
+  }
+  .feat:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--border-strong)}
+  .feat.wide{grid-column:span 3}
+  .feat.full{grid-column:span 6}
+  .ficon{
+    width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    background:var(--accent-weak);color:var(--accent);margin-bottom:16px;
+  }
+  .ficon svg{width:23px;height:23px}
+  .feat h3{font-size:1.12rem;font-weight:700}
+  .feat p{margin-top:9px;color:var(--muted);font-size:14.5px;line-height:1.55}
+  .feat .kbd{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--muted);
+    background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:3px 8px}
+  /* privacy full-width card */
+  .feat.full{
+    display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center;
+    background:
+      linear-gradient(180deg,var(--ok-weak),transparent 70%),var(--surface);
+    border-color:color-mix(in srgb,var(--ok) 30%,var(--border));
+  }
+  .feat.full .ficon{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+  .feat.full h3{font-size:1.3rem}
+  .privacy-tags{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start}
+  .ptag{font-size:13px;font-weight:600;padding:8px 12px;border-radius:9px;background:var(--surface);
+    border:1px solid var(--border);color:var(--muted);display:inline-flex;gap:8px;align-items:center}
+  .ptag svg{width:15px;height:15px;color:var(--ok)}
+  .ptag.out{color:var(--faint)}
+  .ptag.out svg{color:var(--warn)}
+  @media (max-width:900px){
+    .bento{grid-template-columns:repeat(2,1fr)}
+    .feat,.feat.wide{grid-column:span 1}
+    .feat.full{grid-column:span 2;grid-template-columns:1fr}
+  }
+  @media (max-width:560px){
+    .bento{grid-template-columns:1fr}
+    .feat,.feat.wide,.feat.full{grid-column:span 1}
+  }
+
+  /* ---------- pipeline ---------- */
+  .pipe-wrap{overflow-x:auto;padding-bottom:6px;margin:0 -22px;padding-left:22px;padding-right:22px}
+  .pipe{display:flex;gap:0;min-width:min-content}
+  .pstep{
+    flex:1 1 0;min-width:172px;position:relative;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+    padding:20px 18px;box-shadow:var(--shadow-sm);
+  }
+  .pstep:not(:last-child){margin-right:26px}
+  .pstep:not(:last-child)::after{
+    content:"";position:absolute;top:50%;right:-26px;width:26px;height:2px;
+    background:linear-gradient(90deg,var(--border-strong),var(--accent));
+  }
+  .pstep:not(:last-child)::before{
+    content:"";position:absolute;top:50%;right:-8px;width:0;height:0;transform:translateY(-50%);
+    border-left:7px solid var(--accent);border-top:5px solid transparent;border-bottom:5px solid transparent;z-index:2;
+  }
+  .pnum{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--accent);
+    background:var(--accent-weak);border-radius:6px;padding:2px 7px;display:inline-block}
+  .pstep h3{margin-top:14px;font-size:1.02rem;font-weight:700}
+  .pstep p{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.5}
+  @media (max-width:760px){
+    .pipe{flex-direction:column}
+    .pstep{min-width:0}
+    .pstep:not(:last-child){margin-right:0;margin-bottom:28px}
+    .pstep:not(:last-child)::after{top:auto;bottom:-26px;right:50%;width:2px;height:26px;background:linear-gradient(180deg,var(--border-strong),var(--accent))}
+    .pstep:not(:last-child)::before{top:auto;bottom:-9px;right:50%;transform:translateX(50%);
+      border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--accent);border-bottom:0}
+  }
+
+  /* ---------- install ---------- */
+  .install{background:var(--bg-tint);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .install-grid{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:start}
+  .code-card{
+    background:var(--code-bg);border:1px solid var(--code-border);border-radius:var(--radius);
+    box-shadow:var(--shadow-lg);overflow:hidden;
+  }
+  .code-top{display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--code-border)}
+  .code-top .fn{font-family:var(--mono);font-size:12.5px;color:#9aa3b2;margin-left:2px}
+  .copy-btn{
+    margin-left:auto;display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+    font-family:var(--font);font-size:12.5px;font-weight:600;color:#cdd4e0;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+    padding:5px 11px;border-radius:8px;transition:background .15s,color .15s;
+  }
+  .copy-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+  .copy-btn svg{width:14px;height:14px}
+  .copy-btn.done{color:#3ec38a;border-color:rgba(62,195,138,.4)}
+  .code-scroll{overflow-x:auto}
+  pre{margin:0;padding:18px 18px 20px}
+  pre code{
+    font-family:var(--mono);font-size:13px;line-height:1.85;color:var(--code-text);
+    white-space:pre;display:block;
+  }
+  .code-scroll .cm{color:#6f7a8d}
+  .code-scroll .pr{color:#5b8cff}
+  .install-copy h2{font-size:clamp(1.7rem,3.6vw,2.3rem);font-weight:800}
+  .install-copy p{margin-top:14px;color:var(--muted);line-height:1.6}
+  .req{margin-top:22px;display:flex;flex-direction:column;gap:11px}
+  .req li{display:flex;gap:11px;align-items:flex-start;list-style:none;font-size:14.5px}
+  .req ul{margin:0;padding:0}
+  .req .ic{flex:none;width:22px;height:22px;border-radius:6px;background:var(--accent-weak);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .req .ic svg{width:13px;height:13px}
+  .req b{color:var(--text)}
+  @media (max-width:840px){.install-grid{grid-template-columns:1fr;gap:30px}}
+
+  /* ---------- privacy / compare ---------- */
+  .compare{border-collapse:separate;border-spacing:0;width:100%;background:var(--surface);
+    border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm)}
+  .compare th,.compare td{padding:15px 18px;text-align:left;font-size:14.5px;vertical-align:top}
+  .compare thead th{background:var(--surface-2);font-weight:700;font-size:13.5px;border-bottom:1px solid var(--border)}
+  .compare thead th.us{color:var(--accent)}
+  .compare tbody tr:not(:last-child) td{border-bottom:1px solid var(--border)}
+  .compare td.lbl{font-weight:600;color:var(--muted);width:34%}
+  .compare td.us{font-weight:600}
+  .compare td .yes{color:var(--ok);font-weight:700}
+  .compare td .no{color:var(--faint)}
+  .cmp-wrap{overflow-x:auto}
+  @media (max-width:600px){.compare th,.compare td{padding:12px 13px;font-size:13.5px}}
+
+  /* ---------- legal ---------- */
+  .legal{
+    display:flex;gap:14px;align-items:flex-start;
+    background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--warn);
+    border-radius:var(--radius-sm);padding:18px 20px;
+  }
+  .legal svg{flex:none;width:20px;height:20px;color:var(--warn);margin-top:2px}
+  .legal p{font-size:14px;color:var(--muted);line-height:1.6}
+  .legal b{color:var(--text)}
+
+  /* ---------- final cta ---------- */
+  .final{text-align:center;padding:80px 0}
+  .final h2{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800}
+  .final p{margin:16px auto 0;max-width:46ch;color:var(--muted);font-size:1.06rem}
+  .final .hero-cta{justify-content:center;margin-top:32px}
+
+  /* ---------- footer ---------- */
+  footer.site{border-top:1px solid var(--border);background:var(--bg-tint);padding:44px 0 40px}
+  .foot{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;align-items:flex-start}
+  .foot .brand{margin-bottom:10px}
+  .foot-tag{color:var(--muted);font-size:14px;max-width:34ch;line-height:1.55}
+  .foot-links{display:flex;gap:40px;flex-wrap:wrap}
+  .foot-col b{display:block;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-bottom:12px}
+  .foot-col a{display:block;font-size:14.5px;color:var(--muted);margin-bottom:9px;transition:color .15s}
+  .foot-col a:hover{color:var(--accent)}
+  .foot-bottom{margin-top:36px;padding-top:22px;border-top:1px solid var(--border);
+    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--faint);font-size:13px}
+  .foot-bottom .lic{font-family:var(--mono)}
+
+  /* ---------- scroll reveal ---------- */
+  @media (prefers-reduced-motion:no-preference){
+    .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+    .reveal.in{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="netbg" aria-hidden="true"></canvas>
+
+<!-- ======= HEADER ======= -->
+<header class="site" id="siteHeader">
+  <div class="wrap nav">
+    <a class="brand" href="#top"><img src="logo.svg" alt="marketing-agent logo">marketing-agent</a>
+    <nav class="nav-links">
+      <a href="#tinh-nang">Tính năng</a>
+      <a href="#cach-hoat-dong">Cách hoạt động</a>
+      <a href="#cai-dat">Cài đặt</a>
+      <a href="#rieng-tu">Riêng tư</a>
+    </nav>
+    <a class="btn btn-ghost btn-sm gh" href="https://github.com/ducnguyen221/marketing-agent" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 2.5-.34c.85 0 1.71.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ======= HERO ======= -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="hero-badge">
+        <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+        Mã nguồn mở &nbsp;·&nbsp; <b>MIT</b>
+      </span>
+      <h1>Một chiến dịch chạy từ brief tới báo cáo —<br><span class="hl">AI làm, bạn duyệt.</span></h1>
+      <p class="lead">Repo này là <b>engine</b>: skill, agent, workflow, script và template. Nội dung, dữ liệu và báo cáo của bạn sống ở instance riêng, nằm ngoài git.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://github.com/ducnguyen221/marketing-agent" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 2.5-.34c.85 0 1.71.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+          Xem trên GitHub
+        </a>
+        <a class="btn btn-ghost" href="#cach-hoat-dong">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h6"/><path d="M15 12h6"/><circle cx="12" cy="12" r="3"/></svg>
+          Cách hoạt động
+        </a>
+      </div>
+      <div class="tech-badges">
+        <span class="tb local"><span class="g"></span>Dry-run mặc định</span>
+        <span class="tb"><span class="g"></span>MIT License</span>
+        <span class="tb"><span class="g"></span>Excel · 13 sheet</span>
+        <span class="tb"><span class="g"></span>Windows · PowerShell</span>
+      </div>
+    </div>
+
+    <!-- product preview: stylized approval-gate illustration -->
+    <div class="preview" role="img" aria-label="Minh hoạ sheet lịch nội dung của một chiến dịch: ba cổng duyệt approve_topic, approve_content, approve_final quyết định asset nào được đăng.">
+      <div class="pv-top">
+        <span class="pv-live"><span class="rec"></span>Chờ bạn duyệt</span>
+        <span class="pv-src">CMP-2026-Q3.xlsx · 03_Calendar</span>
+      </div>
+      <div class="pv-body">
+        <div class="line">
+          <span class="who s2">A-014</span>
+          <span class="say"><span class="orig">Reels · “Mở tài khoản trong 3 phút”</span>
+            <span class="tr"><b>gates</b>topic ✓ · content ✓ · final ✓ → được đăng</span></span>
+        </div>
+        <div class="line">
+          <span class="who s1">A-015</span>
+          <span class="say"><span class="orig">Bài dài · “Gửi tiết kiệm online lãi bao nhiêu”</span>
+            <span class="tr"><b>gates</b>topic ✓ · content ✓ · final — → dừng ở đây</span></span>
+        </div>
+        <div class="line">
+          <span class="who s1">A-016</span>
+          <span class="say"><span class="orig">Video ngắn · “Ba lỗi khi vay tiêu dùng”</span>
+            <span class="tr"><b>gates</b>topic ✓ · content — → chưa làm media</span></span>
+        </div>
+        <div class="line">
+          <span class="who you">Bạn</span>
+          <span class="say"><span class="typing"><i></i><i></i><i></i></span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= FEATURES ======= -->
+<section id="tinh-nang">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="dot"></span>Tính năng</span>
+      <h2>Agent chạy nhanh, nhưng chỉ đi qua chỗ bạn đã mở cửa</h2>
+      <p>Tự động hoá marketing thường hỏng ở một chỗ: không ai biết cái gì đã được duyệt, cái gì chỉ là bản nháp trôi ra ngoài. Ở đây trạng thái nằm trong file, và file thì đọc được bằng mắt.</p>
+    </div>
+
+    <div class="bento">
+      <article class="feat wide reveal">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 9v12"/></svg></div>
+        <h3>Một workbook, cả vòng đời</h3>
+        <p>Mỗi chiến dịch là <b>một file Excel 13 sheet</b>: brief → chỉ tiêu KPI → lịch nội dung → nội dung → phê duyệt → log đăng → số liệu ngày → tổng hợp → lead → insight. Không phải mười công cụ nối bằng ảnh chụp màn hình, mà một file mở lên là thấy chiến dịch đang ở đâu.</p>
+        <span class="kbd">01_Brief … 10_Insights · _Lists · _Dictionary</span>
+      </article>
+
+      <article class="feat wide reveal">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Người duyệt là cột trong Excel, không phải lời hứa</h3>
+        <p>Ba cổng: <code style="font-family:var(--mono);font-size:.85em">approve_topic</code> mở đường cho viết nháp, <code style="font-family:var(--mono);font-size:.85em">approve_content</code> mở đường cho làm media, <code style="font-family:var(--mono);font-size:.85em">approve_final</code> mở đường cho đăng. Chưa tick thì CLI không trả asset đó ra, agent không có cách nào nhảy bước.</p>
+        <span class="kbd">gate: draft → media → publish</span>
+      </article>
+
+      <article class="feat reveal">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></div>
+        <h3>Dry-run là mặc định</h3>
+        <p>Adapter đăng bài từ chối chạy thật trừ khi instance đặt <code style="font-family:var(--mono);font-size:.85em">autonomy: full</code> và bạn xác nhận bằng tay. Ba mức tự trị: <b>suggest</b> chỉ đọc và đề xuất, <b>auto_safe</b> được viết nháp, <b>full</b> mới được đăng.</p>
+      </article>
+
+      <article class="feat reveal">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></div>
+        <h3>Schema là hợp đồng</h3>
+        <p>Cột nào tồn tại, giá trị nào hợp lệ, tên nào ánh xạ tên nào — tất cả nằm ở YAML trong <code style="font-family:var(--mono);font-size:.85em">schema/</code>. Sửa schema một chỗ thì dropdown trong Excel, validator và mô hình dữ liệu đổi theo, cho mọi chiến dịch.</p>
+      </article>
+
+      <article class="feat reveal">
+        <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 3-4 3 3 5-7"/></svg></div>
+        <h3>Không đo thì không kết luận</h3>
+        <p>Baseline là median của 10 nội dung gần nhất cùng định dạng, trên chính kênh của bạn — không phải “chuẩn ngành” đọc ở đâu đó. Chưa đủ mẫu thì hiện <b>“chưa đủ mẫu”</b>, không hiện một con số đoán.</p>
+      </article>
+
+      <article class="feat full reveal">
+        <div>
+          <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
+          <h3>Bộ mẫu chạy được ngay</h3>
+          <p>Instance <code style="font-family:var(--mono);font-size:.85em">content/KPIM</code> là một ngân hàng giả định với dữ liệu mô phỏng: <b>4 chiến dịch</b> theo quý, <b>60 bài đã đăng</b>, <b>5.687 lead từ 7 nguồn</b> (app · hotline · form · social inbox · website · quầy · QR sự kiện) — mỗi nguồn một kiểu định dạng lệch nhau, đúng như đời thật. Clone về là chạy, không cần token, không cần tài khoản kênh nào. Đây cũng là bộ dữ liệu dạy học cho khoá Marketing Analytics.</p>
+        </div>
+        <div class="privacy-tags">
+          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>4 chiến dịch · 60 bài</span>
+          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>5.687 lead · 7 nguồn</span>
+          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>Không PII · không credential</span>
+          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>Không đăng gì lên đâu</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ======= HOW IT WORKS ======= -->
+<section id="cach-hoat-dong">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="dot"></span>Cách hoạt động</span>
+      <h2>Sáu bước, ba chỗ dừng chờ người</h2>
+      <p>Agent đi liền mạch từ brief tới báo cáo, nhưng dừng lại ở bước 3, 4 và 5 — mỗi lần dừng là một ô checkbox bạn phải tự tick. Bỏ trống thì đường ống đứng yên, không có “mặc định đồng ý”.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="pipe-wrap reveal">
+      <div class="pipe">
+        <div class="pstep">
+          <span class="pnum">01</span>
+          <h3>Brief</h3>
+          <p>Mục tiêu, đối tượng, pillar, chỉ tiêu KPI — bạn điền vào sheet brief.</p>
+        </div>
+        <div class="pstep">
+          <span class="pnum">02</span>
+          <h3>Lịch nội dung</h3>
+          <p>Agent rải asset theo pillar và định dạng, validator kiểm trước khi ghi.</p>
+        </div>
+        <div class="pstep">
+          <span class="pnum">03</span>
+          <h3>AI viết nháp</h3>
+          <p>Chỉ những asset đã duyệt chủ đề mới được viết. Nháp dài để ở file Markdown.</p>
+        </div>
+        <div class="pstep">
+          <span class="pnum">04</span>
+          <h3>Bạn duyệt</h3>
+          <p>Checklist QA trong sheet phê duyệt. Đây là bước không ai làm thay bạn.</p>
+        </div>
+        <div class="pstep">
+          <span class="pnum">05</span>
+          <h3>Đăng kênh</h3>
+          <p>Adapter YouTube và Facebook, chạy dry-run nếu chưa bật toàn quyền. <b>Đang xây.</b></p>
+        </div>
+        <div class="pstep">
+          <span class="pnum">06</span>
+          <h3>Đo &amp; báo cáo</h3>
+          <p>Thu số liệu qua API, dựng star schema và dashboard Power BI. <b>Đang xây.</b></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= INSTALL ======= -->
+<section id="cai-dat" class="install">
+  <div class="wrap install-grid">
+    <div class="install-copy reveal">
+      <span class="eyebrow"><span class="dot"></span>Cài đặt</span>
+      <h2 style="margin-top:14px">Ba dòng lệnh và bảy câu hỏi</h2>
+      <p>Clone repo rồi chạy <code style="font-family:var(--mono);font-size:.85em">install.ps1</code>. Installer hỏi bảy câu — tên kênh, nơi đặt nội dung, kênh phát hành, nguồn số liệu, mức tự trị, ngôn ngữ, brand voice — rồi dựng khung thư mục instance cho bạn. Nhấn Enter hết là dùng mặc định trong repo.</p>
+      <div class="req">
+        <ul>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span><b>Windows</b> với <b>PowerShell 5.1</b> trở lên</span></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span><b>Python 3.10+</b> kèm <b>pyyaml</b> và <b>openpyxl</b></span></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span>Instance có <b>ba gốc tách rời</b> — nội dung đặt ở kho tri thức riêng cũng được</span></li>
+        </ul>
+      </div>
+      <a class="btn btn-ghost" style="margin-top:24px" href="https://github.com/ducnguyen221/marketing-agent" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+        Đọc README trên GitHub
+      </a>
+    </div>
+
+    <div class="code-card reveal">
+      <div class="code-top">
+        <span class="pv-live" style="gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:#ff5f57;display:inline-block"></span><span style="width:11px;height:11px;border-radius:50%;background:#febc2e;display:inline-block"></span><span style="width:11px;height:11px;border-radius:50%;background:#28c840;display:inline-block"></span></span>
+        <span class="fn">PowerShell</span>
+        <button class="copy-btn" id="copyBtn" type="button" aria-label="Sao chép lệnh cài đặt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span class="lbl">Sao chép</span>
+        </button>
+      </div>
+      <div class="code-scroll">
+<pre><code id="installCode"><span class="pr">git</span> clone https://github.com/ducnguyen221/marketing-agent
+<span class="pr">cd</span> marketing-agent
+<span class="pr">.\install.ps1</span>                        <span class="cm"># hỏi 7 câu rồi dựng khung thư mục</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= PRIVACY / COMPARE ======= -->
+<section id="rieng-tu">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="dot"></span>Ranh giới rõ ràng</span>
+      <h2>Repo giữ engine, bạn giữ nội dung</h2>
+      <p>Một repo marketing rất dễ biến thành nơi rò rỉ: token nằm trong file config, bản nháp chưa duyệt bị commit, dữ liệu khách hàng đi theo. Ranh giới ở đây được cài bằng gitignore và mặc định an toàn, không phải bằng kỷ luật cá nhân.</p>
+    </div>
+    <div class="cmp-wrap reveal">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="us">Trong repo (lên GitHub)</th>
+            <th>Ngoài repo (ở lại máy bạn)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lbl">Token &amp; credential</td>
+            <td class="us"><span class="yes">Chỉ có <code style="font-family:var(--mono);font-size:.85em">.env.example</code></span></td>
+            <td><span class="no">Mọi <code style="font-family:var(--mono);font-size:.85em">.env</code> và file <code style="font-family:var(--mono);font-size:.85em">*token*.json</code> đều bị gitignore</span></td>
+          </tr>
+          <tr>
+            <td class="lbl">Nội dung chiến dịch</td>
+            <td class="us">Chỉ bộ mẫu <b>KPIM</b> mô phỏng</td>
+            <td><span class="no">Workbook, bản nháp, media thật của bạn</span></td>
+          </tr>
+          <tr>
+            <td class="lbl">Dữ liệu &amp; báo cáo</td>
+            <td class="us">Chỉ dữ liệu mô phỏng để học</td>
+            <td><span class="no">Export số liệu, lead, báo cáo xuất ra</span></td>
+          </tr>
+          <tr>
+            <td class="lbl">Đăng bài</td>
+            <td class="us"><span class="yes">Dry-run</span> cho tới khi bạn duyệt</td>
+            <td><span class="no">Chỉ chạy thật khi bật <code style="font-family:var(--mono);font-size:.85em">autonomy: full</code> bằng tay</span></td>
+          </tr>
+          <tr>
+            <td class="lbl">Thông tin cá nhân</td>
+            <td class="us"><span class="yes">Không PII</span> — số điện thoại trong bộ mẫu là chuỗi sinh máy</td>
+            <td><span class="no">Dữ liệu khách hàng thật không bao giờ rời instance</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legal reveal" style="margin-top:26px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+      <p><b>Đang xây:</b> phần đã dùng được hôm nay là schema, dựng workbook 13 sheet, validator lịch nội dung và bộ mẫu KPIM. Adapter đăng YouTube/Facebook, thu số liệu qua API và dashboard Power BI <b>còn đang làm</b> — đừng kỳ vọng chúng chạy khi vừa clone về.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======= FINAL CTA ======= -->
+<section class="final">
+  <div class="wrap reveal">
+    <span class="eyebrow" style="justify-content:center"><span class="dot"></span>Mã nguồn mở</span>
+    <h2 style="margin-top:14px">Mở repo lên, xem thử một chiến dịch hoàn chỉnh</h2>
+    <p>Giấy phép MIT. Bộ mẫu KPIM cho bạn thấy đích đến trông thế nào trước khi bắt tay dựng chiến dịch của mình.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="https://github.com/ducnguyen221/marketing-agent" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 2.5-.34c.85 0 1.71.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+        Xem trên GitHub
+      </a>
+      <a class="btn btn-ghost" href="#cai-dat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="m7 12 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Cài đặt
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ======= FOOTER ======= -->
+<footer class="site">
+  <div class="wrap foot">
+    <div>
+      <a class="brand" href="#top"><img src="logo.svg" alt="marketing-agent logo">marketing-agent</a>
+      <p class="foot-tag">Engine mã nguồn mở chạy chiến dịch marketing từ brief tới báo cáo, có cổng phê duyệt của người ở giữa.</p>
+    </div>
+    <div class="foot-links">
+      <div class="foot-col">
+        <b>Sản phẩm</b>
+        <a href="https://ducnguyen.vn/ai-record/" target="_blank" rel="noopener">ai-record</a>
+        <a href="https://ducnguyen.vn/opcos-orbit/" target="_blank" rel="noopener">opcos-orbit</a>
+        <a href="https://github.com/ducnguyen221/powerbi-agent" target="_blank" rel="noopener">powerbi-agent</a>
+      </div>
+      <div class="foot-col">
+        <b>Tài nguyên</b>
+        <a href="https://github.com/ducnguyen221/marketing-agent" target="_blank" rel="noopener">Repo GitHub</a>
+        <a href="https://ducnguyen.vn" target="_blank" rel="noopener">ducnguyen.vn</a>
+      </div>
+    </div>
+  </div>
+  <div class="wrap foot-bottom">
+    <span class="lic">MIT License</span>
+    <span>© 2026 Duc Nguyen · <a href="https://ducnguyen.vn" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">ducnguyen.vn</a></span>
+  </div>
+</footer>
+
+<script>
+  // sticky header border on scroll
+  (function(){
+    var h = document.getElementById('siteHeader');
+    var onScroll = function(){ h.classList.toggle('scrolled', window.scrollY > 8); };
+    window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+  })();
+
+  // copy install block
+  (function(){
+    var btn = document.getElementById('copyBtn');
+    var codeEl = document.getElementById('installCode');
+    if(!btn || !codeEl) return;
+    var label = btn.querySelector('.lbl');
+    var cmd = [
+      'git clone https://github.com/ducnguyen221/marketing-agent',
+      'cd marketing-agent',
+      '.\\install.ps1'
+    ].join('\n');
+    function flash(ok){
+      btn.classList.toggle('done', ok);
+      label.textContent = ok ? 'Đã chép' : 'Lỗi, chép tay';
+      setTimeout(function(){ btn.classList.remove('done'); label.textContent = 'Sao chép'; }, 1900);
+    }
+    function fallback(){
+      try{
+        var ta = document.createElement('textarea');
+        ta.value = cmd; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta); flash(ok);
+      }catch(e){ flash(false); }
+    }
+    btn.addEventListener('click', function(){
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(cmd).then(function(){ flash(true); }, fallback);
+      } else { fallback(); }
+    });
+  })();
+
+  // scroll reveal
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els = document.querySelectorAll('.reveal');
+    if(reduce || !('IntersectionObserver' in window)){
+      els.forEach(function(el){ el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(el){ io.observe(el); });
+  })();
+</script>
+<!-- Tech network background: drifting nodes linked by proximity + subtle cursor pull -->
+<script>
+(function(){
+  var c=document.getElementById('netbg'); if(!c) return;
+  var ctx=c.getContext('2d');
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var darkQ=matchMedia('(prefers-color-scheme: dark)');
+  var dpr=Math.min(window.devicePixelRatio||1,2), W=0, H=0, pts=[], raf=0;
+  var mouse={x:-9999,y:-9999};
+  function col(a){ return (darkQ.matches?'rgba(120,160,255,':'rgba(47,109,246,')+a+')'; }
+  function resize(){
+    W=window.innerWidth; H=window.innerHeight;
+    c.width=Math.floor(W*dpr); c.height=Math.floor(H*dpr);
+    c.style.width=W+'px'; c.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    var n=Math.min(70, Math.max(22, Math.floor(W*H/26000)));
+    pts=Array.from({length:n},function(){return {
+      x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-0.5)*0.28, vy:(Math.random()-0.5)*0.28
+    };});
+    if(reduce) draw();
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    var i,j;
+    if(!reduce){
+      for(i=0;i<pts.length;i++){ var p=pts[i]; p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0||p.x>W)p.vx*=-1; if(p.y<0||p.y>H)p.vy*=-1; }
+    }
+    for(i=0;i<pts.length;i++){
+      for(j=i+1;j<pts.length;j++){
+        var a=pts[i], b=pts[j], dx=a.x-b.x, dy=a.y-b.y, d=Math.sqrt(dx*dx+dy*dy);
+        if(d<150){ ctx.strokeStyle=col((0.13*(1-d/150)).toFixed(3)); ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+      }
+      var mx=pts[i].x-mouse.x, my=pts[i].y-mouse.y, md=Math.sqrt(mx*mx+my*my);
+      if(md<170){ ctx.strokeStyle=col((0.18*(1-md/170)).toFixed(3)); ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(mouse.x,mouse.y); ctx.stroke(); }
+    }
+    for(i=0;i<pts.length;i++){ ctx.fillStyle=col(0.5); ctx.beginPath();
+      ctx.arc(pts[i].x,pts[i].y,1.5,0,6.2832); ctx.fill(); }
+    if(!reduce) raf=requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize,{passive:true});
+  window.addEventListener('mousemove',function(e){mouse.x=e.clientX;mouse.y=e.clientY;},{passive:true});
+  window.addEventListener('mouseout',function(){mouse.x=-9999;mouse.y=-9999;});
+  resize();
+  if(!reduce) draw();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# ── Instance data: chỉ KPIM (bộ mẫu khoá học) được lên GitHub ──────────────
+content/*
+!content/.gitkeep
+!content/KPIM/
+
+data/*
+!data/.gitkeep
+!data/KPIM/
+
+reports/*
+!reports/.gitkeep
+!reports/KPIM/
+
+# ── Secret: không bao giờ ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*token*.json
+*client_secret*.json
+*credentials*.json
+instances.json
+
+# ── Python / OS ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+Thumbs.db
+desktop.ini
+~$*
+.~lock.*

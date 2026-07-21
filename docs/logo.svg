@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="marketing-agent logo">
+  <title>marketing-agent</title>
+  <g fill="#2f6df6">
+    <rect x="11" y="9" width="42" height="7.5" rx="3.75"/>
+    <rect x="17.5" y="20.5" width="29" height="7.5" rx="3.75" opacity=".72"/>
+    <rect x="24" y="32" width="16" height="7.5" rx="3.75" opacity=".45"/>
+  </g>
+  <path d="M20.5 50 L27 56.5 L44 39.5" fill="none" stroke="#2f6df6" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

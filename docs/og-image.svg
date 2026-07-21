@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="marketing-agent">
+  <title>marketing-agent</title>
+  <defs>
+    <radialGradient id="glow" cx="82%" cy="0%" r="70%">
+      <stop offset="0%" stop-color="#2f6df6" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#2f6df6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="6%" cy="100%" r="60%">
+      <stop offset="0%" stop-color="#2f6df6" stop-opacity=".14"/>
+      <stop offset="100%" stop-color="#2f6df6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#0e0f13"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#2f6df6"/>
+
+  <!-- logo -->
+  <g transform="translate(96,132) scale(1.55)">
+    <g fill="#5b8cff">
+      <rect x="11" y="9" width="42" height="7.5" rx="3.75"/>
+      <rect x="17.5" y="20.5" width="29" height="7.5" rx="3.75" opacity=".72"/>
+      <rect x="24" y="32" width="16" height="7.5" rx="3.75" opacity=".45"/>
+    </g>
+    <path d="M20.5 50 L27 56.5 L44 39.5" fill="none" stroke="#5b8cff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g font-family="Be Vietnam Pro, Segoe UI, Roboto, Noto Sans, sans-serif">
+    <text x="96" y="330" fill="#e9ebef" font-size="88" font-weight="800" letter-spacing="-2">marketing-agent</text>
+    <text x="96" y="398" fill="#a4abb6" font-size="34" font-weight="500">Chiến dịch marketing chạy end-to-end bằng AI — người vẫn cầm cương.</text>
+    <text x="96" y="452" fill="#727984" font-size="27" font-weight="500">Brief → lịch nội dung → AI viết nháp → bạn duyệt → đăng → đo.</text>
+  </g>
+
+  <g font-family="JetBrains Mono, Consolas, monospace" font-size="24">
+    <text x="96" y="556" fill="#5b8cff" font-weight="600">MIT License</text>
+    <text x="1104" y="556" fill="#727984" text-anchor="end">ducnguyen.vn/marketing-agent</text>
+  </g>
+  <line x1="96" y1="516" x2="1104" y2="516" stroke="#282c34" stroke-width="2"/>
+</svg>

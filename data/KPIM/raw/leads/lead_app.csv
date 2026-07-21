@@ -1,0 +1,950 @@
+﻿lead_id,ma_chien_dich,ma_bai_viet,sdt,ho_ten,created_at,san_pham_quan_tam,khu_vuc,chi_nhanh,nhu_cau,trang_thai,phan_loai,app_version
+APP-01674,CMP-2026-Q1,,0957746375,Khách hàng 1674,1767715860000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,nurture,4.3.0
+APP-01641,CMP-2026-Q1,,0906419260,Khách hàng 1641,1767889500000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,won,nurture,4.2.1
+APP-01422,CMP-2026-Q1,,0985353316,Khách hàng 1422,1767968040000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,Hỏi ưu đãi,new,nurture,4.3.0
+APP-01486,CMP-2026-Q1,,0928637773,Khách hàng 1486,1767976680000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,contacting,warm,4.3.0
+APP-01734,CMP-2026-Q1,,0919593860,Khách hàng 1734,1767980160000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,contacting,warm,4.3.1
+APP-01917,CMP-2026-Q1,,0952082531,Khách hàng 1917,1768033980000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,nurture,5.0.0
+APP-01919,CMP-2026-Q1,,0987396218,Khách hàng 1919,1768126080000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,contacting,warm,4.2.1
+APP-01689,CMP-2026-Q1,,0920204317,Khách hàng 1689,1768140000000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,submitted,warm,4.3.1
+APP-01850,CMP-2026-Q1,,0967548403,Khách hàng 1850,1768160040000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Mở mới,won,warm,4.3.0
+APP-05647,CMP-2026-Q1,,0929795404,Khách hàng 1344,1768166820000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Mở mới,won,warm,5.0.0
+APP-01507,CMP-2026-Q1,,0989480306,Khách hàng 1507,1768223640000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,new,low_priority,4.3.1
+APP-01484,CMP-2026-Q1,,0990869545,Khách hàng 1484,1768241280000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,consulted,low_priority,5.0.0
+APP-01335,CMP-2026-Q1,,0900274905,Khách hàng 1335,1768307220000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-00027,CMP-2026-Q1,2149679516196294,0959361932,Khách hàng 0027,1768309320000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,submitted,warm,5.0.0
+APP-01790,CMP-2026-Q1,,0958475035,Khách hàng 1790,1768322220000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,So sánh sản phẩm,consulted,low_priority,4.2.1
+APP-01687,CMP-2026-Q1,,0909686796,Khách hàng 1687,1768322880000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,consulted,nurture,5.0.0
+APP-01150,CMP-2026-Q1,,0907347319,Khách hàng 1150,1768324260000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,low_priority,5.0.0
+APP-01372,CMP-2026-Q1,,0934932832,Khách hàng 1372,1768331700000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,new,warm,4.3.1
+APP-01868,CMP-2026-Q1,,0912889499,Khách hàng 1868,1768332060000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,won,nurture,5.0.0
+APP-01903,CMP-2026-Q1,,0955413707,Khách hàng 1903,1768510440000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,unreachable,warm,4.3.0
+APP-01511,CMP-2026-Q1,,0940284556,Khách hàng 1511,1768579860000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,new,low_priority,4.2.1
+APP-01280,CMP-2026-Q1,,0915064485,Khách hàng 1280,1768583100000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Mở mới,new,hot,4.3.0
+APP-01542,CMP-2026-Q1,,0944801133,Khách hàng 1542,1768656240000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Mở mới,submitted,warm,4.3.0
+APP-01934,CMP-2026-Q1,,0930507953,Khách hàng 1934,1768678680000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,consulted,warm,5.0.0
+APP-00050,CMP-2026-Q1,3081367811561413,0973505539,Khách hàng 0050,1768729260000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,So sánh sản phẩm,consulted,hot,4.2.1
+APP-01869,CMP-2026-Q1,,0973637116,Khách hàng 1869,1768747020000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,consulted,warm,4.2.1
+APP-01618,CMP-2026-Q1,,0988391963,Khách hàng 1618,1768750500000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,new,nurture,5.0.0
+APP-01703,CMP-2026-Q1,,0922911205,Khách hàng 1703,1768763340000,Vay mua nhà,Miền Trung,CN Huế,Mở mới,new,warm,5.0.0
+APP-00030,CMP-2026-Q1,2149679516196294,0919302797,Khách hàng 0030,1768821420000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,contacting,low_priority,4.3.0
+APP-05686,CMP-2026-Q1,2149679516196294,0988462641,Khách hàng 0031,1768915080000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,new,low_priority,4.3.0
+APP-01110,CMP-2026-Q1,,0938277863,Khách hàng 1110,1768915560000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,new,low_priority,4.3.1
+APP-01400,CMP-2026-Q1,,0961999444,Khách hàng 1400,1768921020000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Mở mới,won,warm,5.0.0
+APP-01720,CMP-2026-Q1,,0915630256,Khách hàng 1720,1769012700000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,nurture,4.3.0
+APP-01818,CMP-2026-Q1,,0924540116,Khách hàng 1818,1769024160000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Mở mới,won,low_priority,4.3.1
+APP-00007,CMP-2026-Q1,2399134656438024,0968634865,Khách hàng 0007,1769085600000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,warm,4.3.1
+APP-01099,CMP-2026-Q1,,0905760465,Khách hàng 1099,1769085660000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Hỏi ưu đãi,consulted,nurture,4.3.1
+APP-01102,CMP-2026-Q1,,0981279772,Khách hàng 1102,1769166840000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,submitted,low_priority,4.2.1
+APP-01300,CMP-2026-Q1,,0992238107,Khách hàng 1300,1769174580000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,consulted,warm,4.2.1
+APP-00010,CMP-2026-Q1,2399134656438024,0948514319,Khách hàng 0010,1769192400000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Mở mới,contacting,warm,4.2.1
+APP-01666,CMP-2026-Q1,,0919298648,Khách hàng 1666,1769194920000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,contacting,low_priority,5.0.0
+APP-01468,CMP-2026-Q1,,0999988501,Khách hàng 1468,1769243040000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,new,hot,4.2.1
+APP-01894,CMP-2026-Q1,,0950522037,Khách hàng 1894,1769263080000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,new,low_priority,5.0.0
+APP-01303,CMP-2026-Q1,,0928522362,Khách hàng 1303,1769331300000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,Mở mới,consulted,nurture,4.3.0
+APP-01907,CMP-2026-Q1,,0983395473,Khách hàng 1907,1769336340000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,unreachable,warm,5.0.0
+APP-00059,CMP-2026-Q1,9991301027931100,0962272822,Khách hàng 0059,1769340000000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,contacting,warm,4.2.1
+APP-01301,CMP-2026-Q1,,0939804576,Khách hàng 1301,1769363820000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,won,nurture,5.0.0
+APP-01439,CMP-2026-Q1,,0915106830,Khách hàng 1439,1769451180000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,warm,4.3.0
+APP-00055,CMP-2026-Q1,3081367811561413,0954396141,Khách hàng 0055,1769497560000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,submitted,nurture,4.3.0
+APP-01356,CMP-2026-Q1,,0916792884,Khách hàng 1356,1769527860000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,won,low_priority,5.0.0
+APP-01164,CMP-2026-Q1,,0925471661,Khách hàng 1164,1769530920000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-01192,CMP-2026-Q1,,0967116576,Khách hàng 1192,1769535600000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,warm,4.3.0
+APP-01405,CMP-2026-Q1,,0984737491,Khách hàng 1405,1769673960000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Hỗ trợ hồ sơ,consulted,warm,4.3.0
+APP-01243,CMP-2026-Q1,,0908211453,Khách hàng 1243,1769781120000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Mở mới,submitted,warm,4.3.1
+APP-01880,CMP-2026-Q1,,0912998301,Khách hàng 1880,1769804040000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,So sánh sản phẩm,won,warm,4.2.1
+APP-01438,CMP-2026-Q1,,0920214798,Khách hàng 1438,1769933100000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,consulted,warm,4.2.1
+APP-01566,CMP-2026-Q1,,0956023230,Khách hàng 1566,1769938980000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Hỏi ưu đãi,won,warm,4.2.1
+APP-01391,CMP-2026-Q1,,0934084708,Khách hàng 1391,1769976900000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,consulted,low_priority,4.3.0
+APP-01684,CMP-2026-Q1,,0925657598,Khách hàng 1684,1770118140000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Mở mới,consulted,warm,4.3.1
+APP-01810,CMP-2026-Q1,,0957100975,Khách hàng 1810,1770133320000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,consulted,low_priority,4.2.1
+APP-01624,CMP-2026-Q1,,0933807975,Khách hàng 1624,1770148440000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,submitted,hot,4.3.0
+APP-00082,CMP-2026-Q1,9782644390640101,0951252354,Khách hàng 0082,1770148680000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Mở mới,new,nurture,4.3.0
+APP-01367,CMP-2026-Q1,,0928931532,Khách hàng 1367,1770152100000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Tư vấn sản phẩm,won,low_priority,4.3.0
+APP-01278,CMP-2026-Q1,,0975991469,Khách hàng 1278,1770216240000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,So sánh sản phẩm,submitted,low_priority,4.3.0
+APP-01180,CMP-2026-Q1,,0994959784,Khách hàng 1180,1770226260000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,submitted,warm,4.3.1
+APP-00083,CMP-2026-Q1,9782644390640101,0939077698,Khách hàng 0083,1770239100000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,unreachable,nurture,4.2.1
+APP-01873,CMP-2026-Q1,,0910455561,Khách hàng 1873,1770284100000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Mở mới,contacting,warm,5.0.0
+APP-01625,CMP-2026-Q1,,0999939522,Khách hàng 1625,1770301740000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,warm,4.3.1
+APP-01560,CMP-2026-Q1,,0937385293,Khách hàng 1560,1770304980000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,new,hot,4.2.1
+APP-01406,CMP-2026-Q1,,0921015850,Khách hàng 1406,1770306120000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,consulted,warm,5.0.0
+APP-01586,CMP-2026-Q1,,0969921901,Khách hàng 1586,1770307680000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,So sánh sản phẩm,won,low_priority,4.3.1
+APP-00040,CMP-2026-Q1,3081367811561413,0999928735,Khách hàng 0040,1770391800000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,hot,4.2.1
+APP-00121,CMP-2026-Q1,0122212341662123,0996012933,Khách hàng 0121,1770454920000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Tư vấn sản phẩm,consulted,low_priority,5.0.0
+APP-01341,CMP-2026-Q1,,0911399467,Khách hàng 1341,1770483180000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,won,warm,4.3.0
+APP-00114,CMP-2026-Q1,0122212341662123,0919532743,Khách hàng 0114,1770494580000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,So sánh sản phẩm,won,warm,4.2.1
+APP-00073,CMP-2026-Q1,9782644390640101,0936484086,Khách hàng 0073,1770627540000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,nurture,5.0.0
+APP-01455,CMP-2026-Q1,,0936782505,Khách hàng 1455,1770636180000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,contacting,nurture,5.0.0
+APP-01318,CMP-2026-Q1,,0997854930,Khách hàng 1318,1770641460000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,hot,4.3.1
+APP-01183,CMP-2026-Q1,,0978234232,Khách hàng 1183,1770664500000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,contacting,low_priority,4.2.1
+APP-01572,CMP-2026-Q1,,0972123376,Khách hàng 1572,1770742500000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,nurture,4.3.0
+APP-05598,CMP-2026-Q1,,0951854598,Khách hàng 1726,1770778320000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,won,hot,5.0.0
+APP-01682,CMP-2026-Q1,,0921111944,Khách hàng 1682,1770810060000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,new,nurture,4.3.1
+APP-00146,CMP-2026-Q1,0122212341662123,0906167471,Khách hàng 0146,1770827040000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,won,nurture,5.0.0
+APP-01905,CMP-2026-Q1,,0916427531,Khách hàng 1905,1770892140000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,So sánh sản phẩm,contacting,warm,4.3.0
+APP-01862,CMP-2026-Q1,,0972439394,Khách hàng 1862,1770893220000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,hot,4.3.0
+APP-00058,CMP-2026-Q1,9991301027931100,0911855977,Khách hàng 0058,1771004400000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,won,warm,4.3.0
+APP-00124,CMP-2026-Q1,0122212341662123,0933204196,Khách hàng 0124,1771068300000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,hot,4.3.0
+APP-00064,CMP-2026-Q1,9991301027931100,0928276973,Khách hàng 0064,1771072260000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,new,warm,5.0.0
+APP-01614,CMP-2026-Q1,,0963925490,Khách hàng 1614,1771078680000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,warm,4.2.1
+APP-01606,CMP-2026-Q1,,0995055858,Khách hàng 1606,1771177200000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,submitted,hot,4.2.1
+APP-00080,CMP-2026-Q1,9782644390640101,0998767368,Khách hàng 0080,1771189800000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,won,low_priority,5.0.0
+APP-01383,CMP-2026-Q1,,0944748115,Khách hàng 1383,1771250820000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,won,warm,4.3.1
+APP-01685,CMP-2026-Q1,,0904990901,Khách hàng 1685,1771263900000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,won,low_priority,4.3.1
+APP-01250,CMP-2026-Q1,,0983559642,Khách hàng 1250,1771273500000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,won,nurture,4.3.1
+APP-01527,CMP-2026-Q1,,0922739856,Khách hàng 1527,1771321380000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,new,warm,4.2.1
+APP-01426,CMP-2026-Q1,,0925108503,Khách hàng 1426,1771326600000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,won,nurture,4.3.1
+APP-01881,CMP-2026-Q1,,0948298855,Khách hàng 1881,1771357920000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Hỏi ưu đãi,contacting,warm,4.2.1
+APP-01760,CMP-2026-Q1,,0935284594,Khách hàng 1760,1771358220000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,Hỗ trợ hồ sơ,contacting,warm,4.3.0
+APP-00174,CMP-2026-Q1,2164179127990661,0950891335,Khách hàng 0174,1771403220000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,consulted,nurture,4.3.0
+APP-01230,CMP-2026-Q1,,0938402295,Khách hàng 1230,1771430280000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,consulted,low_priority,4.3.1
+APP-01441,CMP-2026-Q1,,0906245182,Khách hàng 1441,1771435800000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,won,warm,5.0.0
+APP-01168,CMP-2026-Q1,,0947365750,Khách hàng 1168,1771437600000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,warm,4.3.1
+APP-01599,CMP-2026-Q1,,0982176153,Khách hàng 1599,1771448280000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,Hỗ trợ hồ sơ,submitted,nurture,4.3.0
+APP-00163,CMP-2026-Q1,0122212341662123,0923565779,Khách hàng 0163,1771507380000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,unreachable,warm,5.0.0
+APP-01847,CMP-2026-Q1,,0982586900,Khách hàng 1847,1771515840000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,contacting,low_priority,5.0.0
+APP-01861,CMP-2026-Q1,,0981209341,Khách hàng 1861,1771520520000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,consulted,warm,4.2.1
+APP-01114,CMP-2026-Q1,,0947456885,Khách hàng 1114,1771523340000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,contacting,warm,4.3.0
+APP-01388,CMP-2026-Q1,,0950780578,Khách hàng 1388,1771581540000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,contacting,nurture,4.3.1
+APP-00173,CMP-2026-Q1,2164179127990661,0920328275,Khách hàng 0173,1771592820000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,new,nurture,5.0.0
+APP-01397,CMP-2026-Q1,,0941296141,Khách hàng 1397,1771664220000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,So sánh sản phẩm,won,warm,4.3.1
+APP-01607,CMP-2026-Q1,,0976745872,Khách hàng 1607,1771706940000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,consulted,nurture,4.2.1
+APP-01092,CMP-2026-Q1,,0930221309,Khách hàng 1092,1771754880000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,nurture,4.3.1
+APP-01697,CMP-2026-Q1,,0989067968,Khách hàng 1697,1771767720000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,warm,5.0.0
+APP-01723,CMP-2026-Q1,,0903362877,Khách hàng 1723,1771878720000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,won,warm,5.0.0
+APP-00109,CMP-2026-Q1,0122212341662123,0944626632,Khách hàng 0109,1771957800000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,unreachable,low_priority,4.3.0
+APP-01421,CMP-2026-Q1,,0954971345,Khách hàng 1421,1772030760000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Mở mới,new,warm,4.3.1
+APP-00224,CMP-2026-Q1,5950605098925196,0990292721,Khách hàng 0224,1772105700000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,hot,4.2.1
+APP-01281,CMP-2026-Q1,,0935070143,Khách hàng 1281,1772105940000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Hỗ trợ hồ sơ,contacting,low_priority,5.0.0
+APP-05685,CMP-2026-Q1,0122212341662123,0924448745,Khách hàng 0137,1772117940000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,won,nurture,4.3.1
+APP-00157,CMP-2026-Q1,0122212341662123,0993139638,Khách hàng 0157,1772199360000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,unreachable,warm,4.3.0
+APP-01752,CMP-2026-Q1,,0961513748,Khách hàng 1752,1772206560000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,won,low_priority,4.3.0
+APP-01766,CMP-2026-Q1,,0950137614,Khách hàng 1766,1772220900000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Mở mới,unreachable,warm,4.2.1
+APP-01842,CMP-2026-Q1,,0979730328,Khách hàng 1842,1772222580000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,contacting,hot,4.3.0
+APP-00178,CMP-2026-Q1,2164179127990661,0958372451,Khách hàng 0178,1772293560000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Mở mới,contacting,warm,4.3.0
+APP-00215,CMP-2026-Q1,7570322020988031,0984760436,Khách hàng 0215,1772297280000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,unreachable,hot,4.3.0
+APP-00205,CMP-2026-Q1,7570322020988031,0929491745,Khách hàng 0205,1772374800000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,warm,5.0.0
+APP-01955,CMP-2026-Q1,,0970235523,Khách hàng 1955,1772382240000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,submitted,nurture,5.0.0
+APP-01115,CMP-2026-Q1,,0995849290,Khách hàng 1115,1772396940000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,contacting,nurture,4.3.1
+APP-01585,CMP-2026-Q1,,0953939749,Khách hàng 1585,1772457420000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,consulted,low_priority,4.2.1
+APP-01698,CMP-2026-Q1,,0912315007,Khách hàng 1698,1772470440000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,warm,4.3.1
+APP-01664,CMP-2026-Q1,,0998860469,Khách hàng 1664,1772474580000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,warm,4.3.1
+APP-01121,CMP-2026-Q1,,0949776052,Khách hàng 1121,1772527260000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,nurture,4.3.0
+APP-01203,CMP-2026-Q1,,0989296834,Khách hàng 1203,1772538120000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,submitted,nurture,4.3.0
+APP-01254,CMP-2026-Q1,,0933313741,Khách hàng 1254,1772561460000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,warm,5.0.0
+APP-01651,CMP-2026-Q1,,0943352775,Khách hàng 1651,1772612040000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,low_priority,4.3.0
+APP-01402,CMP-2026-Q1,,0938362211,Khách hàng 1402,1772615040000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,submitted,hot,5.0.0
+APP-01348,CMP-2026-Q1,,0967219621,Khách hàng 1348,1772619960000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Tư vấn sản phẩm,consulted,warm,4.3.1
+APP-01529,CMP-2026-Q1,,0933103764,Khách hàng 1529,1772636940000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,submitted,hot,4.3.0
+APP-01832,CMP-2026-Q1,,0978196879,Khách hàng 1832,1772638740000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,consulted,hot,4.3.1
+APP-01314,CMP-2026-Q1,,0960618427,Khách hàng 1314,1772700480000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,warm,5.0.0
+APP-01144,CMP-2026-Q1,,0935307264,Khách hàng 1144,1772712900000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Mở mới,contacting,warm,4.3.1
+APP-01351,CMP-2026-Q1,,0948134284,Khách hàng 1351,1772732580000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,new,hot,4.2.1
+APP-01510,CMP-2026-Q1,,0981704717,Khách hàng 1510,1772737020000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Hỏi ưu đãi,contacting,warm,4.2.1
+APP-01396,CMP-2026-Q1,,0994897327,Khách hàng 1396,1772792700000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,won,nurture,4.3.0
+APP-01736,CMP-2026-Q1,,0998894334,Khách hàng 1736,1772811840000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,consulted,warm,5.0.0
+APP-01741,CMP-2026-Q1,,0912013178,Khách hàng 1741,1772817060000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,unreachable,nurture,4.2.1
+APP-00206,CMP-2026-Q1,7570322020988031,0911094916,Khách hàng 0206,1772882940000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Mở mới,contacting,nurture,5.0.0
+APP-00238,CMP-2026-Q1,0195974565515384,0945391907,Khách hàng 0238,1772898780000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,So sánh sản phẩm,contacting,warm,4.3.0
+APP-01474,CMP-2026-Q1,,0915155435,Khách hàng 1474,1772959800000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,nurture,5.0.0
+APP-00230,CMP-2026-Q1,2222529584217775,0920233896,Khách hàng 0230,1772983320000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,consulted,warm,4.3.1
+APP-01589,CMP-2026-Q1,,0995083728,Khách hàng 1589,1773051840000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,consulted,nurture,4.2.1
+APP-01688,CMP-2026-Q1,,0957921774,Khách hàng 1688,1773055800000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Nha Trang,Hỗ trợ hồ sơ,new,hot,5.0.0
+APP-00227,CMP-2026-Q1,5950605098925196,0969212083,Khách hàng 0227,1773135180000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,hot,4.2.1
+APP-00219,CMP-2026-Q1,7570322020988031,0969488458,Khách hàng 0219,1773150660000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-01960,CMP-2026-Q1,,0954294138,Khách hàng 1960,1773223680000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Tư vấn sản phẩm,won,nurture,4.3.1
+APP-01733,CMP-2026-Q1,,0900950637,Khách hàng 1733,1773235200000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,contacting,warm,4.2.1
+APP-00245,CMP-2026-Q1,0195974565515384,0966716626,Khách hàng 0245,1773238860000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,hot,4.2.1
+APP-01821,CMP-2026-Q1,,0913196390,Khách hàng 1821,1773251880000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Hỗ trợ hồ sơ,consulted,low_priority,4.3.1
+APP-01237,CMP-2026-Q1,,0912881875,Khách hàng 1237,1773345420000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,consulted,warm,4.2.1
+APP-01694,CMP-2026-Q1,,0963284255,Khách hàng 1694,1773348360000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,contacting,nurture,4.3.1
+APP-01802,CMP-2026-Q1,,0976978747,Khách hàng 1802,1773394020000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,unreachable,warm,4.3.0
+APP-01678,CMP-2026-Q1,,0956909035,Khách hàng 1678,1773408960000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,consulted,warm,4.3.1
+APP-01430,CMP-2026-Q1,,0927438777,Khách hàng 1430,1773499200000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,contacting,hot,4.3.0
+APP-01459,CMP-2026-Q1,,0922632927,Khách hàng 1459,1773574800000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,consulted,warm,5.0.0
+APP-02009,CMP-2026-Q1,,0952329791,Khách hàng 2009,1773592920000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,won,low_priority,5.0.0
+APP-01612,CMP-2026-Q1,,0955223309,Khách hàng 1612,1773606780000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,contacting,warm,5.0.0
+APP-01429,CMP-2026-Q1,,0953740610,Khách hàng 1429,1773688140000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,won,nurture,4.2.1
+APP-01777,CMP-2026-Q1,,0919395295,Khách hàng 1777,1773738780000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Mở mới,unreachable,nurture,4.3.0
+APP-01193,CMP-2026-Q1,,0926070365,Khách hàng 1193,1773747240000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,submitted,nurture,5.0.0
+APP-00236,CMP-2026-Q1,2222529584217775,0967417751,Khách hàng 0236,1773747360000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-01154,CMP-2026-Q1,,0928582030,Khách hàng 1154,1773748500000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Tư vấn sản phẩm,contacting,low_priority,4.3.0
+APP-01748,CMP-2026-Q1,,0994926956,Khách hàng 1748,1773779520000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,won,low_priority,5.0.0
+APP-01820,CMP-2026-Q1,,0940790669,Khách hàng 1820,1773838020000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,contacting,warm,4.2.1
+APP-01118,CMP-2026-Q1,,0902489748,Khách hàng 1118,1773846780000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Mở mới,consulted,nurture,4.3.0
+APP-00277,CMP-2026-Q1,9861481134148368,0957274110,Khách hàng 0277,1773859620000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,low_priority,4.2.1
+APP-01645,CMP-2026-Q1,,0944353405,Khách hàng 1645,1773914100000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,consulted,warm,4.3.1
+APP-00278,CMP-2026-Q1,9861481134148368,0981414497,Khách hàng 0278,1773930180000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,contacting,nurture,4.3.0
+APP-01143,CMP-2026-Q1,,0977687202,Khách hàng 1143,1773935940000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,So sánh sản phẩm,won,nurture,4.3.1
+APP-01786,CMP-2026-Q1,,0925380512,Khách hàng 1786,1773946380000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,warm,4.3.0
+APP-01559,CMP-2026-Q1,,0972364526,Khách hàng 1559,1773999780000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,hot,4.2.1
+APP-01345,CMP-2026-Q1,,0906528938,Khách hàng 1345,1774090260000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-01906,CMP-2026-Q1,,0920881423,Khách hàng 1906,1774178040000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,won,warm,5.0.0
+APP-01948,CMP-2026-Q1,,0910104571,Khách hàng 1948,1774180860000,App số & Tiết kiệm online,Miền Trung,CN Huế,Tư vấn sản phẩm,contacting,nurture,4.2.1
+APP-01829,CMP-2026-Q1,,0905495361,Khách hàng 1829,1774254540000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,contacting,nurture,4.2.1
+APP-00264,CMP-2026-Q1,8107624568985007,0928128795,Khách hàng 0264,1774262100000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,submitted,warm,4.3.0
+APP-01374,CMP-2026-Q1,,0936278867,Khách hàng 1374,1774295640000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,low_priority,5.0.0
+APP-01811,CMP-2026-Q1,,0937943270,Khách hàng 1811,1774381020000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Huế,So sánh sản phẩm,consulted,warm,4.3.0
+APP-00237,CMP-2026-Q1,0195974565515384,0929610008,Khách hàng 0237,1774441740000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,unreachable,warm,4.3.0
+APP-01998,CMP-2026-Q1,,0984679267,Khách hàng 1998,1774512420000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,consulted,low_priority,4.3.0
+APP-01822,CMP-2026-Q1,,0945513863,Khách hàng 1822,1774524780000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,won,hot,4.3.0
+APP-01601,CMP-2026-Q1,,0922960944,Khách hàng 1601,1774529520000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,low_priority,4.2.1
+APP-01524,CMP-2026-Q1,,0927179577,Khách hàng 1524,1774536360000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,hot,4.2.1
+APP-01158,CMP-2026-Q1,,0923332732,Khách hàng 1158,1774544220000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,hot,5.0.0
+APP-01328,CMP-2026-Q1,,0988565143,Khách hàng 1328,1774547940000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,unreachable,nurture,4.3.0
+APP-01823,CMP-2026-Q1,,0906582134,Khách hàng 1823,1774618980000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,won,warm,4.3.1
+APP-01436,CMP-2026-Q1,,0964315588,Khách hàng 1436,1774643040000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,hot,4.3.0
+APP-01410,CMP-2026-Q1,,0971932810,Khách hàng 1410,1774643580000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,consulted,nurture,4.3.0
+APP-00259,CMP-2026-Q1,8107624568985007,0939331068,Khách hàng 0259,1774795800000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,consulted,hot,5.0.0
+APP-00270,CMP-2026-Q1,8107624568985007,0903989183,Khách hàng 0270,1775134920000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,new,hot,5.0.0
+APP-00292,CMP-2026-Q1,9861481134148368,0984065897,Khách hàng 0292,1775252220000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,hot,4.3.0
+APP-02278,CMP-2026-Q2,,0904514080,Khách hàng 2278,1775552280000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,submitted,warm,4.2.1
+APP-02501,CMP-2026-Q2,,0964727956,Khách hàng 2501,1775674320000,Vay mua nhà,Miền Nam,CN Bình Dương,Mở mới,new,warm,4.3.1
+APP-00305,CMP-2026-Q2,3854730219053828,0937402334,Khách hàng 0305,1775726700000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,nurture,4.3.0
+APP-02318,CMP-2026-Q2,,0933489464,Khách hàng 2318,1775732040000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,warm,4.3.0
+APP-00319,CMP-2026-Q2,3854730219053828,0998141021,Khách hàng 0319,1775752500000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Mở mới,consulted,low_priority,5.0.0
+APP-02301,CMP-2026-Q2,,0934133427,Khách hàng 2301,1775814480000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,contacting,low_priority,4.3.0
+APP-02507,CMP-2026-Q2,,0997002724,Khách hàng 2507,1775832180000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,nurture,4.3.0
+APP-02432,CMP-2026-Q2,,0936376096,Khách hàng 2432,1775999820000,Vay mua nhà,Miền Trung,CN Nha Trang,Mở mới,new,warm,4.3.0
+APP-02219,CMP-2026-Q2,,0939730210,Khách hàng 2219,1776009840000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,low_priority,4.2.1
+APP-02091,CMP-2026-Q2,,0945305888,Khách hàng 2091,1776018600000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,consulted,nurture,4.3.0
+APP-02246,CMP-2026-Q2,,0988725627,Khách hàng 2246,1776153780000,Vay mua nhà,Miền Nam,CN Bình Dương,Mở mới,new,nurture,4.3.1
+APP-02221,CMP-2026-Q2,,0954740335,Khách hàng 2221,1776271020000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Hỗ trợ hồ sơ,won,low_priority,5.0.0
+APP-05512,CMP-2026-Q2,,0944890412,Khách hàng 2298,1776279120000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,low_priority,4.3.1
+APP-05513,CMP-2026-Q2,,0900097848,Khách hàng 2257,1776328560000,Vay mua nhà,Miền Nam,CN Bình Dương,So sánh sản phẩm,new,nurture,4.3.1
+APP-02295,CMP-2026-Q2,,0933465280,Khách hàng 2295,1776342840000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,warm,5.0.0
+APP-02437,CMP-2026-Q2,,0929953816,Khách hàng 2437,1776345600000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Mở mới,new,low_priority,5.0.0
+APP-02194,CMP-2026-Q2,,0973547099,Khách hàng 2194,1776438720000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,consulted,warm,4.3.1
+APP-02491,CMP-2026-Q2,,0922739678,Khách hàng 2491,1776521220000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,new,hot,4.2.1
+APP-02449,CMP-2026-Q2,,0993176754,Khách hàng 2449,1776523800000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,new,hot,5.0.0
+APP-00304,CMP-2026-Q2,3854730219053828,0914964190,Khách hàng 0304,1776537240000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,contacting,warm,4.3.0
+APP-00353,CMP-2026-Q2,5328778056202055,0986588093,Khách hàng 0353,1776583140000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,warm,4.3.0
+APP-00320,CMP-2026-Q2,3854730219053828,0947352341,Khách hàng 0320,1776681120000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,unreachable,hot,4.2.1
+APP-02160,CMP-2026-Q2,,0960171632,Khách hàng 2160,1776694140000,Vay mua nhà,Miền Trung,CN Nha Trang,Hỗ trợ hồ sơ,unreachable,hot,4.3.1
+APP-02487,CMP-2026-Q2,,0913680230,Khách hàng 2487,1776850860000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,contacting,low_priority,4.3.1
+APP-02473,CMP-2026-Q2,,0959849074,Khách hàng 2473,1776854340000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Mở mới,consulted,warm,4.3.0
+APP-00341,CMP-2026-Q2,5328778056202055,0952885488,Khách hàng 0341,1776886740000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,hot,4.2.1
+APP-00301,CMP-2026-Q2,3854730219053828,0922607966,Khách hàng 0301,1777021500000,Vay mua nhà,Miền Nam,CN Bình Dương,So sánh sản phẩm,unreachable,hot,5.0.0
+APP-02045,CMP-2026-Q2,,0981711575,Khách hàng 2045,1777051440000,Vay mua nhà,Miền Nam,CN Bình Dương,Mở mới,new,warm,4.2.1
+APP-00303,CMP-2026-Q2,3854730219053828,0917115078,Khách hàng 0303,1777056600000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,won,low_priority,4.2.1
+APP-00346,CMP-2026-Q2,5328778056202055,0915098910,Khách hàng 0346,1777069440000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,hot,4.3.0
+APP-02309,CMP-2026-Q2,,0934286936,Khách hàng 2309,1777146060000,Vay mua nhà,Miền Nam,CN Bình Dương,Hỏi ưu đãi,consulted,low_priority,4.2.1
+APP-02308,CMP-2026-Q2,,0986927546,Khách hàng 2308,1777197780000,Vay mua nhà,Miền Trung,CN Huế,Hỏi ưu đãi,won,low_priority,4.2.1
+APP-02349,CMP-2026-Q2,,0972345413,Khách hàng 2349,1777206000000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,low_priority,4.2.1
+APP-02243,CMP-2026-Q2,,0964041519,Khách hàng 2243,1777212840000,Vay mua nhà,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,won,hot,4.3.0
+APP-02168,CMP-2026-Q2,,0914160152,Khách hàng 2168,1777288080000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,warm,5.0.0
+APP-02062,CMP-2026-Q2,,0963780226,Khách hàng 2062,1777296600000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,warm,4.2.1
+APP-02054,CMP-2026-Q2,,0989165494,Khách hàng 2054,1777296840000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,consulted,nurture,4.3.0
+APP-02477,CMP-2026-Q2,,0973808642,Khách hàng 2477,1777298520000,Vay mua nhà,Miền Trung,CN Huế,Hỗ trợ hồ sơ,won,hot,4.2.1
+APP-02200,CMP-2026-Q2,,0902284989,Khách hàng 2200,1777316100000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,low_priority,4.2.1
+APP-02331,CMP-2026-Q2,,0977489027,Khách hàng 2331,1777396740000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,hot,5.0.0
+APP-00392,CMP-2026-Q2,8679415069054753,0944174310,Khách hàng 0392,1777409940000,Vay mua nhà,Miền Nam,CN Bình Dương,Hỏi ưu đãi,won,warm,5.0.0
+APP-00300,CMP-2026-Q2,3854730219053828,0962300305,Khách hàng 0300,1777446540000,Vay mua nhà,Miền Nam,CN Bình Dương,So sánh sản phẩm,consulted,warm,5.0.0
+APP-00352,CMP-2026-Q2,5328778056202055,0938782747,Khách hàng 0352,1777457940000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,won,nurture,4.3.0
+APP-02322,CMP-2026-Q2,,0948621710,Khách hàng 2322,1777473120000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,consulted,warm,5.0.0
+APP-02325,CMP-2026-Q2,,0905587137,Khách hàng 2325,1777564440000,Tài khoản lương,Miền Nam,CN Bình Dương,Mở mới,new,hot,4.2.1
+APP-02241,CMP-2026-Q2,,0932062083,Khách hàng 2241,1777664820000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,warm,4.2.1
+APP-00357,CMP-2026-Q2,5328778056202055,0982329211,Khách hàng 0357,1777715400000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Mở mới,new,hot,4.2.1
+APP-02228,CMP-2026-Q2,,0999262866,Khách hàng 2228,1777729680000,Vay mua nhà,Miền Trung,CN Huế,Hỏi ưu đãi,new,warm,4.2.1
+APP-00330,CMP-2026-Q2,5328778056202055,0903256549,Khách hàng 0330,1777732680000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Hỏi ưu đãi,unreachable,low_priority,4.3.0
+APP-00395,CMP-2026-Q2,8679415069054753,0970218996,Khách hàng 0395,1777745100000,Vay mua nhà,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,contacting,hot,4.3.1
+APP-00336,CMP-2026-Q2,5328778056202055,0917404341,Khách hàng 0336,1777762500000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,new,nurture,4.3.1
+APP-02270,CMP-2026-Q2,,0937510211,Khách hàng 2270,1777815240000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,consulted,warm,4.3.0
+APP-02358,CMP-2026-Q2,,0971393604,Khách hàng 2358,1777829280000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,won,nurture,4.3.0
+APP-02380,CMP-2026-Q2,,0965569553,Khách hàng 2380,1777900440000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,warm,4.3.0
+APP-00380,CMP-2026-Q2,2350424896090231,0942664166,Khách hàng 0380,1777912260000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,new,warm,4.3.0
+APP-02260,CMP-2026-Q2,,0946126719,Khách hàng 2260,1777989840000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,new,warm,4.3.1
+APP-02148,CMP-2026-Q2,,0924636811,Khách hàng 2148,1777990020000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,contacting,nurture,4.3.1
+APP-02299,CMP-2026-Q2,,0977668023,Khách hàng 2299,1777994940000,Vay mua nhà,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,low_priority,4.3.0
+APP-05484,CMP-2026-Q2,,0935085596,Khách hàng 2042,1778000460000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,consulted,nurture,4.3.1
+APP-02144,CMP-2026-Q2,,0908333543,Khách hàng 2144,1778065140000,Vay mua nhà,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,submitted,hot,5.0.0
+APP-02367,CMP-2026-Q2,,0932893856,Khách hàng 2367,1778092980000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,contacting,nurture,4.3.1
+APP-05667,CMP-2026-Q2,,0928866358,Khách hàng 2344,1778117040000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,warm,4.3.0
+APP-02382,CMP-2026-Q2,,0957281164,Khách hàng 2382,1778227560000,Vay mua nhà,Miền Nam,CN Cần Thơ,Hỏi ưu đãi,consulted,hot,4.3.1
+APP-02326,CMP-2026-Q2,,0944567223,Khách hàng 2326,1778273640000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,consulted,warm,4.3.1
+APP-02083,CMP-2026-Q2,,0957103881,Khách hàng 2083,1778427420000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Mở mới,unreachable,hot,4.3.1
+APP-02094,CMP-2026-Q2,,0977736866,Khách hàng 2094,1778428860000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,consulted,nurture,4.2.1
+APP-02068,CMP-2026-Q2,,0968548738,Khách hàng 2068,1778493240000,Vay mua nhà,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,contacting,nurture,4.2.1
+APP-02413,CMP-2026-Q2,,0962553523,Khách hàng 2413,1778509260000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Mở mới,unreachable,warm,4.3.0
+APP-02387,CMP-2026-Q2,,0909967618,Khách hàng 2387,1778601420000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,submitted,warm,4.3.1
+APP-02471,CMP-2026-Q2,,0967373148,Khách hàng 2471,1778705460000,Vay mua nhà,Miền Trung,CN Nha Trang,Mở mới,new,low_priority,5.0.0
+APP-02296,CMP-2026-Q2,,0991047999,Khách hàng 2296,1778774700000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,unreachable,nurture,5.0.0
+APP-02145,CMP-2026-Q2,,0985982104,Khách hàng 2145,1778781900000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,won,warm,5.0.0
+APP-00443,CMP-2026-Q2,9813898273873357,0909223675,Khách hàng 0443,1778849940000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,contacting,warm,5.0.0
+APP-02453,CMP-2026-Q2,,0963949664,Khách hàng 2453,1778850780000,Vay mua nhà,Miền Trung,CN Huế,Mở mới,new,hot,4.3.0
+APP-02408,CMP-2026-Q2,,0988800916,Khách hàng 2408,1778923740000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,won,warm,4.2.1
+APP-02479,CMP-2026-Q2,,0924926535,Khách hàng 2479,1779009060000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,contacting,nurture,4.3.1
+APP-02348,CMP-2026-Q2,,0962963903,Khách hàng 2348,1779014280000,Tài khoản lương,Miền Trung,CN Huế,Hỏi ưu đãi,consulted,warm,4.3.1
+APP-02188,CMP-2026-Q2,,0973376068,Khách hàng 2188,1779033480000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,new,hot,4.3.1
+APP-00423,CMP-2026-Q2,9595677675060904,0960302152,Khách hàng 0423,1779093720000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,warm,4.2.1
+APP-02289,CMP-2026-Q2,,0919040981,Khách hàng 2289,1779105900000,Vay mua nhà,Miền Nam,CN Bình Dương,Mở mới,contacting,hot,4.3.0
+APP-00429,CMP-2026-Q2,9813898273873357,0980786133,Khách hàng 0429,1779177900000,Vay mua nhà,Miền Trung,CN Huế,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-02320,CMP-2026-Q2,,0941085435,Khách hàng 2320,1779179280000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,new,warm,4.2.1
+APP-02047,CMP-2026-Q2,,0973712271,Khách hàng 2047,1779289020000,Vay mua nhà,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,contacting,nurture,4.3.1
+APP-02116,CMP-2026-Q2,,0947685327,Khách hàng 2116,1779297660000,Vay mua nhà,Miền Trung,CN Huế,Mở mới,new,warm,4.2.1
+APP-00474,CMP-2026-Q2,9571240248592113,0945392499,Khách hàng 0474,1779366000000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,contacting,hot,4.3.0
+APP-00455,CMP-2026-Q2,9571240248592113,0999388721,Khách hàng 0455,1779447900000,Vay mua nhà,Miền Nam,CN Bình Dương,Mở mới,contacting,warm,4.3.0
+APP-02354,CMP-2026-Q2,,0925833819,Khách hàng 2354,1779467220000,Vay mua nhà,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,contacting,low_priority,4.3.0
+APP-02431,CMP-2026-Q2,,0983613421,Khách hàng 2431,1779524880000,Vay mua nhà,Miền Nam,CN Bình Dương,Mở mới,consulted,low_priority,5.0.0
+APP-02310,CMP-2026-Q2,,0969654149,Khách hàng 2310,1779554100000,Vay mua nhà,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,consulted,warm,5.0.0
+APP-02401,CMP-2026-Q2,,0988818833,Khách hàng 2401,1779639300000,Vay mua nhà,Miền Trung,CN Huế,Mở mới,consulted,nurture,4.2.1
+APP-00430,CMP-2026-Q2,9813898273873357,0908861306,Khách hàng 0430,1779720420000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,contacting,nurture,4.3.1
+APP-05629,CMP-2026-Q2,,0929858325,Khách hàng 2426,1779793260000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,won,warm,4.2.1
+APP-00467,CMP-2026-Q2,9571240248592113,0939020995,Khách hàng 0467,1779909300000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,contacting,hot,4.3.0
+APP-02469,CMP-2026-Q2,,0998846032,Khách hàng 2469,1779956340000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,contacting,nurture,4.2.1
+APP-02084,CMP-2026-Q2,,0990514713,Khách hàng 2084,1779956880000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,consulted,warm,4.3.0
+APP-00444,CMP-2026-Q2,9813898273873357,0957518680,Khách hàng 0444,1779976740000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,submitted,nurture,4.2.1
+APP-00417,CMP-2026-Q2,9595677675060904,0957691303,Khách hàng 0417,1779987240000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,won,low_priority,4.3.0
+APP-02244,CMP-2026-Q2,,0970308986,Khách hàng 2244,1780001700000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,consulted,nurture,4.3.0
+APP-02517,CMP-2026-Q2,,0945080792,Khách hàng 2517,1780062060000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,low_priority,4.2.1
+APP-05621,CMP-2026-Q2,,0929538753,Khách hàng 2319,1780326540000,Vay mua nhà,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,new,nurture,4.3.1
+APP-02522,CMP-2026-Q2,,0949074300,Khách hàng 2522,1780392660000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,unreachable,hot,4.3.1
+APP-02362,CMP-2026-Q2,,0900815868,Khách hàng 2362,1780402200000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,unreachable,warm,4.2.1
+APP-02175,CMP-2026-Q2,,0916738445,Khách hàng 2175,1780413000000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,consulted,nurture,4.3.0
+APP-02497,CMP-2026-Q2,,0910971230,Khách hàng 2497,1780423260000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,new,nurture,4.3.0
+APP-00493,CMP-2026-Q2,7121348063197319,0906424838,Khách hàng 0493,1780519380000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,consulted,nurture,5.0.0
+APP-02391,CMP-2026-Q2,,0982447341,Khách hàng 2391,1780759440000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,warm,4.3.0
+APP-05661,CMP-2026-Q2,0226645623268620,0928778622,Khách hàng 0518,1780829820000,Vay mua nhà,Miền Nam,CN Bình Dương,So sánh sản phẩm,consulted,hot,5.0.0
+APP-02073,CMP-2026-Q2,,0979236295,Khách hàng 2073,1780831260000,Vay mua nhà,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,consulted,low_priority,5.0.0
+APP-00497,CMP-2026-Q2,7121348063197319,0979452917,Khách hàng 0497,1780844940000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,contacting,warm,4.3.0
+APP-02195,CMP-2026-Q2,,0980485577,Khách hàng 2195,1780998060000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Mở mới,new,hot,4.3.1
+APP-02184,CMP-2026-Q2,,0926399841,Khách hàng 2184,1781094240000,Vay mua nhà,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,won,warm,4.3.1
+APP-00488,CMP-2026-Q2,8634981203513142,0906158601,Khách hàng 0488,1781099580000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,won,hot,4.2.1
+APP-02429,CMP-2026-Q2,,0963648512,Khách hàng 2429,1781176800000,Vay mua nhà,Miền Nam,CN Bình Dương,Hỏi ưu đãi,consulted,warm,4.3.1
+APP-02452,CMP-2026-Q2,,0934619379,Khách hàng 2452,1781188980000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,submitted,nurture,4.3.0
+APP-00524,CMP-2026-Q2,7832522224335881,0937837178,Khách hàng 0524,1781213400000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,contacting,warm,4.3.0
+APP-02314,CMP-2026-Q2,,0965100212,Khách hàng 2314,1781251620000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,consulted,warm,4.3.1
+APP-00516,CMP-2026-Q2,0226645623268620,0979089562,Khách hàng 0516,1781466060000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Mở mới,new,warm,4.3.1
+APP-00496,CMP-2026-Q2,7121348063197319,0928174593,Khách hàng 0496,1781613840000,Vay mua nhà,Miền Nam,CN Cần Thơ,So sánh sản phẩm,won,hot,4.3.1
+APP-02130,CMP-2026-Q2,,0953987372,Khách hàng 2130,1781683500000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Mở mới,new,nurture,5.0.0
+APP-00502,CMP-2026-Q2,7121348063197319,0923259450,Khách hàng 0502,1781859660000,Vay mua nhà,Miền Nam,CN Bình Dương,Mở mới,new,hot,4.2.1
+APP-02191,CMP-2026-Q2,,0999993271,Khách hàng 2191,1781865420000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,submitted,nurture,4.3.1
+APP-00542,CMP-2026-Q2,8696209086327502,0911602651,Khách hàng 0542,1782035400000,Vay mua nhà,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,unreachable,hot,4.3.1
+APP-02131,CMP-2026-Q2,,0935909044,Khách hàng 2131,1782052800000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,new,hot,5.0.0
+APP-02458,CMP-2026-Q2,,0980307016,Khách hàng 2458,1782064320000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Hỏi ưu đãi,new,nurture,5.0.0
+APP-02427,CMP-2026-Q2,,0994568833,Khách hàng 2427,1782153840000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Mở mới,contacting,warm,5.0.0
+APP-02021,CMP-2026-Q2,,0933473329,Khách hàng 2021,1782157800000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,submitted,nurture,4.2.1
+APP-02513,CMP-2026-Q2,,0986975578,Khách hàng 2513,1782211860000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Mở mới,new,nurture,4.3.1
+APP-00549,CMP-2026-Q2,8696209086327502,0933058415,Khách hàng 0549,1782213120000,Vay mua nhà,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,unreachable,nurture,4.3.0
+APP-02096,CMP-2026-Q2,,0916614918,Khách hàng 2096,1782224220000,Vay mua nhà,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,contacting,hot,4.3.0
+APP-02398,CMP-2026-Q2,,0939341906,Khách hàng 2398,1782298080000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,nurture,4.2.1
+APP-02330,CMP-2026-Q2,,0924389655,Khách hàng 2330,1782301980000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,submitted,nurture,4.3.1
+APP-02261,CMP-2026-Q2,,0993586343,Khách hàng 2261,1782374880000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,So sánh sản phẩm,unreachable,low_priority,4.2.1
+APP-02524,CMP-2026-Q2,,0939847214,Khách hàng 2524,1782406320000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,nurture,5.0.0
+APP-00507,CMP-2026-Q2,0226645623268620,0933663067,Khách hàng 0507,1782459480000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,unreachable,nurture,4.3.1
+APP-00550,CMP-2026-Q2,8696209086327502,0999937071,Khách hàng 0550,1782464340000,Vay mua nhà,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,won,nurture,4.2.1
+APP-02493,CMP-2026-Q2,,0923020614,Khách hàng 2493,1782472440000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,contacting,nurture,4.3.0
+APP-02272,CMP-2026-Q2,,0926971167,Khách hàng 2272,1782486840000,Vay mua nhà,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,contacting,nurture,4.2.1
+APP-00537,CMP-2026-Q2,8696209086327502,0939832767,Khách hàng 0537,1782807540000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,contacting,hot,4.2.1
+APP-00553,CMP-2026-Q2,8696209086327502,0934591957,Khách hàng 0553,1782984240000,Vay mua nhà,Miền Trung,CN Nha Trang,Mở mới,consulted,warm,4.2.1
+APP-00555,CMP-2026-Q2,8696209086327502,0936718025,Khách hàng 0555,1783011240000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,unreachable,nurture,4.3.0
+APP-00560,CMP-2026-Q2,6030289017256250,0933029555,Khách hàng 0560,1783274100000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,contacting,warm,4.2.1
+APP-03141,CMP-2026-Q3,,0987547865,Khách hàng 3141,1783335000000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,contacting,nurture,5.0.0
+APP-03372,CMP-2026-Q3,,0902027323,Khách hàng 3372,1783350060000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,consulted,low_priority,5.0.0
+APP-00557,CMP-2026-Q2,8696209086327502,0955043654,Khách hàng 0557,1783359660000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,hot,4.3.1
+APP-03153,CMP-2026-Q3,,0996608389,Khách hàng 3153,1783420200000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,submitted,hot,4.3.1
+APP-02595,CMP-2026-Q3,,0909858221,Khách hàng 2595,1783431960000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,So sánh sản phẩm,new,low_priority,5.0.0
+APP-03016,CMP-2026-Q3,,0940636780,Khách hàng 3016,1783437480000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,won,warm,4.2.1
+APP-02818,CMP-2026-Q3,,0919090404,Khách hàng 2818,1783498560000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,new,hot,4.2.1
+APP-03875,CMP-2026-Q3,,0948325046,Khách hàng 3875,1783510140000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,submitted,low_priority,4.2.1
+APP-03257,CMP-2026-Q3,,0928821922,Khách hàng 3257,1783522860000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,hot,4.3.0
+APP-03878,CMP-2026-Q3,,0922607982,Khách hàng 3878,1783536480000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,new,nurture,5.0.0
+APP-05687,CMP-2026-Q3,,0950260982,Khách hàng 2834,1783537920000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,won,nurture,5.0.0
+APP-05674,CMP-2026-Q3,,0987915089,Khách hàng 3264,1783547220000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,new,warm,5.0.0
+APP-03520,CMP-2026-Q3,,0913792862,Khách hàng 3520,1783587840000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,consulted,nurture,4.3.0
+APP-02921,CMP-2026-Q3,,0954335273,Khách hàng 2921,1783595520000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,won,warm,4.2.1
+APP-02910,CMP-2026-Q3,,0988863869,Khách hàng 2910,1783624920000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,nurture,5.0.0
+APP-03556,CMP-2026-Q3,,0993163332,Khách hàng 3556,1783629240000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,submitted,low_priority,4.3.0
+APP-03212,CMP-2026-Q3,,0959808503,Khách hàng 3212,1783702860000,App số & Tiết kiệm online,Miền Trung,CN Huế,Tư vấn sản phẩm,contacting,hot,5.0.0
+APP-03143,CMP-2026-Q3,,0975587000,Khách hàng 3143,1783707540000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,low_priority,4.2.1
+APP-03172,CMP-2026-Q3,,0919062446,Khách hàng 3172,1783766100000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,unreachable,nurture,4.3.0
+APP-03353,CMP-2026-Q3,,0979323804,Khách hàng 3353,1783772940000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,new,low_priority,4.2.1
+APP-03461,CMP-2026-Q3,,0947988003,Khách hàng 3461,1783791840000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,submitted,low_priority,4.2.1
+APP-03739,CMP-2026-Q3,,0987171929,Khách hàng 3739,1783794900000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,consulted,warm,4.3.1
+APP-03382,CMP-2026-Q3,,0923126365,Khách hàng 3382,1783802340000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,warm,5.0.0
+APP-03738,CMP-2026-Q3,,0961456137,Khách hàng 3738,1783874820000,Vay mua nhà,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-02946,CMP-2026-Q3,,0976393904,Khách hàng 2946,1783875960000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,won,warm,4.3.1
+APP-02845,CMP-2026-Q3,,0968281560,Khách hàng 2845,1783886040000,Vay mua nhà,Miền Trung,CN Huế,Mở mới,new,low_priority,5.0.0
+APP-03083,CMP-2026-Q3,,0978998026,Khách hàng 3083,1783889340000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,won,warm,5.0.0
+APP-03408,CMP-2026-Q3,,0923676688,Khách hàng 3408,1783935600000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Mở mới,new,nurture,4.3.0
+APP-03656,CMP-2026-Q3,,0930348472,Khách hàng 3656,1783970400000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,new,nurture,4.3.1
+APP-02614,CMP-2026-Q3,,0904996007,Khách hàng 2614,1784036940000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Hỗ trợ hồ sơ,contacting,nurture,5.0.0
+APP-02688,CMP-2026-Q3,,0910618672,Khách hàng 2688,1784040720000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,won,nurture,4.2.1
+APP-02788,CMP-2026-Q3,,0933463511,Khách hàng 2788,1784049120000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,won,hot,5.0.0
+APP-02736,CMP-2026-Q3,,0970776369,Khách hàng 2736,1784118840000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,won,warm,4.2.1
+APP-03934,CMP-2026-Q3,,0974022141,Khách hàng 3934,1784120700000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,new,nurture,5.0.0
+APP-03662,CMP-2026-Q3,,0935892423,Khách hàng 3662,1784132460000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,low_priority,4.3.1
+APP-02577,CMP-2026-Q3,,0978070592,Khách hàng 2577,1784146500000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,nurture,4.2.1
+APP-03826,CMP-2026-Q3,,0907938567,Khách hàng 3826,1784201160000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,won,warm,4.3.1
+APP-03771,CMP-2026-Q3,,0991176984,Khách hàng 3771,1784204040000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Mở mới,new,low_priority,4.2.1
+APP-03010,CMP-2026-Q3,,0914579299,Khách hàng 3010,1784210340000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,new,warm,4.3.0
+APP-02869,CMP-2026-Q3,,0998519053,Khách hàng 2869,1784218080000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,submitted,low_priority,4.2.1
+APP-03285,CMP-2026-Q3,,0907950861,Khách hàng 3285,1784220240000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,So sánh sản phẩm,submitted,nurture,4.2.1
+APP-03985,CMP-2026-Q3,,0988481646,Khách hàng 3985,1784288820000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,won,nurture,4.3.1
+APP-03055,CMP-2026-Q3,,0976459819,Khách hàng 3055,1784303340000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,won,nurture,4.3.0
+APP-03039,CMP-2026-Q3,,0901848238,Khách hàng 3039,1784309220000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,won,hot,5.0.0
+APP-03262,CMP-2026-Q3,,0964458253,Khách hàng 3262,1784366520000,App số & Tiết kiệm online,Miền Trung,CN Huế,Hỗ trợ hồ sơ,consulted,low_priority,4.3.0
+APP-03298,CMP-2026-Q3,,0976348496,Khách hàng 3298,1784375100000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,consulted,nurture,4.3.0
+APP-02622,CMP-2026-Q3,,0996297701,Khách hàng 2622,1784379660000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Hỗ trợ hồ sơ,consulted,hot,4.3.1
+APP-02611,CMP-2026-Q3,,0905724340,Khách hàng 2611,1784454720000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,consulted,warm,4.3.0
+APP-03335,CMP-2026-Q3,,0968033836,Khách hàng 3335,1784484180000,App số & Tiết kiệm online,Miền Trung,CN Huế,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-02796,CMP-2026-Q3,,0972878000,Khách hàng 2796,1784544360000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,contacting,hot,4.3.0
+APP-02831,CMP-2026-Q3,,0937044471,Khách hàng 2831,1784554140000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,nurture,4.3.0
+APP-02959,CMP-2026-Q3,,0900588940,Khách hàng 2959,1784562840000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,won,nurture,4.3.0
+APP-02724,CMP-2026-Q3,,0925302515,Khách hàng 2724,1784575680000,Tài khoản lương,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,new,hot,4.2.1
+APP-02875,CMP-2026-Q3,,0990674165,Khách hàng 2875,1784620800000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,warm,5.0.0
+APP-03557,CMP-2026-Q3,,0957630536,Khách hàng 3557,1784657100000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,new,low_priority,4.3.0
+APP-03210,CMP-2026-Q3,,0945308221,Khách hàng 3210,1784713380000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,new,low_priority,4.2.1
+APP-02803,CMP-2026-Q3,,0995090756,Khách hàng 2803,1784714820000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Mở mới,new,warm,4.2.1
+APP-03000,CMP-2026-Q3,,0969510671,Khách hàng 3000,1784722140000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,warm,5.0.0
+APP-02902,CMP-2026-Q3,,0968721317,Khách hàng 2902,1784818440000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,submitted,low_priority,5.0.0
+APP-03075,CMP-2026-Q3,,0916284503,Khách hàng 3075,1784967420000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,low_priority,4.3.1
+APP-03361,CMP-2026-Q3,,0976875472,Khách hàng 3361,1784985240000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,won,hot,5.0.0
+APP-03198,CMP-2026-Q3,,0929632710,Khách hàng 3198,1784988240000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,contacting,low_priority,4.3.1
+APP-03160,CMP-2026-Q3,,0986389861,Khách hàng 3160,1784991360000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,nurture,4.2.1
+APP-03695,CMP-2026-Q3,,0948668389,Khách hàng 3695,1784991960000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,unreachable,hot,5.0.0
+APP-02837,CMP-2026-Q3,,0903944637,Khách hàng 2837,1785007980000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,new,warm,4.3.1
+APP-02809,CMP-2026-Q3,,0949432746,Khách hàng 2809,1785010080000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,nurture,4.2.1
+APP-02583,CMP-2026-Q3,,0967870798,Khách hàng 2583,1785056700000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,low_priority,4.3.0
+APP-02972,CMP-2026-Q3,,0936329658,Khách hàng 2972,1785059640000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,won,nurture,4.2.1
+APP-03271,CMP-2026-Q3,,0907544657,Khách hàng 3271,1785067380000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,consulted,nurture,4.3.1
+APP-02774,CMP-2026-Q3,,0902536891,Khách hàng 2774,1785075000000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,nurture,4.3.0
+APP-02956,CMP-2026-Q3,,0965596683,Khách hàng 2956,1785094680000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,contacting,nurture,5.0.0
+APP-00566,CMP-2026-Q3,3876540619270400,0965449599,Khách hàng 0566,1785140520000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,new,warm,4.2.1
+APP-03031,CMP-2026-Q3,,0975213764,Khách hàng 3031,1785166980000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,won,warm,5.0.0
+APP-03580,CMP-2026-Q3,,0989907433,Khách hàng 3580,1785167520000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,warm,4.3.1
+APP-02691,CMP-2026-Q3,,0948889624,Khách hàng 2691,1785179700000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,won,nurture,4.2.1
+APP-00579,CMP-2026-Q3,6472006735562211,0948412863,Khách hàng 0579,1785186060000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,unreachable,warm,5.0.0
+APP-00591,CMP-2026-Q3,6114302212578867,0977929860,Khách hàng 0591,1785229980000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,unreachable,nurture,5.0.0
+APP-03794,CMP-2026-Q3,,0932700072,Khách hàng 3794,1785238140000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,new,low_priority,4.2.1
+APP-03129,CMP-2026-Q3,,0900329419,Khách hàng 3129,1785254640000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Hỏi ưu đãi,new,nurture,4.2.1
+APP-00590,CMP-2026-Q3,6114302212578867,0994554784,Khách hàng 0590,1785310020000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,contacting,warm,4.3.1
+APP-03289,CMP-2026-Q3,,0938350532,Khách hàng 3289,1785312180000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,hot,4.3.1
+APP-02996,CMP-2026-Q3,,0956219391,Khách hàng 2996,1785315300000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Hỏi ưu đãi,contacting,warm,4.3.0
+APP-02695,CMP-2026-Q3,,0970571884,Khách hàng 2695,1785318180000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Mở mới,new,warm,4.2.1
+APP-03419,CMP-2026-Q3,,0960349048,Khách hàng 3419,1785328800000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,consulted,warm,4.2.1
+APP-03497,CMP-2026-Q3,,0916479263,Khách hàng 3497,1785329820000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,contacting,nurture,4.3.0
+APP-03514,CMP-2026-Q3,,0907365926,Khách hàng 3514,1785402840000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,unreachable,warm,4.3.0
+APP-03241,CMP-2026-Q3,,0971207729,Khách hàng 3241,1785416640000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,contacting,low_priority,4.3.1
+APP-00587,CMP-2026-Q3,6472006735562211,0947662706,Khách hàng 0587,1785421080000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,consulted,warm,4.2.1
+APP-02777,CMP-2026-Q3,,0948688393,Khách hàng 2777,1785589380000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,won,warm,5.0.0
+APP-05615,CMP-2026-Q3,,0982841630,Khách hàng 3781,1785591840000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Mở mới,contacting,warm,5.0.0
+APP-03638,CMP-2026-Q3,,0974234862,Khách hàng 3638,1785610620000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,consulted,nurture,4.3.0
+APP-03420,CMP-2026-Q3,,0925161750,Khách hàng 3420,1785614760000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,contacting,warm,4.2.1
+APP-00583,CMP-2026-Q3,6472006735562211,0920951002,Khách hàng 0583,1785654000000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,contacting,warm,4.3.1
+APP-03850,CMP-2026-Q3,,0914743128,Khách hàng 3850,1785673500000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,contacting,warm,5.0.0
+APP-03844,CMP-2026-Q3,,0914322709,Khách hàng 3844,1785766440000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,consulted,hot,4.3.1
+APP-02878,CMP-2026-Q3,,0941274544,Khách hàng 2878,1785773640000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,contacting,nurture,4.3.1
+APP-03792,CMP-2026-Q3,,0922940377,Khách hàng 3792,1785785280000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,nurture,5.0.0
+APP-03528,CMP-2026-Q3,,0980572913,Khách hàng 3528,1785832080000,App số & Tiết kiệm online,Miền Trung,CN Huế,Mở mới,consulted,nurture,4.2.1
+APP-02780,CMP-2026-Q3,,0947530516,Khách hàng 2780,1785834300000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,new,low_priority,5.0.0
+APP-03887,CMP-2026-Q3,,0920148977,Khách hàng 3887,1785835920000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,hot,4.3.1
+APP-00619,CMP-2026-Q3,0501983200985459,0979894029,Khách hàng 0619,1785852600000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,nurture,5.0.0
+APP-03006,CMP-2026-Q3,,0966891716,Khách hàng 3006,1785856560000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,consulted,low_priority,5.0.0
+APP-03688,CMP-2026-Q3,,0980094676,Khách hàng 3688,1785860340000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,consulted,nurture,4.3.0
+APP-03059,CMP-2026-Q3,,0989112716,Khách hàng 3059,1785861000000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,consulted,nurture,4.2.1
+APP-02970,CMP-2026-Q3,,0970882972,Khách hàng 2970,1785867540000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Mở mới,unreachable,warm,4.3.0
+APP-03452,CMP-2026-Q3,,0903522657,Khách hàng 3452,1785934260000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Mở mới,unreachable,nurture,4.3.0
+APP-03907,CMP-2026-Q3,,0923234989,Khách hàng 3907,1785955860000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,new,low_priority,5.0.0
+APP-02990,CMP-2026-Q3,,0940744359,Khách hàng 2990,1785960900000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,submitted,warm,5.0.0
+APP-05591,CMP-2026-Q3,,0961904110,Khách hàng 3144,1786087440000,App số & Tiết kiệm online,Miền Trung,CN Huế,Tư vấn sản phẩm,new,nurture,4.3.0
+APP-03952,CMP-2026-Q3,,0992879864,Khách hàng 3952,1786108620000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,low_priority,5.0.0
+APP-03180,CMP-2026-Q3,,0937257572,Khách hàng 3180,1786130280000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,low_priority,4.2.1
+APP-05489,CMP-2026-Q3,,0951742824,Khách hàng 3197,1786131120000,App số & Tiết kiệm online,Miền Trung,CN Huế,Hỗ trợ hồ sơ,consulted,low_priority,4.2.1
+APP-03752,CMP-2026-Q3,,0977357413,Khách hàng 3752,1786131360000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,won,nurture,5.0.0
+APP-03652,CMP-2026-Q3,,0961769199,Khách hàng 3652,1786134240000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,unreachable,nurture,4.3.1
+APP-03869,CMP-2026-Q3,,0973946955,Khách hàng 3869,1786212060000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,hot,4.3.0
+APP-03357,CMP-2026-Q3,,0998715804,Khách hàng 3357,1786215900000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,submitted,hot,5.0.0
+APP-00603,CMP-2026-Q3,3376353211288051,0962062952,Khách hàng 0603,1786220880000,Vay mua nhà,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,won,warm,4.3.1
+APP-02710,CMP-2026-Q3,,0953705613,Khách hàng 2710,1786284840000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,hot,4.3.1
+APP-03747,CMP-2026-Q3,,0912567577,Khách hàng 3747,1786285620000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,hot,5.0.0
+APP-03884,CMP-2026-Q3,,0911277122,Khách hàng 3884,1786286460000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,won,low_priority,4.2.1
+APP-05678,CMP-2026-Q3,,0923246614,Khách hàng 3734,1786296540000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,won,nurture,4.3.0
+APP-05622,CMP-2026-Q3,,0949878344,Khách hàng 3325,1786300320000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,So sánh sản phẩm,new,nurture,4.2.1
+APP-03624,CMP-2026-Q3,,0968949216,Khách hàng 3624,1786302960000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,contacting,nurture,4.3.1
+APP-02983,CMP-2026-Q3,,0985995566,Khách hàng 2983,1786351140000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,contacting,warm,4.3.0
+APP-03669,CMP-2026-Q3,,0970974880,Khách hàng 3669,1786381500000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,new,nurture,4.3.0
+APP-03757,CMP-2026-Q3,,0953018791,Khách hàng 3757,1786441860000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,new,nurture,5.0.0
+APP-03149,CMP-2026-Q3,,0986793208,Khách hàng 3149,1786442340000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,new,warm,4.2.1
+APP-03318,CMP-2026-Q3,,0928192475,Khách hàng 3318,1786468800000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,nurture,4.3.1
+APP-02693,CMP-2026-Q3,,0951289204,Khách hàng 2693,1786476780000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,new,warm,4.2.1
+APP-03897,CMP-2026-Q3,,0995800144,Khách hàng 3897,1786530420000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,warm,4.3.1
+APP-02526,CMP-2026-Q3,,0988818106,Khách hàng 2526,1786614120000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,submitted,hot,4.3.0
+APP-03504,CMP-2026-Q3,,0934743492,Khách hàng 3504,1786636920000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,new,warm,4.3.0
+APP-03653,CMP-2026-Q3,,0929674242,Khách hàng 3653,1786695120000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,warm,4.3.0
+APP-03865,CMP-2026-Q3,,0952887665,Khách hàng 3865,1786706160000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Hỏi ưu đãi,new,nurture,4.3.0
+APP-03680,CMP-2026-Q3,,0919293810,Khách hàng 3680,1786718520000,Vay mua nhà,Miền Nam,CN Cần Thơ,Mở mới,consulted,nurture,4.3.0
+APP-03400,CMP-2026-Q3,,0901653433,Khách hàng 3400,1786723560000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,contacting,hot,4.3.0
+APP-02535,CMP-2026-Q3,,0972330453,Khách hàng 2535,1786725720000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,submitted,hot,4.3.1
+APP-02941,CMP-2026-Q3,,0980920413,Khách hàng 2941,1786727820000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,won,nurture,4.3.0
+APP-03069,CMP-2026-Q3,,0906491207,Khách hàng 3069,1786786500000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Mở mới,contacting,low_priority,5.0.0
+APP-02651,CMP-2026-Q3,,0984132926,Khách hàng 2651,1786790760000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,contacting,warm,4.2.1
+APP-03320,CMP-2026-Q3,,0971577917,Khách hàng 3320,1786817100000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,won,warm,5.0.0
+APP-02562,CMP-2026-Q3,,0963923151,Khách hàng 2562,1786874220000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,unreachable,hot,4.2.1
+APP-03816,CMP-2026-Q3,,0933518915,Khách hàng 3816,1786878000000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,new,nurture,4.3.1
+APP-00656,CMP-2026-Q3,7239705981442999,0925313826,Khách hàng 0656,1786886280000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,consulted,nurture,4.2.1
+APP-03666,CMP-2026-Q3,,0934199626,Khách hàng 3666,1786888200000,Tài khoản lương,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,consulted,warm,5.0.0
+APP-03056,CMP-2026-Q3,,0909860789,Khách hàng 3056,1786894200000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,unreachable,nurture,4.3.1
+APP-03174,CMP-2026-Q3,,0928933850,Khách hàng 3174,1786899180000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,consulted,low_priority,4.3.1
+APP-03974,CMP-2026-Q3,,0954167313,Khách hàng 3974,1786912380000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,submitted,warm,4.3.1
+APP-05636,CMP-2026-Q3,3376353211288051,0984024468,Khách hàng 0604,1787029020000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,consulted,warm,5.0.0
+APP-03405,CMP-2026-Q3,,0937771112,Khách hàng 3405,1787046840000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,low_priority,4.3.1
+APP-03458,CMP-2026-Q3,,0963014619,Khách hàng 3458,1787067480000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,low_priority,5.0.0
+APP-00627,CMP-2026-Q3,0501983200985459,0910749043,Khách hàng 0627,1787070660000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,consulted,warm,4.3.0
+APP-03702,CMP-2026-Q3,,0931190904,Khách hàng 3702,1787075760000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,consulted,warm,5.0.0
+APP-03671,CMP-2026-Q3,,0979163106,Khách hàng 3671,1787076060000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,submitted,warm,4.2.1
+APP-03089,CMP-2026-Q3,,0912173879,Khách hàng 3089,1787130840000,App số & Tiết kiệm online,Miền Trung,CN Huế,Mở mới,consulted,warm,4.3.1
+APP-03369,CMP-2026-Q3,,0900875507,Khách hàng 3369,1787135760000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Hỏi ưu đãi,submitted,hot,4.3.1
+APP-02653,CMP-2026-Q3,,0936440313,Khách hàng 2653,1787143080000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,unreachable,low_priority,4.3.1
+APP-03313,CMP-2026-Q3,,0985673983,Khách hàng 3313,1787231460000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,contacting,warm,4.2.1
+APP-03502,CMP-2026-Q3,,0953992198,Khách hàng 3502,1787245020000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,won,warm,4.3.0
+APP-03079,CMP-2026-Q3,,0916282672,Khách hàng 3079,1787250960000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,new,hot,4.2.1
+APP-02586,CMP-2026-Q3,,0991976342,Khách hàng 2586,1787315940000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,new,low_priority,4.2.1
+APP-00633,CMP-2026-Q3,4281725977271086,0921296956,Khách hàng 0633,1787319600000,App số & Tiết kiệm online,Miền Trung,CN Huế,So sánh sản phẩm,contacting,nurture,4.3.1
+APP-02994,CMP-2026-Q3,,0961946002,Khách hàng 2994,1787322480000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,nurture,5.0.0
+APP-03751,CMP-2026-Q3,,0911966289,Khách hàng 3751,1787326920000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,hot,4.3.0
+APP-03917,CMP-2026-Q3,,0956434850,Khách hàng 3917,1787345400000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,won,hot,4.3.1
+APP-02866,CMP-2026-Q3,,0941931127,Khách hàng 2866,1787345940000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,submitted,warm,5.0.0
+APP-02542,CMP-2026-Q3,,0971533542,Khách hàng 2542,1787411040000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,new,warm,5.0.0
+APP-03522,CMP-2026-Q3,,0990565000,Khách hàng 3522,1787421060000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,consulted,warm,5.0.0
+APP-02733,CMP-2026-Q3,,0932117019,Khách hàng 2733,1787426220000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,unreachable,warm,5.0.0
+APP-00623,CMP-2026-Q3,0501983200985459,0968493603,Khách hàng 0623,1787428440000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,consulted,nurture,5.0.0
+APP-02637,CMP-2026-Q3,,0956392765,Khách hàng 2637,1787428740000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-00617,CMP-2026-Q3,0501983200985459,0933844630,Khách hàng 0617,1787513700000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Mở mới,new,low_priority,4.2.1
+APP-03797,CMP-2026-Q3,,0923261864,Khách hàng 3797,1787516940000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,submitted,hot,4.2.1
+APP-03306,CMP-2026-Q3,,0920132289,Khách hàng 3306,1787578980000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,submitted,warm,4.2.1
+APP-03576,CMP-2026-Q3,,0917324783,Khách hàng 3576,1787580540000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,warm,5.0.0
+APP-03523,CMP-2026-Q3,,0908862666,Khách hàng 3523,1787598540000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,consulted,nurture,5.0.0
+APP-02547,CMP-2026-Q3,,0975403667,Khách hàng 2547,1787644920000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Hỏi ưu đãi,new,low_priority,5.0.0
+APP-03427,CMP-2026-Q3,,0967709322,Khách hàng 3427,1787647020000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,won,nurture,4.3.0
+APP-03269,CMP-2026-Q3,,0945851094,Khách hàng 3269,1787675280000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,low_priority,4.3.0
+APP-03336,CMP-2026-Q3,,0973319549,Khách hàng 3336,1787744100000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,So sánh sản phẩm,consulted,warm,5.0.0
+APP-00645,CMP-2026-Q3,7239705981442999,0901277283,Khách hàng 0645,1787776380000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,nurture,4.3.0
+APP-02771,CMP-2026-Q3,,0998814798,Khách hàng 2771,1787840880000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,consulted,hot,4.3.0
+APP-02615,CMP-2026-Q3,,0972152158,Khách hàng 2615,1787848260000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Hỏi ưu đãi,unreachable,nurture,4.3.0
+APP-03760,CMP-2026-Q3,,0987328191,Khách hàng 3760,1787860680000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,consulted,hot,5.0.0
+APP-02601,CMP-2026-Q3,,0900373244,Khách hàng 2601,1787926920000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,new,nurture,5.0.0
+APP-03767,CMP-2026-Q3,,0977521318,Khách hàng 3767,1787931000000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,submitted,hot,4.3.0
+APP-03396,CMP-2026-Q3,,0909766260,Khách hàng 3396,1787932500000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Mở mới,won,nurture,5.0.0
+APP-03788,CMP-2026-Q3,,0994361873,Khách hàng 3788,1787947860000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,unreachable,warm,4.3.0
+APP-03022,CMP-2026-Q3,,0913775701,Khách hàng 3022,1787990880000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,hot,4.2.1
+APP-03799,CMP-2026-Q3,,0930129850,Khách hàng 3799,1787998380000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,warm,4.2.1
+APP-02823,CMP-2026-Q3,,0931951123,Khách hàng 2823,1788002520000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,nurture,5.0.0
+APP-02612,CMP-2026-Q3,,0912622108,Khách hàng 2612,1788007800000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,contacting,hot,4.2.1
+APP-03104,CMP-2026-Q3,,0937837753,Khách hàng 3104,1788028620000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,So sánh sản phẩm,contacting,hot,5.0.0
+APP-03843,CMP-2026-Q3,,0980673447,Khách hàng 3843,1788100260000,App số & Tiết kiệm online,Miền Trung,CN Huế,Hỗ trợ hồ sơ,won,warm,4.2.1
+APP-03933,CMP-2026-Q3,,0999408156,Khách hàng 3933,1788166740000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,consulted,nurture,4.3.0
+APP-02962,CMP-2026-Q3,,0941966165,Khách hàng 2962,1788192420000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,consulted,hot,4.2.1
+APP-02824,CMP-2026-Q3,,0998036077,Khách hàng 2824,1788196140000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,new,warm,5.0.0
+APP-02541,CMP-2026-Q3,,0996934408,Khách hàng 2541,1788264180000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,new,nurture,5.0.0
+APP-03466,CMP-2026-Q3,,0945006876,Khách hàng 3466,1788264240000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,unreachable,warm,4.2.1
+APP-03237,CMP-2026-Q3,,0986058788,Khách hàng 3237,1788286860000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,submitted,warm,4.3.1
+APP-03028,CMP-2026-Q3,,0965940524,Khách hàng 3028,1788287280000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,nurture,4.3.1
+APP-03310,CMP-2026-Q3,,0978700425,Khách hàng 3310,1788287340000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,consulted,warm,4.3.1
+APP-03085,CMP-2026-Q3,,0933393904,Khách hàng 3085,1788288540000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,new,hot,4.2.1
+APP-02815,CMP-2026-Q3,,0994196734,Khách hàng 2815,1788336780000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,contacting,low_priority,4.2.1
+APP-03692,CMP-2026-Q3,,0940016085,Khách hàng 3692,1788342060000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,contacting,warm,5.0.0
+APP-02717,CMP-2026-Q3,,0916104396,Khách hàng 2717,1788354360000,App số & Tiết kiệm online,Miền Trung,CN Huế,Mở mới,contacting,warm,4.3.0
+APP-03288,CMP-2026-Q3,,0964390778,Khách hàng 3288,1788354780000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,won,warm,4.3.1
+APP-03312,CMP-2026-Q3,,0901871126,Khách hàng 3312,1788359520000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,unreachable,warm,5.0.0
+APP-02816,CMP-2026-Q3,,0941426726,Khách hàng 2816,1788359820000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Mở mới,won,warm,5.0.0
+APP-00646,CMP-2026-Q3,7239705981442999,0923594004,Khách hàng 0646,1788385260000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Mở mới,new,warm,4.3.0
+APP-05632,CMP-2026-Q3,,0925067186,Khách hàng 3438,1788393900000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,consulted,nurture,4.3.0
+APP-03548,CMP-2026-Q3,,0986855206,Khách hàng 3548,1788424860000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,contacting,nurture,4.3.0
+APP-03646,CMP-2026-Q3,,0918625171,Khách hàng 3646,1788443400000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,won,warm,4.2.1
+APP-03595,CMP-2026-Q3,,0995424060,Khách hàng 3595,1788448020000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,new,warm,4.3.1
+APP-03359,CMP-2026-Q3,,0924397282,Khách hàng 3359,1788458400000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,new,low_priority,4.3.1
+APP-03275,CMP-2026-Q3,,0981290811,Khách hàng 3275,1788462960000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,warm,5.0.0
+APP-05649,CMP-2026-Q3,,0962918367,Khách hàng 3958,1788468000000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,won,warm,5.0.0
+APP-02965,CMP-2026-Q3,,0946021582,Khách hàng 2965,1788511740000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,won,nurture,4.3.1
+APP-02954,CMP-2026-Q3,,0979647982,Khách hàng 2954,1788530220000,App số & Tiết kiệm online,Miền Trung,CN Huế,Hỗ trợ hồ sơ,submitted,hot,4.2.1
+APP-03077,CMP-2026-Q3,,0941219038,Khách hàng 3077,1788553620000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Mở mới,submitted,nurture,4.3.1
+APP-00674,CMP-2026-Q3,8838795878226067,0947725555,Khách hàng 0674,1788594960000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,new,warm,4.3.0
+APP-00685,CMP-2026-Q3,8838795878226067,0957944553,Khách hàng 0685,1788595860000,Thẻ tín dụng hoàn tiền,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,contacting,nurture,4.3.1
+APP-03645,CMP-2026-Q3,,0962411700,Khách hàng 3645,1788605100000,App số & Tiết kiệm online,Miền Trung,CN Huế,Hỗ trợ hồ sơ,new,nurture,4.3.1
+APP-00713,CMP-2026-Q3,1831466142308577,0996488657,Khách hàng 0713,1788627000000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-02740,CMP-2026-Q3,,0996228749,Khách hàng 2740,1788629880000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,unreachable,nurture,5.0.0
+APP-03426,CMP-2026-Q3,,0935144822,Khách hàng 3426,1788696420000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,warm,4.3.1
+APP-03953,CMP-2026-Q3,,0929875124,Khách hàng 3953,1788701220000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,warm,4.3.1
+APP-02948,CMP-2026-Q3,,0994305695,Khách hàng 2948,1788716100000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,nurture,5.0.0
+APP-02742,CMP-2026-Q3,,0942342004,Khách hàng 2742,1788721980000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,consulted,hot,4.2.1
+APP-03558,CMP-2026-Q3,,0995775003,Khách hàng 3558,1788724200000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,won,warm,4.2.1
+APP-05492,CMP-2026-Q3,,0958721104,Khách hàng 3386,1788760260000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,contacting,low_priority,5.0.0
+APP-00723,CMP-2026-Q3,2061868948576237,0946384724,Khách hàng 0723,1788771720000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,contacting,nurture,4.2.1
+APP-02744,CMP-2026-Q3,,0962219865,Khách hàng 2744,1788773580000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,new,nurture,4.3.0
+APP-03300,CMP-2026-Q3,,0985583997,Khách hàng 3300,1788860580000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,consulted,warm,5.0.0
+APP-03428,CMP-2026-Q3,,0940829572,Khách hàng 3428,1788865080000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Mở mới,consulted,hot,4.3.0
+APP-00680,CMP-2026-Q3,8838795878226067,0935056735,Khách hàng 0680,1788867480000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,nurture,4.2.1
+APP-03052,CMP-2026-Q3,,0961798279,Khách hàng 3052,1788872940000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,warm,4.2.1
+APP-02817,CMP-2026-Q3,,0988107209,Khách hàng 2817,1788875220000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,new,hot,4.3.0
+APP-03491,CMP-2026-Q3,,0969006095,Khách hàng 3491,1788877860000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,consulted,nurture,4.3.0
+APP-02920,CMP-2026-Q3,,0910688163,Khách hàng 2920,1788898500000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,warm,4.3.0
+APP-00696,CMP-2026-Q3,4113569452229199,0908072635,Khách hàng 0696,1788900300000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,won,hot,4.3.1
+APP-03019,CMP-2026-Q3,,0940039332,Khách hàng 3019,1788951720000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,consulted,nurture,5.0.0
+APP-02579,CMP-2026-Q3,,0964312466,Khách hàng 2579,1789031820000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,new,nurture,4.3.1
+APP-02798,CMP-2026-Q3,,0984359704,Khách hàng 2798,1789039740000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,warm,4.3.0
+APP-03676,CMP-2026-Q3,,0999686917,Khách hàng 3676,1789047120000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,unreachable,nurture,4.3.1
+APP-03591,CMP-2026-Q3,,0972867217,Khách hàng 3591,1789072080000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,So sánh sản phẩm,consulted,warm,4.3.1
+APP-02980,CMP-2026-Q3,,0980949438,Khách hàng 2980,1789120200000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,low_priority,4.2.1
+APP-02707,CMP-2026-Q3,,0914902619,Khách hàng 2707,1789122120000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,unreachable,hot,4.3.1
+APP-03463,CMP-2026-Q3,,0918342756,Khách hàng 3463,1789130400000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Hỏi ưu đãi,consulted,warm,5.0.0
+APP-02731,CMP-2026-Q3,,0990676413,Khách hàng 2731,1789134840000,App số & Tiết kiệm online,Miền Trung,CN Huế,Tư vấn sản phẩm,won,warm,4.3.0
+APP-00701,CMP-2026-Q3,4113569452229199,0946469834,Khách hàng 0701,1789137360000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Mở mới,submitted,nurture,4.2.1
+APP-03796,CMP-2026-Q3,,0916256480,Khách hàng 3796,1789138380000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,contacting,nurture,4.3.1
+APP-02928,CMP-2026-Q3,,0986166054,Khách hàng 2928,1789139820000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,contacting,warm,4.2.1
+APP-03873,CMP-2026-Q3,,0975437520,Khách hàng 3873,1789144140000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,consulted,warm,5.0.0
+APP-03545,CMP-2026-Q3,,0962704818,Khách hàng 3545,1789144260000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Mở mới,contacting,nurture,5.0.0
+APP-02930,CMP-2026-Q3,,0938273063,Khách hàng 2930,1789146960000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,submitted,nurture,4.3.1
+APP-03066,CMP-2026-Q3,,0997029265,Khách hàng 3066,1789212300000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,consulted,nurture,4.2.1
+APP-00717,CMP-2026-Q3,1831466142308577,0924918788,Khách hàng 0717,1789213080000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-03384,CMP-2026-Q3,,0900252837,Khách hàng 3384,1789237020000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,submitted,warm,4.2.1
+APP-02665,CMP-2026-Q3,,0989550740,Khách hàng 2665,1789287900000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,submitted,nurture,5.0.0
+APP-02617,CMP-2026-Q3,,0991190088,Khách hàng 2617,1789298940000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Mở mới,new,nurture,4.2.1
+APP-03132,CMP-2026-Q3,,0947933833,Khách hàng 3132,1789320600000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,consulted,warm,4.2.1
+APP-00731,CMP-2026-Q3,5536564728223666,0960671548,Khách hàng 0731,1789402800000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,submitted,nurture,4.3.1
+APP-00746,CMP-2026-Q3,8097306288017476,0943433407,Khách hàng 0746,1789462080000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,submitted,hot,4.3.1
+APP-03572,CMP-2026-Q3,,0995650355,Khách hàng 3572,1789462560000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,new,nurture,4.3.1
+APP-02734,CMP-2026-Q3,,0927502544,Khách hàng 2734,1789469520000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Mở mới,new,nurture,4.3.0
+APP-00754,CMP-2026-Q3,8097306288017476,0981986558,Khách hàng 0754,1789499160000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,contacting,nurture,5.0.0
+APP-03976,CMP-2026-Q3,,0936428060,Khách hàng 3976,1789553880000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,Mở mới,new,hot,5.0.0
+APP-02643,CMP-2026-Q3,,0938368214,Khách hàng 2643,1789570500000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,So sánh sản phẩm,consulted,low_priority,4.3.0
+APP-03267,CMP-2026-Q3,,0918931409,Khách hàng 3267,1789589400000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,So sánh sản phẩm,new,warm,4.3.0
+APP-03877,CMP-2026-Q3,,0930543570,Khách hàng 3877,1789647840000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,new,nurture,4.3.0
+APP-02751,CMP-2026-Q3,,0915295955,Khách hàng 2751,1789664280000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,contacting,nurture,5.0.0
+APP-03513,CMP-2026-Q3,,0935561482,Khách hàng 3513,1789724520000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,consulted,nurture,4.3.0
+APP-03524,CMP-2026-Q3,,0964755649,Khách hàng 3524,1789737060000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,warm,4.3.1
+APP-02741,CMP-2026-Q3,,0918034524,Khách hàng 2741,1789757040000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,submitted,warm,5.0.0
+APP-03902,CMP-2026-Q3,,0900317552,Khách hàng 3902,1789835580000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,new,low_priority,4.3.1
+APP-03621,CMP-2026-Q3,,0959643110,Khách hàng 3621,1789839600000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,won,nurture,4.3.0
+APP-00747,CMP-2026-Q3,8097306288017476,0972472602,Khách hàng 0747,1789854480000,App số & Tiết kiệm online,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,contacting,low_priority,5.0.0
+APP-00714,CMP-2026-Q3,1831466142308577,0982603684,Khách hàng 0714,1789893480000,App số & Tiết kiệm online,Miền Trung,CN Huế,Mở mới,new,hot,4.2.1
+APP-02971,CMP-2026-Q3,,0931389915,Khách hàng 2971,1789895400000,Thẻ tín dụng hoàn tiền,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,nurture,4.2.1
+APP-02674,CMP-2026-Q3,,0991190698,Khách hàng 2674,1789914300000,App số & Tiết kiệm online,Miền Trung,CN Huế,Mở mới,won,hot,5.0.0
+APP-03309,CMP-2026-Q3,,0900319404,Khách hàng 3309,1789921680000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,submitted,nurture,4.3.1
+APP-02624,CMP-2026-Q3,,0929604522,Khách hàng 2624,1789922040000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,consulted,low_priority,5.0.0
+APP-03460,CMP-2026-Q3,,0905628428,Khách hàng 3460,1789937520000,App số & Tiết kiệm online,Miền Bắc,CN Hải Phòng,Mở mới,submitted,low_priority,4.2.1
+APP-00748,CMP-2026-Q3,8097306288017476,0966734174,Khách hàng 0748,1789994280000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,won,warm,4.2.1
+APP-00744,CMP-2026-Q3,5536564728223666,0959864041,Khách hàng 0744,1790011980000,App số & Tiết kiệm online,Miền Bắc,CN Bắc Ninh,Mở mới,contacting,warm,5.0.0
+APP-05620,CMP-2026-Q3,,0915259232,Khách hàng 3835,1790023320000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,contacting,low_priority,5.0.0
+APP-03804,CMP-2026-Q3,,0928592080,Khách hàng 3804,1790077320000,App số & Tiết kiệm online,Miền Trung,CN Huế,Tư vấn sản phẩm,new,warm,4.2.1
+APP-03207,CMP-2026-Q3,,0905395800,Khách hàng 3207,1790090820000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,unreachable,nurture,4.3.1
+APP-03727,CMP-2026-Q3,,0918180215,Khách hàng 3727,1790107200000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,So sánh sản phẩm,consulted,nurture,4.3.0
+APP-03328,CMP-2026-Q3,,0991755178,Khách hàng 3328,1790161140000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,new,hot,4.2.1
+APP-00769,CMP-2026-Q3,8097306288017476,0992361549,Khách hàng 0769,1790178660000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,contacting,warm,4.3.1
+APP-02899,CMP-2026-Q3,,0933308341,Khách hàng 2899,1790185620000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,So sánh sản phẩm,consulted,low_priority,4.2.1
+APP-02682,CMP-2026-Q3,,0956794834,Khách hàng 2682,1790185860000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,contacting,hot,4.3.0
+APP-03855,CMP-2026-Q3,,0950463014,Khách hàng 3855,1790194140000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,contacting,warm,4.3.1
+APP-03425,CMP-2026-Q3,,0977569171,Khách hàng 3425,1790248320000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,nurture,4.2.1
+APP-03709,CMP-2026-Q3,,0920389565,Khách hàng 3709,1790260500000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,consulted,low_priority,4.2.1
+APP-03045,CMP-2026-Q3,,0952889256,Khách hàng 3045,1790266680000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,won,nurture,4.3.1
+APP-03471,CMP-2026-Q3,,0983833726,Khách hàng 3471,1790271540000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,won,warm,4.3.0
+APP-02720,CMP-2026-Q3,,0980188954,Khách hàng 2720,1790282520000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,warm,4.3.1
+APP-03368,CMP-2026-Q3,,0947476145,Khách hàng 3368,1790355660000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,low_priority,4.2.1
+APP-02995,CMP-2026-Q3,,0985429523,Khách hàng 2995,1790365680000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,consulted,hot,4.3.0
+APP-00776,CMP-2026-Q3,8097306288017476,0904689611,Khách hàng 0776,1790600280000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,new,warm,4.3.0
+APP-00762,CMP-2026-Q3,8097306288017476,0994767664,Khách hàng 0762,1790954340000,App số & Tiết kiệm online,Miền Trung,CN Huế,Tư vấn sản phẩm,consulted,nurture,5.0.0
+APP-04276,CMP-2026-Q4,,0948730296,Khách hàng 4276,1791189300000,Tài khoản lương,Miền Trung,CN Nha Trang,So sánh sản phẩm,unreachable,warm,4.3.0
+APP-04650,CMP-2026-Q4,,0990619268,Khách hàng 4650,1791196260000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,consulted,nurture,4.2.1
+APP-04784,CMP-2026-Q4,,0996169435,Khách hàng 4784,1791206880000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,won,warm,4.2.1
+APP-00788,CMP-2026-Q3,3582044240907373,0924078104,Khách hàng 0788,1791209220000,App số & Tiết kiệm online,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,new,warm,4.3.0
+APP-05168,CMP-2026-Q4,,0957672199,Khách hàng 5168,1791221220000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,new,hot,4.3.0
+APP-04689,CMP-2026-Q4,,0946365659,Khách hàng 4689,1791226440000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,consulted,nurture,5.0.0
+APP-04591,CMP-2026-Q4,,0976998628,Khách hàng 4591,1791283860000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,consulted,low_priority,4.2.1
+APP-04576,CMP-2026-Q4,,0998679994,Khách hàng 4576,1791292260000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Mở mới,new,nurture,4.3.0
+APP-04417,CMP-2026-Q4,,0985146854,Khách hàng 4417,1791295440000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,contacting,nurture,4.3.0
+APP-04227,CMP-2026-Q4,,0924843538,Khách hàng 4227,1791315720000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,hot,5.0.0
+APP-04997,CMP-2026-Q4,,0917374643,Khách hàng 4997,1791370440000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,warm,4.3.0
+APP-04916,CMP-2026-Q4,,0940655245,Khách hàng 4916,1791386520000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,hot,4.3.0
+APP-04577,CMP-2026-Q4,,0934959120,Khách hàng 4577,1791405780000,Tài khoản lương,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,new,low_priority,4.2.1
+APP-04783,CMP-2026-Q4,,0992621091,Khách hàng 4783,1791406560000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,hot,4.3.1
+APP-04017,CMP-2026-Q4,,0964962876,Khách hàng 4017,1791449460000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,submitted,low_priority,4.3.1
+APP-05166,CMP-2026-Q4,,0999791356,Khách hàng 5166,1791453480000,Tài khoản lương,Miền Trung,CN Huế,Hỗ trợ hồ sơ,won,warm,4.2.1
+APP-04587,CMP-2026-Q4,,0974345223,Khách hàng 4587,1791454320000,Tài khoản lương,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,consulted,hot,4.2.1
+APP-04347,CMP-2026-Q4,,0941950746,Khách hàng 4347,1791458760000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỏi ưu đãi,contacting,nurture,4.2.1
+APP-04311,CMP-2026-Q4,,0904378631,Khách hàng 4311,1791462120000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,consulted,low_priority,5.0.0
+APP-04892,CMP-2026-Q4,,0998397377,Khách hàng 4892,1791463800000,Vay mua nhà,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,new,nurture,4.2.1
+APP-04118,CMP-2026-Q4,,0997938089,Khách hàng 4118,1791467520000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,contacting,low_priority,4.3.1
+APP-05269,CMP-2026-Q4,,0910703575,Khách hàng 5269,1791468240000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,hot,4.3.0
+APP-00810,CMP-2026-Q4,7794561112042953,0992038921,Khách hàng 0810,1791473820000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,submitted,nurture,5.0.0
+APP-05121,CMP-2026-Q4,,0938518542,Khách hàng 5121,1791533160000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,contacting,low_priority,4.3.1
+APP-05255,CMP-2026-Q4,,0932831457,Khách hàng 5255,1791558660000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,contacting,hot,5.0.0
+APP-05587,CMP-2026-Q4,,0969805503,Khách hàng 4810,1791664860000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,won,warm,4.3.0
+APP-05110,CMP-2026-Q4,,0900250751,Khách hàng 5110,1791732060000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,unreachable,hot,4.3.0
+APP-04214,CMP-2026-Q4,,0957389327,Khách hàng 4214,1791741840000,Tài khoản lương,Miền Trung,CN Huế,Tư vấn sản phẩm,new,low_priority,4.3.1
+APP-04330,CMP-2026-Q4,,0905150577,Khách hàng 4330,1791796740000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,won,low_priority,4.2.1
+APP-04567,CMP-2026-Q4,,0944488543,Khách hàng 4567,1791799860000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,new,hot,4.3.1
+APP-04405,CMP-2026-Q4,,0982648102,Khách hàng 4405,1791800760000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,unreachable,low_priority,4.2.1
+APP-04342,CMP-2026-Q4,,0976175968,Khách hàng 4342,1791801960000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,consulted,warm,5.0.0
+APP-04176,CMP-2026-Q4,,0943960532,Khách hàng 4176,1791832440000,Tài khoản lương,Miền Nam,CN Bình Dương,Mở mới,contacting,nurture,4.3.1
+APP-04335,CMP-2026-Q4,,0904218596,Khách hàng 4335,1791835140000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,consulted,nurture,4.3.1
+APP-04023,CMP-2026-Q4,,0945088852,Khách hàng 4023,1791901620000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,unreachable,nurture,5.0.0
+APP-05361,CMP-2026-Q4,,0972813545,Khách hàng 5361,1791904680000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,nurture,4.2.1
+APP-04684,CMP-2026-Q4,,0946552959,Khách hàng 4684,1791907320000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,unreachable,warm,4.3.0
+APP-05278,CMP-2026-Q4,,0941814852,Khách hàng 5278,1791917040000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,new,warm,4.3.0
+APP-04995,CMP-2026-Q4,,0915835660,Khách hàng 4995,1791918900000,Tài khoản lương,Miền Nam,CN Cần Thơ,So sánh sản phẩm,unreachable,nurture,4.2.1
+APP-04170,CMP-2026-Q4,,0929146244,Khách hàng 4170,1791992580000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,contacting,low_priority,4.3.0
+APP-04264,CMP-2026-Q4,,0944655205,Khách hàng 4264,1791993600000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,won,nurture,4.3.0
+APP-05578,CMP-2026-Q4,2220056324625401,0993259665,Khách hàng 0822,1791998340000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,consulted,hot,4.2.1
+APP-05389,CMP-2026-Q4,,0941792660,Khách hàng 5389,1792063440000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,consulted,nurture,4.2.1
+APP-04909,CMP-2026-Q4,,0956725019,Khách hàng 4909,1792084560000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,submitted,hot,4.2.1
+APP-05365,CMP-2026-Q4,,0958964869,Khách hàng 5365,1792085940000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,submitted,nurture,4.2.1
+APP-04908,CMP-2026-Q4,,0920023120,Khách hàng 4908,1792090320000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,submitted,nurture,4.3.0
+APP-05596,CMP-2026-Q4,,0947596170,Khách hàng 4731,1792116300000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,hot,4.3.1
+APP-00816,CMP-2026-Q4,2220056324625401,0979778220,Khách hàng 0816,1792135740000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,nurture,4.2.1
+APP-00801,CMP-2026-Q4,7794561112042953,0935671967,Khách hàng 0801,1792165080000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,submitted,hot,4.2.1
+APP-04792,CMP-2026-Q4,,0984651210,Khách hàng 4792,1792177860000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,new,warm,5.0.0
+APP-04498,CMP-2026-Q4,,0943675552,Khách hàng 4498,1792178040000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,low_priority,4.3.0
+APP-04428,CMP-2026-Q4,,0948584093,Khách hàng 4428,1792182780000,Tài khoản lương,Miền Nam,CN Bình Dương,So sánh sản phẩm,consulted,warm,4.3.1
+APP-05374,CMP-2026-Q4,,0959285444,Khách hàng 5374,1792252680000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,submitted,nurture,5.0.0
+APP-04683,CMP-2026-Q4,,0993426384,Khách hàng 4683,1792253400000,App số & Tiết kiệm online,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,submitted,nurture,4.2.1
+APP-04599,CMP-2026-Q4,,0934789836,Khách hàng 4599,1792319760000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,submitted,hot,5.0.0
+APP-04807,CMP-2026-Q4,,0905542402,Khách hàng 4807,1792333260000,Tài khoản lương,Miền Trung,CN Huế,So sánh sản phẩm,new,warm,4.3.1
+APP-00834,CMP-2026-Q4,3294962086367279,0902519450,Khách hàng 0834,1792335600000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,unreachable,hot,4.3.1
+APP-04162,CMP-2026-Q4,,0943798589,Khách hàng 4162,1792355820000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,contacting,low_priority,4.3.1
+APP-05253,CMP-2026-Q4,,0914709186,Khách hàng 5253,1792397160000,Tài khoản lương,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,nurture,5.0.0
+APP-00807,CMP-2026-Q4,7794561112042953,0909408064,Khách hàng 0807,1792398000000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Hỗ trợ hồ sơ,submitted,warm,4.3.0
+APP-05132,CMP-2026-Q4,,0944654593,Khách hàng 5132,1792400880000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,contacting,nurture,4.2.1
+APP-04400,CMP-2026-Q4,,0937269140,Khách hàng 4400,1792411980000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,unreachable,nurture,4.2.1
+APP-04767,CMP-2026-Q4,,0974329411,Khách hàng 4767,1792422780000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,low_priority,4.3.0
+APP-04229,CMP-2026-Q4,,0906362060,Khách hàng 4229,1792493940000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,won,nurture,5.0.0
+APP-04713,CMP-2026-Q4,,0917223829,Khách hàng 4713,1792499520000,Vay mua nhà,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,unreachable,warm,5.0.0
+APP-04344,CMP-2026-Q4,,0951849816,Khách hàng 4344,1792513440000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,hot,4.3.0
+APP-04588,CMP-2026-Q4,,0996462229,Khách hàng 4588,1792517520000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,new,hot,4.3.1
+APP-05355,CMP-2026-Q4,,0927528332,Khách hàng 5355,1792518180000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,new,warm,4.2.1
+APP-05216,CMP-2026-Q4,,0971864711,Khách hàng 5216,1792529340000,Tài khoản lương,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,nurture,4.2.1
+APP-04069,CMP-2026-Q4,,0916838568,Khách hàng 4069,1792583940000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Mở mới,contacting,warm,4.3.1
+APP-04690,CMP-2026-Q4,,0926316007,Khách hàng 4690,1792596420000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,warm,4.2.1
+APP-00815,CMP-2026-Q4,2220056324625401,0954903723,Khách hàng 0815,1792602420000,Tài khoản lương,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,contacting,hot,4.2.1
+APP-05156,CMP-2026-Q4,,0986955170,Khách hàng 5156,1792602960000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,consulted,nurture,4.3.1
+APP-05106,CMP-2026-Q4,,0910700051,Khách hàng 5106,1792613340000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,new,warm,4.3.1
+APP-04724,CMP-2026-Q4,,0913745518,Khách hàng 4724,1792670220000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,won,warm,4.3.0
+APP-04771,CMP-2026-Q4,,0966198358,Khách hàng 4771,1792671120000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,warm,5.0.0
+APP-04760,CMP-2026-Q4,,0916883975,Khách hàng 4760,1792681740000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,unreachable,warm,4.2.1
+APP-04554,CMP-2026-Q4,,0990167565,Khách hàng 4554,1792691880000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,So sánh sản phẩm,new,warm,4.2.1
+APP-04455,CMP-2026-Q4,,0985354572,Khách hàng 4455,1792695660000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,submitted,hot,4.2.1
+APP-04970,CMP-2026-Q4,,0996326301,Khách hàng 4970,1792754040000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,warm,4.3.1
+APP-04169,CMP-2026-Q4,,0968922271,Khách hàng 4169,1792765380000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,won,nurture,4.3.0
+APP-04096,CMP-2026-Q4,,0920652101,Khách hàng 4096,1792769760000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,warm,5.0.0
+APP-05187,CMP-2026-Q4,,0945575364,Khách hàng 5187,1792779360000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,contacting,hot,4.3.1
+APP-05249,CMP-2026-Q4,,0908573284,Khách hàng 5249,1792830300000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,contacting,nurture,4.3.1
+APP-04605,CMP-2026-Q4,,0989780712,Khách hàng 4605,1792835520000,Tài khoản lương,Miền Trung,CN Huế,So sánh sản phẩm,contacting,nurture,4.2.1
+APP-04715,CMP-2026-Q4,,0951664167,Khách hàng 4715,1792851060000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,won,warm,4.3.1
+APP-04221,CMP-2026-Q4,,0946319197,Khách hàng 4221,1792915500000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,won,hot,4.2.1
+APP-04350,CMP-2026-Q4,,0958238952,Khách hàng 4350,1792915980000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,warm,4.2.1
+APP-05247,CMP-2026-Q4,,0981857632,Khách hàng 5247,1792931520000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,contacting,hot,4.2.1
+APP-04762,CMP-2026-Q4,,0958716800,Khách hàng 4762,1792937640000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,contacting,warm,4.2.1
+APP-05183,CMP-2026-Q4,,0901111032,Khách hàng 5183,1792940820000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,new,hot,4.3.0
+APP-04886,CMP-2026-Q4,,0945533263,Khách hàng 4886,1793015520000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,submitted,low_priority,4.3.1
+APP-04482,CMP-2026-Q4,,0917901031,Khách hàng 4482,1793039280000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,unreachable,nurture,4.3.1
+APP-04758,CMP-2026-Q4,,0970783948,Khách hàng 4758,1793110980000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,won,hot,4.2.1
+APP-05153,CMP-2026-Q4,,0955569641,Khách hàng 5153,1793131020000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,won,low_priority,4.3.0
+APP-04641,CMP-2026-Q4,,0982154883,Khách hàng 4641,1793267580000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,warm,5.0.0
+APP-04734,CMP-2026-Q4,,0951289930,Khách hàng 4734,1793274900000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,hot,5.0.0
+APP-04136,CMP-2026-Q4,,0995976081,Khách hàng 4136,1793300220000,Tài khoản lương,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,contacting,warm,4.3.1
+APP-04279,CMP-2026-Q4,,0992866166,Khách hàng 4279,1793349480000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Hỗ trợ hồ sơ,submitted,warm,4.3.1
+APP-00855,CMP-2026-Q4,0856479830649889,0931199279,Khách hàng 0855,1793353500000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,won,warm,4.3.0
+APP-05403,CMP-2026-Q4,,0922971749,Khách hàng 5403,1793355600000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,contacting,nurture,4.3.0
+APP-05043,CMP-2026-Q4,,0911119182,Khách hàng 5043,1793362020000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,consulted,low_priority,4.2.1
+APP-04770,CMP-2026-Q4,,0945144584,Khách hàng 4770,1793381220000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,submitted,nurture,4.3.1
+APP-04614,CMP-2026-Q4,,0955554237,Khách hàng 4614,1793435040000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,unreachable,nurture,4.2.1
+APP-04270,CMP-2026-Q4,,0994336487,Khách hàng 4270,1793440020000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-05167,CMP-2026-Q4,,0951582464,Khách hàng 5167,1793440860000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,consulted,low_priority,4.3.1
+APP-04703,CMP-2026-Q4,,0975223541,Khách hàng 4703,1793453220000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,contacting,nurture,4.2.1
+APP-04842,CMP-2026-Q4,,0937612217,Khách hàng 4842,1793455380000,Tài khoản lương,Miền Nam,CN Bình Dương,Hỏi ưu đãi,won,nurture,4.3.0
+APP-04045,CMP-2026-Q4,,0986157966,Khách hàng 4045,1793461800000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,contacting,low_priority,5.0.0
+APP-04271,CMP-2026-Q4,,0923758586,Khách hàng 4271,1793533380000,Tài khoản lương,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,consulted,nurture,4.3.0
+APP-04753,CMP-2026-Q4,,0997280884,Khách hàng 4753,1793537220000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,submitted,low_priority,5.0.0
+APP-04595,CMP-2026-Q4,,0916829213,Khách hàng 4595,1793544420000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,unreachable,hot,4.3.1
+APP-04775,CMP-2026-Q4,,0993035680,Khách hàng 4775,1793553360000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,consulted,nurture,5.0.0
+APP-04194,CMP-2026-Q4,,0996732708,Khách hàng 4194,1793608740000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,low_priority,4.3.1
+APP-00839,CMP-2026-Q4,6567556466851246,0975776734,Khách hàng 0839,1793625360000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,consulted,hot,4.3.1
+APP-04395,CMP-2026-Q4,,0959800818,Khách hàng 4395,1793631900000,Tài khoản lương,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,new,warm,4.3.0
+APP-05029,CMP-2026-Q4,,0939515648,Khách hàng 5029,1793721180000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Mở mới,submitted,hot,4.3.1
+APP-04454,CMP-2026-Q4,,0907206273,Khách hàng 4454,1793731020000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,contacting,low_priority,4.3.0
+APP-04943,CMP-2026-Q4,,0996232086,Khách hàng 4943,1793780940000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,consulted,nurture,5.0.0
+APP-00880,CMP-2026-Q4,0856479830649889,0903146746,Khách hàng 0880,1793788920000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,submitted,low_priority,4.3.1
+APP-04363,CMP-2026-Q4,,0917662546,Khách hàng 4363,1793806920000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,warm,4.3.0
+APP-04066,CMP-2026-Q4,,0950707169,Khách hàng 4066,1793813100000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,contacting,nurture,5.0.0
+APP-04348,CMP-2026-Q4,,0997279824,Khách hàng 4348,1793891580000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,unreachable,warm,4.3.1
+APP-04123,CMP-2026-Q4,,0995227221,Khách hàng 4123,1793893020000,Tài khoản lương,Miền Nam,CN Cần Thơ,So sánh sản phẩm,new,nurture,4.3.0
+APP-04645,CMP-2026-Q4,,0966314426,Khách hàng 4645,1793907360000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,consulted,hot,5.0.0
+APP-04590,CMP-2026-Q4,,0939309415,Khách hàng 4590,1793967360000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,new,warm,4.3.0
+APP-05089,CMP-2026-Q4,,0958507622,Khách hàng 5089,1793973360000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,unreachable,hot,5.0.0
+APP-04179,CMP-2026-Q4,,0989681770,Khách hàng 4179,1793990460000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,submitted,hot,4.3.0
+APP-04267,CMP-2026-Q4,,0983456197,Khách hàng 4267,1794040380000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,new,nurture,4.2.1
+APP-04562,CMP-2026-Q4,,0978300031,Khách hàng 4562,1794041820000,Tài khoản lương,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,new,nurture,4.3.1
+APP-04317,CMP-2026-Q4,,0955249806,Khách hàng 4317,1794148440000,Tài khoản lương,Miền Trung,CN Nha Trang,So sánh sản phẩm,won,warm,5.0.0
+APP-04851,CMP-2026-Q4,,0949200209,Khách hàng 4851,1794149820000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,contacting,warm,4.3.1
+APP-04988,CMP-2026-Q4,,0970270464,Khách hàng 4988,1794160200000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,warm,4.3.1
+APP-05461,CMP-2026-Q4,,0960003065,Khách hàng 5461,1794160560000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,new,nurture,4.2.1
+APP-05135,CMP-2026-Q4,,0987621439,Khách hàng 5135,1794234900000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,submitted,hot,4.3.1
+APP-04931,CMP-2026-Q4,,0986547451,Khách hàng 4931,1794241920000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,contacting,low_priority,4.3.0
+APP-04741,CMP-2026-Q4,,0950717167,Khách hàng 4741,1794248640000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,warm,5.0.0
+APP-05342,CMP-2026-Q4,,0945674692,Khách hàng 5342,1794299580000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,won,nurture,5.0.0
+APP-04008,CMP-2026-Q4,,0953647531,Khách hàng 4008,1794305520000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,new,warm,5.0.0
+APP-05229,CMP-2026-Q4,,0904433624,Khách hàng 5229,1794314100000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,consulted,nurture,5.0.0
+APP-04028,CMP-2026-Q4,,0948104782,Khách hàng 4028,1794321480000,Tài khoản lương,Miền Trung,CN Huế,So sánh sản phẩm,contacting,nurture,5.0.0
+APP-04134,CMP-2026-Q4,,0956753697,Khách hàng 4134,1794324000000,Tài khoản lương,Miền Nam,CN Bình Dương,Mở mới,contacting,warm,4.2.1
+APP-04241,CMP-2026-Q4,,0986000357,Khách hàng 4241,1794411960000,App số & Tiết kiệm online,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,submitted,hot,5.0.0
+APP-04501,CMP-2026-Q4,,0942364618,Khách hàng 4501,1794419700000,Tài khoản lương,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,consulted,warm,4.3.0
+APP-05611,CMP-2026-Q4,,0913349789,Khách hàng 4297,1794430140000,Tài khoản lương,Miền Nam,CN Bình Dương,So sánh sản phẩm,contacting,low_priority,4.3.1
+APP-04646,CMP-2026-Q4,,0908794544,Khách hàng 4646,1794478860000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-04252,CMP-2026-Q4,,0928799342,Khách hàng 4252,1794487620000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,nurture,4.2.1
+APP-04362,CMP-2026-Q4,,0916356036,Khách hàng 4362,1794488280000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,contacting,nurture,4.2.1
+APP-05148,CMP-2026-Q4,,0947974188,Khách hàng 5148,1794512220000,Tài khoản lương,Miền Nam,CN Cần Thơ,So sánh sản phẩm,consulted,nurture,4.2.1
+APP-04679,CMP-2026-Q4,,0965795740,Khách hàng 4679,1794574920000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Mở mới,consulted,nurture,4.3.0
+APP-04322,CMP-2026-Q4,,0923295339,Khách hàng 4322,1794579360000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,unreachable,hot,4.2.1
+APP-04382,CMP-2026-Q4,,0954532496,Khách hàng 4382,1794584760000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,warm,4.2.1
+APP-00930,CMP-2026-Q4,8121642386975185,0920441132,Khách hàng 0930,1794674880000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,unreachable,hot,5.0.0
+APP-05441,CMP-2026-Q4,,0909294556,Khách hàng 5441,1794677400000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,consulted,warm,4.3.0
+APP-05262,CMP-2026-Q4,,0916095525,Khách hàng 5262,1794757080000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,won,nurture,5.0.0
+APP-00912,CMP-2026-Q4,6231426978539053,0929186247,Khách hàng 0912,1794759600000,Tài khoản lương,Miền Trung,CN Nha Trang,Hỏi ưu đãi,new,warm,5.0.0
+APP-00902,CMP-2026-Q4,6231426978539053,0980353435,Khách hàng 0902,1794767220000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,submitted,warm,4.2.1
+APP-05048,CMP-2026-Q4,,0919803774,Khách hàng 5048,1794825600000,Tài khoản lương,Miền Trung,CN Huế,Hỗ trợ hồ sơ,unreachable,nurture,4.3.0
+APP-05281,CMP-2026-Q4,,0909644283,Khách hàng 5281,1794826080000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,low_priority,4.3.1
+APP-00933,CMP-2026-Q4,8121642386975185,0941912707,Khách hàng 0933,1794834420000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,warm,4.3.0
+APP-05466,CMP-2026-Q4,,0941423571,Khách hàng 5466,1794858840000,Tài khoản lương,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,contacting,nurture,4.2.1
+APP-04723,CMP-2026-Q4,,0982709815,Khách hàng 4723,1794862380000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,unreachable,low_priority,4.3.1
+APP-05297,CMP-2026-Q4,,0952002770,Khách hàng 5297,1794906900000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,hot,5.0.0
+APP-05564,CMP-2026-Q4,,0989700562,Khách hàng 4312,1794907140000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,unreachable,hot,5.0.0
+APP-03986,CMP-2026-Q4,,0973529865,Khách hàng 3986,1794923640000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,unreachable,warm,4.3.1
+APP-00860,CMP-2026-Q4,0856479830649889,0997972908,Khách hàng 0860,1794927420000,Tài khoản lương,Miền Trung,CN Huế,So sánh sản phẩm,new,hot,5.0.0
+APP-04686,CMP-2026-Q4,,0918082820,Khách hàng 4686,1794934320000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,consulted,low_priority,5.0.0
+APP-04733,CMP-2026-Q4,,0963907895,Khách hàng 4733,1794944220000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,consulted,nurture,5.0.0
+APP-04093,CMP-2026-Q4,,0936284268,Khách hàng 4093,1795030200000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỗ trợ hồ sơ,won,low_priority,4.2.1
+APP-04589,CMP-2026-Q4,,0925863584,Khách hàng 4589,1795075260000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,submitted,nurture,4.2.1
+APP-05227,CMP-2026-Q4,,0971176860,Khách hàng 5227,1795089600000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,consulted,low_priority,4.3.1
+APP-04243,CMP-2026-Q4,,0994583382,Khách hàng 4243,1795093560000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,new,low_priority,4.2.1
+APP-04895,CMP-2026-Q4,,0956403342,Khách hàng 4895,1795106700000,Tài khoản lương,Miền Nam,CN Bình Dương,So sánh sản phẩm,submitted,nurture,5.0.0
+APP-04626,CMP-2026-Q4,,0963888623,Khách hàng 4626,1795112820000,Tài khoản lương,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,consulted,nurture,5.0.0
+APP-04624,CMP-2026-Q4,,0911003673,Khách hàng 4624,1795168980000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Mở mới,consulted,nurture,4.3.1
+APP-04925,CMP-2026-Q4,,0905570634,Khách hàng 4925,1795172880000,Tài khoản lương,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,submitted,warm,4.3.0
+APP-04855,CMP-2026-Q4,,0952846851,Khách hàng 4855,1795199640000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,contacting,hot,5.0.0
+APP-04398,CMP-2026-Q4,,0977887831,Khách hàng 4398,1795270260000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,contacting,hot,4.3.1
+APP-04979,CMP-2026-Q4,,0980545593,Khách hàng 4979,1795280220000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,new,low_priority,4.3.1
+APP-05217,CMP-2026-Q4,,0939323027,Khách hàng 5217,1795287540000,Tài khoản lương,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,consulted,warm,4.3.0
+APP-04643,CMP-2026-Q4,,0964755148,Khách hàng 4643,1795288560000,Tài khoản lương,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,consulted,warm,4.2.1
+APP-00941,CMP-2026-Q4,8351827270004813,0990310497,Khách hàng 0941,1795335060000,Tài khoản lương,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,contacting,nurture,4.2.1
+APP-05185,CMP-2026-Q4,,0901115262,Khách hàng 5185,1795349160000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,consulted,warm,4.3.0
+APP-05313,CMP-2026-Q4,,0978487037,Khách hàng 5313,1795366800000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,new,nurture,5.0.0
+APP-04436,CMP-2026-Q4,,0948605376,Khách hàng 4436,1795464720000,Vay mua nhà,Miền Trung,CN Đà Nẵng,Mở mới,consulted,low_priority,5.0.0
+APP-05240,CMP-2026-Q4,,0913864192,Khách hàng 5240,1795518300000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,new,nurture,4.3.0
+APP-04234,CMP-2026-Q4,,0969283405,Khách hàng 4234,1795526280000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,won,nurture,4.3.1
+APP-04182,CMP-2026-Q4,,0967700189,Khách hàng 4182,1795529880000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Mở mới,new,hot,5.0.0
+APP-04831,CMP-2026-Q4,,0915107554,Khách hàng 4831,1795531200000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,submitted,nurture,4.3.0
+APP-05068,CMP-2026-Q4,,0917812397,Khách hàng 5068,1795538160000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,So sánh sản phẩm,won,warm,4.2.1
+APP-04638,CMP-2026-Q4,,0951219525,Khách hàng 4638,1795544100000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,warm,4.3.1
+APP-05359,CMP-2026-Q4,,0922027196,Khách hàng 5359,1795547880000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,new,warm,5.0.0
+APP-04331,CMP-2026-Q4,,0974190807,Khách hàng 4331,1795553820000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,contacting,low_priority,4.3.0
+APP-00946,CMP-2026-Q4,8351827270004813,0934734825,Khách hàng 0946,1795602900000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,new,warm,4.3.0
+APP-04053,CMP-2026-Q4,,0968609124,Khách hàng 4053,1795602900000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,consulted,low_priority,4.3.0
+APP-04957,CMP-2026-Q4,,0940319960,Khách hàng 4957,1795619580000,Tài khoản lương,Miền Trung,CN Nha Trang,Hỏi ưu đãi,won,hot,5.0.0
+APP-04755,CMP-2026-Q4,,0954971617,Khách hàng 4755,1795622460000,Tài khoản lương,Miền Nam,CN Cần Thơ,Hỏi ưu đãi,consulted,hot,5.0.0
+APP-04219,CMP-2026-Q4,,0961912132,Khách hàng 4219,1795688100000,Tài khoản lương,Miền Bắc,CN Hải Phòng,So sánh sản phẩm,new,low_priority,4.2.1
+APP-04349,CMP-2026-Q4,,0953057996,Khách hàng 4349,1795701060000,Tài khoản lương,Miền Trung,CN Nha Trang,Tư vấn sản phẩm,won,warm,4.2.1
+APP-04133,CMP-2026-Q4,,0976853332,Khách hàng 4133,1795717920000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,new,warm,4.3.1
+APP-04386,CMP-2026-Q4,,0995771783,Khách hàng 4386,1795782780000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,won,warm,4.3.0
+APP-04152,CMP-2026-Q4,,0938469263,Khách hàng 4152,1795793640000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,submitted,nurture,4.2.1
+APP-05170,CMP-2026-Q4,,0907808016,Khách hàng 5170,1795870140000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,contacting,nurture,5.0.0
+APP-04986,CMP-2026-Q4,,0975608383,Khách hàng 4986,1795880280000,Tài khoản lương,Miền Trung,CN Huế,Tư vấn sản phẩm,contacting,nurture,5.0.0
+APP-04840,CMP-2026-Q4,,0955599601,Khách hàng 4840,1795882080000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,warm,4.2.1
+APP-04967,CMP-2026-Q4,,0984898754,Khách hàng 4967,1795887600000,Tài khoản lương,Miền Trung,CN Huế,Tư vấn sản phẩm,won,nurture,4.3.0
+APP-04815,CMP-2026-Q4,,0992765825,Khách hàng 4815,1795973160000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Hỏi ưu đãi,consulted,nurture,4.3.0
+APP-04902,CMP-2026-Q4,,0986368479,Khách hàng 4902,1795974000000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,new,nurture,4.2.1
+APP-05092,CMP-2026-Q4,,0968888186,Khách hàng 5092,1796028480000,Tài khoản lương,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,consulted,warm,4.3.0
+APP-04798,CMP-2026-Q4,,0905929990,Khách hàng 4798,1796029440000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Hỗ trợ hồ sơ,won,nurture,4.3.0
+APP-05021,CMP-2026-Q4,,0938165211,Khách hàng 5021,1796115480000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,contacting,nurture,4.3.1
+APP-04949,CMP-2026-Q4,,0955749558,Khách hàng 4949,1796117400000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,unreachable,warm,4.3.0
+APP-05418,CMP-2026-Q4,,0900608387,Khách hàng 5418,1796122500000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,new,hot,4.3.1
+APP-04502,CMP-2026-Q4,,0934638985,Khách hàng 4502,1796131500000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,consulted,nurture,4.3.0
+APP-04453,CMP-2026-Q4,,0900355816,Khách hàng 4453,1796147640000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,contacting,warm,4.3.1
+APP-04543,CMP-2026-Q4,,0973637859,Khách hàng 4543,1796149620000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,submitted,warm,4.3.1
+APP-05028,CMP-2026-Q4,,0966961223,Khách hàng 5028,1796156220000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,new,warm,4.2.1
+APP-00968,CMP-2026-Q4,3564191008918867,0980143723,Khách hàng 0968,1796161140000,App số & Tiết kiệm online,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,contacting,nurture,4.3.1
+APP-05548,CMP-2026-Q4,,0935165946,Khách hàng 4653,1796211240000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,consulted,nurture,4.3.1
+APP-05372,CMP-2026-Q4,,0957950821,Khách hàng 5372,1796212080000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-04422,CMP-2026-Q4,,0957077856,Khách hàng 4422,1796231220000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,hot,4.3.0
+APP-00962,CMP-2026-Q4,0882270633946347,0955966764,Khách hàng 0962,1796252160000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,So sánh sản phẩm,consulted,nurture,5.0.0
+APP-04341,CMP-2026-Q4,,0940846835,Khách hàng 4341,1796297280000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,submitted,warm,5.0.0
+APP-04387,CMP-2026-Q4,,0941553699,Khách hàng 4387,1796301540000,Tài khoản lương,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,new,nurture,4.2.1
+APP-01034,CMP-2026-Q4,1221842893611660,0957618817,Khách hàng 1034,1796303220000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỗ trợ hồ sơ,consulted,nurture,4.3.1
+APP-04054,CMP-2026-Q4,,0956687851,Khách hàng 4054,1796319060000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,new,nurture,4.3.1
+APP-00922,CMP-2026-Q4,8121642386975185,0954789660,Khách hàng 0922,1796320680000,Tài khoản lương,Miền Nam,CN Bình Dương,So sánh sản phẩm,contacting,hot,4.2.1
+APP-05285,CMP-2026-Q4,,0941746570,Khách hàng 5285,1796325720000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,won,nurture,4.3.0
+APP-04736,CMP-2026-Q4,,0942110873,Khách hàng 4736,1796382300000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,submitted,hot,4.3.1
+APP-05580,CMP-2026-Q4,,0906675749,Khách hàng 4749,1796382300000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,contacting,hot,4.3.1
+APP-04124,CMP-2026-Q4,,0968654862,Khách hàng 4124,1796382960000,Tài khoản lương,Miền Trung,CN Đà Nẵng,So sánh sản phẩm,won,warm,4.2.1
+APP-04060,CMP-2026-Q4,,0904577835,Khách hàng 4060,1796477580000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,won,hot,4.3.0
+APP-05122,CMP-2026-Q4,,0941470238,Khách hàng 5122,1796501760000,Tài khoản lương,Miền Nam,CN Bình Dương,Hỏi ưu đãi,consulted,nurture,4.2.1
+APP-04450,CMP-2026-Q4,,0955471045,Khách hàng 4450,1796544060000,Tài khoản lương,Miền Trung,CN Huế,Hỏi ưu đãi,consulted,nurture,4.3.0
+APP-04013,CMP-2026-Q4,,0995944372,Khách hàng 4013,1796721660000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,won,low_priority,4.3.0
+APP-00981,CMP-2026-Q4,3564191008918867,0990444026,Khách hàng 0981,1796733540000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,submitted,nurture,4.3.0
+APP-04220,CMP-2026-Q4,,0908363031,Khách hàng 4220,1796744280000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,consulted,warm,4.2.1
+APP-04346,CMP-2026-Q4,,0952896289,Khách hàng 4346,1796754180000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,unreachable,warm,4.2.1
+APP-05158,CMP-2026-Q4,,0925073588,Khách hàng 5158,1796818080000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,new,nurture,4.3.1
+APP-04830,CMP-2026-Q4,,0944817464,Khách hàng 4830,1796825160000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,new,nurture,4.3.0
+APP-04580,CMP-2026-Q4,,0999793789,Khách hàng 4580,1796838240000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Hỏi ưu đãi,consulted,warm,4.3.0
+APP-04236,CMP-2026-Q4,,0989951875,Khách hàng 4236,1796840940000,Tài khoản lương,Miền Nam,CN Bình Dương,Mở mới,submitted,hot,4.3.1
+APP-05050,CMP-2026-Q4,,0961588043,Khách hàng 5050,1796910840000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,won,low_priority,4.3.1
+APP-04026,CMP-2026-Q4,,0929589812,Khách hàng 4026,1796915340000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Mở mới,contacting,warm,5.0.0
+APP-05370,CMP-2026-Q4,,0923905753,Khách hàng 5370,1796935560000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,consulted,warm,4.3.1
+APP-05203,CMP-2026-Q4,,0929489168,Khách hàng 5203,1796982180000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,unreachable,nurture,5.0.0
+APP-01042,CMP-2026-Q4,4950957424112024,0994189460,Khách hàng 1042,1797001080000,Tài khoản lương,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,contacting,nurture,5.0.0
+APP-04853,CMP-2026-Q4,,0937798825,Khách hàng 4853,1797004260000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Hỏi ưu đãi,new,nurture,4.3.1
+APP-00960,CMP-2026-Q4,0882270633946347,0948110368,Khách hàng 0960,1797005880000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,So sánh sản phẩm,won,nurture,4.2.1
+APP-04412,CMP-2026-Q4,,0978809347,Khách hàng 4412,1797010020000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỏi ưu đãi,won,nurture,4.3.0
+APP-01005,CMP-2026-Q4,1221842893611660,0916583626,Khách hàng 1005,1797017280000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,consulted,nurture,4.3.1
+APP-05069,CMP-2026-Q4,,0926544787,Khách hàng 5069,1797064080000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,submitted,low_priority,4.2.1
+APP-05010,CMP-2026-Q4,,0971106830,Khách hàng 5010,1797074040000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,consulted,warm,4.3.1
+APP-05237,CMP-2026-Q4,,0902646256,Khách hàng 5237,1797079740000,Tài khoản lương,Miền Trung,CN Nha Trang,So sánh sản phẩm,consulted,low_priority,5.0.0
+APP-04827,CMP-2026-Q4,,0925368261,Khách hàng 4827,1797087720000,Tài khoản lương,Miền Trung,CN Huế,So sánh sản phẩm,submitted,nurture,4.3.0
+APP-05371,CMP-2026-Q4,,0969025733,Khách hàng 5371,1797087960000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,unreachable,hot,4.3.1
+APP-04304,CMP-2026-Q4,,0909638977,Khách hàng 4304,1797102780000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,won,hot,4.2.1
+APP-04336,CMP-2026-Q4,,0964345189,Khách hàng 4336,1797151680000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Hỗ trợ hồ sơ,won,warm,4.2.1
+APP-04087,CMP-2026-Q4,,0903986422,Khách hàng 4087,1797156000000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Mở mới,new,low_priority,4.2.1
+APP-01006,CMP-2026-Q4,1221842893611660,0905010796,Khách hàng 1006,1797160800000,Tài khoản lương,Miền Trung,CN Nha Trang,Mở mới,won,nurture,4.3.1
+APP-04320,CMP-2026-Q4,,0974950012,Khách hàng 4320,1797183660000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,won,warm,4.2.1
+APP-05171,CMP-2026-Q4,,0971508292,Khách hàng 5171,1797185940000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Hỗ trợ hồ sơ,won,warm,4.3.1
+APP-05111,CMP-2026-Q4,,0991036162,Khách hàng 5111,1797236940000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,So sánh sản phẩm,consulted,low_priority,4.3.0
+APP-04705,CMP-2026-Q4,,0933880764,Khách hàng 4705,1797255000000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,won,low_priority,4.3.1
+APP-04021,CMP-2026-Q4,,0945908490,Khách hàng 4021,1797259740000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,submitted,warm,4.3.1
+APP-03991,CMP-2026-Q4,,0906433497,Khách hàng 3991,1797261060000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,submitted,hot,4.2.1
+APP-01045,CMP-2026-Q4,4950957424112024,0960679353,Khách hàng 1045,1797321780000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỗ trợ hồ sơ,contacting,hot,4.2.1
+APP-05113,CMP-2026-Q4,,0949712424,Khách hàng 5113,1797326520000,Tài khoản lương,Miền Nam,CN Bình Dương,Tư vấn sản phẩm,contacting,nurture,4.3.0
+APP-01025,CMP-2026-Q4,1221842893611660,0935845507,Khách hàng 1025,1797328320000,Tài khoản lương,Miền Trung,CN Nha Trang,Hỗ trợ hồ sơ,consulted,low_priority,4.3.0
+APP-03988,CMP-2026-Q4,,0976708234,Khách hàng 3988,1797360900000,App số & Tiết kiệm online,Miền Nam,CN Cần Thơ,Mở mới,contacting,warm,5.0.0
+APP-04397,CMP-2026-Q4,,0908502950,Khách hàng 4397,1797411360000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Tư vấn sản phẩm,contacting,nurture,4.3.0
+APP-05191,CMP-2026-Q4,,0971947920,Khách hàng 5191,1797412980000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Hỏi ưu đãi,contacting,low_priority,4.3.1
+APP-04407,CMP-2026-Q4,,0975010103,Khách hàng 4407,1797426600000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,new,warm,4.3.1
+APP-01046,CMP-2026-Q4,4950957424112024,0972326252,Khách hàng 1046,1797453120000,Tài khoản lương,Miền Nam,CN Bình Dương,Mở mới,new,hot,5.0.0
+APP-04318,CMP-2026-Q4,,0954496498,Khách hàng 4318,1797495480000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,consulted,hot,4.3.1
+APP-01071,CMP-2026-Q4,9333682285477441,0993698135,Khách hàng 1071,1797539760000,Tài khoản lương,Miền Trung,CN Nha Trang,So sánh sản phẩm,new,warm,4.2.1
+APP-01000,CMP-2026-Q4,1221842893611660,0979254172,Khách hàng 1000,1797543600000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,nurture,4.3.1
+APP-05640,CMP-2026-Q4,,0936451957,Khách hàng 4975,1797560160000,Tài khoản lương,Miền Nam,CN Cần Thơ,Mở mới,consulted,warm,4.2.1
+APP-05137,CMP-2026-Q4,,0907425628,Khách hàng 5137,1797584580000,Tài khoản lương,Miền Nam,CN TP.HCM - Thủ Đức,Mở mới,consulted,low_priority,4.2.1
+APP-04367,CMP-2026-Q4,,0975464144,Khách hàng 4367,1797606780000,Tài khoản lương,Miền Trung,CN Huế,Mở mới,consulted,nurture,4.2.1
+APP-04415,CMP-2026-Q4,,0975028003,Khách hàng 4415,1797621720000,Vay mua nhà,Miền Bắc,CN Hà Nội - Ba Đình,Mở mới,contacting,hot,4.2.1
+APP-04424,CMP-2026-Q4,,0900328331,Khách hàng 4424,1797626220000,Tài khoản lương,Miền Bắc,CN Bắc Ninh,Tư vấn sản phẩm,unreachable,nurture,5.0.0
+APP-04526,CMP-2026-Q4,,0953920403,Khách hàng 4526,1797672060000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,new,warm,4.2.1
+APP-04019,CMP-2026-Q4,,0987465142,Khách hàng 4019,1797676680000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,warm,4.3.1
+APP-04081,CMP-2026-Q4,,0923373181,Khách hàng 4081,1797682320000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Hỏi ưu đãi,new,warm,4.2.1
+APP-05046,CMP-2026-Q4,,0944883645,Khách hàng 5046,1797682320000,Tài khoản lương,Miền Bắc,CN Hải Phòng,Tư vấn sản phẩm,consulted,low_priority,5.0.0
+APP-01018,CMP-2026-Q4,1221842893611660,0925696667,Khách hàng 1018,1797702840000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,won,nurture,4.3.1
+APP-04418,CMP-2026-Q4,,0940187324,Khách hàng 4418,1797777660000,Tài khoản lương,Miền Nam,CN Bình Dương,Mở mới,won,nurture,4.3.0
+APP-04171,CMP-2026-Q4,,0957031886,Khách hàng 4171,1797788820000,Tài khoản lương,Miền Nam,CN Bình Dương,Mở mới,contacting,hot,5.0.0
+APP-05337,CMP-2026-Q4,,0900996657,Khách hàng 5337,1797841260000,Tài khoản lương,Miền Bắc,CN Hà Nội - Ba Đình,Tư vấn sản phẩm,submitted,nurture,4.2.1
+APP-04757,CMP-2026-Q4,,0901604777,Khách hàng 4757,1797862680000,Tài khoản lương,Miền Trung,CN Đà Nẵng,Hỏi ưu đãi,new,warm,5.0.0
+APP-05084,CMP-2026-Q4,,0916490183,Khách hàng 5084,1797875580000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,contacting,low_priority,4.3.0
+APP-05058,CMP-2026-Q4,,0944296282,Khách hàng 5058,1797885780000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,contacting,warm,5.0.0
+APP-04157,CMP-2026-Q4,,0989292867,Khách hàng 4157,1797932160000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,consulted,warm,4.3.1
+APP-04530,CMP-2026-Q4,,0982340586,Khách hàng 4530,1797940860000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Mở mới,won,nurture,4.3.0
+APP-04774,CMP-2026-Q4,,0905748420,Khách hàng 4774,1797960780000,Tài khoản lương,Miền Bắc,CN Hà Nội - Cầu Giấy,Tư vấn sản phẩm,submitted,hot,5.0.0
+APP-04623,CMP-2026-Q4,,0990928926,Khách hàng 4623,1798031640000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Tư vấn sản phẩm,new,warm,4.3.0
+APP-01072,CMP-2026-Q4,9333682285477441,0951236495,Khách hàng 1072,1798045380000,Vay mua nhà,Miền Nam,CN TP.HCM - Quận 1,Mở mới,contacting,warm,4.3.1
+APP-04377,CMP-2026-Q4,,0935329094,Khách hàng 4377,1798052400000,Vay mua nhà,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,new,warm,4.2.1
+APP-05290,CMP-2026-Q4,,0968939954,Khách hàng 5290,1798121940000,Tài khoản lương,Miền Trung,CN Huế,Tư vấn sản phẩm,won,nurture,5.0.0
+APP-04888,CMP-2026-Q4,,0971933008,Khách hàng 4888,1798195680000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,unreachable,nurture,4.3.0
+APP-04473,CMP-2026-Q4,,0941167321,Khách hàng 4473,1798199640000,Thẻ tín dụng hoàn tiền,Miền Nam,CN Bình Dương,Hỗ trợ hồ sơ,contacting,nurture,4.3.1
+APP-04941,CMP-2026-Q4,,0990267116,Khách hàng 4941,1798204440000,Tài khoản lương,Miền Nam,CN Cần Thơ,Tư vấn sản phẩm,consulted,low_priority,4.2.1
+APP-05276,CMP-2026-Q4,,0988959587,Khách hàng 5276,1798220580000,Thẻ tín dụng hoàn tiền,Miền Nam,CN TP.HCM - Thủ Đức,Tư vấn sản phẩm,contacting,hot,4.3.0
+APP-01056,CMP-2026-Q4,9333682285477441,0996730087,Khách hàng 1056,1798457640000,Tài khoản lương,Miền Nam,CN TP.HCM - Quận 1,Mở mới,unreachable,warm,5.0.0

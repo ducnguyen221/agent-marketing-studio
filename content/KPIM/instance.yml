@@ -1,0 +1,42 @@
+## instance.yml — KPIM Bank (BỘ MẪU MÔ PHỎNG cho khoá MKA-101)
+##
+## ⚠️ ĐÂY LÀ DỮ LIỆU MÔ PHỎNG. KPIM Bank là ngân hàng GIẢ ĐỊNH dựng riêng cho học liệu.
+## Không có khách hàng thật, không có PII, không có credential, không kết nối API nào.
+## Số điện thoại/tên khách trong dữ liệu lead là chuỗi sinh máy (`Khách hàng 0421`).
+name: KPIM
+label: KPIM Bank — bộ dữ liệu mẫu MKA-101 Marketing Analytics
+brand: kpim-bank
+autonomy: suggest          # chỉ đọc + đề xuất; adapter publish LUÔN từ chối chạy thật
+language: vi
+timezone: Asia/Ho_Chi_Minh
+currency: VND
+
+data_kind: simulated       # simulated | real  — gate an toàn cho mọi script publish
+generated_by: scripts/courseware/generate_kpim_bank.py
+generator_seed: 20260721
+
+roots:
+  content: content/KPIM
+  data:    data/KPIM
+  reports: reports/KPIM
+
+channels:
+  - platform: facebook
+    handle: KPIM Bank
+    page_id: "100055500000001"        # giả lập, khớp cột "ID Trang" của file export
+  - platform: youtube
+    handle: KPIM Bank
+    channel_id: ""                    # bộ mẫu không có kênh thật
+
+source_of_truth:
+  plan_xlsx: KPIM_Bank_Marketing_Plan.xlsx   # sheet Campaign (4) + Post (60) — CHỈ ĐỌC
+  facebook_export:
+    - data/KPIM/raw/Facebook Post Summary.csv
+    - data/KPIM/raw/Facebook Post Daily.csv
+  note: >
+    Hai file Facebook là export gốc, GIỮ NGUYÊN 95 cột (56 cột rỗng hoàn toàn).
+    Việc dọn cột rỗng chính là bài lab S04 — đừng dọn sẵn cho học viên.
+
+course:
+  code: MKA-101
+  sessions_supported: [S02, S03, S04, S05, S06]

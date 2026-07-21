@@ -1,0 +1,341 @@
+﻿id,phone,name,created_at,campaign,post_id,product,region,need,status,quality,channel_page
+SIB-01898,0967 217 416,Khách hàng 1898,2026-01-07 15:23:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,So sánh sản phẩm,consulted,low_priority,KPIM Bank - CSKH
+SIB-00002,0998 539 046,Khách hàng 0002,2026-01-08 11:36:00,CMP-2026-Q1,P-Q1-01,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,contacting,nurture,KPIM Bank
+SIB-05521,0900 274 905,Khách hàng 1335,2026-01-15 07:27:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,consulted,nurture,KPIM Bank - CSKH
+SIB-02017,0902 540 414,Khách hàng 2017,2026-01-15 11:37:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Trung,Mở mới,submitted,hot,KPIM Bank
+SIB-01701,0915 454 883,Khách hàng 1701,2026-01-19 20:31:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,So sánh sản phẩm,new,low_priority,KPIM Bank
+SIB-01646,0984 865 852,Khách hàng 1646,2026-01-20 14:12:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,won,warm,KPIM Bank - CSKH
+SIB-00036,0906 087 236,Khách hàng 0036,2026-01-20 16:36:00,CMP-2026-Q1,P-Q1-02,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỗ trợ hồ sơ,submitted,hot,KPIM Bank - CSKH
+SIB-00051,0963 035 097,Khách hàng 0051,2026-01-21 17:08:00,CMP-2026-Q1,P-Q1-03,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỏi ưu đãi,contacting,nurture,KPIM Bank
+SIB-01166,0901 689 240,Khách hàng 1166,2026-01-22 11:21:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,So sánh sản phẩm,contacting,nurture,KPIM Bank
+SIB-01221,0989 142 684,Khách hàng 1221,2026-01-24 13:32:00,CMP-2026-Q1,,Tài khoản lương,Miền Trung,Mở mới,won,hot,KPIM Bank - CSKH
+SIB-01749,0914 332 637,Khách hàng 1749,2026-01-24 19:44:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,consulted,low_priority,KPIM Bank - CSKH
+SIB-01408,0959 410 009,Khách hàng 1408,2026-01-24 20:39:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,So sánh sản phẩm,new,warm,KPIM Bank - CSKH
+SIB-01747,0983 875 013,Khách hàng 1747,2026-01-26 12:56:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỗ trợ hồ sơ,contacting,hot,KPIM Bank - CSKH
+SIB-01420,0950 353 457,Khách hàng 1420,2026-01-26 14:25:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,submitted,nurture,KPIM Bank
+SIB-00022,0950 901 402,Khách hàng 0022,2026-01-27 07:42:00,CMP-2026-Q1,P-Q1-02,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỏi ưu đãi,new,nurture,KPIM Bank
+SIB-00014,0975 274 622,Khách hàng 0014,2026-01-27 09:23:00,CMP-2026-Q1,P-Q1-02,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,submitted,warm,KPIM Bank - CSKH
+SIB-01412,0926 755 014,Khách hàng 1412,2026-01-27 19:56:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,new,hot,KPIM Bank
+SIB-01155,0917 149 988,Khách hàng 1155,2026-01-29 18:27:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,consulted,low_priority,KPIM Bank - CSKH
+SIB-05478,0953 572 609,Khách hàng 1364,2026-01-30 13:53:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank - CSKH
+SIB-00074,0979 140 230,Khách hàng 0074,2026-02-01 08:28:00,CMP-2026-Q1,P-Q1-05,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,new,warm,KPIM Bank
+SIB-01851,0971 120 946,Khách hàng 1851,2026-02-01 13:24:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỏi ưu đãi,new,hot,KPIM Bank - CSKH
+SIB-05589,0932 415 660,Khách hàng 1359,2026-02-03 20:45:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Trung,Tư vấn sản phẩm,contacting,warm,KPIM Bank
+SIB-01534,0960 562 073,Khách hàng 1534,2026-02-04 10:58:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỗ trợ hồ sơ,submitted,hot,KPIM Bank
+SIB-01707,0991 470 412,Khách hàng 1707,2026-02-10 11:15:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Hỏi ưu đãi,submitted,hot,KPIM Bank - CSKH
+SIB-01773,0970 775 743,Khách hàng 1773,2026-02-11 19:15:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,won,nurture,KPIM Bank
+SIB-05644,0972 123 376,Khách hàng 1572,2026-02-12 08:55:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-00167,0911 021 658,Khách hàng 0167,2026-02-13 22:40:00,CMP-2026-Q1,P-Q1-08,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,won,hot,KPIM Bank
+SIB-01513,0918 167 967,Khách hàng 1513,2026-02-14 13:21:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,consulted,low_priority,KPIM Bank - CSKH
+SIB-00150,0904 314 825,Khách hàng 0150,2026-02-14 16:48:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Trung,So sánh sản phẩm,contacting,nurture,KPIM Bank
+SIB-00117,0940 160 411,Khách hàng 0117,2026-02-15 10:23:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Trung,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank
+SIB-01537,0950 983 711,Khách hàng 1537,2026-02-15 12:03:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,new,nurture,KPIM Bank
+SIB-00166,0989 478 356,Khách hàng 0166,2026-02-17 07:53:00,CMP-2026-Q1,P-Q1-08,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,contacting,hot,KPIM Bank
+SIB-00148,0911 844 777,Khách hàng 0148,2026-02-17 10:11:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỏi ưu đãi,new,nurture,KPIM Bank - CSKH
+SIB-01292,0996 259 876,Khách hàng 1292,2026-02-17 19:17:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Trung,Mở mới,new,low_priority,KPIM Bank - CSKH
+SIB-00086,0981 415 637,Khách hàng 0086,2026-02-17 21:22:00,CMP-2026-Q1,P-Q1-05,Thẻ tín dụng hoàn tiền,Miền Trung,Hỗ trợ hồ sơ,unreachable,warm,KPIM Bank
+SIB-00119,0904 151 506,Khách hàng 0119,2026-02-18 07:04:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Trung,Tư vấn sản phẩm,unreachable,hot,KPIM Bank - CSKH
+SIB-00147,0971 966 264,Khách hàng 0147,2026-02-18 07:25:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,contacting,warm,KPIM Bank - CSKH
+SIB-01285,0958 355 561,Khách hàng 1285,2026-02-19 20:26:00,CMP-2026-Q1,,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,won,nurture,KPIM Bank
+SIB-01778,0966 211 531,Khách hàng 1778,2026-02-21 08:16:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,won,warm,KPIM Bank
+SIB-00122,0995 188 830,Khách hàng 0122,2026-02-21 08:32:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Nam,Hỏi ưu đãi,contacting,warm,KPIM Bank - CSKH
+SIB-01499,0954 611 555,Khách hàng 1499,2026-02-21 20:13:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,consulted,nurture,KPIM Bank
+SIB-00111,0980 518 887,Khách hàng 0111,2026-02-22 18:43:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Trung,So sánh sản phẩm,submitted,low_priority,KPIM Bank
+SIB-00103,0909 053 043,Khách hàng 0103,2026-02-23 11:00:00,CMP-2026-Q1,P-Q1-06,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,contacting,warm,KPIM Bank
+SIB-00161,0946 601 101,Khách hàng 0161,2026-02-23 11:53:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,consulted,low_priority,KPIM Bank - CSKH
+SIB-00125,0911 934 094,Khách hàng 0125,2026-02-23 14:20:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Nam,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank
+SIB-01289,0969 077 232,Khách hàng 1289,2026-02-24 12:09:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,submitted,warm,KPIM Bank
+SIB-01567,0962 048 922,Khách hàng 1567,2026-02-24 16:08:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Hỗ trợ hồ sơ,new,warm,KPIM Bank - CSKH
+SIB-00204,0977 298 965,Khách hàng 0204,2026-02-25 08:02:00,CMP-2026-Q1,P-Q1-09,Thẻ tín dụng hoàn tiền,Miền Trung,Hỗ trợ hồ sơ,consulted,nurture,KPIM Bank
+SIB-00112,0938 447 515,Khách hàng 0112,2026-02-26 10:56:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,unreachable,nurture,KPIM Bank
+SIB-00179,0904 724 300,Khách hàng 0179,2026-02-26 16:10:00,CMP-2026-Q1,P-Q1-08,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,won,warm,KPIM Bank
+SIB-00134,0953 367 992,Khách hàng 0134,2026-02-27 14:15:00,CMP-2026-Q1,P-Q1-07,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,won,hot,KPIM Bank - CSKH
+SIB-01932,0951 427 786,Khách hàng 1932,2026-02-27 16:37:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,submitted,nurture,KPIM Bank
+SIB-01173,0955 033 184,Khách hàng 1173,2026-02-27 20:53:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,unreachable,warm,KPIM Bank - CSKH
+SIB-00170,0947 891 541,Khách hàng 0170,2026-02-28 13:04:00,CMP-2026-Q1,P-Q1-08,Thẻ tín dụng hoàn tiền,Miền Trung,Hỏi ưu đãi,contacting,warm,KPIM Bank
+SIB-00184,0931 729 603,Khách hàng 0184,2026-03-01 14:49:00,CMP-2026-Q1,P-Q1-08,Thẻ tín dụng hoàn tiền,Miền Bắc,So sánh sản phẩm,contacting,hot,KPIM Bank
+SIB-00229,0981 048 151,Khách hàng 0229,2026-03-01 19:06:00,CMP-2026-Q1,P-Q1-10,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,won,warm,KPIM Bank
+SIB-00211,0995 671 645,Khách hàng 0211,2026-03-03 13:28:00,CMP-2026-Q1,P-Q1-09,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,unreachable,warm,KPIM Bank - CSKH
+SIB-00196,0911 318 794,Khách hàng 0196,2026-03-05 13:25:00,CMP-2026-Q1,P-Q1-09,Thẻ tín dụng hoàn tiền,Miền Bắc,So sánh sản phẩm,new,low_priority,KPIM Bank - CSKH
+SIB-01565,0906 419 589,Khách hàng 1565,2026-03-06 17:59:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Trung,Mở mới,won,warm,KPIM Bank - CSKH
+SIB-01413,0961 684 074,Khách hàng 1413,2026-03-06 19:01:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,contacting,low_priority,KPIM Bank
+SIB-00208,0944 100 577,Khách hàng 0208,2026-03-08 11:03:00,CMP-2026-Q1,P-Q1-09,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỏi ưu đãi,consulted,nurture,KPIM Bank - CSKH
+SIB-00233,0987 996 423,Khách hàng 0233,2026-03-09 09:16:00,CMP-2026-Q1,P-Q1-11,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,new,warm,KPIM Bank - CSKH
+SIB-01220,0933 328 331,Khách hàng 1220,2026-03-09 16:48:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Hỗ trợ hồ sơ,won,nurture,KPIM Bank
+SIB-00232,0930 234 441,Khách hàng 0232,2026-03-09 19:12:00,CMP-2026-Q1,P-Q1-11,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,submitted,warm,KPIM Bank - CSKH
+SIB-01579,0963 008 614,Khách hàng 1579,2026-03-10 19:11:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,new,hot,KPIM Bank
+SIB-01108,0910 149 762,Khách hàng 1108,2026-03-20 13:18:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,new,warm,KPIM Bank
+SIB-05625,0911 382 240,Khách hàng 1826,2026-03-20 18:27:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,submitted,low_priority,KPIM Bank - CSKH
+SIB-00267,0996 077 448,Khách hàng 0267,2026-03-20 18:38:00,CMP-2026-Q1,P-Q1-13,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,consulted,warm,KPIM Bank - CSKH
+SIB-00243,0939 255 650,Khách hàng 0243,2026-03-20 19:34:00,CMP-2026-Q1,P-Q1-12,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,new,hot,KPIM Bank
+SIB-00241,0982 633 758,Khách hàng 0241,2026-03-21 12:22:00,CMP-2026-Q1,P-Q1-12,Thẻ tín dụng hoàn tiền,Miền Trung,Tư vấn sản phẩm,new,warm,KPIM Bank - CSKH
+SIB-01856,0966 384 567,Khách hàng 1856,2026-03-21 17:13:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,So sánh sản phẩm,submitted,warm,KPIM Bank
+SIB-01897,0929 036 889,Khách hàng 1897,2026-03-23 14:52:00,CMP-2026-Q1,,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,consulted,nurture,KPIM Bank
+SIB-00291,0946 871 460,Khách hàng 0291,2026-03-24 09:05:00,CMP-2026-Q1,P-Q1-14,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-00256,0979 388 854,Khách hàng 0256,2026-03-24 17:56:00,CMP-2026-Q1,P-Q1-13,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-05503,0929 610 008,Khách hàng 0237,2026-03-25 14:29:00,CMP-2026-Q1,P-Q1-12,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,consulted,warm,KPIM Bank
+SIB-05588,0925 042 485,Khách hàng 1500,2026-03-26 20:21:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,contacting,hot,KPIM Bank - CSKH
+SIB-01322,0907 823 320,Khách hàng 1322,2026-03-27 08:22:00,CMP-2026-Q1,,Thẻ tín dụng hoàn tiền,Miền Bắc,Hỗ trợ hồ sơ,consulted,hot,KPIM Bank
+SIB-00255,0978 728 017,Khách hàng 0255,2026-03-30 20:58:00,CMP-2026-Q1,P-Q1-13,Thẻ tín dụng hoàn tiền,Miền Bắc,So sánh sản phẩm,submitted,low_priority,KPIM Bank
+SIB-00290,0963 644 318,Khách hàng 0290,2026-04-04 07:05:00,CMP-2026-Q1,P-Q1-14,Thẻ tín dụng hoàn tiền,Miền Bắc,Tư vấn sản phẩm,contacting,nurture,KPIM Bank - CSKH
+SIB-00285,0982 321 592,Khách hàng 0285,2026-04-04 21:34:00,CMP-2026-Q1,P-Q1-14,Thẻ tín dụng hoàn tiền,Miền Nam,Hỏi ưu đãi,submitted,low_priority,KPIM Bank
+SIB-02208,0915 350 150,Khách hàng 2208,2026-04-06 17:27:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Mở mới,consulted,warm,KPIM Bank
+SIB-00315,0948 480 098,Khách hàng 0315,2026-04-10 07:41:00,CMP-2026-Q2,P-Q2-01,Vay mua nhà,Miền Bắc,Hỗ trợ hồ sơ,consulted,nurture,KPIM Bank
+SIB-02514,0981 866 630,Khách hàng 2514,2026-04-10 08:24:00,CMP-2026-Q2,,Vay mua nhà,Miền Bắc,Mở mới,won,warm,KPIM Bank
+SIB-00337,0939 103 550,Khách hàng 0337,2026-04-14 20:36:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Trung,Mở mới,new,hot,KPIM Bank - CSKH
+SIB-00325,0959 778 625,Khách hàng 0325,2026-04-16 18:08:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Trung,Hỗ trợ hồ sơ,won,hot,KPIM Bank
+SIB-00349,0945 160 260,Khách hàng 0349,2026-04-16 22:08:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Bắc,So sánh sản phẩm,new,hot,KPIM Bank - CSKH
+SIB-00328,0961 337 377,Khách hàng 0328,2026-04-17 22:00:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Nam,Hỗ trợ hồ sơ,new,warm,KPIM Bank - CSKH
+SIB-00358,0967 956 202,Khách hàng 0358,2026-04-18 11:11:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Bắc,Mở mới,unreachable,nurture,KPIM Bank - CSKH
+SIB-05491,0986 588 093,Khách hàng 0353,2026-04-19 13:19:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Nam,Mở mới,contacting,warm,KPIM Bank
+SIB-02065,0969 742 147,Khách hàng 2065,2026-04-19 15:14:00,CMP-2026-Q2,,Vay mua nhà,Miền Bắc,Mở mới,new,nurture,KPIM Bank
+SIB-00314,0984 064 756,Khách hàng 0314,2026-04-19 15:59:00,CMP-2026-Q2,P-Q2-01,Vay mua nhà,Miền Nam,Hỗ trợ hồ sơ,submitted,nurture,KPIM Bank
+SIB-00299,0987 812 234,Khách hàng 0299,2026-04-19 19:39:00,CMP-2026-Q2,P-Q2-01,Vay mua nhà,Miền Nam,Mở mới,new,warm,KPIM Bank
+SIB-02412,0976 817 434,Khách hàng 2412,2026-04-22 13:11:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Hỗ trợ hồ sơ,contacting,hot,KPIM Bank - CSKH
+SIB-00360,0907 959 108,Khách hàng 0360,2026-04-22 22:00:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,consulted,warm,KPIM Bank - CSKH
+SIB-02251,0900 203 045,Khách hàng 2251,2026-04-23 12:54:00,CMP-2026-Q2,,Vay mua nhà,Miền Bắc,Mở mới,submitted,hot,KPIM Bank
+SIB-00384,0916 332 771,Khách hàng 0384,2026-04-24 14:10:00,CMP-2026-Q2,P-Q2-03,Vay mua nhà,Miền Bắc,Mở mới,unreachable,hot,KPIM Bank
+SIB-00387,0950 337 620,Khách hàng 0387,2026-04-24 20:37:00,CMP-2026-Q2,P-Q2-03,Vay mua nhà,Miền Bắc,Mở mới,contacting,hot,KPIM Bank - CSKH
+SIB-00361,0944 983 010,Khách hàng 0361,2026-04-25 08:11:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,new,hot,KPIM Bank
+SIB-02404,0966 468 764,Khách hàng 2404,2026-04-25 16:32:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,contacting,warm,KPIM Bank - CSKH
+SIB-00391,0950 199 008,Khách hàng 0391,2026-04-25 18:26:00,CMP-2026-Q2,P-Q2-04,Vay mua nhà,Miền Bắc,Mở mới,new,hot,KPIM Bank
+SIB-00363,0916 955 744,Khách hàng 0363,2026-04-27 16:33:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Bắc,So sánh sản phẩm,consulted,low_priority,KPIM Bank
+SIB-02203,0944 710 063,Khách hàng 2203,2026-04-27 17:32:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Hỗ trợ hồ sơ,won,low_priority,KPIM Bank - CSKH
+SIB-00375,0966 275 104,Khách hàng 0375,2026-04-28 20:41:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Bắc,Mở mới,contacting,nurture,KPIM Bank
+SIB-00343,0968 516 899,Khách hàng 0343,2026-04-30 19:21:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,unreachable,nurture,KPIM Bank - CSKH
+SIB-00385,0926 938 939,Khách hàng 0385,2026-05-01 08:42:00,CMP-2026-Q2,P-Q2-03,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,consulted,warm,KPIM Bank
+SIB-00333,0978 427 313,Khách hàng 0333,2026-05-02 18:37:00,CMP-2026-Q2,P-Q2-02,Vay mua nhà,Miền Nam,Mở mới,consulted,low_priority,KPIM Bank
+SIB-02441,0971 361 631,Khách hàng 2441,2026-05-05 08:17:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,contacting,warm,KPIM Bank - CSKH
+SIB-02344,0928 866 358,Khách hàng 2344,2026-05-06 08:24:00,CMP-2026-Q2,,Vay mua nhà,Miền Bắc,Tư vấn sản phẩm,new,warm,KPIM Bank - CSKH
+SIB-05553,0951 856 722,Khách hàng 2399,2026-05-11 01:35:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Mở mới,submitted,nurture,KPIM Bank
+SIB-02439,0929 298 139,Khách hàng 2439,2026-05-13 17:27:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Mở mới,new,warm,KPIM Bank
+SIB-00406,0926 123 529,Khách hàng 0406,2026-05-14 14:56:00,CMP-2026-Q2,P-Q2-05,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,unreachable,warm,KPIM Bank - CSKH
+SIB-00410,0952 928 821,Khách hàng 0410,2026-05-14 16:16:00,CMP-2026-Q2,P-Q2-06,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,consulted,warm,KPIM Bank - CSKH
+SIB-00409,0906 263 028,Khách hàng 0409,2026-05-15 11:28:00,CMP-2026-Q2,P-Q2-06,Vay mua nhà,Miền Nam,So sánh sản phẩm,consulted,low_priority,KPIM Bank - CSKH
+SIB-00419,0951 554 904,Khách hàng 0419,2026-05-16 16:44:00,CMP-2026-Q2,P-Q2-07,Vay mua nhà,Miền Nam,Mở mới,contacting,hot,KPIM Bank
+SIB-02248,0917 562 649,Khách hàng 2248,2026-05-16 19:12:00,CMP-2026-Q2,,Vay mua nhà,Miền Bắc,Tư vấn sản phẩm,consulted,warm,KPIM Bank - CSKH
+SIB-00422,0977 227 410,Khách hàng 0422,2026-05-18 07:55:00,CMP-2026-Q2,P-Q2-07,Vay mua nhà,Miền Bắc,Hỏi ưu đãi,contacting,low_priority,KPIM Bank - CSKH
+SIB-02189,0943 857 051,Khách hàng 2189,2026-05-19 16:07:00,CMP-2026-Q2,,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,new,nurture,KPIM Bank
+SIB-00461,0937 446 926,Khách hàng 0461,2026-05-21 15:33:00,CMP-2026-Q2,P-Q2-09,Vay mua nhà,Miền Nam,Mở mới,submitted,warm,KPIM Bank - CSKH
+SIB-00457,0973 868 217,Khách hàng 0457,2026-05-22 10:07:00,CMP-2026-Q2,P-Q2-09,Vay mua nhà,Miền Trung,Hỗ trợ hồ sơ,new,warm,KPIM Bank - CSKH
+SIB-00447,0979 840 086,Khách hàng 0447,2026-05-22 16:43:00,CMP-2026-Q2,P-Q2-09,Vay mua nhà,Miền Bắc,So sánh sản phẩm,submitted,nurture,KPIM Bank - CSKH
+SIB-00415,0996 843 934,Khách hàng 0415,2026-05-22 19:26:00,CMP-2026-Q2,P-Q2-07,Vay mua nhà,Miền Trung,Tư vấn sản phẩm,won,warm,KPIM Bank - CSKH
+SIB-00416,0981 803 934,Khách hàng 0416,2026-05-24 09:56:00,CMP-2026-Q2,P-Q2-07,Vay mua nhà,Miền Bắc,Hỗ trợ hồ sơ,consulted,low_priority,KPIM Bank
+SIB-02489,0997 435 486,Khách hàng 2489,2026-05-24 20:34:00,CMP-2026-Q2,,Vay mua nhà,Miền Bắc,Mở mới,new,nurture,KPIM Bank
+SIB-00482,0935 892 149,Khách hàng 0482,2026-05-26 13:32:00,CMP-2026-Q2,P-Q2-09,Vay mua nhà,Miền Nam,Mở mới,new,warm,KPIM Bank
+SIB-00462,0922 195 561,Khách hàng 0462,2026-05-28 12:01:00,CMP-2026-Q2,P-Q2-09,Vay mua nhà,Miền Bắc,Hỗ trợ hồ sơ,new,hot,KPIM Bank - CSKH
+SIB-00459,0942 479 352,Khách hàng 0459,2026-05-30 19:56:00,CMP-2026-Q2,P-Q2-09,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank - CSKH
+SIB-00485,0917 220 578,Khách hàng 0485,2026-06-01 12:54:00,CMP-2026-Q2,P-Q2-10,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,new,hot,KPIM Bank
+SIB-00435,0939 680 186,Khách hàng 0435,2026-06-04 07:01:00,CMP-2026-Q2,P-Q2-08,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,contacting,hot,KPIM Bank
+SIB-00446,0958 585 912,Khách hàng 0446,2026-06-05 09:12:00,CMP-2026-Q2,P-Q2-09,Vay mua nhà,Miền Nam,Hỗ trợ hồ sơ,unreachable,hot,KPIM Bank - CSKH
+SIB-00520,0934 547 710,Khách hàng 0520,2026-06-05 22:27:00,CMP-2026-Q2,P-Q2-12,Vay mua nhà,Miền Nam,Mở mới,new,nurture,KPIM Bank
+SIB-02470,0914 650 491,Khách hàng 2470,2026-06-06 10:56:00,CMP-2026-Q2,,Vay mua nhà,Miền Bắc,So sánh sản phẩm,contacting,nurture,KPIM Bank - CSKH
+SIB-02170,0907 211 493,Khách hàng 2170,2026-06-08 12:17:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Mở mới,submitted,hot,KPIM Bank - CSKH
+SIB-00469,0912 800 149,Khách hàng 0469,2026-06-09 17:59:00,CMP-2026-Q2,P-Q2-09,Vay mua nhà,Miền Bắc,Tư vấn sản phẩm,submitted,hot,KPIM Bank - CSKH
+SIB-02334,0930 510 162,Khách hàng 2334,2026-06-10 18:27:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Mở mới,consulted,warm,KPIM Bank
+SIB-00484,0994 383 107,Khách hàng 0484,2026-06-12 15:27:00,CMP-2026-Q2,P-Q2-10,Thẻ tín dụng hoàn tiền,Miền Nam,Tư vấn sản phẩm,contacting,warm,KPIM Bank - CSKH
+SIB-02108,0986 887 058,Khách hàng 2108,2026-06-13 17:29:00,CMP-2026-Q2,,Vay mua nhà,Miền Trung,Tư vấn sản phẩm,new,warm,KPIM Bank
+SIB-00486,0920 246 852,Khách hàng 0486,2026-06-14 16:55:00,CMP-2026-Q2,P-Q2-10,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,new,warm,KPIM Bank - CSKH
+SIB-00543,0913 697 089,Khách hàng 0543,2026-06-15 15:57:00,CMP-2026-Q2,P-Q2-14,Vay mua nhà,Miền Trung,Tư vấn sản phẩm,new,warm,KPIM Bank - CSKH
+SIB-00511,0954 933 071,Khách hàng 0511,2026-06-16 19:11:00,CMP-2026-Q2,P-Q2-12,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,won,hot,KPIM Bank
+SIB-00540,0994 752 415,Khách hàng 0540,2026-06-17 22:56:00,CMP-2026-Q2,P-Q2-14,Vay mua nhà,Miền Bắc,So sánh sản phẩm,new,low_priority,KPIM Bank
+SIB-00513,0977 220 642,Khách hàng 0513,2026-06-18 16:52:00,CMP-2026-Q2,P-Q2-12,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,submitted,nurture,KPIM Bank
+SIB-00508,0982 159 003,Khách hàng 0508,2026-06-18 20:07:00,CMP-2026-Q2,P-Q2-12,Vay mua nhà,Miền Bắc,Mở mới,consulted,nurture,KPIM Bank
+SIB-02227,0993 919 513,Khách hàng 2227,2026-06-19 15:37:00,CMP-2026-Q2,,Vay mua nhà,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-02508,0961 061 564,Khách hàng 2508,2026-06-19 17:09:00,CMP-2026-Q2,,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,new,nurture,KPIM Bank - CSKH
+SIB-00512,0992 566 386,Khách hàng 0512,2026-06-21 14:02:00,CMP-2026-Q2,P-Q2-12,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,submitted,warm,KPIM Bank - CSKH
+SIB-00539,0992 351 994,Khách hàng 0539,2026-06-30 20:29:00,CMP-2026-Q2,P-Q2-14,Vay mua nhà,Miền Bắc,Tư vấn sản phẩm,contacting,warm,KPIM Bank - CSKH
+SIB-00529,0980 549 072,Khách hàng 0529,2026-07-01 22:40:00,CMP-2026-Q2,P-Q2-13,Vay mua nhà,Miền Nam,Hỗ trợ hồ sơ,new,nurture,KPIM Bank
+SIB-00558,0919 280 256,Khách hàng 0558,2026-07-04 18:45:00,CMP-2026-Q2,P-Q2-14,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,consulted,hot,KPIM Bank
+SIB-00564,0921 050 853,Khách hàng 0564,2026-07-07 18:35:00,CMP-2026-Q3,P-Q3-01,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,new,warm,KPIM Bank
+SIB-03484,0977 287 994,Khách hàng 3484,2026-07-10 20:18:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,consulted,hot,KPIM Bank
+SIB-03100,0915 582 921,Khách hàng 3100,2026-07-14 18:29:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Mở mới,submitted,low_priority,KPIM Bank
+SIB-02883,0903 624 669,Khách hàng 2883,2026-07-15 11:42:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,won,hot,KPIM Bank - CSKH
+SIB-05479,0930 330 564,Khách hàng 3756,2026-07-15 17:32:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Mở mới,won,low_priority,KPIM Bank - CSKH
+SIB-05683,0978 446 536,Khách hàng 2530,2026-07-17 01:41:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,new,low_priority,KPIM Bank - CSKH
+SIB-00575,0947 608 792,Khách hàng 0575,2026-07-17 07:01:00,CMP-2026-Q3,P-Q3-02,App số & Tiết kiệm online,Miền Bắc,Mở mới,new,nurture,KPIM Bank
+SIB-03050,0974 413 128,Khách hàng 3050,2026-07-18 08:18:00,CMP-2026-Q3,,Vay mua nhà,Miền Nam,So sánh sản phẩm,new,nurture,KPIM Bank
+SIB-03371,0920 498 022,Khách hàng 3371,2026-07-19 12:44:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,consulted,hot,KPIM Bank - CSKH
+SIB-03064,0913 091 767,Khách hàng 3064,2026-07-21 15:29:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,new,warm,KPIM Bank - CSKH
+SIB-02650,0992 080 502,Khách hàng 2650,2026-07-23 20:26:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,contacting,low_priority,KPIM Bank
+SIB-00572,0915 049 759,Khách hàng 0572,2026-07-24 14:50:00,CMP-2026-Q3,P-Q3-02,App số & Tiết kiệm online,Miền Bắc,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank
+SIB-05613,0992 379 123,Khách hàng 3443,2026-07-27 05:34:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,new,low_priority,KPIM Bank
+SIB-05579,0986 389 861,Khách hàng 3160,2026-07-27 07:56:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,new,nurture,KPIM Bank - CSKH
+SIB-02897,0936 325 751,Khách hàng 2897,2026-07-28 15:30:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,won,low_priority,KPIM Bank
+SIB-02739,0903 532 641,Khách hàng 2739,2026-07-29 15:22:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,consulted,nurture,KPIM Bank
+SIB-03618,0975 118 093,Khách hàng 3618,2026-07-29 18:32:00,CMP-2026-Q3,,Tài khoản lương,Miền Nam,Mở mới,contacting,nurture,KPIM Bank - CSKH
+SIB-03094,0975 988 084,Khách hàng 3094,2026-07-30 10:24:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Hỗ trợ hồ sơ,contacting,low_priority,KPIM Bank - CSKH
+SIB-05519,0910 714 548,Khách hàng 2646,2026-08-01 01:16:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Mở mới,consulted,warm,KPIM Bank - CSKH
+SIB-03583,0901 455 899,Khách hàng 3583,2026-08-01 14:44:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,won,warm,KPIM Bank - CSKH
+SIB-00602,0924 056 227,Khách hàng 0602,2026-08-01 19:26:00,CMP-2026-Q3,P-Q3-05,App số & Tiết kiệm online,Miền Bắc,Mở mới,submitted,low_priority,KPIM Bank - CSKH
+SIB-05487,0902 043 592,Khách hàng 3258,2026-08-05 08:54:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Mở mới,contacting,nurture,KPIM Bank - CSKH
+SIB-02768,0998 696 235,Khách hàng 2768,2026-08-05 15:38:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Trung,Tư vấn sản phẩm,consulted,warm,KPIM Bank
+SIB-03295,0971 269 838,Khách hàng 3295,2026-08-06 11:35:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,new,nurture,KPIM Bank - CSKH
+SIB-02893,0944 246 061,Khách hàng 2893,2026-08-07 09:51:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,So sánh sản phẩm,contacting,nurture,KPIM Bank - CSKH
+SIB-03531,0999 112 475,Khách hàng 3531,2026-08-07 11:32:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,So sánh sản phẩm,consulted,low_priority,KPIM Bank - CSKH
+SIB-00622,0944 638 848,Khách hàng 0622,2026-08-08 10:38:00,CMP-2026-Q3,P-Q3-06,Vay mua nhà,Miền Nam,So sánh sản phẩm,submitted,warm,KPIM Bank - CSKH
+SIB-00589,0913 916 951,Khách hàng 0589,2026-08-08 18:03:00,CMP-2026-Q3,P-Q3-04,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,unreachable,low_priority,KPIM Bank - CSKH
+SIB-00636,0983 361 543,Khách hàng 0636,2026-08-09 17:49:00,CMP-2026-Q3,P-Q3-07,App số & Tiết kiệm online,Miền Bắc,Mở mới,submitted,low_priority,KPIM Bank
+SIB-00626,0997 846 236,Khách hàng 0626,2026-08-10 08:27:00,CMP-2026-Q3,P-Q3-06,App số & Tiết kiệm online,Miền Trung,Mở mới,new,warm,KPIM Bank - CSKH
+SIB-00634,0959 360 317,Khách hàng 0634,2026-08-10 14:09:00,CMP-2026-Q3,P-Q3-07,App số & Tiết kiệm online,Miền Nam,Mở mới,new,nurture,KPIM Bank
+SIB-00632,0942 393 606,Khách hàng 0632,2026-08-10 21:54:00,CMP-2026-Q3,P-Q3-06,App số & Tiết kiệm online,Miền Bắc,Hỗ trợ hồ sơ,new,warm,KPIM Bank - CSKH
+SIB-00618,0985 905 779,Khách hàng 0618,2026-08-11 12:54:00,CMP-2026-Q3,P-Q3-06,App số & Tiết kiệm online,Miền Bắc,Hỗ trợ hồ sơ,new,low_priority,KPIM Bank
+SIB-05471,0944 923 798,Khách hàng 3331,2026-08-16 01:32:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,contacting,nurture,KPIM Bank
+SIB-05556,0928 018 060,Khách hàng 0648,2026-08-16 02:00:00,CMP-2026-Q3,P-Q3-08,App số & Tiết kiệm online,Miền Bắc,So sánh sản phẩm,consulted,hot,KPIM Bank
+SIB-05523,0938 165 395,Khách hàng 2827,2026-08-16 17:53:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,new,warm,KPIM Bank
+SIB-00659,0950 510 453,Khách hàng 0659,2026-08-16 19:56:00,CMP-2026-Q3,P-Q3-08,App số & Tiết kiệm online,Miền Nam,Mở mới,consulted,nurture,KPIM Bank
+SIB-00641,0961 008 538,Khách hàng 0641,2026-08-17 10:54:00,CMP-2026-Q3,P-Q3-07,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,new,hot,KPIM Bank - CSKH
+SIB-00595,0981 418 926,Khách hàng 0595,2026-08-18 09:21:00,CMP-2026-Q3,P-Q3-05,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,new,nurture,KPIM Bank - CSKH
+SIB-02762,0954 044 787,Khách hàng 2762,2026-08-18 13:54:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỏi ưu đãi,unreachable,low_priority,KPIM Bank
+SIB-00610,0986 534 861,Khách hàng 0610,2026-08-19 15:16:00,CMP-2026-Q3,P-Q3-06,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,consulted,warm,KPIM Bank - CSKH
+SIB-03801,0949 533 598,Khách hàng 3801,2026-08-20 16:35:00,CMP-2026-Q3,,Vay mua nhà,Miền Nam,Tư vấn sản phẩm,submitted,nurture,KPIM Bank
+SIB-03503,0904 434 689,Khách hàng 3503,2026-08-21 08:50:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,So sánh sản phẩm,won,warm,KPIM Bank
+SIB-03032,0908 040 202,Khách hàng 3032,2026-08-21 09:01:00,CMP-2026-Q3,,Vay mua nhà,Miền Bắc,Mở mới,consulted,warm,KPIM Bank - CSKH
+SIB-03305,0979 764 941,Khách hàng 3305,2026-08-21 10:36:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-03533,0987 154 457,Khách hàng 3533,2026-08-23 14:28:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Mở mới,contacting,warm,KPIM Bank
+SIB-00683,0903 422 000,Khách hàng 0683,2026-08-24 11:52:00,CMP-2026-Q3,P-Q3-09,App số & Tiết kiệm online,Miền Trung,Tư vấn sản phẩm,consulted,warm,KPIM Bank - CSKH
+SIB-05532,0996 673 364,Khách hàng 3293,2026-08-24 23:30:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Mở mới,consulted,low_priority,KPIM Bank - CSKH
+SIB-00698,0912 757 479,Khách hàng 0698,2026-08-25 09:50:00,CMP-2026-Q3,P-Q3-10,App số & Tiết kiệm online,Miền Bắc,So sánh sản phẩm,consulted,hot,KPIM Bank
+SIB-03423,0918 251 238,Khách hàng 3423,2026-08-26 19:12:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,submitted,nurture,KPIM Bank - CSKH
+SIB-02528,0909 621 040,Khách hàng 2528,2026-08-27 12:24:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,So sánh sản phẩm,submitted,nurture,KPIM Bank
+SIB-00670,0934 791 536,Khách hàng 0670,2026-08-27 20:28:00,CMP-2026-Q3,P-Q3-09,App số & Tiết kiệm online,Miền Bắc,Mở mới,consulted,warm,KPIM Bank
+SIB-03807,0990 906 168,Khách hàng 3807,2026-08-27 20:40:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Hỏi ưu đãi,new,warm,KPIM Bank - CSKH
+SIB-05508,0957 746 178,Khách hàng 3176,2026-08-30 20:13:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,consulted,low_priority,KPIM Bank
+SIB-05530,0930 129 850,Khách hàng 3799,2026-08-31 10:13:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,submitted,warm,KPIM Bank - CSKH
+SIB-03679,0965 182 441,Khách hàng 3679,2026-08-31 15:42:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank - CSKH
+SIB-00668,0981 119 360,Khách hàng 0668,2026-08-31 16:45:00,CMP-2026-Q3,P-Q3-09,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,won,warm,KPIM Bank
+SIB-03078,0969 589 936,Khách hàng 3078,2026-09-01 13:22:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Trung,Mở mới,new,hot,KPIM Bank
+SIB-00652,0938 283 280,Khách hàng 0652,2026-09-02 10:03:00,CMP-2026-Q3,P-Q3-08,App số & Tiết kiệm online,Miền Trung,Hỗ trợ hồ sơ,consulted,hot,KPIM Bank - CSKH
+SIB-03095,0930 405 222,Khách hàng 3095,2026-09-03 08:06:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,new,hot,KPIM Bank - CSKH
+SIB-03571,0928 731 555,Khách hàng 3571,2026-09-03 16:05:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Hỏi ưu đãi,contacting,nurture,KPIM Bank - CSKH
+SIB-03389,0935 449 611,Khách hàng 3389,2026-09-04 14:02:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,consulted,hot,KPIM Bank - CSKH
+SIB-00649,0917 131 302,Khách hàng 0649,2026-09-04 17:47:00,CMP-2026-Q3,P-Q3-08,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,new,hot,KPIM Bank
+SIB-02848,0915 135 566,Khách hàng 2848,2026-09-05 13:24:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Hỗ trợ hồ sơ,won,nurture,KPIM Bank - CSKH
+SIB-02858,0991 847 480,Khách hàng 2858,2026-09-06 16:21:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Trung,Hỗ trợ hồ sơ,contacting,nurture,KPIM Bank - CSKH
+SIB-03839,0954 969 699,Khách hàng 3839,2026-09-07 11:16:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,won,low_priority,KPIM Bank - CSKH
+SIB-00687,0968 922 357,Khách hàng 0687,2026-09-07 22:25:00,CMP-2026-Q3,P-Q3-09,App số & Tiết kiệm online,Miền Nam,Mở mới,consulted,hot,KPIM Bank
+SIB-05624,0949 817 113,Khách hàng 2806,2026-09-08 06:29:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,consulted,warm,KPIM Bank - CSKH
+SIB-03441,0955 776 782,Khách hàng 3441,2026-09-09 08:33:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỏi ưu đãi,contacting,warm,KPIM Bank
+SIB-05527,0993 254 362,Khách hàng 2982,2026-09-10 02:15:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,unreachable,warm,KPIM Bank - CSKH
+SIB-00708,0955 596 055,Khách hàng 0708,2026-09-10 12:48:00,CMP-2026-Q3,P-Q3-11,App số & Tiết kiệm online,Miền Bắc,Mở mới,new,warm,KPIM Bank
+SIB-00733,0964 079 315,Khách hàng 0733,2026-09-11 09:30:00,CMP-2026-Q3,P-Q3-13,App số & Tiết kiệm online,Miền Bắc,So sánh sản phẩm,consulted,warm,KPIM Bank - CSKH
+SIB-03724,0911 326 469,Khách hàng 3724,2026-09-11 16:15:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Mở mới,won,warm,KPIM Bank
+SIB-05520,0938 223 055,Khách hàng 0702,2026-09-11 21:06:00,CMP-2026-Q3,P-Q3-10,App số & Tiết kiệm online,Miền Nam,Mở mới,contacting,hot,KPIM Bank - CSKH
+SIB-02618,0912 695 229,Khách hàng 2618,2026-09-12 11:37:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Hỗ trợ hồ sơ,unreachable,hot,KPIM Bank
+SIB-05639,0999 686 917,Khách hàng 3676,2026-09-12 12:32:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,unreachable,nurture,KPIM Bank
+SIB-05560,0952 534 261,Khách hàng 2634,2026-09-13 05:43:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Trung,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank
+SIB-05682,0918 342 756,Khách hàng 3463,2026-09-13 11:40:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Hỏi ưu đãi,won,warm,KPIM Bank - CSKH
+SIB-03465,0944 068 120,Khách hàng 3465,2026-09-13 11:57:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank - CSKH
+SIB-02850,0931 855 581,Khách hàng 2850,2026-09-13 20:25:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,submitted,warm,KPIM Bank
+SIB-03199,0959 334 403,Khách hàng 3199,2026-09-14 12:21:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,new,warm,KPIM Bank - CSKH
+SIB-03277,0906 883 069,Khách hàng 3277,2026-09-14 18:34:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Tư vấn sản phẩm,contacting,low_priority,KPIM Bank - CSKH
+SIB-05567,0901 212 805,Khách hàng 3641,2026-09-16 03:37:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,contacting,warm,KPIM Bank - CSKH
+SIB-00757,0965 965 523,Khách hàng 0757,2026-09-16 19:44:00,CMP-2026-Q3,P-Q3-14,App số & Tiết kiệm online,Miền Bắc,Hỗ trợ hồ sơ,won,nurture,KPIM Bank
+SIB-03363,0931 979 669,Khách hàng 3363,2026-09-17 08:30:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,consulted,low_priority,KPIM Bank
+SIB-05495,0934 500 523,Khách hàng 3003,2026-09-18 14:50:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Hỏi ưu đãi,new,nurture,KPIM Bank - CSKH
+SIB-05676,0991 808 833,Khách hàng 3106,2026-09-18 20:08:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,won,warm,KPIM Bank
+SIB-02539,0914 895 487,Khách hàng 2539,2026-09-18 20:39:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Mở mới,new,low_priority,KPIM Bank - CSKH
+SIB-00783,0925 066 409,Khách hàng 0783,2026-09-18 22:37:00,CMP-2026-Q3,P-Q3-14,App số & Tiết kiệm online,Miền Bắc,Mở mới,unreachable,low_priority,KPIM Bank - CSKH
+SIB-02942,0949 114 688,Khách hàng 2942,2026-09-19 09:48:00,CMP-2026-Q3,,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-00738,0988 596 595,Khách hàng 0738,2026-09-21 14:35:00,CMP-2026-Q3,P-Q3-13,App số & Tiết kiệm online,Miền Trung,Mở mới,unreachable,nurture,KPIM Bank
+SIB-02810,0961 541 675,Khách hàng 2810,2026-09-22 09:14:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Trung,Mở mới,unreachable,hot,KPIM Bank
+SIB-00787,0924 011 723,Khách hàng 0787,2026-09-22 16:37:00,CMP-2026-Q3,P-Q3-15,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank
+SIB-00789,0938 527 103,Khách hàng 0789,2026-09-23 15:31:00,CMP-2026-Q3,P-Q3-15,App số & Tiết kiệm online,Miền Nam,Hỏi ưu đãi,submitted,nurture,KPIM Bank
+SIB-03364,0907 590 217,Khách hàng 3364,2026-09-24 20:31:00,CMP-2026-Q3,,App số & Tiết kiệm online,Miền Nam,Hỗ trợ hồ sơ,consulted,nurture,KPIM Bank - CSKH
+SIB-00732,0916 587 631,Khách hàng 0732,2026-09-25 10:10:00,CMP-2026-Q3,P-Q3-13,App số & Tiết kiệm online,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-00775,0946 749 089,Khách hàng 0775,2026-09-26 18:49:00,CMP-2026-Q3,P-Q3-14,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,unreachable,warm,KPIM Bank
+SIB-00777,0977 155 134,Khách hàng 0777,2026-09-27 10:55:00,CMP-2026-Q3,P-Q3-14,App số & Tiết kiệm online,Miền Trung,Mở mới,won,hot,KPIM Bank - CSKH
+SIB-00774,0950 952 696,Khách hàng 0774,2026-09-28 07:54:00,CMP-2026-Q3,P-Q3-14,App số & Tiết kiệm online,Miền Bắc,Tư vấn sản phẩm,contacting,warm,KPIM Bank
+SIB-00771,0901 937 578,Khách hàng 0771,2026-10-01 13:53:00,CMP-2026-Q3,P-Q3-14,Thẻ tín dụng hoàn tiền,Miền Trung,Tư vấn sản phẩm,new,low_priority,KPIM Bank
+SIB-00752,0962 789 455,Khách hàng 0752,2026-10-01 14:42:00,CMP-2026-Q3,P-Q3-14,Thẻ tín dụng hoàn tiền,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-00786,0965 350 823,Khách hàng 0786,2026-10-07 12:19:00,CMP-2026-Q3,P-Q3-15,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,unreachable,nurture,KPIM Bank
+SIB-00795,0918 208 369,Khách hàng 0795,2026-10-07 22:04:00,CMP-2026-Q4,P-Q4-01,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,new,nurture,KPIM Bank
+SIB-04080,0976 318 834,Khách hàng 4080,2026-10-08 20:48:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Hỗ trợ hồ sơ,new,nurture,KPIM Bank
+SIB-05583,0924 137 951,Khách hàng 4601,2026-10-10 09:48:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,won,nurture,KPIM Bank - CSKH
+SIB-04701,0908 114 662,Khách hàng 4701,2026-10-11 09:40:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Tư vấn sản phẩm,won,hot,KPIM Bank - CSKH
+SIB-04791,0954 425 436,Khách hàng 4791,2026-10-11 20:15:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,new,warm,KPIM Bank - CSKH
+SIB-05476,0969 971 597,Khách hàng 5218,2026-10-12 17:51:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,contacting,hot,KPIM Bank
+SIB-00822,0993 259 665,Khách hàng 0822,2026-10-13 20:19:00,CMP-2026-Q4,P-Q4-02,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,submitted,hot,KPIM Bank
+SIB-00793,0971 378 364,Khách hàng 0793,2026-10-14 07:21:00,CMP-2026-Q4,P-Q4-01,Tài khoản lương,Miền Trung,Mở mới,contacting,hot,KPIM Bank - CSKH
+SIB-00805,0972 701 826,Khách hàng 0805,2026-10-14 08:10:00,CMP-2026-Q4,P-Q4-01,Tài khoản lương,Miền Nam,So sánh sản phẩm,new,low_priority,KPIM Bank
+SIB-05642,0991 079 476,Khách hàng 4598,2026-10-15 16:35:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Mở mới,consulted,nurture,KPIM Bank - CSKH
+SIB-04634,0932 293 241,Khách hàng 4634,2026-10-17 10:30:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,contacting,low_priority,KPIM Bank - CSKH
+SIB-00813,0941 666 668,Khách hàng 0813,2026-10-20 08:31:00,CMP-2026-Q4,P-Q4-02,Tài khoản lương,Miền Bắc,Mở mới,contacting,nurture,KPIM Bank - CSKH
+SIB-00825,0929 088 447,Khách hàng 0825,2026-10-20 10:02:00,CMP-2026-Q4,P-Q4-03,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,consulted,nurture,KPIM Bank - CSKH
+SIB-05481,0913 851 135,Khách hàng 5284,2026-10-23 00:29:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,new,warm,KPIM Bank
+SIB-04446,0934 920 357,Khách hàng 4446,2026-10-23 20:35:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Mở mới,contacting,hot,KPIM Bank - CSKH
+SIB-00796,0949 879 085,Khách hàng 0796,2026-10-24 11:09:00,CMP-2026-Q4,P-Q4-01,Tài khoản lương,Miền Nam,Hỏi ưu đãi,submitted,nurture,KPIM Bank
+SIB-04779,0981 476 393,Khách hàng 4779,2026-10-24 20:45:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,new,nurture,KPIM Bank
+SIB-05143,0933 893 896,Khách hàng 5143,2026-10-26 14:03:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Hỗ trợ hồ sơ,consulted,nurture,KPIM Bank
+SIB-05626,0965 309 409,Khách hàng 5408,2026-10-27 18:33:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,contacting,nurture,KPIM Bank - CSKH
+SIB-04503,0952 481 530,Khách hàng 4503,2026-10-28 09:58:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,unreachable,nurture,KPIM Bank - CSKH
+SIB-00829,0920 830 286,Khách hàng 0829,2026-10-28 10:13:00,CMP-2026-Q4,P-Q4-03,Tài khoản lương,Miền Trung,Hỗ trợ hồ sơ,won,warm,KPIM Bank
+SIB-05220,0942 819 201,Khách hàng 5220,2026-10-28 20:20:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,contacting,nurture,KPIM Bank - CSKH
+SIB-04777,0991 144 318,Khách hàng 4777,2026-10-30 14:52:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Hỗ trợ hồ sơ,new,nurture,KPIM Bank
+SIB-05518,0955 554 237,Khách hàng 4614,2026-11-01 09:24:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,new,nurture,KPIM Bank - CSKH
+SIB-05009,0903 617 124,Khách hàng 5009,2026-11-01 19:08:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-05501,0994 693 638,Khách hàng 4519,2026-11-01 20:06:00,CMP-2026-Q4,,Thẻ tín dụng hoàn tiền,Miền Bắc,Mở mới,consulted,low_priority,KPIM Bank
+SIB-00841,0928 062 225,Khách hàng 0841,2026-11-02 09:28:00,CMP-2026-Q4,P-Q4-04,Tài khoản lương,Miền Trung,Tư vấn sản phẩm,contacting,warm,KPIM Bank
+SIB-00849,0932 685 943,Khách hàng 0849,2026-11-04 17:40:00,CMP-2026-Q4,P-Q4-05,Tài khoản lương,Miền Bắc,Mở mới,unreachable,warm,KPIM Bank
+SIB-00894,0931 147 198,Khách hàng 0894,2026-11-07 10:56:00,CMP-2026-Q4,P-Q4-06,Tài khoản lương,Miền Bắc,Mở mới,consulted,warm,KPIM Bank - CSKH
+SIB-00897,0904 664 511,Khách hàng 0897,2026-11-08 16:11:00,CMP-2026-Q4,P-Q4-06,Tài khoản lương,Miền Nam,Hỏi ưu đãi,new,nurture,KPIM Bank - CSKH
+SIB-04297,0913 349 789,Khách hàng 4297,2026-11-09 09:49:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,So sánh sản phẩm,contacting,low_priority,KPIM Bank
+SIB-05172,0985 655 458,Khách hàng 5172,2026-11-09 18:59:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,contacting,low_priority,KPIM Bank
+SIB-05634,0958 550 188,Khách hàng 5422,2026-11-10 04:57:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,contacting,warm,KPIM Bank
+SIB-05608,0907 336 006,Khách hàng 0900,2026-11-12 02:50:00,CMP-2026-Q4,P-Q4-06,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,contacting,warm,KPIM Bank - CSKH
+SIB-00854,0956 212 697,Khách hàng 0854,2026-11-12 20:25:00,CMP-2026-Q4,P-Q4-05,Tài khoản lương,Miền Bắc,Mở mới,new,nurture,KPIM Bank
+SIB-00851,0925 068 366,Khách hàng 0851,2026-11-12 22:54:00,CMP-2026-Q4,P-Q4-05,Tài khoản lương,Miền Nam,Mở mới,consulted,warm,KPIM Bank
+SIB-04112,0986 867 494,Khách hàng 4112,2026-11-13 11:47:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Mở mới,contacting,hot,KPIM Bank - CSKH
+SIB-05244,0944 875 452,Khách hàng 5244,2026-11-14 08:57:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,So sánh sản phẩm,consulted,hot,KPIM Bank - CSKH
+SIB-00926,0991 073 384,Khách hàng 0926,2026-11-15 13:52:00,CMP-2026-Q4,P-Q4-08,Tài khoản lương,Miền Bắc,Mở mới,consulted,nurture,KPIM Bank
+SIB-00884,0922 834 377,Khách hàng 0884,2026-11-15 14:39:00,CMP-2026-Q4,P-Q4-06,Tài khoản lương,Miền Nam,Mở mới,contacting,nurture,KPIM Bank
+SIB-04356,0902 863 300,Khách hàng 4356,2026-11-15 16:48:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,submitted,nurture,KPIM Bank
+SIB-05584,0926 837 151,Khách hàng 4254,2026-11-16 12:07:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,consulted,hot,KPIM Bank
+SIB-04277,0957 926 899,Khách hàng 4277,2026-11-16 12:58:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,new,low_priority,KPIM Bank - CSKH
+SIB-00852,0940 298 591,Khách hàng 0852,2026-11-16 15:54:00,CMP-2026-Q4,P-Q4-05,Tài khoản lương,Miền Bắc,So sánh sản phẩm,contacting,low_priority,KPIM Bank
+SIB-05541,0925 863 584,Khách hàng 4589,2026-11-20 11:01:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Hỏi ưu đãi,new,nurture,KPIM Bank - CSKH
+SIB-05670,0993 772 134,Khách hàng 4552,2026-11-21 03:48:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Tư vấn sản phẩm,submitted,low_priority,KPIM Bank
+SIB-04675,0980 809 048,Khách hàng 4675,2026-11-25 19:05:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Mở mới,new,nurture,KPIM Bank
+SIB-00925,0998 711 266,Khách hàng 0925,2026-11-27 07:46:00,CMP-2026-Q4,P-Q4-08,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,contacting,warm,KPIM Bank
+SIB-00950,0957 628 448,Khách hàng 0950,2026-11-27 15:03:00,CMP-2026-Q4,P-Q4-09,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,submitted,nurture,KPIM Bank
+SIB-00940,0962 132 069,Khách hàng 0940,2026-11-28 10:23:00,CMP-2026-Q4,P-Q4-09,Tài khoản lương,Miền Bắc,Hỗ trợ hồ sơ,consulted,nurture,KPIM Bank - CSKH
+SIB-05458,0965 046 457,Khách hàng 5458,2026-11-28 15:40:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Tư vấn sản phẩm,new,low_priority,KPIM Bank
+SIB-05280,0994 337 045,Khách hàng 5280,2026-11-29 20:11:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,contacting,low_priority,KPIM Bank - CSKH
+SIB-05174,0988 467 637,Khách hàng 5174,2026-11-30 10:58:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Mở mới,unreachable,warm,KPIM Bank - CSKH
+SIB-00959,0918 950 483,Khách hàng 0959,2026-11-30 18:05:00,CMP-2026-Q4,P-Q4-10,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,submitted,nurture,KPIM Bank
+SIB-00931,0977 660 288,Khách hàng 0931,2026-12-01 07:56:00,CMP-2026-Q4,P-Q4-08,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,contacting,nurture,KPIM Bank
+SIB-00979,0945 116 305,Khách hàng 0979,2026-12-01 08:00:00,CMP-2026-Q4,P-Q4-11,Tài khoản lương,Miền Bắc,Hỗ trợ hồ sơ,consulted,warm,KPIM Bank
+SIB-04146,0921 499 950,Khách hàng 4146,2026-12-01 17:59:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,consulted,warm,KPIM Bank
+SIB-04125,0947 832 555,Khách hàng 4125,2026-12-01 19:35:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-05525,0984 210 324,Khách hàng 4253,2026-12-03 13:51:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Hỏi ưu đãi,new,nurture,KPIM Bank
+SIB-00970,0926 719 363,Khách hàng 0970,2026-12-04 07:45:00,CMP-2026-Q4,P-Q4-11,Tài khoản lương,Miền Bắc,Mở mới,won,hot,KPIM Bank
+SIB-04717,0998 176 900,Khách hàng 4717,2026-12-04 11:30:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Mở mới,contacting,warm,KPIM Bank - CSKH
+SIB-01031,0978 662 041,Khách hàng 1031,2026-12-05 19:09:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Nam,Mở mới,won,nurture,KPIM Bank
+SIB-00976,0936 771 643,Khách hàng 0976,2026-12-06 19:55:00,CMP-2026-Q4,P-Q4-11,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,contacting,warm,KPIM Bank - CSKH
+SIB-00958,0985 515 229,Khách hàng 0958,2026-12-09 11:11:00,CMP-2026-Q4,P-Q4-10,Tài khoản lương,Miền Nam,Mở mới,new,hot,KPIM Bank - CSKH
+SIB-04561,0936 905 200,Khách hàng 4561,2026-12-10 14:09:00,CMP-2026-Q4,,Tài khoản lương,Miền Trung,Hỗ trợ hồ sơ,new,nurture,KPIM Bank
+SIB-00969,0994 383 765,Khách hàng 0969,2026-12-11 12:27:00,CMP-2026-Q4,P-Q4-11,Tài khoản lương,Miền Nam,Mở mới,new,nurture,KPIM Bank - CSKH
+SIB-04799,0965 123 675,Khách hàng 4799,2026-12-11 13:20:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,consulted,low_priority,KPIM Bank
+SIB-01043,0975 041 867,Khách hàng 1043,2026-12-13 17:12:00,CMP-2026-Q4,P-Q4-13,Tài khoản lương,Miền Bắc,Hỏi ưu đãi,consulted,warm,KPIM Bank - CSKH
+SIB-05531,0971 508 292,Khách hàng 5171,2026-12-14 09:19:00,CMP-2026-Q4,,Vay mua nhà,Miền Bắc,Hỗ trợ hồ sơ,new,warm,KPIM Bank
+SIB-00993,0963 283 099,Khách hàng 0993,2026-12-14 10:08:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Nam,Tư vấn sản phẩm,new,nurture,KPIM Bank
+SIB-04565,0901 028 557,Khách hàng 4565,2026-12-14 11:50:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Hỏi ưu đãi,won,hot,KPIM Bank
+SIB-01010,0931 005 018,Khách hàng 1010,2026-12-14 15:59:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Bắc,Hỏi ưu đãi,new,warm,KPIM Bank
+SIB-04000,0928 257 469,Khách hàng 4000,2026-12-14 20:00:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Hỗ trợ hồ sơ,contacting,nurture,KPIM Bank - CSKH
+SIB-05257,0987 763 840,Khách hàng 5257,2026-12-14 20:23:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,contacting,low_priority,KPIM Bank - CSKH
+SIB-01012,0925 273 742,Khách hàng 1012,2026-12-15 15:14:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,won,warm,KPIM Bank - CSKH
+SIB-01023,0906 537 695,Khách hàng 1023,2026-12-16 09:46:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Bắc,Mở mới,new,low_priority,KPIM Bank - CSKH
+SIB-00967,0953 175 246,Khách hàng 0967,2026-12-17 18:09:00,CMP-2026-Q4,P-Q4-11,Tài khoản lương,Miền Trung,Mở mới,unreachable,hot,KPIM Bank - CSKH
+SIB-01003,0971 024 613,Khách hàng 1003,2026-12-18 17:04:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Nam,Hỗ trợ hồ sơ,unreachable,hot,KPIM Bank - CSKH
+SIB-00982,0943 858 275,Khách hàng 0982,2026-12-19 11:53:00,CMP-2026-Q4,P-Q4-11,Tài khoản lương,Miền Nam,Mở mới,contacting,nurture,KPIM Bank - CSKH
+SIB-04042,0925 157 328,Khách hàng 4042,2026-12-19 14:49:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,new,hot,KPIM Bank - CSKH
+SIB-01001,0911 097 613,Khách hàng 1001,2026-12-21 09:44:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Nam,Mở mới,contacting,warm,KPIM Bank
+SIB-01060,0996 036 192,Khách hàng 1060,2026-12-21 15:28:00,CMP-2026-Q4,P-Q4-14,Tài khoản lương,Miền Bắc,So sánh sản phẩm,new,hot,KPIM Bank
+SIB-00997,0978 502 663,Khách hàng 0997,2026-12-22 09:05:00,CMP-2026-Q4,P-Q4-12,Tài khoản lương,Miền Nam,Hỏi ưu đãi,new,warm,KPIM Bank - CSKH
+SIB-04007,0960 128 012,Khách hàng 4007,2026-12-22 13:00:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,Mở mới,new,low_priority,KPIM Bank
+SIB-01084,0913 581 587,Khách hàng 1084,2026-12-22 16:21:00,CMP-2026-Q4,P-Q4-14,Tài khoản lương,Miền Trung,Tư vấn sản phẩm,won,warm,KPIM Bank - CSKH
+SIB-05668,0969 241 821,Khách hàng 5437,2026-12-24 03:45:00,CMP-2026-Q4,,Tài khoản lương,Miền Bắc,So sánh sản phẩm,consulted,hot,KPIM Bank - CSKH
+SIB-04546,0938 638 921,Khách hàng 4546,2026-12-24 09:16:00,CMP-2026-Q4,,Tài khoản lương,Miền Nam,Mở mới,consulted,warm,KPIM Bank - CSKH
+SIB-01065,0985 851 211,Khách hàng 1065,2027-01-03 12:48:00,CMP-2026-Q4,P-Q4-14,Tài khoản lương,Miền Nam,Mở mới,won,warm,KPIM Bank - CSKH
+SIB-01083,0995 838 522,Khách hàng 1083,2027-01-03 19:48:00,CMP-2026-Q4,P-Q4-14,Tài khoản lương,Miền Bắc,Tư vấn sản phẩm,won,hot,KPIM Bank - CSKH
+SIB-01087,0929 339 380,Khách hàng 1087,2027-01-09 12:03:00,CMP-2026-Q4,P-Q4-15,Tài khoản lương,Miền Nam,Mở mới,won,nurture,KPIM Bank
