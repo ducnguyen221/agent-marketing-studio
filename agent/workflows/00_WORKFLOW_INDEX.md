@@ -36,7 +36,7 @@ không có đường vòng, và đó là chủ đích.
 | **④ media** — brief hình & tiếng | `campaign-run` | `BRAND_VOICE` (mục ảnh) | — | `checklists/QA_ASSET.md` | `campaign_excel.py content --type media_prompt` | — |
 | 🔒 | **NGƯỜI tick `approve_final`** | | | | | |
 | **⑤ publish** — đăng | `campaign-run` | `MULTICHANNEL_MATRIX` | — | `checklists/QA_ASSET.md` | `campaign_excel.py publish-log` | — |
-| **⑥ measure** — đo | `campaign-run` | `DIAGNOSTICS` | — | — | `collect/*` *(đang xây)* | — |
+| **⑥ measure** — đo | `campaign-run` | `DIAGNOSTICS` | — | — | `collect/from_export.py` → `model/build_summary.py` | — |
 | **⑦ learn** — chốt 28 ngày | `campaign-run` | `DIAGNOSTICS` | — | — | `campaign_excel.py set` | — |
 
 **Persona dùng khi nào:** `content-strategist` ở ①②, `qa-reviewer` trước mỗi cổng 🔒,
@@ -100,8 +100,26 @@ luật đổi thì hành vi phải đổi theo.
 
 | Vùng | |
 |---|---|
-| `schema/` · `scripts/{calendar,workbook,pipeline,courseware}` · `agent/` | ✅ chạy được |
-| `scripts/{publish,collect,model}` | ⛔ **chưa có** — đừng gọi, đừng hứa với người dùng |
-| `07_Metrics_Daily` | ⛔ trống — chưa nối API YouTube/Facebook |
+| `schema/` · `scripts/{calendar,workbook,pipeline,courseware,collect,model}` · `agent/` | ✅ chạy được |
+| Đo bằng **file export tay** | ✅ `collect/from_export.py` → `model/build_summary.py` |
+| Đo bằng **API** (`collect/from_api_*`) và **đăng thật** (`publish/`) | ⛔ **chưa có** — cần quyền API |
+
+### Đo bằng file export tay — chạy được ngay, không cần token
+
+```powershell
+python scripts/collect/from_export.py --calendar <calendar.csv> `
+    --facebook-daily "Facebook Post Daily.csv" --youtube youtube_export.csv `
+    --out <fact_metrics_daily.csv> --workbook <wb.xlsx>
+
+python scripts/model/build_summary.py --calendar <calendar.csv> `
+    --metrics <fact_metrics_daily.csv> --brief <brief.yml> `
+    --leads-bridge <cta_lead_bridge.csv> --out <summary.csv> --workbook <wb.xlsx>
+```
+
+Hai điều script sẽ **từ chối làm im lặng**, và agent phải đọc cảnh báo chứ đừng bỏ qua:
+- `primary_kpi` trong brief không phải tên cột đo được → in ✖ kèm danh sách cột hợp lệ,
+  và **không kết luận winner**. Nhãn tiếng Việt để ở `primary_kpi_label`.
+- Chưa đủ 10 nội dung cùng định dạng → `vs_median_*` để **trống**, in cảnh báo
+  "CHƯA ĐỦ MẪU". Không được tự điền số thay thế.
 
 Thư mục chỉ có `README` hoặc `.gitkeep` = **kho rỗng**. Không suy nội dung từ tên thư mục.

@@ -22,8 +22,10 @@ funnel_goal: business
 channels: [facebook, youtube]
 pillars: [Product, Education, Promo, HowTo, Testimonial, Brand]
 
-primary_kpi: Số hồ sơ vay
-secondary_kpi: Chi phí trên mỗi lead (CPL)
+primary_kpi: leads
+primary_kpi_label: "Số hồ sơ vay"
+secondary_kpi: cta_rate
+secondary_kpi_label: "Chi phí trên mỗi lead (CPL)"
 target_reach: 110000
 target_leads: 800
 budget: 220000000
