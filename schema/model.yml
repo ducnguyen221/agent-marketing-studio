@@ -67,7 +67,9 @@ tables:
       funnel_goal_raw:    { type: string, note: "nguyên văn cột 'Mục tiêu funnel' trong kế hoạch — giữ để truy vết" }
       function_role:      { type: string, note: "vai trò chống lặp — 51.01 §11.3" }
       # -- nội dung / packaging
-      title_draft:        { type: string, required: true }
+      # Khuôn dựng sẵn tạo asset ở status `idea` với tiêu đề rỗng — stage `topics` mới điền.
+      # Bắt buộc từ `drafted` trở đi, không phải ngay lúc tạo.
+      title_draft:        { type: string, required: true, required_from_status: drafted }
       title_variant_a:    { type: string }
       title_variant_b:    { type: string }
       title_final:        { type: string }

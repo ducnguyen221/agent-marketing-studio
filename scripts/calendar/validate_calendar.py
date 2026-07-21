@@ -91,9 +91,17 @@ def check(rows: list[dict], model: dict, enums: dict, args) -> Report:
     for r in rows:
         rid = r.get("asset_id") or "?"
 
-        # -- trường bắt buộc
+        # -- trường bắt buộc.
+        # `required_from_status` cho phép cột chỉ bắt buộc từ một trạng thái trở đi —
+        # asset mới dựng từ khuôn chưa có tiêu đề là ĐÚNG, không phải lỗi.
+        row_rank = status_rank(enums, (r.get("status") or "").strip())
         for col, spec in asset_cols.items():
-            if spec.get("required") and col in r and not (r.get(col) or "").strip():
+            if not spec.get("required") or col not in r:
+                continue
+            since = spec.get("required_from_status")
+            if since and row_rank < status_rank(enums, since):
+                continue
+            if not (r.get(col) or "").strip():
                 rep.error(rid, f"{col} bắt buộc nhưng rỗng")
 
         # -- enum

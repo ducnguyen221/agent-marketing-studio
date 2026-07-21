@@ -1,0 +1,54 @@
+## brief.template.yml — khuôn brief chiến dịch
+##
+## `new_campaign.py` điền phần máy biết được; phần `<<HỎI NGƯỜI>>` agent PHẢI hỏi
+## trước khi điền. Đừng đoán hộ — brief sai thì mọi thứ phía sau sai theo.
+## Schema: schema/model.yml → dim_campaign
+
+campaign_id: "{{CAMPAIGN_ID}}"
+campaign_name: "{{CAMPAIGN_NAME}}"
+brand: "{{BRAND}}"
+campaign_type: "{{TYPE}}"          # series | product_launch | hot_news | evergreen
+series_id: "{{SERIES_ID}}"
+
+## ── Phần người phải trả lời ────────────────────────────────────────────────
+big_idea: "<<HỎI NGƯỜI>>"          # 1 câu. Không phải slogan — là luận điểm xuyên suốt.
+objective: "<<HỎI NGƯỜI>>"         # Xong chiến dịch thì cái gì khác đi?
+product_or_topic: "<<HỎI NGƯỜI>>"
+persona_primary: "<<HỎI NGƯỜI>>"
+persona_secondary: []
+series_promise: "<<HỎI NGƯỜI>>"    # Vì sao người ta nên theo dõi tiếp?
+key_message: "<<HỎI NGƯỜI>>"
+compliance_notes: "<<HỎI NGƯỜI nếu ngành có quy định — tài chính, y tế, giáo dục>>"
+
+## ── Máy điền theo loại chiến dịch ─────────────────────────────────────────
+start_date: "{{START_DATE}}"
+end_date: "{{END_DATE}}"
+channels: {{CHANNELS}}
+pillars: {{PILLARS}}
+
+primary_kpi: "{{PRIMARY_KPI}}"
+secondary_kpi: "{{SECONDARY_KPI}}"
+guardrail_kpi: "{{GUARDRAIL_KPI}}"
+
+winner_rule:
+  must_beat_median_on: ["{{PRIMARY_KPI}}", "{{SECONDARY_KPI}}"]
+  min_kpi_count: 2
+  guardrail: "{{GUARDRAIL_KPI}} không tụt dưới median"
+  baseline_source: "median 10 nội dung gần nhất CÙNG định dạng của chính kênh"
+  baseline_ready: false            # ⚠️ false cho tới khi đo đủ 10 mẫu. KHÔNG tự đổi.
+
+measurement_checkpoints: [24h, 72h, 7d, 28d]
+decision_at_28d: [SCALE, ITERATE, REPURPOSE, EVERGREEN, STOP]
+
+budget: null
+currency: VND
+
+constraints:
+  commercial_cta_episodes: {{COMMERCIAL_CTA_EPISODES}}
+  forbidden_terms_note: "không nhắc bất kỳ công cụ/hạ tầng sản xuất nội bộ nào trong asset công khai"
+  human_must_approve: [góc nhìn, kết luận, claim quan trọng, title/thumbnail cuối, CTA thương mại]
+  hashtag_limits: "YouTube ≤3 · Shorts ≤6 · Facebook 6–13"
+
+status: draft
+owner: "{{OWNER}}"
+created: "{{CREATED}}"

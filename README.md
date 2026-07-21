@@ -110,6 +110,12 @@ Cả bốn đã được kiểm bằng UAT 12 bước trên bộ mẫu KPIM — 
 
 ```
 agent/
+├─ workflows/00_WORKFLOW_INDEX.md   ★ ĐIỂM VÀO — 7 bước, nạp gì ở mỗi bước, bảng tra nhanh
+├─ templates/                       khuôn dựng sẵn
+│  ├─ campaign-types.yml            4 loại chiến dịch + nhịp đăng + KPI mặc định
+│  ├─ brief.template.yml            khuôn brief, chỗ nào phải hỏi người thì ghi <<HỎI NGƯỜI>>
+│  ├─ campaign_workbook.template.xlsx   workbook trống 13 sheet để xem cấu trúc chuẩn
+│  └─ README.md                     chọn loại nào, đổi được gì, không đổi gì
 ├─ skills/campaign-run/SKILL.md     luồng 5 stage, việc của từng stage, điều cấm
 ├─ agents/
 │  ├─ content-strategist.md         cái gì nên làm, bao nhiêu, tỷ trọng pillar
@@ -124,6 +130,29 @@ agent/
 ├─ checklists/QA_ASSET.md           18 mục + luật không tự sửa nội dung public
 └─ prompts/                         topic-gen · content-write
 ```
+
+### Dựng chiến dịch mới từ khuôn
+
+Bốn loại dựng sẵn — chọn sai loại thì nhịp đăng và cách đo đều sai theo:
+
+| Loại | Thời lượng | Hero | KPI chính | Dùng khi |
+|---|---|---|---|---|
+| `series` | 28 ngày · 4 chu kỳ · 28 asset | video dài | `subs_per_1000_engaged_views` | Chủ đề lớn chia nhiều tập |
+| `product_launch` | 84 ngày · 12 chu kỳ · 24 asset | bài Facebook | `leads` | Ra mắt sản phẩm, cần đăng ký |
+| `hot_news` | 3 ngày · 3 asset | short | `impressions` | Sự kiện phải nói trong 24–72h |
+| `evergreen` | 14 ngày · 5 asset | video dài | `avg_percentage_viewed` | Chủ đề tìm kiếm nhiều tháng |
+
+```powershell
+python scripts/pipeline/new_campaign.py --instance <content_root> `
+    --campaign-id DNA-C02 --type series --name "Tên" --start 2026-09-01 --owner "Duc Nguyen"
+```
+
+Script bung `asset_pattern` thành lịch đầy đủ với `asset_id` ổn định, `function_role`
+chống lặp và `parent_asset_id` trỏ về hero của chu kỳ. Thêm `--dry-run` để xem trước.
+
+**Script cố ý để trống** những thứ chỉ người mới trả lời được — `big_idea`, `objective`,
+`persona`, tiêu đề từng asset, `tos_score`, `hrs_score`. Chúng hiện thành `<<HỎI NGƯỜI>>`
+trong brief, và asset nằm ở `status: idea` cho tới khi stage `topics` chạy.
 
 ### Luật vận hành agent phải tuân
 
