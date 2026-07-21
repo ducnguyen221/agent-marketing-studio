@@ -50,20 +50,24 @@ Mỗi chiến dịch = một file `<CAMPAIGN_ID>.xlsx` **13 sheet**, dựng từ
 
 | Sheet | 1 dòng = | Ai ghi |
 |---|---|---|
-| `00_README` | hướng dẫn | 🤖 |
-| `01_Brief` | 1 trường của brief | 👤 |
-| `02_KPI_Target` | campaign × kênh × pillar × chỉ số × kỳ | 👤 target · ⚙️ baseline |
-| `03_Calendar` | **1 asset** — sheet trung tâm | 🤖 sinh · 👤 duyệt |
-| `04_Content` | 1 asset × 1 mảnh nội dung × 1 biến thể | 🤖 |
-| `05_Approval` | 1 asset × 1 vòng duyệt (10 mục checklist) | 👤 |
-| `06_Publish_Log` | 1 asset × 1 kênh × 1 lần chạy | ⚙️ |
-| `07_Metrics_Daily` | asset × kênh × ngày | ⚙️ |
-| `08_Metrics_Summary` | asset × kênh — winner, North Star, quyết định 28 ngày | ⚙️ tính · 👤 chốt |
-| `09_Leads` | 1 lead | ⚙️ |
-| `10_Insights` | 1 phát hiện — **bắt buộc có cột bằng chứng** | 🤖 đề xuất · 👤 duyệt |
-| `_Lists` · `_Dictionary` | dropdown enum · data dictionary nhúng | ⚙️ |
+| `00_README` | hướng dẫn | agent |
+| `01_Brief` | 1 trường của brief | bạn |
+| `02_KPI_Target` | campaign × kênh × pillar × chỉ số × kỳ | bạn đặt target · script điền baseline |
+| `03_Calendar` | **1 asset** — sheet trung tâm | agent sinh · bạn duyệt |
+| `04_Content` | 1 asset × 1 mảnh nội dung × 1 biến thể | agent |
+| `05_Approval` | 1 asset × 1 vòng duyệt (10 mục checklist) | bạn |
+| `06_Publish_Log` | 1 asset × 1 kênh × 1 lần chạy | script |
+| `07_Metrics_Daily` | asset × kênh × ngày | script |
+| `08_Metrics_Summary` | asset × kênh — winner, North Star, quyết định 28 ngày | script tính · bạn chốt |
+| `09_Leads` | 1 lead | script |
+| `10_Insights` | 1 phát hiện — **bắt buộc có cột bằng chứng** | agent đề xuất · bạn duyệt |
+| `_Lists` · `_Dictionary` | dropdown enum · data dictionary nhúng | script |
 
-🤖 agent · 👤 bạn · ⚙️ script. **Hàng tiêu đề nền vàng là cột của bạn — agent không bao giờ ghi đè.**
+**Tiêu đề cột là text thuần, không icon** — tên trong Excel trùng khớp tuyệt đối với tên cột
+trong schema, nên Power Query và pandas join thẳng được. Quyền sở hữu cột đọc qua **màu nền
+hàng tiêu đề**: 🟡 vàng = của bạn, agent không bao giờ ghi đè · 🟢 xanh lá = script sinh,
+sửa tay sẽ bị ghi đè · 🔵 xanh dương = agent sinh, sửa thoải mái. Không nhớ màu thì mở
+sheet `_Dictionary`, cột "ai ghi".
 
 ```powershell
 python scripts/workbook/build_workbook.py --campaign-id <ID> --out <file.xlsx> `

@@ -30,7 +30,10 @@ except ImportError as e:
     sys.exit(2)
 
 SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schema"
-OWNER_MARK = {"agent": "🤖", "human": "👤", "script": "⚙️"}
+# Chú giải màu nền hàng tiêu đề — thay cho icon trong tên cột.
+OWNER_LABEL = {"agent": "agent sinh, bạn sửa thoải mái",
+               "human": "CỦA BẠN — agent không bao giờ ghi đè",
+               "script": "script sinh, sửa tay sẽ bị ghi đè"}
 
 
 def load(name: str) -> dict:
@@ -122,7 +125,10 @@ class Builder:
         ws = self.wb.create_sheet(sheet["name"])
         cols = self.resolve(sheet)
         for i, (name, cspec, owner) in enumerate(cols, start=1):
-            c = ws.cell(row=1, column=i, value=f"{OWNER_MARK.get(owner,'')} {name}".strip())
+            # Tiêu đề là TEXT THUẦN — không icon. Quyền sở hữu cột đọc qua màu nền
+            # hàng tiêu đề và sheet _Dictionary, để tên cột trùng khớp tuyệt đối với
+            # tên trong schema (Power Query / pandas / crosswalk đều khớp thẳng).
+            c = ws.cell(row=1, column=i, value=name)
             c.font = Font(bold=True, size=10)
             c.fill = self.fills.get(owner, self.fills["agent"])
             c.alignment = Alignment(vertical="center", wrap_text=True)
@@ -172,7 +178,7 @@ class Builder:
             ws.cell(row=r, column=1, value=field).font = Font(bold=True, size=10)
             ws.cell(row=r, column=2, value=values.get(field, ""))
             ws.cell(row=r, column=3, value=str(tcols.get(field, {}).get("note", "")))
-            ws.cell(row=r, column=4, value=f"{OWNER_MARK.get(owner,'')} {owner}")
+            ws.cell(row=r, column=4, value=owner)
             ws.cell(row=r, column=2).fill = self.fills.get(owner, self.fills["agent"])
             self.dict_rows.append([sheet["name"], field, "", "", "", owner,
                                    str(tcols.get(field, {}).get("note", ""))])
@@ -192,9 +198,11 @@ class Builder:
             ("Schema version", str(self.spec.get("version"))),
             ("Dựng bởi", "marketing-agent · scripts/workbook/build_workbook.py"),
             ("", ""),
-            ("LUẬT VÀNG", "Ô nền VÀNG ở hàng tiêu đề là cột của bạn — agent không bao giờ ghi đè."),
-            ("", "Ô nền XANH LÁ do script sinh — sửa tay sẽ bị ghi đè lần chạy sau."),
-            ("", "Ô nền XANH DƯƠNG do agent sinh — bạn sửa thoải mái."),
+            ("Tên cột", "Là TEXT THUẦN, không có icon — trùng khớp tuyệt đối với tên trong schema."),
+            ("LUẬT VÀNG", f"Nền VÀNG ở hàng tiêu đề = {OWNER_LABEL['human']}."),
+            ("", f"Nền XANH LÁ = {OWNER_LABEL['script']}."),
+            ("", f"Nền XANH DƯƠNG = {OWNER_LABEL['agent']}."),
+            ("", "Không nhớ màu? Mở sheet _Dictionary, cột 'ai ghi'."),
             ("", ""),
             ("Ô rỗng nghĩa là gì", self.conv.get("na_policy", "").strip()),
             ("", ""),
@@ -247,6 +255,8 @@ def main() -> int:
     ap.add_argument("--metrics")
     ap.add_argument("--leads")
     ap.add_argument("--content")
+    ap.add_argument("--force", action="store_true",
+                    help="ghi đè dù workbook đã có dữ liệu không tái tạo được từ CSV")
     args = ap.parse_args()
 
     spec, model, enums = load("workbook_spec.yml"), load("model.yml"), load("enums.yml")
@@ -300,6 +310,27 @@ def main() -> int:
     b.wb.move_sheet("_Dictionary", offset=len(b.wb.sheetnames))
 
     out = Path(args.out)
+    # 04_Content / 05_Approval / 06_Publish_Log chỉ sống trong workbook — không có bản CSV
+    # nguồn để dựng lại. Ghi đè là mất trắng nội dung agent đã viết và lịch sử duyệt.
+    if out.exists() and not args.force:
+        try:
+            from openpyxl import load_workbook
+            old = load_workbook(out, read_only=True)
+            risky = {s: old[s].max_row - 1 for s in ("04_Content", "05_Approval", "06_Publish_Log")
+                     if s in old.sheetnames and old[s].max_row > 1}
+            old.close()
+            if risky:
+                print(f"✖ {out.name} đã có dữ liệu chỉ tồn tại trong workbook:", file=sys.stderr)
+                for s, n in risky.items():
+                    print(f"    {s}: {n} dòng", file=sys.stderr)
+                print("  Dựng lại sẽ MẤT TRẮNG những dòng này (không có CSV nguồn để khôi phục).",
+                      file=sys.stderr)
+                print("  Sao lưu file trước, rồi chạy lại với --force nếu vẫn muốn ghi đè.",
+                      file=sys.stderr)
+                return 1
+        except Exception:
+            pass  # đọc không được thì cứ ghi, đừng chặn vì lý do phụ
+
     out.parent.mkdir(parents=True, exist_ok=True)
     b.wb.save(out)
 

@@ -327,6 +327,12 @@ Từ nay mỗi chiến dịch có **một workbook 13 sheet** gom toàn bộ vò
 Nạp sẵn một phần sẽ khiến học viên tưởng dữ liệu đã sạch. Nhiệm vụ của họ là append
 đủ **5.687 dòng** từ 7 nguồn về đúng schema của sheet này.
 
+### Tên cột — text thuần, không icon
+
+Tiêu đề cột trong mọi sheet là **text thuần**, trùng khớp tuyệt đối với tên cột khai ở
+`schema/model.yml`. Không có tiền tố, không có icon. Nhờ vậy Power Query, pandas và
+`crosswalk.yml` join thẳng được mà không phải bóc ký tự ra khỏi tên cột.
+
 ### Quy ước màu hàng tiêu đề
 
 | Màu | Ý nghĩa |

@@ -18,6 +18,12 @@ conventions:
   file_name: "{campaign_id}.xlsx"
   header_row: 1
   freeze: "A2"
+  header_style: plain_text
+  header_note: >
+    Tiêu đề cột là TEXT THUẦN — không icon, không tiền tố. Tên trong Excel trùng khớp
+    tuyệt đối với tên cột ở model.yml, nên Power Query / pandas / crosswalk join thẳng
+    được mà không phải bóc ký tự. Quyền sở hữu cột đọc qua MÀU NỀN hàng tiêu đề
+    (xem owner_fill) và qua sheet _Dictionary cột "ai ghi".
   owner_fill:                      # màu nền hàng tiêu đề, theo owner
     agent:  "DDEBF7"               # xanh nhạt
     human:  "FFF2CC"               # vàng nhạt — ô của bạn
