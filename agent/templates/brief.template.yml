@@ -49,6 +49,32 @@ constraints:
   human_must_approve: [góc nhìn, kết luận, claim quan trọng, title/thumbnail cuối, CTA thương mại]
   hashtag_limits: "YouTube ≤3 · Shorts ≤6 · Facebook 6–13"
 
+## ── Mức tự động của RIÊNG chiến dịch này ──────────────────────────────────
+## Đây là chỗ chuyển giữa "người duyệt từng bài" và "chạy hàng loạt / tự động 100%".
+## Đổi khối này là việc của NGƯỜI. Agent đọc, không được sửa.
+##
+##   hitl  — người tick từng cổng cho từng asset (mặc định, an toàn nhất)
+##   batch — người vẫn duyệt, nhưng duyệt cả loạt bằng auto-approve theo điều kiện dưới
+##   auto  — cổng nào khai `auto` thì máy tự tick khi asset thoả `auto_if`
+##
+## Dù ở mode nào, BỐN chặn cứng vẫn không bỏ được:
+##   verification_open > 0 · chưa approve_final · autonomy != full khi đăng thật · cột của người
+automation:
+  mode: hitl
+  gates:
+    approve_topic:   required     # required | auto
+    approve_content: required
+    approve_final:   required     # nên để required lâu nhất có thể
+  auto_if:
+    require_verification_closed: true
+    require_qa_passed: true
+    max_hrs_score: 2              # tin rủi ro cao thì luôn phải người xem
+    forbid_commercial_cta: true   # bài có CTA thương mại không bao giờ tự duyệt
+  schedule:
+    enabled: false
+    publish_time: "20:00"
+    timezone: Asia/Ho_Chi_Minh
+
 status: draft
 owner: "{{OWNER}}"
 created: "{{CREATED}}"

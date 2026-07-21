@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -297,6 +298,134 @@ def cmd_publish_log(args) -> int:
     return 0
 
 
+def log_activity(path: str, actor: str, action: str, result: str,
+                 asset_id: str = "", stage: str = "", mode: str = "", detail: str = "") -> None:
+    """Ghi một dòng vào 14_Activity_Log. Ghi CẢ khi bị chặn — nhật ký chỉ có giá trị khi
+    nó phản ánh cả những lần hệ thống nói không."""
+    try:
+        wb = load_workbook(path)
+        if "14_Activity_Log" not in wb.sheetnames:
+            return
+        sh = Sheet(wb["14_Activity_Log"])
+        n = sum(1 for _ in sh.rows()) + 1
+        sh.append({
+            "activity_id": f"A{n:05d}", "timestamp": now(), "actor": actor,
+            "actor_name": os.environ.get("USERNAME", ""), "action": action,
+            "asset_id": asset_id, "stage": stage, "automation_mode": mode,
+            "result": result, "detail": detail[:400],
+        })
+        wb.save(path)
+    except Exception:
+        pass  # nhật ký hỏng không được làm chết lệnh chính
+
+
+def load_policy(workbook: str) -> dict:
+    """Chính sách tự động đọc từ brief.yml cạnh workbook. Không có thì mặc định hitl."""
+    brief = Path(workbook).parent / "brief.yml"
+    default = {"mode": "hitl", "gates": {}, "auto_if": {}}
+    if not brief.exists():
+        return default
+    try:
+        b = yaml.safe_load(brief.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return default
+    return {**default, **(b.get("automation") or {})}
+
+
+def cmd_auto_approve(args) -> int:
+    """Duyệt hàng loạt theo CHÍNH SÁCH, không phải theo ý agent.
+
+    Chỉ chạy khi brief khai `automation.mode: batch|auto`. Điều kiện an toàn trong
+    `auto_if` phải thoả TỪNG asset — asset nào không thoả thì bỏ qua và nói rõ vì sao.
+    """
+    pol = load_policy(args.workbook)
+    if pol.get("mode") not in ("batch", "auto"):
+        print(f"✖ brief khai automation.mode='{pol.get('mode')}'. "
+              f"Duyệt hàng loạt chỉ chạy ở mode 'batch' hoặc 'auto'.", file=sys.stderr)
+        print("  Đổi mode trong brief.yml là việc của NGƯỜI, không phải của agent.", file=sys.stderr)
+        log_activity(args.workbook, "agent", "auto-approve", "blocked",
+                     mode=str(pol.get("mode")), detail="mode không cho phép")
+        return 1
+    if pol.get("gates", {}).get(args.gate) != "auto":
+        print(f"✖ cổng '{args.gate}' khai '{pol.get('gates', {}).get(args.gate)}' trong brief — "
+              f"chỉ 'auto' mới được duyệt hàng loạt.", file=sys.stderr)
+        log_activity(args.workbook, "agent", "auto-approve", "blocked",
+                     mode=pol["mode"], detail=f"gate {args.gate} không auto")
+        return 1
+
+    wb, p = open_wb(args.workbook)
+    sh = Sheet(wb["03_Calendar"])
+    cond = pol.get("auto_if") or {}
+
+    # Điều kiện an toàn trỏ vào cột KHÔNG tồn tại thì nó không bảo vệ gì cả, mà vẫn
+    # báo thành công — đó là an toàn giả, nguy hiểm hơn không có điều kiện.
+    NEEDS = {"require_verification_closed": "verification_open",
+             "require_qa_passed": "qa_passed",
+             "max_hrs_score": "hrs_score",
+             "forbid_commercial_cta": "has_commercial_cta"}
+    vacuous = [f"{k} (cần cột '{c}')" for k, c in NEEDS.items()
+               if cond.get(k) not in (None, False) and c not in sh.col]
+    if vacuous:
+        print("✖ CHẶN: điều kiện an toàn trỏ vào cột không có trong 03_Calendar —",
+              file=sys.stderr)
+        for v in vacuous:
+            print(f"    {v}", file=sys.stderr)
+        print("  Duyệt hàng loạt lúc này = không có điều kiện nào thật sự chạy.", file=sys.stderr)
+        print("  Bổ sung cột vào calendar rồi dựng lại workbook, hoặc bỏ điều kiện khỏi brief.",
+              file=sys.stderr)
+        log_activity(args.workbook, "agent", "auto-approve", "blocked",
+                     mode=pol["mode"], detail="điều kiện rỗng ruột: " + "; ".join(vacuous))
+        return 1
+
+    done, skipped = [], []
+    for row, r in sh.rows():
+        if is_true(r.get(args.gate)):
+            continue
+        why = []
+        if cond.get("require_verification_closed", True):
+            try:
+                if int(r.get("verification_open") or 0) > 0:
+                    why.append("còn [KIỂM CHỨNG] mở")
+            except (TypeError, ValueError):
+                pass
+        if cond.get("require_qa_passed") and not is_true(r.get("qa_passed")):
+            why.append("chưa qa_passed")
+        mh = cond.get("max_hrs_score")
+        if mh is not None:
+            raw = str(r.get("hrs_score") or "").strip()
+            if not raw:
+                # Chưa chấm nghĩa là rủi ro CHƯA BIẾT, không phải rủi ro bằng 0.
+                # Coi ô trống là 0 rồi cho qua chính là cách một cổng an toàn chết âm thầm.
+                why.append("hrs_score chưa chấm")
+            else:
+                try:
+                    if float(raw) > float(mh):
+                        why.append(f"hrs_score {raw} > ngưỡng {mh}")
+                except ValueError:
+                    why.append(f"hrs_score '{raw}' không phải số")
+        if cond.get("forbid_commercial_cta") and str(r.get("has_commercial_cta")).upper() == "TRUE":
+            why.append("có CTA thương mại")
+        if why:
+            skipped.append((r.get("asset_id"), "; ".join(why)))
+            continue
+        sh.set(row, args.gate, "x")
+        if args.gate == "approve_final":
+            sh.set(row, "approved_by", f"auto:{pol['mode']}")
+            sh.set(row, "approved_at", now())
+        done.append(r.get("asset_id"))
+    wb.save(p)
+
+    print(f"── auto-approve · mode={pol['mode']} · cổng {args.gate}")
+    print(f"   ✅ duyệt {len(done)} asset" + (f": {', '.join(done[:6])}" if done else ""))
+    for aid, why in skipped[:10]:
+        print(f"   ⏭ bỏ qua {aid} — {why}")
+    if len(skipped) > 10:
+        print(f"   ⏭ … còn {len(skipped) - 10} asset bị bỏ qua")
+    log_activity(args.workbook, "agent", f"auto-approve:{args.gate}", "ok",
+                 mode=pol["mode"], detail=f"duyệt {len(done)}, bỏ qua {len(skipped)}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -333,8 +462,21 @@ def main() -> int:
     p.add_argument("--scheduled-for"); p.add_argument("--error")
     p.set_defaults(fn=cmd_publish_log)
 
+    p = sub.add_parser("auto-approve"); p.add_argument("workbook")
+    p.add_argument("--gate", required=True); p.set_defaults(fn=cmd_auto_approve)
+
     args = ap.parse_args()
-    return args.fn(args)
+    rc = args.fn(args)
+    # Mọi lệnh có tác dụng phụ đều để lại vết — kể cả lệnh bị chặn.
+    if args.cmd in ("approve", "set", "content", "publish-log"):
+        pol = load_policy(args.workbook)
+        log_activity(args.workbook,
+                     "human" if args.cmd == "approve" else "agent",
+                     args.cmd, "ok" if rc == 0 else "blocked",
+                     asset_id=getattr(args, "asset", "") or "",
+                     mode=str(pol.get("mode", "hitl")),
+                     detail=" ".join(sys.argv[3:])[:400])
+    return rc
 
 
 if __name__ == "__main__":

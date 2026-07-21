@@ -208,6 +208,83 @@ tables:
       is_duplicate_of:  { type: string, fk: fact_lead }
 
   # ────────────────────────────────────────────────────────────────────────
+  dim_asset_file:
+    grain: 1 dòng = 1 file thật (ảnh, video, audio, md) thuộc một asset
+    key: file_id
+    note: >
+      Sổ tài sản. Cột rights_* là bắt buộc với mọi file KHÔNG do mình tự tạo —
+      thiếu nó thì không được publish, vì rủi ro bản quyền không đo được bằng metric nào.
+    columns:
+      file_id:       { type: string, required: true }
+      asset_id:      { type: string, required: true, fk: dim_asset }
+      file_type:     { type: enum, values: [image, video, audio, markdown, doc, other], required: true }
+      role:          { type: enum, values: [thumbnail, hero_media, b_roll, infographic,
+                                            script, caption, subtitle, source_data, other] }
+      rel_path:      { type: string, required: true, note: "đường dẫn tương đối trong thư mục chiến dịch" }
+      bytes:         { type: int }
+      dimensions:    { type: string, note: "vd 1280x720" }
+      duration_sec:  { type: decimal }
+      checksum:      { type: string, note: "sha256 rút gọn — phát hiện file bị thay mà quên cập nhật" }
+      rights_status: { type: enum, values: [own, licensed, cc, stock, unknown], required: true, default: unknown }
+      rights_source: { type: string, note: "mua ở đâu / ai chụp / link giấy phép" }
+      rights_expiry: { type: date }
+      ai_generated:  { type: bool, note: "phải disclose nếu là ảnh chính của bài dài" }
+      created_at:    { type: datetime }
+      created_by:    { type: string }
+
+  # ────────────────────────────────────────────────────────────────────────
+  dim_link:
+    grain: 1 dòng = 1 đường link có gắn UTM
+    key: link_id
+    note: Mắt xích nối click với lead. Không có bảng này thì conversion không quy về asset được.
+    columns:
+      link_id:       { type: string, required: true }
+      asset_id:      { type: string, required: true, fk: dim_asset }
+      campaign_id:   { type: string, fk: dim_campaign }
+      target_url:    { type: string, required: true }
+      utm_source:    { type: string, required: true }
+      utm_medium:    { type: string, required: true }
+      utm_campaign:  { type: string, required: true }
+      utm_content:   { type: string, note: "nên = asset_id để quy ngược được" }
+      short_url:     { type: string }
+      landing_page:  { type: string }
+      cta_label:     { type: string }
+      created_at:    { type: datetime }
+
+  # ────────────────────────────────────────────────────────────────────────
+  fact_cost:
+    grain: 1 dòng = 1 khoản chi cho 1 asset (hoặc cấp chiến dịch nếu asset_id rỗng)
+    key: [cost_id]
+    columns:
+      cost_id:       { type: string, required: true }
+      campaign_id:   { type: string, required: true, fk: dim_campaign }
+      asset_id:      { type: string, fk: dim_asset }
+      cost_type:     { type: enum, values: [ads, production, tool, outsource, other], required: true }
+      amount:        { type: decimal, required: true }
+      currency:      { type: string, default: VND }
+      spend_date:    { type: date, required: true }
+      note:          { type: string }
+
+  # ────────────────────────────────────────────────────────────────────────
+  fact_activity:
+    grain: 1 dòng = 1 hành động agent hoặc người đã thực hiện
+    key: activity_id
+    note: >
+      Nhật ký. Đây là thứ cho phép chạy mass/tự động mà vẫn truy vết được — mỗi lệnh CLI
+      tự ghi một dòng. Khi có sự cố, đọc bảng này biết ai làm gì lúc nào, ở chế độ nào.
+    columns:
+      activity_id:   { type: string, required: true }
+      timestamp:     { type: datetime, required: true }
+      actor:         { type: enum, values: [agent, human, script, schedule], required: true }
+      actor_name:    { type: string }
+      action:        { type: string, required: true, note: "vd approve · content · publish-log · set" }
+      asset_id:      { type: string, fk: dim_asset }
+      stage:         { type: string }
+      automation_mode: { type: enum, values: [hitl, batch, auto], note: "chế độ lúc chạy" }
+      result:        { type: enum, values: [ok, blocked, error, skipped], required: true }
+      detail:        { type: string }
+
+  # ────────────────────────────────────────────────────────────────────────
   dim_date:
     grain: 1 dòng = 1 ngày
     key: date

@@ -42,3 +42,20 @@ compliance_notes:
   - Nội dung testimonial phải có văn bản đồng ý của khách hàng lưu tại phòng Pháp chế.
   - Bài Promo bắt buộc gắn dòng 'Điều kiện & điều khoản áp dụng' và link Biểu phí.
   - "Chiến dịch CMP-2026-Q2: mọi nội dung nhắc 'Vay mua nhà' phải dẫn về landing page chính thức /lp/cmp-2026-q2 và nêu rõ thời hạn chương trình."
+
+## ── Mức tự động của riêng chiến dịch này (bộ mẫu: bật batch để minh hoạ) ──
+automation:
+  mode: batch
+  gates:
+    approve_topic:   auto
+    approve_content: required
+    approve_final:   required
+  auto_if:
+    require_verification_closed: true
+    require_qa_passed: false
+    max_hrs_score: 2
+    forbid_commercial_cta: true
+  schedule:
+    enabled: false
+    publish_time: "20:00"
+    timezone: Asia/Ho_Chi_Minh

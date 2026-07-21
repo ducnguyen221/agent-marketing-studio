@@ -276,6 +276,44 @@ sheets:
       status:          { type: enum, values: [đề xuất, đã duyệt, đang làm, xong, bỏ], owner: human }
 
   # ──────────────────────────────────────────────────────────────────────────
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: "11_Assets"
+    grain: 1 dòng = 1 file thật thuộc một asset
+    from_table: dim_asset_file
+    columns: all
+    owner: agent
+    owner_overrides: { rights_status: human, rights_source: human, rights_expiry: human }
+    purpose: >
+      Sổ tài sản: ảnh, video, audio, file md nằm ở đâu trong thư mục chiến dịch.
+      Cột rights_* do NGƯỜI xác nhận — agent không được tự khai một file là "own".
+
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: "12_Links"
+    grain: 1 dòng = 1 link có UTM
+    from_table: dim_link
+    columns: all
+    owner: agent
+    purpose: Mắt xích nối click với lead. `utm_content` nên bằng `asset_id` để quy ngược được.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: "13_Cost"
+    grain: 1 dòng = 1 khoản chi
+    from_table: fact_cost
+    columns: all
+    owner: human
+    optional: true
+    purpose: Không có bảng này thì không tính được CPL/ROAS — chỉ biết nhiều view, không biết đắt rẻ.
+
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: "14_Activity_Log"
+    grain: 1 dòng = 1 hành động
+    from_table: fact_activity
+    columns: all
+    owner: script
+    purpose: >
+      Mọi lệnh CLI tự ghi một dòng vào đây. Đây là thứ cho phép chạy mass/tự động mà vẫn
+      truy vết được: ai làm gì, lúc nào, ở chế độ nào, kết quả ra sao (kể cả bị chặn).
+
   - name: "_Lists"
     kind: helper
     owner: script
