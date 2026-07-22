@@ -114,6 +114,7 @@ sheets:
       Cổng duyệt:  [approve_topic, approve_content, approve_final]
       Quy trình:   [status, owner, verification_open, qa_passed,
                     approved_by, approved_at, blocked_reason]
+      Tài liệu:    [asset_folder]
       Sau khi đăng: [actual_publish_datetime, platform_native_id, live_url,
                      playlist_id, recycle_source_id, recycle_due_date]
     owner_overrides:
@@ -313,6 +314,19 @@ sheets:
     purpose: >
       Mọi lệnh CLI tự ghi một dòng vào đây. Đây là thứ cho phép chạy mass/tự động mà vẫn
       truy vết được: ai làm gì, lúc nào, ở chế độ nào, kết quả ra sao (kể cả bị chặn).
+
+  # ──────────────────────────────────────────────────────────────────────────
+  - name: "15_Platform_Sync"
+    grain: 1 dòng = 1 asset × 1 nền tảng
+    from_table: dim_platform_sync
+    columns: all
+    owner: script
+    owner_overrides: { platform_post_id: human, sync_method: human, note: human }
+    purpose: >
+      Cầu nối duy nhất giữa asset của mình và bài thật trên nền tảng. Quy trình đồng bộ:
+      (1) đăng xong → ghi platform_post_id vào đây · (2) tải export hoặc gọi API ·
+      (3) nối theo platform_post_id → 07_Metrics_Daily · (4) đóng dấu last_synced_at.
+      Chưa có dòng ở đây thì asset chưa được coi là đã đo, dù có số liệu ở đâu đó.
 
   - name: "_Lists"
     kind: helper

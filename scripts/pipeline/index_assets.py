@@ -86,7 +86,16 @@ def main() -> int:
         rel = p.relative_to(cdir).as_posix()
         if rel in ("calendar.csv", "brief.yml"):
             continue
-        aid = match_asset(p.stem, ids)
+        # Ưu tiên THƯ MỤC theo mã content: assets/<asset_id>/... — tên file muốn đặt sao
+        # cũng được. Chỉ khi file nằm ngoài cấu trúc đó mới đoán theo tiền tố tên file.
+        parts = p.relative_to(cdir).parts
+        aid = ""
+        for seg in parts[:-1]:
+            if seg in by_id:
+                aid = seg
+                break
+        if not aid:
+            aid = match_asset(p.stem, ids)
         if not aid:
             orphan.append(rel)
             continue
@@ -161,8 +170,33 @@ def main() -> int:
                 v = row.get(name, "")
                 if name.startswith("rights_") and old.get(name) not in (None, "", "unknown"):
                     v = old[name]          # ← không đè xác nhận của người
-                ws.cell(j, i, v)
+                cell = ws.cell(j, i, v)
+                if name == "rel_path" and v:          # bấm mở file ngay từ Excel
+                    cell.hyperlink = str((cdir / str(v)).resolve())
+                    cell.style = "Hyperlink"
+                elif name == "target_url" and v:
+                    cell.hyperlink = str(v)
+                    cell.style = "Hyperlink"
         print(f"   ✅ {sheet}: {len(rows)} dòng")
+
+    # 03_Calendar: cột asset_folder trỏ thẳng tới thư mục tài liệu của asset
+    if "03_Calendar" in wb.sheetnames:
+        ws = wb["03_Calendar"]
+        cols = sheet_cols(ws)
+        if "asset_folder" in cols and "asset_id" in cols:
+            n = 0
+            for r in range(2, ws.max_row + 1):
+                aid = ws.cell(r, cols["asset_id"]).value
+                if not aid:
+                    continue
+                folder = cdir / "assets" / str(aid)
+                rel = f"assets/{aid}/"
+                cell = ws.cell(r, cols["asset_folder"], rel)
+                if folder.exists():
+                    cell.hyperlink = str(folder.resolve())
+                    cell.style = "Hyperlink"
+                    n += 1
+            print(f"   ✅ 03_Calendar.asset_folder: {n} asset đã có thư mục tài liệu")
     wb.save(args.workbook)
     return 0
 

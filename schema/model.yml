@@ -109,6 +109,7 @@ tables:
       live_url:           { type: string }
       playlist_id:        { type: string }
       # -- tái chế
+      asset_folder:       { type: string, derived: true, note: "assets/{asset_id}/ — mọi tài liệu của asset này nằm trong đó" }
       recycle_source_id:  { type: string, fk: dim_asset }
       recycle_due_date:   { type: date }
       doc_ref:            { type: string, note: "mục trong tài liệu kế hoạch gốc, vd §3.1.A — để truy ngược" }
@@ -283,6 +284,29 @@ tables:
       automation_mode: { type: enum, values: [hitl, batch, auto], note: "chế độ lúc chạy" }
       result:        { type: enum, values: [ok, blocked, error, skipped], required: true }
       detail:        { type: string }
+
+  # ────────────────────────────────────────────────────────────────────────
+  dim_platform_sync:
+    grain: 1 dòng = 1 asset × 1 nền tảng
+    key: [asset_id, platform]
+    note: >
+      Bảng ĐỐI SOÁT giữa nội dung của mình và bài đã sống trên nền tảng.
+      Đây là nơi duy nhất giữ ánh xạ `asset_id` ↔ mã bài của Facebook/YouTube, nên mọi
+      lần kéo số liệu về (bằng file export hay bằng API) đều nối được đúng bài.
+      Không có dòng ở đây = chưa đăng hoặc chưa đối soát → chưa được coi là đã đo.
+    columns:
+      asset_id:          { type: string, required: true, fk: dim_asset }
+      platform:          { type: enum, enum: platform, required: true }
+      platform_post_id:  { type: string, required: true, note: "FB: {page_id}_{post_id} · YT: videoId 11 ký tự" }
+      platform_url:      { type: string }
+      platform_title:    { type: string, note: "tiêu đề ĐANG hiển thị trên nền tảng — lệch với title_final là dấu hiệu ai đó sửa tay" }
+      published_at:      { type: datetime, note: "giờ nền tảng ghi nhận, có thể lệch giờ lên lịch" }
+      sync_method:       { type: enum, values: [manual_export, api, manual_entry], required: true }
+      last_synced_at:    { type: datetime }
+      last_sync_status:  { type: enum, values: [ok, not_found, permission_denied, stale, error] }
+      metrics_from:      { type: date, note: "khoảng ngày đã có số liệu" }
+      metrics_to:        { type: date }
+      note:              { type: string }
 
   # ────────────────────────────────────────────────────────────────────────
   dim_date:
