@@ -57,6 +57,9 @@ sheets:
     fields:                          # thứ tự hiển thị
       - [campaign_id, script]
       - [campaign_name, human]
+      - [campaign_type, human]
+      - [automation_mode, human]
+      - [automation_gates, human]
       - [big_idea, human]
       - [objective, human]
       - [series_promise, human]

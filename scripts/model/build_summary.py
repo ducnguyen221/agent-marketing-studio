@@ -21,6 +21,11 @@ from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
+# workbook là nguồn sự thật; lib dùng chung để mọi script đọc giống nhau
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from campaign_io import load_brief, load_calendar  # noqa: E402
+
+
 try:
     import yaml
 except ImportError:
@@ -73,12 +78,12 @@ def main() -> int:
     ap.add_argument("--min-baseline-n", type=int, default=10)
     args = ap.parse_args()
 
-    cal = {r["asset_id"]: r for r in read_csv(args.calendar) if r.get("asset_id")}
+    cal = {r["asset_id"]: r for r in load_calendar(args.calendar) if r.get("asset_id")}
     facts = read_csv(args.metrics)
 
     primary, secondary, guardrail, min_hits = "views", "engagement_rate", "retention_30s", 2
-    if args.brief and yaml and Path(args.brief).exists():
-        b = yaml.safe_load(Path(args.brief).read_text(encoding="utf-8")) or {}
+    if args.brief and Path(args.brief).exists():
+        b = load_brief(args.brief)
         primary = b.get("primary_kpi") or primary
         secondary = b.get("secondary_kpi") or secondary
         guardrail = b.get("guardrail_kpi") or guardrail

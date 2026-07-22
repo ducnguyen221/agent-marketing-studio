@@ -21,6 +21,11 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
+# workbook là nguồn sự thật; lib dùng chung để mọi script đọc giống nhau
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from campaign_io import load_brief, load_calendar  # noqa: E402
+
+
 try:
     import yaml
 except ImportError:
@@ -157,13 +162,23 @@ def check(rows: list[dict], model: dict, enums: dict, args) -> Report:
             rep.error(rid, "verification_open không phải số")
         if verif > 0 and rank >= scheduled_rank >= 0:
             rep.error(rid, f"còn {verif} chỗ [KIỂM CHỨNG] chưa đóng nhưng status='{st}'")
-        if rank >= approved_rank >= 0:
+        # `rejected` và `archived` xếp sau `approved` trong enum nhưng KHÔNG phải đã duyệt —
+        # đòi approved_by ở đó là sai.
+        if rank >= approved_rank >= 0 and st not in ("rejected", "archived"):
             if not (r.get("approved_by") or "").strip():
                 rep.error(rid, f"status='{st}' nhưng thiếu approved_by")
             if not (r.get("approved_at") or "").strip():
                 rep.error(rid, f"status='{st}' nhưng thiếu approved_at")
-        if st == "published" and not (r.get("platform_native_id") or "").strip():
-            rep.error(rid, "status='published' nhưng chưa có platform_native_id")
+        # Mã bài trên nền tảng sống ở 15_Platform_Sync. Chỉ khi KHÔNG có bảng đó
+        # (đọc từ CSV cũ) mới xét cột trong calendar.
+        if st == "published":
+            has_id = bool(str(r.get("platform_native_id") or "").strip())
+            if args._synced_ids is not None:
+                has_id = rid in args._synced_ids
+                if not has_id:
+                    rep.error(rid, "status='published' nhưng không có dòng nào trong 15_Platform_Sync")
+            elif not has_id:
+                rep.error(rid, "status='published' nhưng chưa có platform_native_id")
 
         # -- HRS
         hrs = (r.get("hrs_score") or "").strip()
@@ -227,8 +242,13 @@ def main() -> int:
         print(f"Không thấy file: {cal}", file=sys.stderr)
         return 2
 
-    with open(cal, encoding="utf-8-sig", newline="") as f:
-        rows = list(csv.DictReader(f))
+    rows = load_calendar(cal)
+    args._synced_ids = None
+    if str(cal).lower().endswith(".xlsx"):
+        from campaign_io import read_sheet
+        sync = read_sheet(cal, "15_Platform_Sync")
+        args._synced_ids = {str(s.get("asset_id") or "").strip() for s in sync
+                            if str(s.get("platform_post_id") or "").strip()}
     if not rows:
         print("Calendar rỗng", file=sys.stderr)
         return 2

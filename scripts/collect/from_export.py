@@ -23,6 +23,11 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# workbook là nguồn sự thật; lib dùng chung để mọi script đọc giống nhau
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from campaign_io import load_brief, load_calendar  # noqa: E402
+
+
 try:
     import yaml
 except ImportError:
@@ -90,9 +95,19 @@ def read_csv(p: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
-def build_index(cal_rows: list[dict]) -> dict[str, tuple[str, str]]:
-    """native_id → (asset_id, platform). Nhận cả cột canonical lẫn cột tách theo kênh."""
+def build_index(cal_rows: list[dict], sync_rows: list[dict] | None = None) -> dict[str, tuple[str, str]]:
+    """Mã bài trên nền tảng → (asset_id, platform).
+
+    Nguồn chính là `15_Platform_Sync` — nơi duy nhất giữ ánh xạ này. Calendar chỉ là
+    nguồn phụ cho dữ liệu cũ chưa đối soát.
+    """
     idx: dict[str, tuple[str, str]] = {}
+    for s in (sync_rows or []):
+        pid = str(s.get("platform_post_id") or "").strip()
+        aid = str(s.get("asset_id") or "").strip()
+        plat = str(s.get("platform") or "").strip()
+        if pid and aid:
+            idx[pid] = (aid, plat or "facebook")
     for r in cal_rows:
         aid = (r.get("asset_id") or "").strip()
         if not aid:
@@ -177,8 +192,13 @@ def main() -> int:
         print("Không thấy schema/crosswalk.yml", file=sys.stderr)
         return 2
 
-    cal = read_csv(Path(args.calendar))
-    idx = build_index(cal)
+    cal = load_calendar(args.calendar)
+    sync = []
+    src = args.workbook or args.calendar
+    if str(src).lower().endswith(".xlsx"):
+        from campaign_io import read_sheet
+        sync = read_sheet(src, "15_Platform_Sync")
+    idx = build_index(cal, sync)
     print(f"── nạp số liệu · {len(cal)} asset · {len(idx)} khoá nền tảng")
     if not idx:
         print("   ✖ Calendar chưa có platform_native_id nào — chưa đăng thì chưa có gì để đo.",

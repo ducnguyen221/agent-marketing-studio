@@ -171,12 +171,6 @@ def main() -> int:
         write_md(rows, f, inst.name)
         print(f"   ✅ {f}")
     if args.xlsx:
-        f = inst / "campaigns.csv"
-        with open(f, "w", encoding="utf-8-sig", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=COLS)
-            w.writeheader()
-            w.writerows(rows)
-        print(f"   ✅ {f}")
         try:
             from openpyxl import Workbook
             from openpyxl.styles import Font, PatternFill

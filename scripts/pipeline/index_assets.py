@@ -26,6 +26,11 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# workbook là nguồn sự thật; lib dùng chung để mọi script đọc giống nhau
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from campaign_io import load_brief, load_calendar  # noqa: E402
+
+
 try:
     from openpyxl import load_workbook
 except ImportError:
@@ -67,12 +72,10 @@ def main() -> int:
     args = ap.parse_args()
 
     cdir = Path(args.campaign_dir)
-    cal_f = cdir / "calendar.csv"
-    if not cal_f.exists():
-        print(f"Không thấy {cal_f}", file=sys.stderr)
+    cal = [r for r in load_calendar(args.workbook) if r.get("asset_id")]
+    if not cal:
+        print("03_Calendar rỗng — chưa có asset nào để gắn tài liệu.", file=sys.stderr)
         return 2
-    with open(cal_f, encoding="utf-8-sig", newline="") as f:
-        cal = [r for r in csv.DictReader(f) if r.get("asset_id")]
     ids = [r["asset_id"] for r in cal]
     by_id = {r["asset_id"]: r for r in cal}
 
