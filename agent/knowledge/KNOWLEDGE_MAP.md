@@ -1,50 +1,39 @@
-# Bản đồ tri thức — cần gì thì đọc file nào
+# Bản đồ tri thức — cần gì đọc file nào
 
-Tra bảng này trước. Đừng đọc bừa cả repo — vừa tốn context vừa dễ lấy nhầm file cũ.
+Tra bảng này trước. Đừng đọc bừa cả repo.
 
 | Cần gì | Đọc |
 |---|---|
-| **Không biết bắt đầu từ đâu** | `agent/workflows/00_WORKFLOW_INDEX.md` ← điểm vào |
-| Dựng chiến dịch mới | `agent/templates/README.md` + `campaign-types.yml` |
-| Chạy tiếp một chiến dịch | `agent/skills/campaign-run/SKILL.md` |
-| Giọng viết, điều cấm, tự kiểm | `agent/knowledge/BRAND_VOICE.md` |
-| Độ dài / hashtag / vị trí link theo kênh | `agent/knowledge/MULTICHANNEL_MATRIX.md` |
+| **Cách agent làm việc, quy trình 5 bước** | `AGENTS.md` (gốc repo) |
+| Không biết bắt đầu từ đâu | `agent/workflows/00_WORKFLOW_INDEX.md` |
+| Dựng campaign mới | `agent/templates/CAMPAIGN_TEMPLATE.md` |
+| Viết 1 bài (content.md đa kênh) | `agent/templates/CONTENT_TEMPLATE.md` |
+| Giọng blog | `agent/output-styles/compa-class-blog.md` |
+| Giọng + format Facebook (post dài + caption Reel) | `agent/output-styles/tobi-post.md` |
+| Format độ dài/hashtag/link theo kênh | `agent/output-styles/multichannel-style.md` |
+| Newsletter | `agent/templates/EMAIL_NEWSLETTER_TEMPLATE.md` |
+| Tái chế nội dung 30 ngày | `agent/templates/RECYCLING_PLAN_TEMPLATE.md` |
 | Chấm chủ đề trước khi sản xuất | `agent/knowledge/SCORING.md` |
 | Số liệu xấu, không biết vì sao | `agent/knowledge/DIAGNOSTICS.md` |
-| QA một asset trước khi trình duyệt | `agent/checklists/QA_ASSET.md` |
-| Prompt viết nội dung | `agent/prompts/content-write.md` |
-| Prompt đề xuất chủ đề | `agent/prompts/topic-gen.md` |
-| **Cột nào tồn tại, kiểu gì, ai ghi** | `schema/model.yml` |
-| **Giá trị nào hợp lệ, luật chuyển trạng thái, luật cổng** | `schema/enums.yml` + `schema/model.yml` khối `stages` |
-| Cùng một thứ có mấy tên | `schema/crosswalk.yml` |
-| Workbook có sheet nào, ai ghi cột nào | `schema/workbook_spec.yml` |
-| Một chiến dịch hoàn chỉnh trông thế nào | `content/KPIM/` (dữ liệu mô phỏng) |
-| Từ điển dữ liệu bộ mẫu | `content/KPIM/DATA_DICTIONARY.md` |
-| Cấu hình kênh: đường dẫn, mức tự trị, từ cấm | `<content_root>/instance.yml` |
+| Nối agent với Facebook/YouTube | `agent/knowledge/PLATFORM_SETUP.md` |
+| **Cột nào ở sheet nào, luật cổng** | `schema/workbook_spec.yml` |
+| Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
+
+## Mô hình dữ liệu (nhắc lại vì hay nhầm)
+
+Mỗi campaign = **1 folder + 1 file `.md` (hồ sơ) + 1 file `.xlsx` (5 sheet)**.
+
+| Sheet | Là gì |
+|---|---|
+| Campaign | form dọc — metadata nghiệp vụ |
+| Post | bảng chủ — 1 bài/dòng, 3 cổng duyệt approve_topic/content/final ở đây |
+| Result | URL + ID sau khi đăng |
+| Engagement | số liệu nền tảng kéo về (dữ liệu DUY NHẤT đến từ ngoài file) |
+| Assets | sổ file thật của bài |
+
+Asset từng bài: `<folder campaign>/assets/<post_id>_<slug>/content.md, blog.md, ...`
 
 ## Luật chống ảo giác
 
-**Thư mục chỉ có `README.md` hoặc `.gitkeep` = kho rỗng.** Không được suy nội dung từ
-tên thư mục. Nếu cần thông tin mà file không có, nói "chưa có" — đừng dựng ra.
-
-**Trạng thái hiện tại của repo** (cập nhật 2026-07-21):
-
-| Vùng | Trạng thái |
-|---|---|
-| `schema/` | ✅ đầy đủ 4 file |
-| `scripts/calendar` · `workbook` · `pipeline` · `courseware` | ✅ chạy được |
-| `scripts/collect/from_export.py` | ✅ nạp CSV export tay (Facebook + YouTube) → `fact_metrics_daily` |
-| `scripts/model/build_summary.py` | ✅ tính `08_Metrics_Summary`, chặn so-median khi `baseline_n < 10` |
-| `scripts/collect/from_api_*.py` · `scripts/publish/` | ⛔ **chưa có** — cần quyền API. Đừng gọi, đừng hứa |
-| `agent/skills` · `knowledge` · `checklists` · `prompts` · `workflows` · `templates` | ✅ có nội dung |
-| `content/KPIM` + `data/KPIM` | ✅ bộ mẫu đầy đủ |
-| Thu số liệu từ YouTube/Facebook | ⛔ **chưa nối API** — `07_Metrics_Daily` hiện trống |
-
-## Ưu tiên khi thông tin mâu thuẫn
-
-1. `instance.yml` của kênh đang làm — luật riêng thắng luật chung
-2. `schema/*.yml` — hợp đồng dữ liệu
-3. `agent/knowledge/*` — tri thức nghiệp vụ
-4. `README.md` — mô tả tổng quan, có thể lạc hậu hơn code
-
-Người dùng nói trực tiếp thì đè tất cả.
+Thư mục chỉ có `README`/`.gitkeep` = kho rỗng. Không suy nội dung từ tên thư mục.
+Nếu file không có thông tin, nói "chưa có" — đừng dựng ra.

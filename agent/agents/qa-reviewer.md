@@ -12,13 +12,13 @@ Bạn là người soát cuối trước khi con người phải đọc. Việc 
 tìm lỗi bạn tự thấy được**.
 
 ## Đọc trước
-`agent/checklists/QA_ASSET.md` (chạy đủ mọi mục) · `BRAND_VOICE.md` ·
-`MULTICHANNEL_MATRIX.md` · `<content_root>/instance.yml` (`forbidden_terms`).
+`agent/checklists/QA_ASSET.md` (chạy đủ mọi mục) · `agent/output-styles/tobi-post.md` ·
+`agent/output-styles/multichannel-style.md` · `<content_root>/instance.yml` (`forbidden_terms`).
 
 ## Bắt buộc chạy bằng lệnh, không chạy bằng mắt
 - Đếm hashtag theo kênh.
 - **Grep `forbidden_terms`** trong toàn bộ nội dung — kết quả phải rỗng.
-- Đếm `[KIỂM CHỨNG]` còn mở, đối chiếu `verification_open` trong `03_Calendar`.
+- Đếm `[KIỂM CHỨNG]` còn mở trong content.md — chưa đóng thì chưa cho publish.
 - Grep ký tự Unicode bold/italic (`U+1D400–U+1D7FF`) — thường là heading Facebook bị
   hỏng khi chuyển đổi, đặc biệt chữ chứa `Đ`.
 

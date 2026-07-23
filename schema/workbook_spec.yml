@@ -1,345 +1,121 @@
-## workbook_spec.yml — đặc tả file Excel end-to-end của MỘT chiến dịch
+## workbook_spec.yml — đặc tả file Excel quản lý MỘT chiến dịch (5 sheet)
 ##
-## Một chiến dịch = một workbook `<CAMPAIGN_ID>.xlsx`.
-## build_workbook.py đọc file này + model.yml + enums.yml để dựng/làm mới workbook.
+## Mô hình chuẩn KPIM Academy: mỗi campaign = 1 folder + 1 file `.md` (hồ sơ) + 1 file
+## `.xlsx` (dữ liệu thực thi, 5 sheet). Hai file song hành, cùng tên folder.
 ##
-## KHÔNG lặp lại định nghĩa cột đã có ở model.yml — sheet chỉ liệt kê TÊN cột và
-## trỏ `from_table`; kiểu, enum, chú thích lấy ngược từ model.yml. Cột nào chỉ tồn tại
-## ở workbook (không có trong star schema) thì khai đầy đủ ở `extra_columns`.
-##
-## owner: agent 🤖 · human 👤 · script ⚙️
-##   - agent  : agent được ghi đè tự do
-##   - human  : agent KHÔNG BAO GIỜ ghi đè; chỉ người sửa
-##   - script : do collector/tính toán sinh ra, sửa tay sẽ bị ghi đè lần chạy sau
-version: 1
-updated: 2026-07-21
+## build_workbook.py đọc file này để dựng workbook. Cột lấy y hệt PIPELINE_CONTRACT của
+## KPIM — KHÔNG thêm bớt. Ba cổng duyệt (approve_topic/content/final) là CỘT trong sheet
+## Post, không phải sheet riêng.
+version: 4
+updated: 2026-07-23
+source: "KPIM Academy 30_MARKETING/agent — PIPELINE_CONTRACT v3, 01_Tobi_Posts.xlsx"
 
 conventions:
-  file_name: "{campaign_id}.xlsx"
+  file_name: "{campaign_code}.xlsx"        # đặt tên GIỐNG folder campaign
   header_row: 1
   freeze: "A2"
-  header_style: plain_text
-  header_note: >
-    Tiêu đề cột là TEXT THUẦN — không icon, không tiền tố. Tên trong Excel trùng khớp
-    tuyệt đối với tên cột ở model.yml, nên Power Query / pandas / crosswalk join thẳng
-    được mà không phải bóc ký tự. Quyền sở hữu cột đọc qua MÀU NỀN hàng tiêu đề
-    (xem owner_fill) và qua sheet _Dictionary cột "ai ghi".
-  owner_fill:                      # màu nền hàng tiêu đề, theo owner
-    agent:  "DDEBF7"               # xanh nhạt
-    human:  "FFF2CC"               # vàng nhạt — ô của bạn
-    script: "E2EFDA"               # xanh lá nhạt — máy ghi
-  validation_from: "_Lists"        # dropdown lấy từ sheet này
-  na_policy: >
-    Ô rỗng nghĩa là CHƯA BIẾT. Không điền 0, không điền "N/A", không đoán.
-    Riêng baseline_median rỗng = chưa đủ mẫu, dashboard phải hiện "chưa đủ mẫu".
+  header_style: plain_text                 # tiêu đề cột là text thuần, khớp tên field
+  approve_truthy: [x, X, "TRUE", "✓", "1"] # đánh dấu đã duyệt
+  na_policy: "Ô rỗng = chưa có / chưa biết. Không điền 0, không đoán."
+
+## Máy trạng thái của Post (PIPELINE_CONTRACT §EXCEL)
+post_status: [proposed, drafted, media_ready, atlas_ready, published]
+
+## Luật cổng — CLI `campaign_excel.py list --stage` chỉ trả post đủ điều kiện.
+## Người KHÔNG tick thì stage sau không có việc. Agent không tự tick thay người.
+stages:
+  topics:  { produces: "chủ đề → Sheet Post", from_status: [], to_status: proposed, gate: null }
+  draft:   { requires: "approve_topic",   from_status: [proposed],                  to_status: drafted,     gate: approve_topic }
+  media:   { requires: "approve_content", from_status: [drafted],                   to_status: media_ready, gate: approve_content }
+  atlas:   { requires: null,              from_status: [media_ready],               to_status: atlas_ready, gate: null }
+  publish: { requires: "approve_final",   from_status: [atlas_ready, media_ready],  to_status: published,   gate: approve_final }
 
 sheets:
 
   # ──────────────────────────────────────────────────────────────────────────
-  - name: "00_README"
-    kind: doc
-    owner: agent
-    purpose: Ai sửa cái gì, chạy lại thế nào, phiên bản schema nào.
-    blocks:
-      - Tên chiến dịch, campaign_id, ngày dựng, version schema
-      - Bảng "sheet nào ai ghi" (agent / bạn / script)
-      - Luật vàng: ô vàng là của bạn — agent không bao giờ đè
-      - Lệnh làm mới workbook và lệnh nạp số liệu
+  - name: "Campaign"
+    kind: form                 # FORM DỌC key→value, KHÔNG phải bảng
+    columns: ["field", "value", "chú thích / gợi ý điền"]
+    purpose: Metadata nghiệp vụ của chiến dịch. Đổ từ campaign_meta.json khi tạo.
+    fields:
+      - [campaign_id,         "Mã định danh duy nhất, vd CMP-2026-06-AI"]
+      - [campaign_code,       "Mã ngắn = TÊN FOLDER, vd 01_Tobi_Posts"]
+      - [name,                "Tên chiến dịch dễ đọc"]
+      - [pillar,              "Trụ nội dung: Power BI | Fabric | AI Agent | Career"]
+      - [status,              "proposed → active → paused → done"]
+      - [owner,               "Người phụ trách"]
+      - [created,             "Ngày tạo YYYY-MM-DD (tự điền nếu trống)"]
+      - [objective,           "Mục tiêu nghiệp vụ chính của chiến dịch"]
+      - [description,         "Mô tả ngắn chiến dịch"]
+      - [target_audience,     "Đối tượng mục tiêu"]
+      - [key_message,         "Thông điệp cốt lõi xuyên suốt"]
+      - [channels,            "Kênh phân phối: Facebook, YouTube, Atlas blog"]
+      - [cadence,             "Nhịp đăng, vd 2 bài/tuần"]
+      - [schedule_start,      "Ngày bắt đầu YYYY-MM-DD"]
+      - [schedule_end,        "Ngày kết thúc YYYY-MM-DD"]
+      - [num_posts_planned,   "Số bài dự kiến (số)"]
+      - [kpi_targets,         "Chỉ tiêu KPI, vd reach 50k, 200 lead"]
+      - [prompt_requirements, "Yêu cầu/giọng văn cho AI sinh nội dung"]
+      - [ai_summary,          "Tóm tắt AI cập nhật theo thời gian (AI ghi)"]
+      - [notes,               "Ghi chú khác"]
 
   # ──────────────────────────────────────────────────────────────────────────
-  - name: "01_Brief"
-    grain: 1 dòng = 1 trường của brief
-    orientation: vertical            # field | value | note | owner
-    source: dim_campaign
+  - name: "Post"
+    kind: table
+    key: post_id
     purpose: >
-      Thay cho brief.yml. Brief là thứ BẠN duyệt nên phải nằm trong workbook,
-      không nằm ở file cấu hình máy đọc.
-    fields:                          # thứ tự hiển thị
-      - [campaign_id, script]
-      - [campaign_name, human]
-      - [campaign_type, human]
-      - [automation_mode, human]
-      - [automation_gates, human]
-      - [big_idea, human]
-      - [objective, human]
-      - [series_promise, human]
-      - [persona_primary, human]
-      - [persona_secondary, human]
-      - [pillar_primary, human]
-      - [start_date, human]
-      - [end_date, human]
-      - [channels, human]
-      - [primary_kpi, human]
-      - [secondary_kpi, human]
-      - [guardrail_kpi, human]
-      - [winner_rule_min_kpi_count, human]
-      - [winner_rule_baseline_source, script]
-      - [winner_rule_baseline_ready, script]
-      - [budget, human]
-      - [commercial_cta_episodes, human]
-      - [forbidden_terms, human]
-      - [hashtag_limits, script]
-      - [measurement_checkpoints, script]
-      - [status, agent]
-      - [owner, human]
+      Bảng chủ — một dòng một bài. Ba cổng duyệt approve_topic / approve_content /
+      approve_final nằm ngay đây. status chạy proposed → drafted → media_ready →
+      atlas_ready → published.
+    columns:
+      - post_id
+      - campaign_id
+      - topic_title
+      - angle
+      - pillar
+      - topic_group          # 01_powerbi | 02_fabric | 03_ai-agent | 04_career
+      - slug
+      - detail_prompt
+      - schedule_date
+      - approve_topic        # CỔNG 1 — người tick → cho phép draft
+      - content_md           # đường dẫn content.md (nguồn đa kênh)
+      - blog_md
+      - fb_post
+      - youtube_desc
+      - fb_desc
+      - approve_content      # CỔNG 2 — người tick → cho phép media
+      - make_short           # x → dựng thêm video-short; luôn hỏi xác nhận
+      - infographic_png
+      - audio_mp3
+      - video_mp4
+      - atlas_html
+      - approve_final        # CỔNG 3 — người tick → cho phép publish
+      - status
+      - folder_path          # thư mục asset của bài
+      - notes
 
   # ──────────────────────────────────────────────────────────────────────────
-  - name: "02_KPI_Target"
-    grain: 1 dòng = campaign × kênh × pillar × chỉ số × kỳ
-    from_table: dim_kpi_target
-    columns: [platform, pillar_code, format, metric_name, period,
-              target_value, unit, baseline_median, baseline_source, baseline_n]
-    owner_overrides:
-      target_value: human
-      unit: human
-      baseline_median: script
-      baseline_source: script
-      baseline_n: script
-    note: >
-      baseline_n < 10 thì mọi so-sánh-với-median phải bị chặn. Đây là chỗ duy nhất
-      giữ con số baseline — không được nhân bản sang sheet khác.
+  - name: "Result"
+    kind: table
+    key: post_id
+    purpose: Kết quả đăng tải — URL và ID trên từng nền tảng. Ghi ở stage publish.
+    columns: [post_id, blog_url, youtube_url, fb_post_id, fb_permalink,
+              fb_scheduled_at, published_at, status]
 
   # ──────────────────────────────────────────────────────────────────────────
-  - name: "03_Calendar"
-    grain: 1 dòng = 1 asset
-    from_table: dim_asset
-    key: asset_id
-    purpose: Sheet trung tâm. Nhìn hết một chiến dịch trên một màn hình.
-    column_groups:
-      Định danh:   [asset_id, campaign_id, series_id, episode_no, week_no,
-                    parent_asset_id, doc_ref]
-      Phân loại:   [pillar_primary, pillar_secondary, persona_target, format,
-                    platform, distribution_platforms, funnel_stage, function_role]
-      Kế hoạch:    [title_draft, title_final, cta_type, has_commercial_cta,
-                    hashtags, hashtag_count, planned_publish_date,
-                    planned_publish_time, timezone]
-      Chấm điểm:   [tos_score, hrs_score]
-      Cổng duyệt:  [approve_topic, approve_content, approve_final]
-      Quy trình:   [status, owner, verification_open, qa_passed,
-                    approved_by, approved_at, blocked_reason]
-      Tài liệu:    [asset_folder]
-      Sau khi đăng: [actual_publish_datetime, platform_native_id, live_url,
-                     playlist_id, recycle_source_id, recycle_due_date]
-    owner_overrides:
-      status: agent
-      tos_score: human
-      hrs_score: human
-      approved_by: human
-      approved_at: human
-      qa_passed: human
-      actual_publish_datetime: script
-      platform_native_id: script
-      live_url: script
-      hashtag_count: script
-    guards:
-      - "3 cột approve_* là của NGƯỜI — agent/script không bao giờ ghi vào"
-      - "chưa tick cổng ⟹ campaign_excel.py list --stage KHÔNG trả asset đó ra"
-      - "verification_open > 0 ⟹ status không được ≥ scheduled"
-      - "status ≥ approved ⟹ approved_by và approved_at bắt buộc"
-      - "has_commercial_cta = TRUE ⟹ episode_no ∈ 01_Brief.commercial_cta_episodes"
-      - "status = published ⟹ platform_native_id bắt buộc"
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "04_Content"
-    grain: 1 dòng = 1 asset × 1 mảnh nội dung × 1 biến thể
-    owner: agent
+  - name: "Engagement"
+    kind: table
+    key: post_id
     purpose: >
-      Tách khỏi Calendar vì một asset có nhiều mảnh nội dung (title A/B, 3 caption,
-      prompt media) và vì text dài làm dòng Calendar cao vài trăm pixel.
-    extra_columns:
-      content_id:    { type: string, required: true, note: "{asset_id}-{content_type}-{variant}" }
-      asset_id:      { type: string, required: true, fk: "03_Calendar.asset_id" }
-      content_type:  { type: enum, values: [title, hook, description, caption, script,
-                                            media_prompt, pinned_comment, thumbnail_brief,
-                                            chapters], required: true }
-      variant:       { type: enum, values: [A, B, final], default: final }
-      body:          { type: text, required: true, width: 80, wrap: true }
-      char_count:    { type: int, owner: script }
-      hashtags:      { type: string }
-      language:      { type: string, default: vi }
-      draft_path:    { type: string, note: "đường dẫn .md trong drafts/ khi nội dung quá dài cho ô Excel" }
-      ai_generated:  { type: bool }
-      generated_at:  { type: datetime, owner: script }
-      is_selected:   { type: bool, owner: human, note: "biến thể được chọn để đăng" }
+      Số liệu tương tác kéo về từ nền tảng (Facebook Graph / YouTube). Đây là dữ liệu
+      DUY NHẤT đến từ ngoài file — nạp bằng scan_engagement (API) hoặc từ file export.
+      Nối về bài qua fb_post_id.
+    columns: [post_id, fb_post_id, fb_permalink, likes, comments, reactions,
+              shares, reach, impressions, fetched_at]
 
   # ──────────────────────────────────────────────────────────────────────────
-  - name: "05_Approval"
-    grain: 1 dòng = 1 asset × 1 vòng duyệt
-    owner: human
-    purpose: >
-      Tách khỏi Calendar vì một asset duyệt nhiều vòng. Gộp một dòng là mất
-      lịch sử revise — thứ đắt nhất khi rà lại sau chiến dịch.
-    extra_columns:
-      review_id:      { type: string, required: true }
-      asset_id:       { type: string, required: true, fk: "03_Calendar.asset_id" }
-      round_no:       { type: int, required: true, default: 1 }
-      submitted_at:   { type: datetime, owner: agent }
-      reviewer:       { type: string, required: true }
-      decision:       { type: enum, enum: approval_status_course, required: true }
-      decided_at:     { type: datetime }
-      comment:        { type: text, width: 60, wrap: true }
-      # 10 mục checklist — rút từ QA 14 mục của 51.01 §12.5 + 52.02 §5.1
-      chk_primary_source:   { type: bool, note: "có nguồn sơ cấp + ngày sự kiện" }
-      chk_fact_opinion:     { type: bool, note: "đã tách FACT / INFERENCE / OPINION" }
-      chk_title_no_overclaim: { type: bool }
-      chk_thumbnail_honest: { type: bool, note: "thumbnail không đánh lừa" }
-      chk_subscribe_reason: { type: bool, note: "có lý do subscribe rõ" }
-      chk_next_bridge:      { type: bool, note: "có đường xem tiếp" }
-      chk_hashtag_ok:       { type: bool, note: "đúng giới hạn theo kênh" }
-      chk_cta_ok:           { type: bool, note: "CTA thương mại đúng ngữ cảnh" }
-      chk_no_internal_tool: { type: bool, note: "KHÔNG lộ tên công cụ sản xuất nội bộ" }
-      chk_no_pii:           { type: bool }
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "06_Publish_Log"
-    grain: 1 dòng = 1 asset × 1 kênh × 1 lần chạy
-    owner: script
-    purpose: Vết của mọi lần publish, kể cả dry-run và lần lỗi.
-    extra_columns:
-      run_id:           { type: string, required: true }
-      asset_id:         { type: string, required: true, fk: "03_Calendar.asset_id" }
-      platform:         { type: enum, enum: platform, required: true }
-      attempt_no:       { type: int, default: 1 }
-      mode:             { type: enum, values: [dry_run, live], required: true, default: dry_run }
-      autonomy_at_run:  { type: enum, enum: autonomy, required: true }
-      requested_at:     { type: datetime }
-      scheduled_for:    { type: datetime }
-      status:           { type: enum, values: [queued, scheduled, published, error, skipped] }
-      platform_native_id: { type: string }
-      live_url:         { type: string }
-      error_message:    { type: text }
-    note: >
-      mode=live chỉ được ghi khi autonomy_at_run=full. Nếu thấy dòng live mà autonomy
-      khác full ⟹ có người bypass gate, phải điều tra.
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "07_Metrics_Daily"
-    grain: 1 dòng = asset × kênh × ngày
-    from_table: fact_metrics_daily
-    owner: script
-    purpose: >
-      Bản nạp lại của RIÊNG chiến dịch này (≈1.700 dòng cho 31 asset × 2 kênh × 28 ngày)
-      để soi được ngay trong file. Nguồn sự thật vẫn là CSV ở data/<instance>/raw|star.
-    columns: all
-    refresh: "python scripts/collect/*.py --campaign <ID> && python scripts/workbook/build_workbook.py --refresh-metrics"
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "08_Metrics_Summary"
-    grain: 1 dòng = asset × kênh
-    owner: script
-    purpose: Chỗ trả lời câu "bài nào thắng, vì sao".
-    extra_columns:
-      asset_id:   { type: string, fk: "03_Calendar.asset_id" }
-      platform:   { type: enum, enum: platform }
-      m24h_views: { type: int }
-      m72h_views: { type: int }
-      m7d_views:  { type: int }
-      m28d_views: { type: int }
-      engagement_rate:        { type: decimal, format: percent }
-      ctr:                    { type: decimal, format: percent }
-      cta_rate:               { type: decimal, format: percent }
-      subs_per_1000_engaged:  { type: decimal, note: "★ North Star" }
-      retention_30s:          { type: decimal, format: percent }
-      vs_median_primary:      { type: decimal, note: "BLANK nếu baseline_n < 10" }
-      vs_median_secondary:    { type: decimal }
-      kpi_hit_count:          { type: int, note: "số KPI vượt median" }
-      guardrail_ok:           { type: bool, note: "retention_30s không tụt dưới median" }
-      is_winner:              { type: bool, note: "kpi_hit_count ≥ min_kpi_count VÀ guardrail_ok" }
-      decision_28d:           { type: enum, enum: decision_28d, owner: human }
-      decision_note:          { type: text, owner: human }
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "09_Leads"
-    grain: 1 dòng = 1 lead
-    from_table: fact_lead
-    owner: script
-    columns: all
-    optional: true
-    note: Bỏ sheet này nếu chiến dịch không có mục tiêu lead.
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "10_Insights"
-    grain: 1 dòng = 1 phát hiện
-    purpose: >
-      Ép insight phải có bằng chứng. Không có evidence_metric + evidence_value
-      thì không được ghi dòng — đây là chỗ AI hay bịa nhất.
-    extra_columns:
-      insight_id:      { type: string, required: true }
-      scope:           { type: enum, values: [asset, pillar, channel, campaign], required: true }
-      scope_ref:       { type: string, note: "asset_id / pillar_code / platform, tuỳ scope" }
-      observed_at:     { type: date, required: true }
-      symptom:         { type: text, required: true, owner: agent }
-      evidence_metric: { type: string, required: true, owner: agent }
-      evidence_value:  { type: string, required: true, owner: agent }
-      baseline_value:  { type: string, owner: script }
-      likely_cause:    { type: text, owner: agent, note: "51.01 §13 — bảng triệu chứng→nguyên nhân" }
-      impact:          { type: enum, values: [cao, trung bình, thấp], owner: agent }
-      recommendation:  { type: text, required: true, owner: agent }
-      priority:        { type: enum, values: [P1, P2, P3], owner: agent }
-      approved_by:     { type: string, owner: human }
-      status:          { type: enum, values: [đề xuất, đã duyệt, đang làm, xong, bỏ], owner: human }
-
-  # ──────────────────────────────────────────────────────────────────────────
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "11_Assets"
-    grain: 1 dòng = 1 file thật thuộc một asset
-    from_table: dim_asset_file
-    columns: all
-    owner: agent
-    owner_overrides: { rights_status: human, rights_source: human, rights_expiry: human }
-    purpose: >
-      Sổ tài sản: ảnh, video, audio, file md nằm ở đâu trong thư mục chiến dịch.
-      Cột rights_* do NGƯỜI xác nhận — agent không được tự khai một file là "own".
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "12_Links"
-    grain: 1 dòng = 1 link có UTM
-    from_table: dim_link
-    columns: all
-    owner: agent
-    purpose: Mắt xích nối click với lead. `utm_content` nên bằng `asset_id` để quy ngược được.
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "13_Cost"
-    grain: 1 dòng = 1 khoản chi
-    from_table: fact_cost
-    columns: all
-    owner: human
-    optional: true
-    purpose: Không có bảng này thì không tính được CPL/ROAS — chỉ biết nhiều view, không biết đắt rẻ.
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "14_Activity_Log"
-    grain: 1 dòng = 1 hành động
-    from_table: fact_activity
-    columns: all
-    owner: script
-    purpose: >
-      Mọi lệnh CLI tự ghi một dòng vào đây. Đây là thứ cho phép chạy mass/tự động mà vẫn
-      truy vết được: ai làm gì, lúc nào, ở chế độ nào, kết quả ra sao (kể cả bị chặn).
-
-  # ──────────────────────────────────────────────────────────────────────────
-  - name: "15_Platform_Sync"
-    grain: 1 dòng = 1 asset × 1 nền tảng
-    from_table: dim_platform_sync
-    columns: all
-    owner: script
-    owner_overrides: { platform_post_id: human, sync_method: human, note: human }
-    purpose: >
-      Cầu nối duy nhất giữa asset của mình và bài thật trên nền tảng. Quy trình đồng bộ:
-      (1) đăng xong → ghi platform_post_id vào đây · (2) tải export hoặc gọi API ·
-      (3) nối theo platform_post_id → 07_Metrics_Daily · (4) đóng dấu last_synced_at.
-      Chưa có dòng ở đây thì asset chưa được coi là đã đo, dù có số liệu ở đâu đó.
-
-  - name: "_Lists"
-    kind: helper
-    owner: script
-    purpose: Nguồn dropdown. Sinh từ enums.yml — sửa enums.yml là dropdown đổi theo.
-    hidden: false
-
-  - name: "_Dictionary"
-    kind: helper
-    owner: script
-    grain: 1 dòng = 1 cột của 1 sheet
-    purpose: Data dictionary nhúng — mở workbook là đọc được, không cần tìm file khác.
-    columns: [sheet, column, type, enum, required, owner, note]
+  - name: "Assets"
+    kind: table
+    key: [post_id, rel_path]
+    purpose: Sổ tài liệu — mọi file thật của bài, đường dẫn tương đối trong folder bài.
+    columns: [post_id, asset_type, rel_path, abs_path, size, created]

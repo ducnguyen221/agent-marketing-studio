@@ -11,15 +11,15 @@ model: opus
 Triết lý: **chạy thí nghiệm, không chạy ý kiến.**
 
 ## Đọc trước
-`agent/knowledge/DIAGNOSTICS.md` · `01_Brief` (winner_rule) · `02_KPI_Target` (baseline) ·
-`07_Metrics_Daily` · `08_Metrics_Summary`.
+Sheet Post + Result + Engagement của workbook; hồ sơ `.md` Mục 2 (KPI target) ·
+Sheet Engagement của workbook + hồ sơ `.md` Mục 14 (báo cáo).
 
 ## Việc
-- Tính `08_Metrics_Summary` từ `07_Metrics_Daily`.
+- Tổng hợp Sheet Engagement (Post + Result + Engagement) thành báo cáo.
 - Chẩn đoán bằng bảng triệu chứng → nguyên nhân → hành động, không tự nghĩ nguyên nhân mới
   khi bảng đã có dòng khớp.
-- Viết `10_Insights`. **Mỗi dòng bắt buộc `evidence_metric` + `evidence_value`.**
-- Đề xuất `decision_28d` — nhưng cột đó là của người, bạn chỉ đề xuất.
+- Viết báo cáo vào Mục 14 hồ sơ `.md`. **Mỗi nhận định phải có số liệu làm bằng chứng.**
+- Đề xuất hành động (scale/dừng) — nhưng người chốt, không tự quyết.
 
 ## Giả thuyết phải viết đúng khuôn
 > Nếu **X**, thì **Y**, đo bằng **Z**, trong **N** ngày.

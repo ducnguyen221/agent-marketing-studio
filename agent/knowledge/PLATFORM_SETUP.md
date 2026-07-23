@@ -28,11 +28,11 @@ Và dù có đủ token, agent vẫn **không đăng thật** khi `instance.yml`
 
 ### Mã bài để đối soát
 Đăng xong Graph trả `id` dạng **`{page_id}_{post_id}`**. Ghi nguyên chuỗi này vào
-`15_Platform_Sync.platform_post_id`. Đây là khoá nối duy nhất về sau.
+Sheet Result (`fb_post_id`) của workbook. Đây là khoá nối duy nhất về sau.
 
 ### Nếu KHÔNG cấp được quyền
 Vẫn chạy được bằng đường xuất tay: Meta Business Suite → Insights → Nội dung → Xuất CSV.
-File có cột **`ID bài viết`** — chính là khoá nối. Ánh xạ cột nằm ở `schema/crosswalk.yml`.
+File có cột **`ID bài viết`** — chính là khoá nối. Nối về bài qua cột `fb_post_id`.
 
 ⚠️ Graph API **không đọc được trang cá nhân**, chỉ đọc Page. Nội dung đăng trên profile
 cá nhân thì chỉ còn đường xuất tay.
@@ -62,7 +62,7 @@ phải chạy lại luồng cấp quyền, nếu không mọi lời gọi Analyt
 có API cũng chỉ đọc được số liệu công khai (view, like, comment).
 
 ### Mã bài để đối soát
-`videoId` 11 ký tự. Ghi vào `15_Platform_Sync.platform_post_id`.
+`videoId` 11 ký tự. Ghi vào Sheet Result (`fb_post_id`) của workbook.
 
 ### Nếu KHÔNG cấp được quyền
 YouTube Studio → Analytics → Nâng cao → Xuất CSV. Có `videoId` làm khoá nối.
@@ -73,26 +73,26 @@ Hạn chế: không có retention theo ngày.
 ## 3. Quy trình đồng bộ — 4 bước, giống nhau cho cả hai nền tảng
 
 ```
-① Đăng xong          → ghi platform_post_id + platform_url vào 15_Platform_Sync
+① Đăng xong          → ghi fb_post_id + fb_permalink vào Sheet Result
 ② Lấy số liệu về     → file export tay HOẶC gọi API
-③ Nối theo platform_post_id → ghi vào 07_Metrics_Daily
-④ Đóng dấu           → last_synced_at, last_sync_status, metrics_from/to
+③ Nối theo fb_post_id → ghi vào Sheet Engagement
+④ Đóng dấu           → fetched_at trong Sheet Engagement
 ```
 
-**Bước ① là bước hay bị bỏ nhất, và bỏ nó là hỏng cả chuỗi.** Không có `platform_post_id`
+**Bước ① là bước hay bị bỏ nhất, và bỏ nó là hỏng cả chuỗi.** Không có `fb_post_id`
 thì số liệu tải về không biết thuộc bài nào — dữ liệu vẫn nằm đó nhưng vô dụng.
 
 ### Đối soát định kỳ
-Chạy lại bước ② ③ ④ theo lịch. Ba tình huống phải xử lý, không được lờ:
+Chạy lại kéo số liệu theo lịch. Ba tình huống phải xử lý, không được lờ:
 
-| `last_sync_status` | Nghĩa là | Làm gì |
+| Tình huống | Nghĩa là | Làm gì |
 |---|---|---|
-| `not_found` | Bài đã bị xoá hoặc đổi chế độ riêng tư | Hỏi người, đừng tự xoá dòng |
-| `permission_denied` | Token hết hạn hoặc mất scope | Cấp lại quyền, đừng thử vòng lặp |
-| `stale` | Quá N ngày chưa đồng bộ | Chạy lại; nếu vẫn stale thì báo |
+| bài not found | Bài đã bị xoá hoặc đổi chế độ riêng tư | Hỏi người, đừng tự xoá dòng |
+| permission denied | Token hết hạn hoặc mất scope | Cấp lại quyền, đừng thử vòng lặp |
+| quá lâu chưa đồng bộ | Quá N ngày | Chạy lại; nếu vẫn lỗi thì báo |
 
 ### Dấu hiệu có người sửa tay trên nền tảng
-`platform_title` khác `title_final` trong `03_Calendar` → ai đó đã đổi tiêu đề trực tiếp.
+tiêu đề trên nền tảng khác `topic_title` trong Sheet Post → ai đó đã đổi tiêu đề trực tiếp.
 Đây không phải lỗi, nhưng phải báo cho người biết chứ đừng ghi đè lại.
 
 ---
@@ -127,7 +127,7 @@ sync:
 
 1. `instance.yml` đặt `autonomy: full` (do người sửa tay, không phải agent).
 2. Token còn hạn, đúng scope — kiểm bằng lệnh ở mục 1/2 trên.
-3. Asset đã tick `approve_final` và `verification_open = 0`.
-4. Đã chạy thử `--mode dry_run` và đọc `06_Publish_Log` thấy đúng ý.
+3. Bài đã tick `approve_final` trong Sheet Post.
+4. Đã chạy thử dry-run và kiểm Sheet Result thấy đúng ý.
 
 Thiếu bất kỳ điều nào thì hệ thống tự chặn — đó là thiết kế, không phải lỗi.

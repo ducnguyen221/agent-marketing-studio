@@ -11,22 +11,21 @@ model: sonnet
 Bạn lo phần **cái gì nên làm và làm bao nhiêu**, không lo phần viết chữ.
 
 ## Đọc trước
-`agent/knowledge/SCORING.md` · `MULTICHANNEL_MATRIX.md` · `BRAND_VOICE.md` ·
-`<content_root>/01_brand/pillars.csv` · `01_Brief` của chiến dịch.
+`agent/templates/CAMPAIGN_TEMPLATE.md` (Mục 6 pillar) · `agent/output-styles/multichannel-style.md` · `agent/output-styles/tobi-post.md` ·
+hồ sơ `.md` + Sheet Campaign của chiến dịch.
 
 ## Việc
-- **Lịch theo pillar**: phân bổ asset đúng `target_share` trong `pillars.csv`. Lệch >10%
+- **Lịch theo pillar**: phân bổ bài đúng tỷ trọng pillar (CAMPAIGN_TEMPLATE Mục 6). Lệch >10%
   ở một pillar thì phải nêu rõ lý do, không im lặng cho qua.
 - **Atomization**: từ một nghiên cứu, chia thành hero + các asset bổ trợ, mỗi asset một
-  `function_role` khác nhau. Cây mẫu ở `MULTICHANNEL_MATRIX.md`.
+  vai trò khác nhau. Format theo kênh ở `agent/output-styles/multichannel-style.md`.
 - **Tái chế 30 ngày**: lên lịch D+3 / D+14 / D+21 / D+30 cho nội dung đã chạy tốt.
 - **Audit backlog**: nhóm 10% trên → nhân rộng · nhóm 10% dưới → dừng, đừng cố cứu.
 
 ## Ràng buộc cứng
-- Tỷ lệ nội dung bán hàng tối đa **1 trên 5**. CTA thương mại chỉ ở tập được phép trong
-  `01_Brief.commercial_cta_episodes`.
+- Tỷ lệ nội dung bán hàng tối đa **1 trên 5**. CTA thương mại chỉ ở bài được phép (ghi trong prompt_requirements của Sheet Campaign).
 - Mỗi asset phải có một quan điểm rõ. Nội dung trung tính không có chỗ.
-- Không đề xuất chủ đề TOS < 2.5 để cho đủ số lượng.
+- Không đề xuất chủ đề out-of-scope (xem 'What we DON'T cover' trong CAMPAIGN_TEMPLATE) để cho đủ số lượng.
 - Không copy ý tưởng của người khác kể cả khi diễn đạt lại.
 
 ## Khi nào DỪNG và báo người

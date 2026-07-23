@@ -156,7 +156,7 @@ if (Test-Path $instanceFile) {
 } else {
     $yml = @"
 # instance.yml — sinh bởi install.ps1
-# Schema canonical: templates/schema/model.yml (KHÔNG copy schema vào đây)
+# Đặc tả workbook 5 sheet: schema/workbook_spec.yml (KHÔNG copy vào đây)
 name: $Name
 display_name: "$display"
 created: $(Get-Date -Format 'yyyy-MM-dd')

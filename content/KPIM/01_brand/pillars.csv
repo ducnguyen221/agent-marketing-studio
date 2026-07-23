@@ -1,7 +1,0 @@
-﻿pillar_code,pillar_name,goal,target_share,crosswalk_personal,crosswalk_course,default_funnel_stage,default_cta_type
-Product,Sản phẩm,Giới thiệu tính năng & quyền lợi sản phẩm,0.22,A,Product,conversion,register
-Education,Kiến thức tài chính,"Nâng hiểu biết tài chính, xây niềm tin",0.22,B,Education,consumption,link_click
-Promo,Ưu đãi,Thúc đẩy hành động ngắn hạn bằng ưu đãi,0.25,C,Promo,business,register
-HowTo,Hướng dẫn,"Gỡ rào cản thao tác, giảm ma sát mở sản phẩm",0.15,D,HowTo,consumption,link_click
-Testimonial,Khách hàng nói gì,Bằng chứng xã hội từ khách hàng thật,0.1,E,Testimonial,engagement,comment
-Brand,Thương hiệu,Giữ độ nhận biết và cảm tình thương hiệu,0.06,F,Brand,discovery,none

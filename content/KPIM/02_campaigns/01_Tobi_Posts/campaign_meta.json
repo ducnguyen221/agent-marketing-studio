@@ -1,0 +1,22 @@
+{
+  "campaign_id": "CMP-2026-06-TOBI",
+  "campaign_code": "01_Tobi_Posts",
+  "name": "AI Agent cho người làm Data — nhập môn không buzzword",
+  "pillar": "AI Agent",
+  "status": "active",
+  "owner": "Duc Nguyen",
+  "created": "2026-06-21",
+  "objective": "Awareness — xây uy tín 'Học cùng Tobi' như nguồn giải thích AI Agent tỉnh táo, thực chiến.",
+  "description": "Series 2 bài nhập môn AI Agent cho dân làm data, hạ bệ hype, dạy bắt đầu từ chiến thắng nhỏ.",
+  "target_audience": "Linh (senior analyst tò mò AI), Hà (BI dev). Pain: sợ tụt hậu, không biết bắt đầu từ đâu.",
+  "key_message": "Agent không phải phép thuật — nó là đội thợ AI có việc rõ ràng.",
+  "channels": "Blog ducnguyen.vn (atlas), YouTube (Học cùng Tobi), Facebook (Tobi Nguyễn)",
+  "cadence": "2 bài/tuần",
+  "schedule_start": "2026-06-25",
+  "schedule_end": "2026-07-02",
+  "num_posts_planned": "2",
+  "kpi_targets": "Blog 500 views/bài, YouTube 200 views/video, FB 30 reactions/post",
+  "prompt_requirements": "Angle hạ bệ hype. Phải có 1 ví dụ đời thường + 1 use-case data thật. Tránh 'AI thay thế analyst', listicle top tool, buzzword rỗng.",
+  "ai_summary": "",
+  "notes": "Bộ mẫu chuẩn — tái tạo theo 01_Tobi_Posts của KPIM Academy."
+}

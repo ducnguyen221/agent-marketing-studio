@@ -1,25 +1,20 @@
 # Sổ chiến dịch — KPIM
 
-> Sinh tự động bởi `campaign_registry.py` · cập nhật 2026-07-22
-> Đừng sửa tay file này — sửa `brief.yml` của chiến dịch rồi chạy lại.
+> Sinh tự động bởi `campaign_registry.py`. Đừng sửa tay — sửa Sheet Campaign của
+> workbook rồi chạy lại.
 
-**4 chiến dịch** · 102 asset · 62 đã đăng
+**1 chiến dịch** · 2 bài · 1 đã đăng
 
 ## Đang chạy
 
-*Chưa có chiến dịch nào ở trạng thái `running`.*
+| Chiến dịch | Pillar | Bài | Đã đăng | Cổng (T/C/F) |
+|---|---|---:|---:|---|
+| **01_Tobi_Posts** — AI Agent cho người làm Data — nhập môn không buzzword | AI Agent | 2 | 1 | 1/1/1 |
 
-## Toàn bộ lịch sử
+## Toàn bộ
 
-| Chiến dịch | Tên | Loại | Thời gian | Trạng thái | Asset | Đã đăng | KPI chính |
-|---|---|---|---|---|---:|---:|---|
-| `CMP-2026-Q1` |  |  |  →  |  | 25 | 15 |  |
-| `CMP-2026-Q2` |  |  |  →  |  | 26 | 16 |  |
-| `CMP-2026-Q3` |  |  |  →  |  | 26 | 16 |  |
-| `CMP-2026-Q4` |  |  |  →  |  | 25 | 15 |  |
+| Chiến dịch | Tên | Pillar | Thời gian | Status | Bài | Đã đăng |
+|---|---|---|---|---|---:|---:|
+| `01_Tobi_Posts` | AI Agent cho người làm Data — nhập môn không buzzword | AI Agent | 2026-06-25 → 2026-07-02 | active | 2 | 1 |
 
-## Cách đọc
-
-- **Cổng duyệt (T/C/F)** = số asset đã tick `approve_topic` / `approve_content` / `approve_final`. Chênh lệch lớn giữa T và C nghĩa là nội dung đang tắc ở khâu viết.
-- **Tự động**: `hitl` người duyệt từng bài · `batch` duyệt cả loạt theo điều kiện · `auto` máy tự tick khi thoả điều kiện trong `brief.automation.auto_if`.
-- Mỗi chiến dịch có thư mục riêng trong `02_campaigns/`, chứa cả nội dung và asset.
+> Cổng (T/C/F) = số bài đã tick approve_topic / approve_content / approve_final.
