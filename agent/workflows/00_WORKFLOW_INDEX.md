@@ -18,6 +18,24 @@ Người không tick thì stage sau không có việc. CLI chỉ trả bài đã
 
 ---
 
+
+## Ai làm khâu nào (phân vai chuẩn)
+
+Điều phối: **marketing-director** — chiến lược tổng, giao vai, giám sát, quản mức tự trị.
+
+| Khâu | Vai chính (agent) | Hỗ trợ |
+|---|---|---|
+| ① new — thiết kế chiến dịch | `campaign-strategist` | marketing-director |
+| ② topics — lịch + chủ đề | `content-strategist` | seo-specialist (từ khoá) |
+| ③ draft — viết nội dung | `content-producer` | seo-specialist, hook-writer/thread-writer (skill) |
+| ④ media — hình + tiếng | `creative-producer` | — |
+| trước cổng — biên tập | `content-editor` (hay/rõ/thuyết phục, tư vấn) | — |
+| trước cổng — tuân thủ | `qa-reviewer` (đúng/an toàn, chặn phát hành) | — |
+| ⑥ publish — đăng đa kênh | `distribution-manager` | — |
+| ⑦ report — đo & chẩn đoán | `growth-analyst` | — |
+
+Cổng duyệt (approve_topic/content/final) LUÔN là **người**, không vai nào tick hộ.
+
 ## Nạp gì ở mỗi bước
 
 | Bước | Việc | Đọc | Template | Script |

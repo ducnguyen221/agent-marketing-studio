@@ -18,6 +18,9 @@ Tra bảng này trước. Đừng đọc bừa cả repo.
 | Công thức tiêu đề, khung bài, hook | `agent/knowledge/COPY_FRAMEWORKS.md` |
 | Tâm lý học marketing, vì sao người ta mua | `agent/knowledge/MARKETING_PSYCHOLOGY.md` |
 | Retention / thumbnail / Shorts YouTube | `agent/knowledge/YOUTUBE_PLAYBOOK.md` |
+| SEO on-page / AI search / content cluster | `agent/knowledge/SEO_PLAYBOOK.md` |
+| Chuỗi email nuôi dưỡng / chuyển đổi | `agent/knowledge/EMAIL_SEQUENCES.md` |
+| Ai làm khâu nào (phân vai) | `agent/workflows/00_WORKFLOW_INDEX.md` + `agent/agents/` |
 | Newsletter | `agent/templates/EMAIL_NEWSLETTER_TEMPLATE.md` |
 | Tái chế nội dung 30 ngày | `agent/templates/RECYCLING_PLAN_TEMPLATE.md` |
 | Dựng file HTML tự chứa hình dung bài (chuyển folder không vỡ) | `scripts/pipeline/build_preview.py` |
