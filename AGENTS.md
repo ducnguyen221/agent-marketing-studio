@@ -1,14 +1,16 @@
 ---
 scope: marketing-agent engine
-model: KPIM Academy 30_MARKETING — PIPELINE_CONTRACT v3
 updated: 2026-07-23
 ---
 
 # marketing-agent — Cách AI Agent thực thi công việc marketing
 
-> Engine chạy một chiến dịch nội dung từ đầu đến cuối, theo đúng mô hình đã chuẩn hoá ở
-> KPIM Academy: **mỗi campaign = 1 folder + 1 file `.md` (hồ sơ) + 1 file `.xlsx` (5 sheet)**,
-> Excel làm chủ trạng thái, người duyệt từng bước.
+> Engine chạy một chiến dịch nội dung từ đầu đến cuối: **mỗi campaign = 1 folder + 1 file
+> `.md` (hồ sơ) + 1 file `.xlsx` (5 sheet)**, Excel làm chủ trạng thái, người duyệt từng bước.
+>
+> File này viết chung cho **mọi người cài đặt** — không gắn với một thương hiệu nào. Tên
+> riêng, pillar, kênh, giọng văn cụ thể do bạn khai trong instance của mình. Muốn xem một
+> chiến dịch thật trông thế nào → mở bộ mẫu `content/KPIM/02_campaigns/01_Tobi_Posts/`.
 
 ---
 
@@ -24,6 +26,9 @@ updated: 2026-07-23
 - **Dữ liệu nền tảng** (Facebook Graph / YouTube) là thứ DUY NHẤT đến từ ngoài file — kéo về
   sheet **Engagement** qua `fb_post_id`, bằng API hoặc từ file export.
 
+`<instance>` = tên kênh/thương hiệu của bạn (do `install.ps1` hỏi). Bộ mẫu đi kèm repo tên
+`KPIM` — dùng để tham chiếu, không phải chỗ bạn làm việc thật.
+
 ---
 
 ## Quy trình — từ tạo campaign đến báo cáo
@@ -33,11 +38,12 @@ updated: 2026-07-23
 Người dùng mô tả campaign. **Agent KHÔNG tạo gì vội** — hỏi 1 lượt các câu còn thiếu:
 
 1. **Tên & mã** — tên dễ đọc, `campaign_code = NN_Ten` (= tên folder).
-2. **Pillar** — Power BI / Fabric / AI Agent / Career (1 chính).
+2. **Pillar** — trụ nội dung chính của chiến dịch (lấy từ bộ pillar của instance, khai ở
+   `CAMPAIGN_TEMPLATE.md` Mục 6).
 3. **Mục tiêu** — business goal (awareness/demand/conversion/retention) + KPI mong muốn.
 4. **Đối tượng** — persona chính + pain.
 5. **Key message** — hook + thông điệp lõi + CTA.
-6. **Kênh** — blog + YouTube + FB đủ chưa, hay bớt kênh nào?
+6. **Kênh** — những kênh nào sẽ đăng (blog / YouTube / Facebook Page / …).
 7. **Lịch** — schedule_start/end, cadence, số bài dự kiến.
 8. **prompt_requirements** — angle muốn, phải-có / phải-tránh, nguồn tham khảo.
 
@@ -82,16 +88,16 @@ Danh sách rỗng → dừng, báo ai cần tick cột nào. Không có đườn
 
 ### Bước 5 — Đo & báo cáo
 
-- `scan_engagement` → kéo số liệu FB/YouTube về Sheet Engagement (qua `fb_post_id`).
-- `report_campaign` → tổng hợp Post + Result + Engagement → append `## Báo cáo <ngày>`
-  vào Mục 14 của hồ sơ `.md`. Không xoá mục cũ.
+- Kéo số liệu FB/YouTube về Sheet Engagement (qua `fb_post_id`) — bằng API hoặc file export.
+- Tổng hợp Post + Result + Engagement → append `## Báo cáo <ngày>` vào Mục 14 của hồ sơ `.md`.
+  Không xoá mục cũ.
 
 ---
 
 ## Cổng duyệt — 2 cách, chọn 1
 
 - **Tick Excel** (Sheet Post): `approve_topic` / `approve_content` / `approve_final` = `x`/`X`/`TRUE`/`✓`.
-- **Lệnh**: `campaign_excel.py approve <wb> --post-id P-0001 --gate approve_topic --by "Duc"`.
+- **Lệnh**: `campaign_excel.py approve <wb> --post-id <ID> --gate approve_topic --by "<tên bạn>"`.
 
 Gating: `draft = approve_topic & proposed` · `media = approve_content & drafted` ·
 `preview = media_ready` · `publish = approve_final & {preview_ready, media_ready}`.
@@ -100,41 +106,56 @@ Gating: `draft = approve_topic & proposed` · `media = approve_content & drafted
 
 ---
 
-## Nên làm / Không nên làm (từ AGENTS 30_MARKETING của KPIM)
+## Nên làm / Không nên làm
+
+Đây là mặc định an toàn cho mọi instance. Instance có thể siết thêm trong hồ sơ campaign.
 
 ### Nên làm
-- Đối chiếu mọi nội dung công khai với brand voice (`agent/output-styles/`).
+- Đối chiếu mọi nội dung công khai với brand voice của instance (`agent/output-styles/`).
 - Kiểm SEO cho bài blog: meta description 150–160 ký tự, primary keyword ở title + H2 đầu.
-- Đồng bộ lead thu được vào phễu chung với Sales.
+- Đồng bộ lead thu được vào nơi quản lý lead của bạn.
 
 ### Không nên làm
-- Không tự ý công bố/chỉnh giá dịch vụ, học phí khi chưa duyệt chính thức.
+- Không tự ý công bố/chỉnh giá dịch vụ, sản phẩm khi chưa được duyệt chính thức.
 - Không dùng hình ảnh thương hiệu đối tác/khách hàng khi chưa có đồng ý bằng văn bản.
-- Tránh tiêu đề giật gân, phóng đại hiệu quả khoá học (overpromise).
+- Tránh tiêu đề giật gân, phóng đại hiệu quả (overpromise).
 
 ### Guardrail
-- Mọi bài đại diện thương hiệu phải qua duyệt nội bộ trước khi publish.
-- Lead từ form chuyển thẳng vào lưu trữ an toàn, không để lộ công khai.
-- Trước khi thiết lập campaign mới, phải hỏi rõ ngân sách + mục tiêu leads. Nếu chưa rõ,
-  đề xuất 2 kịch bản (Low-budget & High-growth) kèm dự phóng để người quyết.
+- Mọi bài đại diện thương hiệu phải qua duyệt trước khi publish.
+- Lead từ form chuyển thẳng vào nơi lưu trữ an toàn, không để lộ công khai.
+- Trước khi thiết lập campaign mới, hỏi rõ ngân sách + mục tiêu leads. Nếu chưa rõ, đề xuất
+  2 kịch bản (tiết kiệm & tăng trưởng mạnh) kèm dự phóng để người quyết.
 
 ---
 
 ## Style — đọc trước khi viết
 
-| Kênh | File |
+Instance khai giọng văn của mình trong `agent/output-styles/`. Bộ mẫu đi kèm repo dùng
+giọng thương hiệu của KPIM — **thay bằng giọng của bạn** khi cài instance riêng.
+
+| Kênh | File style (thay nội dung theo thương hiệu của bạn) |
 |---|---|
 | Blog | `agent/output-styles/compa-class-blog.md` |
 | Facebook (post dài + caption Reel) | `agent/output-styles/tobi-post.md` |
 | Format đa kênh (YouTube/FB/X) | `agent/output-styles/multichannel-style.md` |
 
-Quy tắc vàng: cùng 1 nội dung gốc, **FORMAT LẠI** theo từng kênh — KHÔNG copy y nguyên
-blog sang FB/YouTube/X.
+Quy tắc vàng (chung mọi thương hiệu): cùng 1 nội dung gốc, **FORMAT LẠI** theo từng kênh —
+KHÔNG copy y nguyên blog sang FB/YouTube/X.
 
 ---
 
 ## STOP
 
-- Style lệch (blog không theo `compa-class-blog.md`, FB còn markdown literal) → trả writer, không publish.
+- Style lệch với file output-style của instance (vd FB còn markdown literal) → trả writer, không publish.
 - Topic trùng >70% bài đã có → refresh thay vì viết mới.
 - Thiếu token FB/YouTube → dừng ở publish, báo người dùng setup (`agent/knowledge/PLATFORM_SETUP.md`).
+
+---
+
+## Ví dụ tham chiếu (demo trong repo)
+
+Bộ mẫu `content/KPIM/02_campaigns/01_Tobi_Posts/` minh hoạ trọn quy trình bằng dữ liệu của
+một thương hiệu cụ thể (KPIM Academy / COMPA Class), pillar mẫu Power BI / Fabric / AI Agent
+/ Career, kênh mẫu blog `ducnguyen.vn` + YouTube + Facebook. Những tên riêng đó **chỉ là ví
+dụ trong demo** — khi bạn cài instance của mình, chúng được thay bằng thương hiệu, pillar và
+kênh của bạn.
