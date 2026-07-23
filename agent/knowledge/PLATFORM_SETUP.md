@@ -108,7 +108,6 @@ platforms:
     page_id: ""                 # định danh — để được ở đây
     token_env: FB_PAGE_TOKEN__DUCNGUYEN_AI   # TÊN biến, không phải giá trị
     scopes: [pages_manage_posts, pages_read_engagement, read_insights]
-    export_dir: "data/<instance>/raw/facebook"
   youtube:
     enabled: true
     channel_id: ""
@@ -116,11 +115,8 @@ platforms:
     token_env: YT_TOKEN_PATH__DUCNGUYEN_AI
     scopes: ["https://www.googleapis.com/auth/youtube",
              "https://www.googleapis.com/auth/yt-analytics.readonly"]
-    export_dir: "data/<instance>/raw/youtube"
-    playlist: ""
-sync:
-  default_method: manual_export   # manual_export | api
-  stale_after_days: 3
+# File export tải về (Meta Business Suite / YouTube Studio) là TẠM: tải về thư mục
+# bất kỳ, import vào Sheet Engagement, rồi bỏ. Không cần chỗ lưu cố định trong repo.
 ```
 
 ## 5. Trước khi bật đăng thật — bốn thứ phải xanh

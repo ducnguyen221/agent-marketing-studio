@@ -3,13 +3,7 @@ content/*
 !content/.gitkeep
 !content/KPIM/
 
-data/*
-!data/.gitkeep
-!data/KPIM/
 
-reports/*
-!reports/.gitkeep
-!reports/KPIM/
 
 # ── Secret: không bao giờ ────────────────────────────────────────────────────
 .env
