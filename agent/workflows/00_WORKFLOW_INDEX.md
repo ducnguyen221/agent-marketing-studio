@@ -29,7 +29,7 @@ Người không tick thì stage sau không có việc. CLI chỉ trả bài đã
 | 🔒 | **NGƯỜI tick approve_content** | | | |
 | **④ media** | Thumbnail · audio · video | `output-styles/tobi-post.md` | — | `campaign_excel.py set` |
 | 🔒 | **NGƯỜI tick approve_final** | | | |
-| **⑤ preview** | Dựng `preview.html` tự chứa (ảnh nhúng base64) — chuyển folder không vỡ | — | — | `build_preview.py` |
+| **⑤ preview** | Dựng `preview.html` tự chứa (ảnh/audio nhúng base64; video = link YouTube nếu đã upload) — chuyển folder không vỡ | — | — | `build_preview.py` |
 | **⑥ publish** | Đăng → Sheet Result | `output-styles/multichannel-style.md` | — | `campaign_excel.py result` |
 | **⑦ report** | Đo → Engagement, báo cáo vào hồ sơ .md Mục 14 | — | — | `campaign_excel.py upsert-engagement` |
 

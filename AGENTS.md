@@ -69,7 +69,7 @@ draft   → bài approve_topic → content.md → blog.md + fb_post + youtube_de
           → NGƯỜI tick approve_content
 media   → bài approve_content → thumbnail + audio (podcast) + video
           → short là OPTIONAL: chỉ dựng khi make_short tick, và LUÔN hỏi xác nhận
-preview → bài media_ready → preview.html (file tự chứa hình dung bài + asset, ảnh nhúng base64)
+preview → bài media_ready → preview.html (tự chứa: ảnh/audio nhúng base64; video chỉ hiện link YouTube nếu đã upload)
           → NGƯỜI tick approve_final
 publish → bài approve_final → đăng YouTube + FB hẹn lịch → Sheet Result
 ```

@@ -9,11 +9,11 @@ gửi qua đâu, chuyển folder nào cũng nguyên vẹn.
 
   - Ảnh (png/jpg/svg/webp/gif): LUÔN nhúng.
   - Audio (mp3/wav): nhúng nếu ≤ --max-embed-mb (mặc định 12 MB); vượt thì bỏ, ghi chú.
-  - Video (mp4): mặc định KHÔNG nhúng (base64 video quá nặng, trình duyệt xử lý kém) —
-    hiện poster + ghi chú; sau khi publish thì nhúng link YouTube. Ép nhúng bằng --embed-video.
+  - Video: KHÔNG nhúng file mp4 cục bộ. Chỉ hiện video khi bài ĐÃ có `youtube_url` trong
+    Sheet Result — dạng link YouTube. Chưa upload YouTube thì không đính kèm video gì cả.
 
     build_preview.py --campaign-dir <dir> --post-id TOBI-001 [--out preview.html]
-                     [--max-embed-mb 12] [--embed-video] [--workbook <wb.xlsx>]
+                     [--max-embed-mb 12] [--workbook <wb.xlsx>]
 """
 from __future__ import annotations
 
@@ -35,7 +35,6 @@ from campaign_io import find_workbook, read_sheet  # noqa: E402
 
 IMG_EXT = {".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif"}
 AUDIO_EXT = {".mp3", ".wav", ".m4a", ".ogg"}
-VIDEO_EXT = {".mp4", ".mov", ".webm"}
 
 CSS = """
 :root{--fg:#14161b;--muted:#565d69;--bg:#fff;--card:#f7f8fa;--border:#e4e8ef;--accent:#2f6df6}
@@ -52,7 +51,9 @@ background:var(--card);border-radius:0 8px 8px 0}code{background:var(--card);pad
 table{border-collapse:collapse;width:100%;margin:1em 0}th,td{border:1px solid var(--border);padding:8px 10px;text-align:left}
 .assetbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:1.4em 0}
 .assetbox h4{margin:0 0 10px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-audio,video{width:100%;margin:.5em 0}.note{color:var(--muted);font-size:14px}
+audio{width:100%;margin:.5em 0}.note{color:var(--muted);font-size:14px;word-break:break-all}
+.ytlink{display:inline-block;background:#ff0000;color:#fff;font-weight:600;text-decoration:none;
+padding:9px 16px;border-radius:8px}
 .foot{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}
 """
 
@@ -111,14 +112,12 @@ def inline_images(html_body: str, base: Path, report: list) -> str:
     return re.sub(r'<img[^>]*\ssrc="([^"]+)"', repl, html_body)
 
 
-def asset_blocks(folder: Path, max_bytes: int, embed_video: bool, report: list) -> str:
-    """Nhúng các asset trong folder bài (thumbnail, infographic, audio, video)."""
+def asset_blocks(folder: Path, max_bytes: int, youtube_url: str, report: list) -> str:
+    """Nhúng ảnh + audio trong folder bài. Video: chỉ hiện link YouTube nếu đã upload."""
     blocks = []
     files = sorted(p for p in folder.rglob("*") if p.is_file())
-    imgs = [p for p in files if p.suffix.lower() in IMG_EXT
-            and p.name not in ("preview.html",)]
+    imgs = [p for p in files if p.suffix.lower() in IMG_EXT and p.name != "preview.html"]
     auds = [p for p in files if p.suffix.lower() in AUDIO_EXT]
-    vids = [p for p in files if p.suffix.lower() in VIDEO_EXT]
 
     for p in imgs:
         uri = data_uri(p)
@@ -138,18 +137,18 @@ def asset_blocks(folder: Path, max_bytes: int, embed_video: bool, report: list) 
             blocks.append(f'<div class="assetbox"><h4>Audio · {html.escape(p.name)}</h4>'
                           f'<p class="note">File {size/1e6:.1f} MB vượt ngưỡng nhúng — '
                           f'giữ riêng, không nhúng để preview không quá nặng.</p></div>')
-    for p in vids:
-        size = p.stat().st_size
-        if embed_video and size <= max_bytes:
-            uri = data_uri(p)
-            report.append(("nhúng video", p.name, size))
-            blocks.append(f'<div class="assetbox"><h4>Video · {html.escape(p.name)}</h4>'
-                          f'<video controls src="{uri}"></video></div>')
-        else:
-            report.append(("video không nhúng", p.name, size))
-            blocks.append(f'<div class="assetbox"><h4>Video · {html.escape(p.name)}</h4>'
-                          f'<p class="note">{size/1e6:.1f} MB — không nhúng (base64 video quá '
-                          f'nặng). Xem bản chính thức trên YouTube sau khi publish.</p></div>')
+
+    # Video: KHÔNG nhúng file cục bộ. Chỉ hiện khi đã có youtube_url (đã upload).
+    if youtube_url:
+        report.append(("video → link YouTube", youtube_url, 0))
+        safe = html.escape(youtube_url)
+        blocks.append(
+            f'<div class="assetbox"><h4>Video</h4>'
+            f'<p><a class="ytlink" href="{safe}" target="_blank" rel="noopener">'
+            f'▶ Xem video trên YouTube</a></p>'
+            f'<p class="note">{safe}</p></div>')
+    else:
+        report.append(("video", "chưa upload YouTube — không đính kèm", 0))
     return "\n".join(blocks)
 
 
@@ -160,7 +159,6 @@ def main() -> int:
     ap.add_argument("--post-id", required=True)
     ap.add_argument("--out")
     ap.add_argument("--max-embed-mb", type=float, default=12)
-    ap.add_argument("--embed-video", action="store_true")
     ap.add_argument("--workbook")
     args = ap.parse_args()
 
@@ -169,6 +167,7 @@ def main() -> int:
     folder = None
     wb = args.workbook or find_workbook(cdir)
     title = args.post_id
+    youtube_url = ""
     if wb:
         for r in read_sheet(wb, "Post"):
             if str(r.get("post_id")) == args.post_id:
@@ -176,6 +175,11 @@ def main() -> int:
                 fp = str(r.get("folder_path") or "").strip()
                 if fp:
                     folder = (cdir / fp)
+                break
+        # video chỉ hiện nếu đã upload YouTube → lấy từ Sheet Result
+        for r in read_sheet(wb, "Result"):
+            if str(r.get("post_id")) == args.post_id:
+                youtube_url = str(r.get("youtube_url") or "").strip()
                 break
     if folder is None or not folder.exists():
         hits = list((cdir / "assets").glob(f"{args.post_id}*"))
@@ -191,7 +195,7 @@ def main() -> int:
 
     report: list = []
     blog_html = inline_images(blog_html, folder, report)
-    assets_html = asset_blocks(folder, int(args.max_embed_mb * 1e6), args.embed_video, report)
+    assets_html = asset_blocks(folder, int(args.max_embed_mb * 1e6), youtube_url, report)
 
     doc = f"""<!doctype html>
 <html lang="vi"><head><meta charset="utf-8">
