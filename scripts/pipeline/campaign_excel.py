@@ -15,7 +15,7 @@ Cổng vào/ra duy nhất giữa agent và workbook. Luật cổng ở schema/wo
     campaign_excel.py upsert-engagement <wb.xlsx> --json <eng_row.json>
 
 Gating (list): draft=approve_topic&proposed · media=approve_content&drafted ·
-atlas=media_ready · publish=approve_final&{atlas_ready,media_ready}.
+preview=media_ready · publish=approve_final&{preview_ready,media_ready}.
 Không tự tick approve thay user.
 
 Exit: 0 ok · 1 vi phạm luật/không tìm thấy · 2 không chạy được.

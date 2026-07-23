@@ -10,7 +10,7 @@ Tổng quan cách agent làm việc: đọc [`AGENTS.md`](../../AGENTS.md) ở g
 ## Vòng đời — 5 bước, 3 cổng duyệt của người
 
 ```
-①new  →  ②topics ─[approve_topic]→ ③draft ─[approve_content]→ ④media → ⑤atlas ─[approve_final]→ ⑥publish → ⑦report
+①new  →  ②topics ─[approve_topic]→ ③draft ─[approve_content]→ ④media → ⑤preview ─[approve_final]→ ⑥publish → ⑦report
 ```
 
 Ba cổng `approve_topic` / `approve_content` / `approve_final` là **cột trong sheet Post**.
@@ -23,15 +23,15 @@ Người không tick thì stage sau không có việc. CLI chỉ trả bài đã
 | Bước | Việc | Đọc | Template | Script |
 |---|---|---|---|---|
 | **① new** | Dựng campaign | `AGENTS.md` §Bước 1–3 | `CAMPAIGN_TEMPLATE.md` | `build_workbook.py new-campaign` |
-| **② topics** | Đề xuất chủ đề vào Sheet Post | `SCORING.md`, hồ sơ campaign | — | `campaign_excel.py upsert` |
+| **② topics** | Đề xuất chủ đề vào Sheet Post | `CAMPAIGN_TEMPLATE.md` (Mục 6 pillar), hồ sơ campaign | — | `campaign_excel.py upsert` |
 | 🔒 | **NGƯỜI tick approve_topic** | | | `campaign_excel.py approve` |
 | **③ draft** | Viết `content.md` → tách đa kênh | `output-styles/*` | `CONTENT_TEMPLATE.md` | `campaign_excel.py set` |
 | 🔒 | **NGƯỜI tick approve_content** | | | |
 | **④ media** | Thumbnail · audio · video | `output-styles/tobi-post.md` | — | `campaign_excel.py set` |
 | 🔒 | **NGƯỜI tick approve_final** | | | |
-| **⑤ atlas** | Dựng atlas.html (chưa push) | — | — | |
-| **⑥ publish** | Đăng → Sheet Result | `MULTICHANNEL... (multichannel-style)` | — | `campaign_excel.py result` |
-| **⑦ report** | Đo → Engagement, báo cáo | `DIAGNOSTICS.md` | — | `campaign_excel.py upsert-engagement` |
+| **⑤ preview** | Dựng `preview.html` tự chứa (ảnh nhúng base64) — chuyển folder không vỡ | — | — | `build_preview.py` |
+| **⑥ publish** | Đăng → Sheet Result | `output-styles/multichannel-style.md` | — | `campaign_excel.py result` |
+| **⑦ report** | Đo → Engagement, báo cáo vào hồ sơ .md Mục 14 | — | — | `campaign_excel.py upsert-engagement` |
 
 Style theo kênh: blog `output-styles/compa-class-blog.md` · Facebook `output-styles/tobi-post.md`
 · format đa kênh `output-styles/multichannel-style.md`.

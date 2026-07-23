@@ -20,7 +20,7 @@ updated: 2026-07-23
   - Excel: `<NN_Ten>.xlsx` — 5 sheet: **Campaign / Post / Result / Engagement / Assets**
 - **Asset từng bài:** `<folder campaign>/assets/<post_id>_<slug>/` — `content.md`, `blog.md`,
   `fb_post.txt`, `youtube_desc.txt`, `fb_desc.txt`, `thumbnail.png`, `audio.mp3`, `video.mp4`,
-  `atlas.html`, `meta.json`. Tất cả markdown/txt, KHÔNG docx.
+  `preview.html` (tự chứa, ảnh nhúng base64), `meta.json`. Tất cả markdown/txt/html, KHÔNG docx.
 - **Dữ liệu nền tảng** (Facebook Graph / YouTube) là thứ DUY NHẤT đến từ ngoài file — kéo về
   sheet **Engagement** qua `fb_post_id`, bằng API hoặc từ file export.
 
@@ -69,9 +69,9 @@ draft   → bài approve_topic → content.md → blog.md + fb_post + youtube_de
           → NGƯỜI tick approve_content
 media   → bài approve_content → thumbnail + audio (podcast) + video
           → short là OPTIONAL: chỉ dựng khi make_short tick, và LUÔN hỏi xác nhận
-atlas   → bài media_ready → atlas.html (chưa push)
+preview → bài media_ready → preview.html (file tự chứa hình dung bài + asset, ảnh nhúng base64)
           → NGƯỜI tick approve_final
-publish → bài approve_final → atlas push + YouTube + FB hẹn lịch → Sheet Result
+publish → bài approve_final → đăng YouTube + FB hẹn lịch → Sheet Result
 ```
 
 Mỗi stage hỏi CLI để lấy đúng việc, không tự đọc Excel để quyết:
@@ -94,7 +94,7 @@ Danh sách rỗng → dừng, báo ai cần tick cột nào. Không có đườn
 - **Lệnh**: `campaign_excel.py approve <wb> --post-id P-0001 --gate approve_topic --by "Duc"`.
 
 Gating: `draft = approve_topic & proposed` · `media = approve_content & drafted` ·
-`atlas = media_ready` · `publish = approve_final & {atlas_ready, media_ready}`.
+`preview = media_ready` · `publish = approve_final & {preview_ready, media_ready}`.
 
 **KHÔNG tự tick approve thay người.** `campaign_excel.py set` từ chối ghi vào 3 cột này.
 

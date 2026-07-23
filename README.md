@@ -24,7 +24,7 @@ Năm sheet:
 | Sheet | 1 dòng = | Vai trò |
 |---|---|---|
 | **Campaign** | 1 field (form dọc) | Metadata nghiệp vụ: mục tiêu, persona, key message, KPI, kênh, lịch |
-| **Post** | 1 bài | Bảng chủ. **3 cổng duyệt `approve_topic` / `approve_content` / `approve_final` ở đây.** status: proposed → drafted → media_ready → atlas_ready → published |
+| **Post** | 1 bài | Bảng chủ. **3 cổng duyệt `approve_topic` / `approve_content` / `approve_final` ở đây.** status: proposed → drafted → media_ready → preview_ready → published |
 | **Result** | 1 bài | URL + ID sau khi đăng (blog_url, youtube_url, fb_post_id, fb_permalink) |
 | **Engagement** | 1 bài | Số liệu nền tảng kéo về (likes, reach, impressions…) — dữ liệu **duy nhất** đến từ ngoài file |
 | **Assets** | 1 file | Sổ tài liệu: đường dẫn, loại, kích thước |
@@ -34,7 +34,7 @@ Cột lấy y hệt PIPELINE_CONTRACT của KPIM. Đặc tả: `schema/workbook_
 ## Quy trình — 5 stage, 3 cổng duyệt
 
 ```
-①new → ②topics ─[approve_topic]→ ③draft ─[approve_content]→ ④media → ⑤atlas ─[approve_final]→ ⑥publish → ⑦report
+①new → ②topics ─[approve_topic]→ ③draft ─[approve_content]→ ④media → ⑤preview ─[approve_final]→ ⑥publish → ⑦report
 ```
 
 Agent không đọc Excel để tự quyết. Nó hỏi CLI, và CLI chỉ trả bài đã qua cổng:
@@ -45,7 +45,7 @@ python scripts/pipeline/campaign_excel.py list   <wb.xlsx> --stage draft
 ```
 
 Gating: `draft = approve_topic & proposed` · `media = approve_content & drafted` ·
-`atlas = media_ready` · `publish = approve_final & {atlas_ready, media_ready}`.
+`preview = media_ready` · `publish = approve_final & {preview_ready, media_ready}`.
 
 **Agent không tick hộ cổng** — `campaign_excel.py set` từ chối ghi vào 3 cột approve_*.
 Toàn bộ cách agent làm việc: [`AGENTS.md`](AGENTS.md).
@@ -66,7 +66,8 @@ marketing-agent/
 ├─ scripts/
 │  ├─ workbook/build_workbook.py     dựng workbook 5 sheet
 │  ├─ pipeline/campaign_excel.py     CLI thao tác workbook (list/approve/set/result/...)
-│  └─ pipeline/campaign_registry.py  sổ chiến dịch (CAMPAIGNS.md + campaigns.xlsx)
+│  ├─ pipeline/campaign_registry.py  sổ chiến dịch (CAMPAIGNS.md + campaigns.xlsx)
+│  └─ pipeline/build_preview.py      dựng preview.html tự chứa (ảnh nhúng base64)
 ├─ content/KPIM/                bộ mẫu (instance duy nhất vào git)
 └─ docs/plans/                  lịch sử thiết kế
 ```

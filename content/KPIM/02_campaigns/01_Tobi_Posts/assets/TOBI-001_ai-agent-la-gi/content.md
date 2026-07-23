@@ -17,6 +17,8 @@ schedule_date: 2026-06-25
 <!-- BEGIN BLOG -->
 # AI Agent là gì với người làm data — và khi nào KHÔNG nên dùng
 **Ngày xưa hỏi "biết code không?". Giờ hỏi "mô tả rõ việc muốn giao không?".**
+![minh hoạ](thumbnail.svg)
+
 (nội dung mẫu — thay bằng bài thật khi sản xuất)
 <!-- END BLOG -->
 

@@ -19,7 +19,7 @@ conventions:
   na_policy: "Ô rỗng = chưa có / chưa biết. Không điền 0, không đoán."
 
 ## Máy trạng thái của Post (PIPELINE_CONTRACT §EXCEL)
-post_status: [proposed, drafted, media_ready, atlas_ready, published]
+post_status: [proposed, drafted, media_ready, preview_ready, published]
 
 ## Luật cổng — CLI `campaign_excel.py list --stage` chỉ trả post đủ điều kiện.
 ## Người KHÔNG tick thì stage sau không có việc. Agent không tự tick thay người.
@@ -27,8 +27,8 @@ stages:
   topics:  { produces: "chủ đề → Sheet Post", from_status: [], to_status: proposed, gate: null }
   draft:   { requires: "approve_topic",   from_status: [proposed],                  to_status: drafted,     gate: approve_topic }
   media:   { requires: "approve_content", from_status: [drafted],                   to_status: media_ready, gate: approve_content }
-  atlas:   { requires: null,              from_status: [media_ready],               to_status: atlas_ready, gate: null }
-  publish: { requires: "approve_final",   from_status: [atlas_ready, media_ready],  to_status: published,   gate: approve_final }
+  preview: { requires: null,              from_status: [media_ready],               to_status: preview_ready, gate: null }
+  publish: { requires: "approve_final",   from_status: [preview_ready, media_ready], to_status: published,   gate: approve_final }
 
 sheets:
 
@@ -66,7 +66,7 @@ sheets:
     purpose: >
       Bảng chủ — một dòng một bài. Ba cổng duyệt approve_topic / approve_content /
       approve_final nằm ngay đây. status chạy proposed → drafted → media_ready →
-      atlas_ready → published.
+      preview_ready → published.
     columns:
       - post_id
       - campaign_id
@@ -88,7 +88,7 @@ sheets:
       - infographic_png
       - audio_mp3
       - video_mp4
-      - atlas_html
+      - preview_html         # file HTML tự chứa để hình dung bài (ảnh nhúng base64)
       - approve_final        # CỔNG 3 — người tick → cho phép publish
       - status
       - folder_path          # thư mục asset của bài

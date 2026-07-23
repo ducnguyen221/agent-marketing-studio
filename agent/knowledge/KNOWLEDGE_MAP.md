@@ -13,8 +13,7 @@ Tra bảng này trước. Đừng đọc bừa cả repo.
 | Format độ dài/hashtag/link theo kênh | `agent/output-styles/multichannel-style.md` |
 | Newsletter | `agent/templates/EMAIL_NEWSLETTER_TEMPLATE.md` |
 | Tái chế nội dung 30 ngày | `agent/templates/RECYCLING_PLAN_TEMPLATE.md` |
-| Chấm chủ đề trước khi sản xuất | `agent/knowledge/SCORING.md` |
-| Số liệu xấu, không biết vì sao | `agent/knowledge/DIAGNOSTICS.md` |
+| Dựng file HTML tự chứa hình dung bài (chuyển folder không vỡ) | `scripts/pipeline/build_preview.py` |
 | Nối agent với Facebook/YouTube | `agent/knowledge/PLATFORM_SETUP.md` |
 | **Cột nào ở sheet nào, luật cổng** | `schema/workbook_spec.yml` |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
