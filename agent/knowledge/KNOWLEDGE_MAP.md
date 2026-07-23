@@ -6,6 +6,10 @@ Tra bảng này trước. Đừng đọc bừa cả repo.
 |---|---|
 | **Cách agent làm việc, quy trình 5 bước** | `AGENTS.md` (gốc repo) |
 | Không biết bắt đầu từ đâu | `agent/workflows/00_WORKFLOW_INDEX.md` |
+| Chạy pipeline chiến dịch (5 stage) | `agent/skills/campaign-pipeline/SKILL.md` |
+| Sản xuất nội dung từ brief đã duyệt | `agent/skills/content-production/SKILL.md` |
+| Viết hook / câu mở chặn lướt | `agent/skills/hook-writer/SKILL.md` |
+| Viết thread / chuỗi bài | `agent/skills/thread-writer/SKILL.md` |
 | Dựng campaign mới | `agent/templates/CAMPAIGN_TEMPLATE.md` |
 | Viết 1 bài (content.md đa kênh) | `agent/templates/CONTENT_TEMPLATE.md` |
 | Giọng blog | `agent/output-styles/compa-class-blog.md` |
@@ -13,6 +17,7 @@ Tra bảng này trước. Đừng đọc bừa cả repo.
 | Format độ dài/hashtag/link theo kênh | `agent/output-styles/multichannel-style.md` |
 | Công thức tiêu đề, khung bài, hook | `agent/knowledge/COPY_FRAMEWORKS.md` |
 | Tâm lý học marketing, vì sao người ta mua | `agent/knowledge/MARKETING_PSYCHOLOGY.md` |
+| Retention / thumbnail / Shorts YouTube | `agent/knowledge/YOUTUBE_PLAYBOOK.md` |
 | Newsletter | `agent/templates/EMAIL_NEWSLETTER_TEMPLATE.md` |
 | Tái chế nội dung 30 ngày | `agent/templates/RECYCLING_PLAN_TEMPLATE.md` |
 | Dựng file HTML tự chứa hình dung bài (chuyển folder không vỡ) | `scripts/pipeline/build_preview.py` |
@@ -43,4 +48,5 @@ Nếu file không có thông tin, nói "chưa có" — đừng dựng ra.
 
 Một số file knowledge chưng cất tri thức chuẩn ngành từ các repo marketing mã nguồn mở (MIT), viết lại và Việt hoá cho model của repo này:
 - `coreyhaines31/marketingskills` (41k★) — copy frameworks, hook system, marketing psychology.
-- `zubair-trabzada/ai-marketing-claude`, `blacktwist/social-media-skills`, `AgriciDaniel/claude-youtube` — social/YouTube playbook.
+- `zubair-trabzada/ai-marketing-claude`, `blacktwist/social-media-skills`, `blacktwist/social-media-skills` — hook 9 pattern, thread architecture.
+- `AgriciDaniel/claude-youtube` — retention/thumbnail/Shorts playbook.
