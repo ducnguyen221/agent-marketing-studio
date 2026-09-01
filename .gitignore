@@ -24,3 +24,7 @@ Thumbs.db
 desktop.ini
 ~$*
 .~lock.*
+
+# Plan/thiet ke noi bo -> luu tap trung o ~/.opcos/plans/<repo>/ (repo opc-os, PRIVATE).
+# Ly do: plan chua duong dan may + ten to chuc; repo nay public va docs/ duoc GitHub Pages phat ra web.
+docs/plans/
