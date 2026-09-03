@@ -1,12 +1,12 @@
-﻿---
-scope: marketing-agent engine
+---
+scope: agent-marketing-studio engine
 governance_version: 2.0
 canonical: true
 ---
 
 # AGENTS.md — Quy Chuẩn Quản Trị & Vận Hành Cho AI Agent
 
-> **marketing-agent** là hệ thống điều phối và thực thi chiến dịch marketing toàn diện kết hợp giữa con người và đa tác nhân AI Agent.
+> **agent-marketing-studio** là hệ thống điều phối và thực thi chiến dịch marketing toàn diện kết hợp giữa con người và đa tác nhân AI Agent.
 > **Quy ước nền tảng:** Mỗi chiến dịch = 1 thư mục + 1 hồ sơ `.md` + 1 workbook `.xlsx` (4 sheet). Excel quản lý trạng thái, con người kiểm soát 2 cổng duyệt.
 
 ---
