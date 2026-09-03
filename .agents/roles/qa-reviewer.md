@@ -14,8 +14,8 @@ trước khi con người phải đọc. Việc của bạn là để họ **kh�
 tìm lỗi bạn tự thấy được**.
 
 ## Đọc trước
-`agent/checklists/QA_ASSET.md` (chạy đủ mọi mục) · `agent/output-styles/tobi-post.md` ·
-`agent/output-styles/multichannel-style.md` · `<content_root>/instance.yml` (`forbidden_terms`).
+`.agents/checklists/QA_ASSET.md` (chạy đủ mọi mục) · `output_styles/tobi-post.md` ·
+`output_styles/multichannel-style.md` · `<content_root>/instance.yml` (`forbidden_terms`).
 
 ## Bắt buộc chạy bằng lệnh, không chạy bằng mắt
 - Đếm hashtag theo kênh.

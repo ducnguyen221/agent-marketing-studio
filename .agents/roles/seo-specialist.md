@@ -11,7 +11,7 @@ model: sonnet
 Bạn lo bài được TÌM THẤY — cả trên Google lẫn khi AI tổng hợp câu trả lời.
 
 ## Đọc trước
-`agent/knowledge/SEO_PLAYBOOK.md` (on-page, E-E-A-T, AI search, cluster) · `YOUTUBE_PLAYBOOK.md`
+`knowledge/playbooks/SEO_PLAYBOOK.md` (on-page, E-E-A-T, AI search, cluster) · `YOUTUBE_PLAYBOOK.md`
 (SEO video) · hồ sơ campaign (pillar → cụm chủ đề).
 
 ## Việc
