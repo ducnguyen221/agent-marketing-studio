@@ -1,6 +1,6 @@
 # SEO playbook — on-page, technical, và AI search
 
-Luật SEO để bài blog được tìm thấy, dùng ở stage draft (viết) và trước publish (kiểm).
+Luật SEO để bài blog được tìm thấy, dùng ở khâu ② plan (chọn `target_keyword`), ③ produce (viết) và ④ selfqa (kiểm).
 
 > Chưng cất từ `coreyhaines31/marketingskills` (MIT) `ai-seo` + `seo-audit`. Việt hoá.
 
@@ -38,11 +38,11 @@ người-đọc-trước** thắng. Cụ thể:
 
 - **Pillar page** (bài trụ, chủ đề lớn) + **5–10 bài phụ** (supporting) trỏ về nhau.
 - Mỗi bài phụ nhắm một truy vấn/nỗi đau khác nhau, dẫn về pillar.
-- Đây chính là cây atomization của `agent/output-styles/multichannel-style.md` nhìn từ góc SEO.
+- Đây chính là cây atomization của `output_styles/multichannel-style.md` nhìn từ góc SEO.
 
 ## 5. Nối vào quy trình repo
-- Kiểm on-page ở stage draft (trong `content.md`) và trong `checklists/QA_ASSET.md`.
-- Từ khoá + cluster do `agent/agents/seo-specialist.md` lo (nếu instance dùng vai này).
+- Kiểm on-page ở khâu ③ produce (khối `## post:blog_article` trong `content.md`) và ở ④ selfqa qua `checklists/QA_ASSET.md`.
+- Từ khoá + cluster do `.agents/roles/seo-specialist.md` lo (nếu instance dùng vai này).
 
 ## Liên kết
-- Tiêu đề: `agent/knowledge/COPY_FRAMEWORKS.md` · YouTube SEO: `YOUTUBE_PLAYBOOK.md`.
+- Tiêu đề: `knowledge/playbooks/COPY_FRAMEWORKS.md` · YouTube SEO: `YOUTUBE_PLAYBOOK.md`.

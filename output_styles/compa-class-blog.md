@@ -2,7 +2,7 @@
 
 > Style chuẩn cho **bài blog học thuật** đăng compaclass.com → Atlas (ducnguyen.vn).
 > Rút từ 5 bài thật của tác giả (vibe coding, AI×Data Analytics, GitHub alternatives, open-source repo, 2024→2026 AI).
-> Agent PHẢI đọc file này + [tobi-viewpoint](../knowledge/KNOWLEDGE_MAP.md) trước khi viết. Bài lệch style = viết lại.
+> Agent PHẢI đọc file này (kể cả lăng kính **tobi-viewpoint** ở mục "H2 góc nhìn thẳng" bên dưới — không có file riêng) trước khi viết. Bài lệch style = viết lại.
 
 ---
 

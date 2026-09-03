@@ -1,7 +1,7 @@
 # Output Style — Đăng đa kênh (Multichannel Format)
 
 > Quy tắc FORMAT theo từng kênh khi cùng 1 nội dung gốc đi ra nhiều nơi.
-> **Nguyên tắc lõi:** 1 nội dung gốc (blog ở `content.md` Mục 3) → **format lại** theo đặc thù từng
+> **Nguyên tắc lõi:** 1 brief gốc (mục BRIEF của `content.md`) → **format lại** theo đặc thù từng
 > kênh — KHÔNG copy y nguyên. Mỗi kênh có giới hạn độ dài, định dạng, hành vi reach khác nhau.
 >
 > Giọng văn KHÔNG nằm ở đây — file này chỉ lo FORMAT. Giọng:
@@ -11,7 +11,7 @@
 
 ---
 
-## YouTube description (→ `youtube_desc.txt`, từ `content.md` Mục 5)
+## YouTube description (khối `## post:youtube_video`)
 
 - **Độ dài:** 150–300 từ là đủ (giới hạn cứng ~5.000 ký tự). Đừng nhồi.
 - **Hook 1–2 dòng đầu = QUAN TRỌNG NHẤT:** chỉ ~2–3 dòng đầu hiện trên preview (trước nút "...thêm")
@@ -23,13 +23,13 @@
 - **Hashtag:** **≤3** (YouTube chỉ hiển thị 3 hashtag đầu phía trên tiêu đề; >15 là bị bỏ qua hết).
 - **CTA:** 1 câu subscribe rõ ràng ("Subscribe để không bỏ lỡ series...").
 
-## Facebook (→ `fb_post.txt` + `fb_desc.txt`, từ `content.md` Mục 4 & 6)
+## Facebook (khối `## post:facebook_post` và `## post:reel`)
 
 Hai sản phẩm FB khác nhau:
 
-- **`fb_post.txt` — post dài full-content** (Mục 4): 2.000–3.500 từ, viết lại trọn lập luận của blog.
+- **`## post:facebook_post` — bài dài full-content:** 2.000–3.500 từ, viết lại trọn lập luận của blog.
   KHÔNG teaser cụt. Giọng + cấu trúc theo `tobi-post.md`.
-- **`fb_desc.txt` — caption ngắn cho Reel/video** (Mục 6): 1–3 câu hook + link + ít hashtag.
+- **`## post:reel` — caption ngắn cho Reel/video:** 1–3 câu hook + link + ít hashtag.
 
 Quy tắc format FB chung:
 - **Link đặt ĐẦU bài** — FB ưu tiên reach khi link xuất hiện sớm + nội dung đầy đủ bên dưới.

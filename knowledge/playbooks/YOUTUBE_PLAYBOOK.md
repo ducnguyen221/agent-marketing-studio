@@ -1,7 +1,7 @@
 # YouTube playbook — retention, thumbnail, Shorts
 
 Số liệu và luật để làm video/Shorts giữ chân người xem và được thuật toán đẩy. Dùng ở
-stage draft (kịch bản/mô tả) và media (thumbnail/Shorts).
+khâu ③ produce (kịch bản/mô tả) và ⑤ render (thumbnail/Shorts).
 
 > Chưng cất từ `AgriciDaniel/claude-youtube` (MIT, 264★). Số liệu là benchmark tham chiếu,
 > không phải cam kết — kênh của bạn có baseline riêng (so median 10 video gần nhất cùng định dạng).
@@ -26,7 +26,7 @@ các mốc hay tụt (30s, 60s).
 - **Shorts chiếm ~75% view** của nền tảng — không bỏ Shorts.
 
 **⚠️ Giọng đọc AI = retention thấp hơn ~70%** so với nội dung có người dẫn. → Với repo này,
-giọng đọc phải được trình bày là **của tác giả** (luật `output-styles` + AGENTS), và thực tế
+giọng đọc phải được trình bày là **của tác giả** (luật `output_styles` + AGENTS), và thực tế
 người-dẫn giữ chân tốt hơn hẳn.
 
 **CTA đặt đâu (dual CTA):**
@@ -62,11 +62,11 @@ người-dẫn giữ chân tốt hơn hẳn.
 
 ## 4. Nối vào quy trình repo
 
-- Số liệu này về **Sheet Engagement** khi kéo YouTube Analytics (retention, CTR, engaged_views).
-- Khi báo cáo (hồ sơ `.md` Mục 14): so với **baseline của chính kênh**, không so benchmark ở đây.
-- Kịch bản retention → viết ở stage draft (`content.md`). Thumbnail brief → stage media.
+- Số liệu này về các cột **`actual_*` của sheet Post** khi kéo YouTube Analytics (retention, CTR, engaged_views). Nhớ chốt số vào hồ sơ `.md` Mục 9 TRƯỚC khi ghi đè.
+- Khi báo cáo (hồ sơ `.md` Mục 9): so với **baseline của chính kênh**, không so benchmark ở đây.
+- Kịch bản retention → viết ở khâu ③ produce, trong khối `## post:youtube_video` (mục *Kịch bản đọc*). Thumbnail brief → khâu ⑤ render.
 
 ## Liên kết
-- Hook: `agent/skills/hook-writer/SKILL.md` · `agent/knowledge/COPY_FRAMEWORKS.md`.
-- Format đa kênh: `agent/output-styles/multichannel-style.md`.
-- Kéo số liệu: `agent/knowledge/PLATFORM_SETUP.md`.
+- Hook: `.agents/skills/hook-writer/SKILL.md` · `knowledge/playbooks/COPY_FRAMEWORKS.md`.
+- Format đa kênh: `output_styles/multichannel-style.md`.
+- Kéo số liệu: `knowledge/toolchains/PLATFORM_SETUP.md`.

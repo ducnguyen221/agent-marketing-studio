@@ -44,5 +44,5 @@ Khung chuỗi email để bổ trợ `templates/EMAIL_NEWSLETTER_TEMPLATE.md`. N
 - **Ranh giới:** không bịa số/kết quả; consent/PII đúng luật; claim chưa chắc → `[KIỂM CHỨNG]`.
 
 ## Liên kết
-- Newsletter định kỳ: `agent/templates/EMAIL_NEWSLETTER_TEMPLATE.md`.
-- Công thức copy: `agent/knowledge/COPY_FRAMEWORKS.md`.
+- Newsletter định kỳ: `templates/EMAIL_NEWSLETTER_TEMPLATE.md`.
+- Công thức copy: `knowledge/playbooks/COPY_FRAMEWORKS.md`.

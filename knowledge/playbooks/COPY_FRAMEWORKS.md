@@ -2,10 +2,10 @@
 
 Bộ công thức để agent viết tiêu đề, cấu trúc bài và hook có căn cứ, không viết mò.
 Đây là tri thức chuẩn ngành — dùng làm khung, luôn format lại theo giọng của instance
-(`agent/output-styles/`), đừng dán công thức lộ ra ngoài.
+(`output_styles/`), đừng dán công thức lộ ra ngoài.
 
 > Chưng cất từ: `coreyhaines31/marketingskills` (MIT, 41k★) · `zubair-trabzada/ai-marketing-claude` (MIT).
-> Viết lại và Việt hoá cho model 5 sheet của repo này.
+> Viết lại và Việt hoá cho model 3 tầng của repo này.
 
 ---
 
@@ -50,7 +50,7 @@ Chọn 1 khung theo loại nội dung, đừng trộn nửa vời.
 | **PPPP** | Problem → Promise → Proof → Proposal | proposal, pitch |
 | **StoryBrand** | Nhân vật (khách) gặp vấn đề → gặp người dẫn đường (bạn) → có kế hoạch → hành động → tránh thất bại | thương hiệu cá nhân, video |
 
-**Lăng kính 3 lớp** (bắt buộc với bài chuyên sâu — giữ từ `output-styles/compa-class-blog`):
+**Lăng kính 3 lớp** (bắt buộc với bài chuyên sâu — giữ từ `output_styles/compa-class-blog.md`):
 kỹ thuật (nó chạy thế nào) → business (đổi được gì về tiền/thời gian) → con người (ai chịu đổi cách làm).
 
 ---
@@ -101,6 +101,6 @@ Sinh THEO ma trận (10 hook cho 10 ô khác nhau) tốt hơn 30 cách nói lạ
 ---
 
 ## Liên kết
-- Giọng viết: `agent/output-styles/compa-class-blog.md` (blog) · `tobi-post.md` (Facebook).
-- Format theo kênh: `agent/output-styles/multichannel-style.md`.
-- Tâm lý học phía sau: `agent/knowledge/MARKETING_PSYCHOLOGY.md`.
+- Giọng viết: `output_styles/compa-class-blog.md` (blog) · `tobi-post.md` (Facebook).
+- Format theo kênh: `output_styles/multichannel-style.md`.
+- Tâm lý học phía sau: `knowledge/psychology/MARKETING_PSYCHOLOGY.md`.

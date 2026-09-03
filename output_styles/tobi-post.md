@@ -2,7 +2,7 @@
 
 > Style chuẩn cho **bài post Facebook** trên Page "Tobi Nguyễn".
 > Rút từ 5 post thật (cặp đôi với 5 blog COMPA cùng chủ đề). FB post = **bản full-content** đăng thẳng trên feed, KHÔNG phải teaser ngắn.
-> Agent đọc file này + [compa-class-blog](compa-class-blog.md) + [tobi-viewpoint](../knowledge/KNOWLEDGE_MAP.md) trước khi viết.
+> Agent đọc file này + [compa-class-blog](compa-class-blog.md) + lăng kính **tobi-viewpoint** (mô tả trong `compa-class-blog.md`, mục "H2 góc nhìn thẳng") trước khi viết.
 
 ---
 

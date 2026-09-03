@@ -4,7 +4,7 @@ Công cụ tư duy để agent giải đúng bài toán và viết nội dung th
 Không dùng để thao túng — dùng để trình bày đúng giá trị thật cho đúng người.
 
 > Chưng cất từ `coreyhaines31/marketingskills` (MIT) `skills/marketing-psychology` — Việt hoá,
-> gắn với model 5 sheet.
+> gắn với model 3 tầng Campaign → Content → Post.
 
 ---
 
@@ -20,7 +20,7 @@ Không dùng để thao túng — dùng để trình bày đúng giá trị th�
 | **Circle of Competence** | Biết mình giỏi gì, ở trong đó | Đừng đuổi mọi kênh — dồn nơi có lợi thế thật |
 
 Những mô hình này khớp với phần chấm chủ đề (pillar gate, TOS-kiểu) và audit backlog của
-`agent/agents/content-strategist.md`.
+`.agents/roles/content-strategist.md`.
 
 ---
 
@@ -40,7 +40,7 @@ Dùng để làm nội dung TRUNG THỰC mạnh hơn, không để lừa.
 | **Authority** | Tin chuyên gia có bằng chứng | Thể hiện chuyên môn qua kết quả thật, không danh xưng rỗng |
 
 **Ranh giới đạo đức (bắt buộc):** mọi đòn bẩy chỉ dùng khi giá trị thật xứng đáng. Khan hiếm giả,
-social proof bịa, số liệu phóng đại → vi phạm luật `output-styles` + AGENTS §Không nên làm.
+social proof bịa, số liệu phóng đại → vi phạm luật `output_styles` + AGENTS §Không nên làm.
 Claim chưa kiểm được → tag `[KIỂM CHỨNG]`.
 
 ---
@@ -50,15 +50,15 @@ Claim chưa kiểm được → tag `[KIỂM CHỨNG]`.
 | Khung | Các tầng | Hợp với |
 |---|---|---|
 | **AARRR (Pirate)** | Acquisition → Activation → Retention → Referral → Revenue | sản phẩm/SaaS, growth |
-| **Phễu content** | Discovery → Engagement → Conversion → Retention | kênh nội dung (khớp Sheet Engagement + báo cáo) |
+| **Phễu content** | Discovery → Engagement → Conversion → Retention | kênh nội dung (khớp cột `actual_*` + báo cáo) |
 | **See-Think-Do-Care** | theo ý định người dùng | lập kế hoạch nội dung theo giai đoạn |
 
-Khi viết báo cáo (hồ sơ `.md` Mục 14), gắn số liệu Sheet Engagement vào đúng tầng phễu để
+Khi viết báo cáo (hồ sơ `.md` Mục 9), gắn số liệu `actual_*` vào đúng tầng phễu để
 biết đang tắc ở đâu, thay vì chỉ nhìn tổng view.
 
 ---
 
 ## Liên kết
-- Áp vào tiêu đề/hook: `agent/knowledge/COPY_FRAMEWORKS.md`.
-- Chiến lược nội dung: `agent/agents/content-strategist.md`.
-- Đọc số liệu: `agent/agents/growth-analyst.md`.
+- Áp vào tiêu đề/hook: `knowledge/playbooks/COPY_FRAMEWORKS.md`.
+- Chiến lược nội dung: `.agents/roles/content-strategist.md`.
+- Đọc số liệu: `.agents/roles/growth-analyst.md`.
