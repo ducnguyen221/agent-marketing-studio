@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    Cài đặt một instance marketing-agent: hỏi cấu hình, dựng khung thư mục, ghi instance.yml.
+    Cài đặt một instance agent-marketing-studio: hỏi cấu hình, dựng khung thư mục, ghi instance.yml.
 
 .DESCRIPTION
-    Repo marketing-agent chỉ chứa engine (AGENTS, template, output-style, script).
+    Repo agent-marketing-studio chỉ chứa engine (AGENTS, template, output-style, script).
     Nội dung của bạn nằm ở "instance" do script này tạo ra: một thư mục content với
     instance.yml + 02_campaigns/. Mỗi campaign là 1 folder + 1 file .md + 1 file .xlsx
     (5 sheet). Báo cáo nằm trong hồ sơ .md; số liệu nền tảng nằm trong Sheet Engagement —
@@ -69,7 +69,7 @@ function Slugify([string]$Text) {
 }
 
 Write-Host ""
-Write-Host "═══ marketing-agent · cài đặt instance ═══" -ForegroundColor Green
+Write-Host "═══ agent-marketing-studio · cài đặt instance ═══" -ForegroundColor Green
 Write-Host "Repo (engine): $RepoRoot"
 Write-Host ""
 

@@ -207,7 +207,7 @@ def main() -> int:
 <h2 style="margin-top:2em">Asset đính kèm</h2>
 {assets_html or '<p class="note">Chưa có asset nào trong folder bài.</p>'}
 <div class="foot">File này TỰ CHỨA — ảnh và asset đã nhúng base64. Chuyển folder, đổi tên,
-gửi qua email đều không vỡ. Sinh bởi marketing-agent · build_preview.py.</div>
+gửi qua email đều không vỡ. Sinh bởi agent-marketing-studio · build_preview.py.</div>
 </div></body></html>"""
 
     out = Path(args.out) if args.out else (folder / "preview.html")
