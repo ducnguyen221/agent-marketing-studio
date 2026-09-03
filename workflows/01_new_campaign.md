@@ -1,4 +1,4 @@
-﻿# Khâu ①: Khởi Tạo Chiến Dịch (New Campaign)
+# Khâu ①: Khởi Tạo Chiến Dịch (New Campaign)
 
 | Thuộc tính | Chi tiết |
 |---|---|
