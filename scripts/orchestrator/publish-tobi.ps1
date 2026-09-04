@@ -178,6 +178,7 @@ try {
   $fbPostTxt = Join-Path $folder 'fb_post.txt'       # message FB chính
   $ytDescTxt = Join-Path $folder 'youtube_desc.txt'  # mô tả YouTube
   $fbDescTxt = Join-Path $folder 'fb_desc.txt'       # caption ngắn (reel) — best-effort
+  $fbCommentTxt = Join-Path $folder 'fb_comment.txt' # COMMENT dau — noi DUY NHAT chua link
   $infographic = Join-Path $folder 'thumbnail.png'   # cover/thumbnail (đổi từ infographic.png)
 
   # ============================================================ (1) ATLAS
@@ -315,21 +316,34 @@ try {
     Log "(3) Facebook: đã đăng ($($state.fb_post_id)) — SKIP."
   } else {
     if (-not (Test-Path $fbPostTxt)) { throw "thiếu fb_post.txt: $fbPostTxt" }
-    # message = fb_post.txt: THAY placeholder {{BLOG_URL}}/{{YOUTUBE_URL}} bằng link thật,
-    # rồi ĐẢM BẢO đủ link blog + youtube trong thân post (chèn sau dòng đầu nếu còn thiếu).
-    $body = Get-Content $fbPostTxt -Raw -Encoding UTF8
-    $msg = $body.Replace('{{BLOG_URL}}', [string]$state.blog_url).Replace('{{YOUTUBE_URL}}', [string]$state.youtube_url)
-    $links = ''
-    if ($state.blog_url -and ($msg -notlike "*$($state.blog_url)*")) { $links += "📖 Đọc blog: $($state.blog_url)`r`n" }
-    if ($state.youtube_url -and ($msg -notlike "*$($state.youtube_url)*")) { $links += "🎬 Xem video: $($state.youtube_url)`r`n" }
-    if ($links) {
-      $parts = $msg -split "`r?`n", 2
-      $msg = $parts[0] + "`r`n" + $links.TrimEnd() + $(if ($parts.Count -gt 1) { "`r`n" + $parts[1] } else { '' })
-    }
+    # LUAT 04/09/2026: THAN BAI KHONG CHUA URL NAO. Moi link di vao COMMENT DAU TIEN.
+    # Ban cu o day CHU DONG CHEN '📖 Đọc blog:' + '🎬 Xem video:' vao sau dong dau neu
+    # thay thieu link — tuc script dang tu tay dao nguoc dung cai luat vua doi. Da bo.
+    $msg = (Get-Content $fbPostTxt -Raw -Encoding UTF8)
     $msgFile = Join-Path $folder 'fb-message.txt'
     [System.IO.File]::WriteAllText($msgFile, $msg, $utf8)
 
-    $fbArgs = @($fbpy, '--tool', $FB_TOOL, '--message-file', $msgFile, '--link', $ytUrl)
+    # Comment dau tien = noi DUY NHAT chua link. Placeholder thay o DAY, khong thay o body.
+    if (-not (Test-Path $fbCommentTxt)) { throw "thieu fb_comment.txt: $fbCommentTxt — bai khong co cho de dat link" }
+    $cmt = (Get-Content $fbCommentTxt -Raw -Encoding UTF8).Replace('{{BLOG_URL}}', [string]$state.blog_url).Replace('{{YOUTUBE_URL}}', [string]$state.youtube_url)
+    if ($cmt -notmatch 'https?://') { throw 'fb_comment.txt khong con URL nao sau khi thay placeholder — dung lai, dung dang bai mo coi' }
+    $cmtFile = Join-Path $folder 'fb-comment.txt'
+    [System.IO.File]::WriteAllText($cmtFile, $cmt, $utf8)
+
+    # CONG FAIL-CLOSED truoc khi dang: dinh dang sai thi DUNG, vi bai da len Facebook
+    # roi thi sua duoc nhung nguoi da nhin thay roi.
+    $chk = Join-Path $root 'fb_format.py'
+    if (Test-Path $chk) {
+      $savedEAP2 = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+      $chkOut = & $PY $chk '--check' $msgFile '--comment' $cmtFile 2>&1 | Out-String
+      $chkCode = $LASTEXITCODE; $ErrorActionPreference = $savedEAP2
+      if ($chkCode -ne 0) { Log ('fb_format: ' + $chkOut); throw "fb_format.py --check bao do (exit $chkCode) — khong dang" }
+    } else {
+      Log '(3) CANH BAO: khong thay fb_format.py — dang MA KHONG kiem dinh dang.'
+    }
+
+    $fbArgs = @($fbpy, '--tool', $FB_TOOL, '--message-file', $msgFile, '--link', $ytUrl,
+                '--comment-file', $cmtFile)
     if ($Now -or -not $fbWhen) {
       Log "(3) đăng FB NGAY (không hẹn lịch)."
     } else {
@@ -343,7 +357,7 @@ try {
     }
     if ($Uat) {
       Log ("(3) [UAT] $PY " + ($fbArgs -join ' ') + ' --dry-run')
-      Log "(3) [UAT] message preview (đầu bài có blog_url):"
+      Log "(3) [UAT] message preview (than bai KHONG co URL — link nam o comment):"
       ($msg -split "`r?`n" | Select-Object -First 4) | ForEach-Object { Log ('    | ' + $_) }
     } else {
       Log "(3) đăng Facebook$(if ($Now -or -not $fbWhen) { ' NGAY' } else { ' (hẹn 20:00 VN ' + $schedDate.Substring(0, 10) + ')' }) ..."
@@ -362,13 +376,22 @@ try {
         # post_facebook.py không in permalink -> suy ra từ fb_post_id (fb_engagement.py sẽ ghi đè permalink_url chuẩn sau).
         $state.fb_permalink = 'https://www.facebook.com/' + $state.fb_post_id
       }
+      # Engine hien CHI dinh comment vao REEL, chua dinh vao bai thuong (post_facebook.py:612
+      # gate tren reel_id). Neu comment khong len thi bai vua khong co link trong than,
+      # vua khong co link o comment — te hon ca truoc khi doi luat. Nen BAT O DAY.
+      $cm = [regex]::Match($out, 'FB_COMMENT_ID=(\S+)')
+      $cmtId = if ($cm.Success) { $cm.Groups[1].Value } else { '-' }
+      if ($cmtId -eq '-') {
+        throw "FB da dang (post_id=$($state.fb_post_id)) NHUNG COMMENT KHONG LEN. Bai dang khong co link o dau ca. Vao Facebook dan comment bang tay tu $cmtFile, roi sua engine de no comment duoc ca bai thuong."
+      }
+      $state.fb_comment_id = $cmtId
       $sm = [regex]::Match($out, 'STATUS=(.+)')
       if ($sm.Success) {
         $st = $sm.Groups[1].Value.Trim()
         $am = [regex]::Match($st, 'scheduled@(\S+)'); if ($am.Success) { $state.fb_scheduled_at = $am.Groups[1].Value }
       }
       Save-Sidecar
-      Log "(3) DONE fb_post_id = $($state.fb_post_id)  fb_permalink = $($state.fb_permalink)  scheduled_at = $($state.fb_scheduled_at)"
+      Log "(3) DONE fb_post_id = $($state.fb_post_id)  fb_comment_id = $($state.fb_comment_id)  fb_permalink = $($state.fb_permalink)  scheduled_at = $($state.fb_scheduled_at)"
     }
   }
 

@@ -50,6 +50,23 @@ def test_unbold_khu_hoi_quy():
     assert F.unbold(F.bold(goc)) == goc
 
 
+def test_dem_dau_trong_va_ngoai_vung_dam():
+    """Hai đơn vị đo khác nhau, cố ý — dùng chung một phép đếm là cổng vô dụng.
+
+    Trong vùng đậm: đếm KÝ TỰ TỔ HỢP, vì bold() buộc phải tách NFD.
+    Ngoài vùng đậm: đếm CHỮ CÓ DẤU DỰNG SẴN, vì văn bản thường ở dạng NFC ("ộ" là MỘT
+    ký tự). Nếu đếm ký tự tổ hợp ở cả hai chỗ thì phần ngoài luôn ra 0.
+    """
+    m = F.check(F.bold("MỚI") + "\n\nNội dung có dấu.")
+    assert m["so_dau_trong_bold"] > 0
+    assert m["so_chu_co_dau_ngoai_bold"] > 0
+
+    m2 = F.check(F.bold("MOI") + "\n\nNội dung có dấu.")
+    assert m2["so_ky_tu_bold"] == 3, "vẫn có ký tự đậm — phép đếm số lượng KHÔNG thấy gì sai"
+    assert m2["so_dau_trong_bold"] == 0, "nhưng không dấu nào trong vùng đậm"
+    assert m2["so_chu_co_dau_ngoai_bold"] > 0, "trong khi phần thường rõ ràng là tiếng Việt"
+
+
 # ---------------------------------------------------------------- split_link()
 
 def test_split_theo_neo_khong_theo_thu_tu():

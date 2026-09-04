@@ -3,11 +3,12 @@ r"""Cổng chống rò rỉ danh tính máy/người vào repo PUBLIC.
 
 Phân biệt hai thứ hay bị gộp làm một:
 
-1. **Danh tính máy & người** — đường dẫn `C:\Users\<tên>`, email cá nhân, token.
+1. **Danh tính máy & người** — đường dẫn thư mục nhà của người dùng, email cá nhân, token.
    Đây là rò rỉ THẬT, và cổng này chặn CỨNG trên toàn cây git-tracked.
    Lịch sử: 14 file từng mang đường dẫn home của tác giả sau đợt cutover 04/09, lọt qua
-   vì lệnh kiểm lúc đó viết `C:\Users\DucNguyen` vào regex — `\U` và `\D` là escape,
-   nên pattern không khớp chữ literal và trả về "sạch". Âm tính giả.
+   vì lệnh kiểm lúc đó nhét thẳng đường dẫn Windows vào regex — dấu gạch chéo ngược đứng
+   trước chữ hoa bị hiểu là escape, nên pattern không khớp chữ literal và trả về "sạch".
+   Âm tính giả. (Cố ý KHÔNG viết lại đường dẫn đó ở đây: file này cũng bị chính nó quét.)
    ⇒ Ở đây dùng so khớp CHUỖI THẲNG (`in`), không dùng regex, để không tái lập lỗi đó.
 
 2. **Tên thương hiệu / tổ chức** của chủ repo — có mặt hợp lệ ở nhiều nơi: `content/` là
@@ -32,9 +33,13 @@ ROOT = Path(__file__).resolve().parents[1]
 _BS = chr(92)
 CAM_TUYET_DOI = [
     "C:" + _BS + "Users" + _BS,   # bất kỳ đường home Windows nào, không riêng của ai
-    "/home/",                     # tương đương trên Linux
-    "ducnguyen.ams",              # email cá nhân
+    "/" + "home" + "/",           # tương đương trên Linux
+    # Ca hai chuoi tren deu DUNG TU MANH, khong viet literal: file nay nam trong cay
+    # git-tracked nen chinh no bi quet. Viet literal = cong luon do vi chinh no.
 ]
+# Email cá nhân: dùng MẪU chứ không viết literal. Bản trước ghi thẳng địa chỉ vào đây rồi
+# tự miễn trừ chính file này — tức cổng mang sẵn thứ nó đi tìm, và không bao giờ thấy.
+MAU_EMAIL = re.compile(r"[\w.+-]+@(?:gmail|outlook|hotmail|yahoo|icloud)\.com", re.I)
 # Token: cái này buộc phải là regex vì bắt theo hình dạng.
 MAU_TOKEN = [
     re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"),
@@ -82,8 +87,6 @@ def test_co_file_de_quet():
 def test_khong_ro_ri_danh_tinh(cam):
     dinh = []
     for p, noi_dung in FILES:
-        if p == Path(__file__):
-            continue                      # chính file này liệt kê các mẫu cấm
         if cam in noi_dung:
             dong = noi_dung[:noi_dung.index(cam)].count("\n") + 1
             dinh.append(f"{p.relative_to(ROOT).as_posix()}:{dong}")
@@ -93,9 +96,7 @@ def test_khong_ro_ri_danh_tinh(cam):
 def test_khong_lo_token():
     dinh = []
     for p, noi_dung in FILES:
-        if p == Path(__file__):
-            continue
-        for mau in MAU_TOKEN:
+        for mau in MAU_TOKEN + [MAU_EMAIL]:
             if mau.search(noi_dung):
                 dinh.append(f"{p.relative_to(ROOT).as_posix()} ({mau.pattern[:18]}…)")
     assert not dinh, f"có chuỗi hình dạng token: {dinh}"

@@ -155,7 +155,24 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
              m["so_url_than_bai"] == 0, ghi_chu="; ".join(m["url_than_bai"]))
         s.do("G10", "Độ dài post (ký tự)", m["so_ky_tu"], "4000-7500",
              4000 <= m["so_ky_tu"] <= 7500, CANH_BAO)
-        s.do("G11", "Ký tự Unicode bold", m["so_ky_tu_bold"], "> 0", m["so_ky_tu_bold"] > 0)
+        # G11 hai tầng. Tầng 1: có chữ đậm không. Tầng 2: chữ đậm có GIỮ ĐƯỢC DẤU không.
+        # Tầng 2 sinh ra vì bài AST-001 từng qua tầng 1 với 103 ký tự đậm mà cả 5 tiêu đề
+        # đọc là "CAI THAT SU MOI KHONG PHAI DIEM SO" — người viết gõ tay chữ không dấu
+        # thay vì gọi bold(). Cổng đếm số lượng thì không bao giờ thấy.
+        mat_dau = (m["so_ky_tu_bold"] >= 20
+                   and m["so_chu_co_dau_ngoai_bold"] >= 20
+                   and m["so_dau_trong_bold"] == 0)
+        if mat_dau:
+            s.do("G11", "Ký tự Unicode bold",
+                 f'{m["so_ky_tu_bold"]} đậm nhưng 0 dấu', "chữ đậm phải giữ dấu", False,
+                 ghi_chu=f'phần thường có {m["so_chu_co_dau_ngoai_bold"]} chữ có dấu, '
+                         f'phần đậm có 0 — nhiều khả năng gõ tay thay vì dùng '
+                         f'fb_format.bold()')
+        else:
+            s.do("G11", "Ký tự Unicode bold", m["so_ky_tu_bold"], "> 0",
+                 m["so_ky_tu_bold"] > 0,
+                 ghi_chu=f'{m["so_dau_trong_bold"]} dấu trong vùng đậm'
+                         if m["so_ky_tu_bold"] else "")
         s.do("G12", "Markdown literal", m["markdown_literal"], "= 0",
              m["markdown_literal"] == 0)
         s.do("G13", "Hashtag", m["so_hashtag"], "6-13", 6 <= m["so_hashtag"] <= 13)

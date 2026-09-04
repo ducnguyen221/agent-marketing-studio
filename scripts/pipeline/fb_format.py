@@ -98,19 +98,64 @@ def split_link(post: str) -> tuple[str, str]:
     return than, cmt
 
 
+def _tich_dau_trong_bold(s: str) -> dict:
+    """Tách phép đếm dấu tiếng Việt thành TRONG vùng đậm và NGOÀI vùng đậm.
+
+    Trả về so_ky_tu_bold, so_dau_trong_bold, so_chu_co_dau_ngoai_bold.
+
+    Phép so sánh này mới là thứ bắt được lỗi: nếu phần thường CÓ chữ tiếng Việt có dấu
+    (tức bài đúng là tiếng Việt) mà phần đậm KHÔNG có dấu nào, thì chữ đậm đã bị gõ tay
+    bằng chữ không dấu thay vì đi qua bold(). Chỉ đếm "có ký tự đậm không" thì không
+    phân biệt được — và đó chính là cách bài AST-001 lọt qua với 5 tiêu đề mất sạch dấu.
+
+    HAI ĐƠN VỊ ĐO KHÁC NHAU, cố ý:
+    · Trong vùng đậm  -> đếm KÝ TỰ TỔ HỢP (U+0300–036F), vì bold() bắt buộc phải tách
+      dấu ra dạng NFD mới bold được chữ nền.
+    · Ngoài vùng đậm  -> đếm CHỮ CÓ DẤU DỰNG SẴN, vì văn bản thường ở dạng NFC ("ộ" là
+      MỘT ký tự U+1ED9, không có ký tự tổ hợp nào).
+    Dùng cùng một phép đếm cho cả hai thì phần ngoài luôn ra 0 và cổng vô dụng.
+    """
+    lo, hi = BOLD_RANGE
+    n_bold = n_dau_trong = n_chu_dau_ngoai = 0
+    dang_bold = False
+    for ch in s:
+        o = ord(ch)
+        if lo <= o <= hi:
+            n_bold += 1
+            dang_bold = True
+        elif 0x0300 <= o <= 0x036F:          # ký tự tổ hợp
+            if dang_bold:
+                n_dau_trong += 1
+        elif ch.isspace():
+            pass                              # khoảng trắng KHÔNG đóng cụm đậm
+        else:
+            dang_bold = False
+            # Chữ Latinh có dấu dựng sẵn: Latin-1 Supplement, Extended-A/B, Extended
+            # Additional (khối chứa gần hết nguyên âm tiếng Việt).
+            if ch.isalpha() and (0x00C0 <= o <= 0x024F or 0x1E00 <= o <= 0x1EFF):
+                n_chu_dau_ngoai += 1
+    return {"so_ky_tu_bold": n_bold,
+            "so_dau_trong_bold": n_dau_trong,
+            "so_chu_co_dau_ngoai_bold": n_chu_dau_ngoai}
+
+
 def check(text: str, comment: str = "") -> dict:
     """Đếm các chỉ số định dạng FB. CHỈ đếm — không phán 'bài hay/dở', không đoán reach."""
     than, cmt_inline = split_link(text)
     cmt = comment or cmt_inline
-    bold_chars = sum(1 for c in than if BOLD_RANGE[0] <= ord(c) <= BOLD_RANGE[1])
+    # Đếm DẤU tiếng Việt bên trong vùng đậm, tách khỏi dấu ở phần thường.
+    # Vì sao cần: G11 bản đầu chỉ hỏi "có ký tự đậm không". Một bài viết tiếng Việt mà
+    # tiêu đề đậm đọc là "CAI THAT SU MOI" vẫn qua, vì ký tự đậm thì có thật — chỉ là
+    # không dấu. Đã xảy ra thật trên bài AST-001: cả 5 tiêu đề mất sạch dấu, cổng xanh.
+    trong_bold = _tich_dau_trong_bold(than)
     urls = _URL.findall(than)
     md = len(_MD_BOLD.findall(than)) + len(_MD_HEAD.findall(than)) + len(_MD_USCORE.findall(than))
     return {
         "so_ky_tu": len(than),
+        **trong_bold,
         "so_url_than_bai": len(urls),
         "url_than_bai": urls[:5],
         "so_hashtag": len(_HASHTAG.findall(than)),
-        "so_ky_tu_bold": bold_chars,
         "so_ngat_section": len(_NGAT.findall(than)),
         "markdown_literal": md,
         "co_comment": bool(cmt),
