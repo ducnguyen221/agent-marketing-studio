@@ -96,7 +96,21 @@ class SoKetQua:
                           "trang_thai": "thieu", "muc": "", "ghi_chu": vi_sao})
 
 
-def chay(thu_muc: Path, home_domain: str, loai: str = "full") -> dict:
+def chay(thu_muc: Path, home_domain: str, loai: str = "full",
+         cho_phep: dict[str, str] | None = None) -> dict:
+    """`cho_phep` = {needle: lý do} — MIỄN TRỪ CÓ GHI LÝ DO cho G21.
+
+    Vì sao cần: danh sách needle của G21 so khớp chuỗi thô, nên nó không phân biệt được
+    "công cụ sản xuất nội bộ của mình bị lộ" với "tên sản phẩm của hãng khác, đang là
+    chủ đề của bài". Ca thật: một bài viết VỀ bản phát hành của OpenAI buộc phải nhắc
+    tên công cụ lập trình của họ, và cổng chặn thẳng.
+
+    Cách xử lý CỐ Ý không phải là nới danh sách needle — nới một lần là nới mãi, và lần
+    sau lộ thật thì không ai bắt được. Thay vào đó: vẫn phát hiện, vẫn IN RA báo cáo,
+    nhưng kèm lý do do người nêu và không chặn. Miễn trừ nào cũng để lại dấu trong
+    gates.json — im lặng bỏ qua và miễn trừ có ghi lý do là hai chuyện khác nhau.
+    """
+    cho_phep = {k.lower(): v for k, v in (cho_phep or {}).items()}
     d = thu_muc
     s = SoKetQua()
 
@@ -215,9 +229,16 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full") -> dict:
         s.thieu("G21", "Tên công cụ nội bộ", "chưa có file công khai nào để quét")
         s.thieu("G22", "Tên tổ chức trong bản công khai", "chưa có file công khai nào để quét")
     else:
-        hit = [f"{ten}:{t.lower().count(x)}x'{x}'" for ten, t in cong_khai.items()
-               for x in TOOL_NOI_BO if x in t.lower()]
-        s.do("G21", "Tên công cụ nội bộ", len(hit), "= 0", not hit, ghi_chu="; ".join(hit[:6]))
+        hit, mien = [], []
+        for ten, t in cong_khai.items():
+            for x in TOOL_NOI_BO:
+                if x not in t.lower():
+                    continue
+                nhan = f"{ten}:{t.lower().count(x)}x'{x}'"
+                (mien if x in cho_phep else hit).append(
+                    f"{nhan} — MIỄN TRỪ: {cho_phep[x]}" if x in cho_phep else nhan)
+        s.do("G21", "Tên công cụ nội bộ", len(hit), "= 0", not hit,
+             ghi_chu="; ".join(hit[:6] + mien[:4]))
         hit2 = [ten for ten, t in cong_khai.items() if TEN_TO_CHUC.search(t)]
         s.do("G22", "Tên tổ chức trong bản công khai", len(hit2), "= 0 nếu bài sẽ vào repo",
              not hit2, CANH_BAO,
@@ -227,6 +248,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full") -> dict:
     do_chan = [r for r in s.rows if r["trang_thai"] == "do" and r["muc"] == CHAN]
     return {
         "thu_muc": str(d),
+        "mien_tru": cho_phep,
         "tong": len(s.rows),
         "xanh": sum(1 for r in s.rows if r["trang_thai"] == "xanh"),
         "do_chan": len(do_chan),
@@ -244,6 +266,9 @@ def main(argv=None) -> int:
                     help="domain nhà, để loại khỏi phép đếm nguồn ngoài")
     ap.add_argument("--loai", choices=["full", "short"], default="full")
     ap.add_argument("--json-only", action="store_true", help="chỉ in JSON, không in bảng")
+    ap.add_argument("--cho-phep", action="append", default=[], metavar="TÊN=LÝ DO",
+                    help="miễn trừ G21 cho một tên, BẮT BUỘC kèm lý do. Lặp lại được. "
+                         "Miễn trừ vẫn được in ra báo cáo và ghi vào gates.json.")
     a = ap.parse_args(argv)
 
     d = Path(a.thu_muc)
@@ -253,7 +278,18 @@ def main(argv=None) -> int:
 
     home = a.home_domain or re.sub(r"^https?://([^/]+).*$", r"\1",
                                    os.environ.get("ATLAS_BASE_URL", "https://ducnguyen.vn"))
-    kq = chay(d, home, a.loai)
+    cho_phep = {}
+    for muc in a.cho_phep:
+        ten, _, ly_do = muc.partition("=")
+        if not ly_do.strip():
+            sys.stderr.write(
+                f"--cho-phep {muc!r} thiếu lý do.\n"
+                "Đúng cú pháp: --cho-phep \"tên=vì sao đây không phải rò rỉ\"\n"
+                "Miễn trừ không kèm lý do thì sáu tháng sau không ai biết vì sao nó ở đó,\n"
+                "và nó sẽ được sao chép sang bài tiếp theo mà không ai xét lại.\n")
+            return 2
+        cho_phep[ten.strip()] = ly_do.strip()
+    kq = chay(d, home, a.loai, cho_phep)
     (d / "gates.json").write_text(json.dumps(kq, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if a.json_only:

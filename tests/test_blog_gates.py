@@ -148,6 +148,57 @@ def test_thieu_dau_vao_khong_duoc_bao_xanh(tmp_path):
     assert kq["thieu"] == 21
 
 
+# ------------------------------------------------------------------ 4. miễn trừ G21
+
+def _bai_co_ten_tool(tmp_path, ten="codex"):
+    d = tmp_path / "bai"
+    d.mkdir()
+    (d / "blog.md").write_text(f"# Bài\n\nBài này nói về {ten} của một hãng khác.\n",
+                               encoding="utf-8")
+    return d
+
+
+def test_g21_chan_khi_khong_mien_tru(tmp_path):
+    theo = _theo_ma(G.chay(_bai_co_ten_tool(tmp_path), HOME))
+    assert theo["G21"]["trang_thai"] == "do"
+    assert theo["G21"]["muc"] == G.CHAN
+
+
+def test_g21_mien_tru_thi_khong_chan_nhung_VAN_BAO_CAO(tmp_path):
+    """Điểm mấu chốt: miễn trừ KHÁC với im lặng bỏ qua.
+
+    Nếu miễn trừ làm cái tên biến mất khỏi báo cáo thì sáu tháng sau không ai biết nó ở
+    đó, và nó được sao chép sang bài sau mà không ai xét lại.
+    """
+    theo = _theo_ma(G.chay(_bai_co_ten_tool(tmp_path), HOME,
+                           cho_phep={"codex": "là chủ đề bài báo, không phải tool nội bộ"}))
+    assert theo["G21"]["trang_thai"] == "xanh"
+    assert "codex" in theo["G21"]["ghi_chu"], "tên được miễn trừ vẫn phải hiện trong báo cáo"
+    assert "MIỄN TRỪ" in theo["G21"]["ghi_chu"]
+    assert "chủ đề bài báo" in theo["G21"]["ghi_chu"], "lý do phải đi kèm, không chỉ là cờ bật"
+
+
+def test_mien_tru_duoc_ghi_vao_gates_json(tmp_path):
+    kq = G.chay(_bai_co_ten_tool(tmp_path), HOME, cho_phep={"codex": "lý do X"})
+    assert kq["mien_tru"] == {"codex": "lý do X"}, "gates.json phải lưu lại ai miễn trừ cái gì"
+
+
+def test_mien_tru_mot_ten_khong_mo_duong_cho_ten_khac(tmp_path):
+    """Miễn trừ phải hẹp đúng cái tên được nêu."""
+    d = tmp_path / "bai"
+    d.mkdir()
+    (d / "blog.md").write_text("Bài nhắc codex và nhắc cả omnivoice.", encoding="utf-8")
+    theo = _theo_ma(G.chay(d, HOME, cho_phep={"codex": "chủ đề bài"}))
+    assert theo["G21"]["trang_thai"] == "do", "omnivoice không được miễn trừ nên vẫn phải chặn"
+    assert "omnivoice" in theo["G21"]["ghi_chu"]
+
+
+def test_cli_tu_choi_mien_tru_khong_ly_do(tmp_path, capsys):
+    d = _bai_co_ten_tool(tmp_path)
+    assert G.main([str(d), "--home-domain", HOME, "--cho-phep", "codex", "--json-only"]) == 2
+    assert "thiếu lý do" in capsys.readouterr().err
+
+
 def test_cli_ghi_gates_json_va_exit_khac_0(tmp_path):
     d = tmp_path / "bai_do"
     shutil.copytree(BAI_DO, d)

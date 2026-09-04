@@ -28,3 +28,6 @@ desktop.ini
 # Plan/thiet ke noi bo -> luu tap trung o ~/.opcos/repo/<repo>/plans/ (repo opc-os, PRIVATE).
 # Ly do: plan chua duong dan may + ten to chuc; repo nay public va docs/ duoc GitHub Pages phat ra web.
 docs/plans/
+
+# Vung nhap/trung gian cua agent — KHONG bao gio commit.
+.tmp/
