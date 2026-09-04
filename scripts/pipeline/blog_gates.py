@@ -296,7 +296,12 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     # Đọc KÍCH THƯỚC THẬT từ khối IHDR của PNG (8 byte tại offset 16) thay vì chỉ hỏi
     # "file có tồn tại không" — một ảnh 1x1 px cũng tồn tại. Và prompt rỗng thì cũng là
     # không có prompt: sidecar sinh ra để dựng lại được ảnh, rỗng thì dựng lại bằng gì.
-    f_anh, f_prompt = d / "fb_image.png", d / "fb_image.prompt.txt"
+    # infographic.png là tên chính thức từ 04/09: một ảnh vừa đăng Facebook vừa đặt đầu bài
+    # blog, thay cho fb_image.png cũ (một nền + ba dòng chữ). Vẫn nhận tên cũ cho bài cũ.
+    f_anh = d / "infographic.png"
+    f_prompt = d / "infographic.prompt.txt"
+    if not f_anh.exists() and (d / "fb_image.png").exists():
+        f_anh, f_prompt = d / "fb_image.png", d / "fb_image.prompt.txt"
     kich_thuoc, prompt_len = None, 0
     if f_anh.exists():
         try:

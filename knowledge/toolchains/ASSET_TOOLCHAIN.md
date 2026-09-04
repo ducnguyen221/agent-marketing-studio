@@ -111,7 +111,21 @@ Nguồn nội dung: khối `## post:carousel` / `## post:infographic` trong `con
 - Thumbnail: 2–4 từ, **không lặp chữ với title** (title bán keyword + lời hứa, thumbnail bán hook hình).
 - Có số liệu trên hình → **ghi nguồn ngay trên hình**.
 
-### 6.1 Ảnh cho bài Facebook — `fb_image.png`
+### 6.0 Hai loại ảnh, đừng lẫn
+
+| | Dựng bằng | Khổ | Dùng ở đâu |
+|---|---|---|---|
+| **`thumbnail.png`** — ảnh bìa | `gen_infographic.py` (HTML + Chrome, chữ luôn đúng dấu) | 1280×720 | cover card trên atlas · hình thu nhỏ YouTube |
+| **`infographic.png`** — ảnh tóm tắt | model sinh ảnh qua cầu Codex, theo `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` | 1920×1080 | **ảnh đăng Facebook** · đặt **ở đầu bài blog** |
+
+Ảnh tóm tắt là bản rút gọn của cả bài trong một hình — người lướt qua phải nắm được ý
+chính trong 5 giây mà không cần bấm gì. Nó thay cho `fb_image.png` cũ (một nền + ba dòng
+chữ). **Một ảnh, hai chỗ dùng.** Cách viết prompt, ngữ pháp bố cục 5 vùng và cổng kiểm
+chính tả nằm ở `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` — đọc file đó trước khi dựng.
+
+Trên atlas, ảnh tóm tắt đặt tên `<slug>-1.jpg`, **không** đặt `<slug>.jpg`.
+
+### 6.1 Ảnh cho bài Facebook — `fb_image.png` *(cách cũ, giữ để tham chiếu)*
 
 Bài Facebook nay đăng **kèm ảnh riêng**, không dùng lại cover 16:9 của blog. Lý do đo được:
 cover 16:9 chiếm rất ít chiều cao trên feed điện thoại, trong khi khổ đứng 4:5 chiếm gần

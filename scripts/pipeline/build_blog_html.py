@@ -298,6 +298,9 @@ td{{color:var(--text-2)}}
 }}
 .media{{margin:0 0 44px}}
 .media .media-label{{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);margin:0 0 12px}}
+.summary-img{{margin:0 0 22px;text-align:center}}
+.summary-img img{{width:100%;max-width:960px;border-radius:14px;box-shadow:0 8px 28px rgba(0,0,0,.35);display:block;margin:0 auto}}
+.summary-img figcaption{{margin-top:8px;font-size:.86rem;color:#8b98ab;letter-spacing:.02em}}
 .video-embed{{position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;
   border:1px solid var(--border-soft);box-shadow:var(--shadow-lg);margin-bottom:20px;background:#000}}
 .video-embed iframe{{position:absolute;inset:0;width:100%;height:100%;border:0}}
@@ -371,10 +374,24 @@ def _yt_id(url):
     return m.group(1) if m else ""
 
 
-def _cover_block(title, youtube_url, audio_src, cover_uri=""):
-    """Khối ĐẦU TRANG (thay hero): tiêu đề ẩn cho SEO + video YouTube (đã có tiêu đề+ảnh ở cover);
-    nếu chưa có video thì fallback ảnh thumbnail. Audio mp3 ngay dưới."""
+def _cover_block(title, youtube_url, audio_src, cover_uri="", summary_img="", summary_alt=""):
+    """Khối ĐẦU TRANG: tiêu đề ẩn cho SEO → INFOGRAPHIC tóm tắt → video → audio.
+
+    Infographic đứng TRƯỚC video có chủ đích: nó là bản tóm tắt cả bài trong một hình, đọc
+    được trong 5 giây, còn video đòi người ta bấm play và ngồi lại 4 phút. Người lướt qua
+    phải nắm được ý chính mà không cần làm gì cả.
+
+    `summary_img` là TÊN FILE tương đối (vd "<slug>-1.jpg"), KHÔNG nhúng base64: ảnh
+    infographic 1920x1080 nhúng thẳng sẽ đội trang lên vài MB. Đặt tên "<slug>-N" chứ không
+    trùng "<slug>.jpg" vì findThumb trong generate-manifest.js sẽ nhặt nhầm ảnh thân bài
+    làm ảnh cover của card ngoài trang chủ (ATLAS_CHANNEL.md §1).
+    """
     inner = [f'<h1 class="sr-only">{_esc(title)}</h1>']
+    if summary_img:
+        inner.append(
+            f'<figure class="summary-img"><img src="{_esc(summary_img)}" loading="lazy" '
+            f'alt="{_esc(summary_alt or title)}">'
+            f'<figcaption>Tóm tắt cả bài trong một hình</figcaption></figure>')
     vid = _yt_id(youtube_url)
     if vid:
         inner.append(
@@ -390,7 +407,8 @@ def _cover_block(title, youtube_url, audio_src, cover_uri=""):
     return '<section class="media cover">' + "".join(inner) + '</section>'
 
 
-def build_html_full(md_text, meta, infographic_png, youtube_url="", audio_src=""):
+def build_html_full(md_text, meta, infographic_png, youtube_url="", audio_src="",
+                    summary_img=""):
     title = _title(md_text, meta)
     pillar = (meta.get("pillar") or "").strip().lower()
     badge = PILLAR_LABEL.get(pillar, meta.get("pillar") or "COMPA Class")
@@ -398,7 +416,8 @@ def build_html_full(md_text, meta, infographic_png, youtube_url="", audio_src=""
     body = md_to_html(md_text)
     img_uri = _img_data_uri(infographic_png)
     # Cover ở ĐẦU trang = video (đã có tiêu đề+ảnh) hoặc fallback ảnh thumbnail. Bỏ hero trùng lặp.
-    media = _cover_block(title, youtube_url or meta.get("youtube_url", ""), audio_src, img_uri)
+    media = _cover_block(title, youtube_url or meta.get("youtube_url", ""), audio_src, img_uri,
+                         summary_img, meta.get("angle", ""))
     # --- Open Graph: can URL TUYET DOI. Anh nhung data-URI khong dung duoc cho og:image
     # (Facebook phai tai duoc anh qua HTTP), nen tro toi cover .jpg nam canh bai tren Pages.
     # Quy uoc da xac minh tren atlas that: <slug>.html / <slug>.jpg / <slug>.mp3 cung thu muc.
@@ -422,6 +441,10 @@ def main(argv=None):
     ap.add_argument("--meta", required=True)
     ap.add_argument("--infographic", default="")
     ap.add_argument("--youtube-url", default="", help="link YouTube để nhúng iframe (hoặc lấy từ meta.youtube_url)")
+    ap.add_argument("--summary-img", default="",
+                    help="TÊN FILE tương đối của ảnh infographic tóm tắt, vd '<slug>-1.jpg'. "
+                         "Đặt ở đầu bài. Không nhúng base64 (ảnh lớn) và không được trùng "
+                         "'<slug>.jpg' vì findThumb sẽ nhặt nhầm làm cover card.")
     ap.add_argument("--audio-src", default="", help="đường dẫn tương đối tới mp3 trong atlas (vd <slug>.mp3)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
@@ -430,7 +453,8 @@ def main(argv=None):
     with open(args.meta, encoding="utf-8-sig") as f:
         meta = json.load(f)
 
-    html = build_html_full(md_text, meta, args.infographic, args.youtube_url, args.audio_src)
+    html = build_html_full(md_text, meta, args.infographic, args.youtube_url, args.audio_src,
+                           args.summary_img)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(html)
