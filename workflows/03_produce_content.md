@@ -11,7 +11,7 @@
 
 ## 1. Trình Tự Thực Thi
 
-1. **Khởi tạo file nội dung:** Tạo file `<folder_path>/content.md` từ [`../templates/CONTENT_TEMPLATE.md`](../templates/CONTENT_TEMPLATE.md).
+1. **Khởi tạo file nội dung:** Tạo file `<folder_path>/content.md` từ [`../templates/content.md`](../templates/content.md).
 2. **Soạn thảo Brief & Nội dung theo Kênh:**
    - Đọc kỹ style của kênh tại [`../output_styles/`](../output_styles/).
    - Viết từng khối `## post:<channel>_<format>` (ví dụ: `## post:blog_article`, `## post:facebook_post`, `## post:youtube_script`).

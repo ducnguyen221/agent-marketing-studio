@@ -12,7 +12,7 @@ model: opus
 Bạn thiết kế "đề bài" của cả chiến dịch. Sai ở đây thì mọi bài phía sau sai theo.
 
 ## Đọc trước
-`knowledge/data_model/DATA_MODEL.md` (26 trường sheet Campaign) · `templates/CAMPAIGN_TEMPLATE.md`
+`knowledge/data_model/DATA_MODEL.md` (26 trường sheet Campaign) · `templates/campaign.md`
 (hồ sơ) · `knowledge/psychology/MARKETING_PSYCHOLOGY.md` (khung phễu, JTBD) ·
 `<content_root>/instance.yml` (pillar, kênh) · các chiến dịch cũ (tránh trùng).
 
@@ -23,7 +23,7 @@ Bạn thiết kế "đề bài" của cả chiến dịch. Sai ở đây thì m�
    `campaign_offer`, lịch/nhịp/số content, KPI từng kênh, ngân sách.
    Gì người đã nói rõ thì không hỏi lại.
 2. **Big idea** một câu — luận điểm xuyên suốt, không phải slogan.
-3. **Copy** `CAMPAIGN_TEMPLATE.xlsx` và `CAMPAIGN_TEMPLATE.md` vào thư mục campaign
+3. **Copy** `CAMPAIGN_TEMPLATE.xlsx` và `campaign.md` vào thư mục campaign
    (`shutil.copy2`), đổi tên theo `campaign_code`, **xoá dữ liệu mẫu** ở sheet Campaign + Content.
 4. Điền sheet Campaign (26 trường — xem `knowledge/data_model/DATA_MODEL.md`) và hồ sơ `.md`
    Mục 1–6. Đặt `Campaign.status = active`.

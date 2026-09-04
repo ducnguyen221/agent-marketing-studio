@@ -150,7 +150,7 @@ Nó sống ở STATION và được phân giải lúc chạy.
 | Đang làm | Đọc | KHÔNG đọc |
 |---|---|---|
 | Chọn đề tài | file này §3 (B0) + sổ continuity ở STATION | `output_styles/*`, playbooks |
-| Viết `content.md` | `templates/CONTENT_TEMPLATE.md` + `output_styles/<giọng>.md` + `COPY_FRAMEWORKS.md` | toolchains, `PLATFORM_SETUP.md` |
+| Viết `content.md` | `templates/content.md` + `output_styles/<giọng>.md` + `COPY_FRAMEWORKS.md` | toolchains, `PLATFORM_SETUP.md` |
 | Tự kiểm | `.agents/checklists/QA_ASSET.md` + chạy `blog_gates.py` | templates |
 | Dựng asset | `knowledge/toolchains/ASSET_TOOLCHAIN.md` | `output_styles/*` |
 | Đăng | file này §3 (B7–B10) + `PLATFORM_SETUP.md` | templates, psychology |

@@ -54,7 +54,7 @@ Copy — **không** dựng lại workbook từ đặc tả.
 
 ### ③ `produce` — viết nội dung + sinh Post
 **Vào:** Content `approved`.
-**Làm:** tạo `<folder_path>/content.md` từ `CONTENT_TEMPLATE.md` — viết BRIEF trước, rồi từng
+**Làm:** tạo `<folder_path>/content.md` từ `content.md` — viết BRIEF trước, rồi từng
 khối `## post:<post_format>`. Mỗi khối sinh đúng **một** dòng Post với `post_content` = anchor
 tương ứng, `channel` lấy từ `Campaign.channels`, `target_*` kế thừa `kpi_*_target`.
 **Ra:** `Content.status = in_production`, `Post.agent_status = completed`.

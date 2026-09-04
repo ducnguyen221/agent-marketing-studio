@@ -43,10 +43,10 @@ _LABEL_PATTERNS = [
     ("blog",         re.compile(r"\bblog\b|bài\s*viết", re.I)),
 ]
 
-# Số mục chuẩn theo CONTENT_TEMPLATE -> khóa kênh.
+# Số mục chuẩn theo mẫu content -> khóa kênh.
 _NUM_TO_KEY = {3: "blog", 4: "fb_post", 5: "youtube_desc", 6: "fb_desc"}
 
-# NEO kiểu repo: "## post:facebook_post". Đây là dạng CONTENT_TEMPLATE.md hiện dùng.
+# NEO kiểu repo: "## post:facebook_post". Đây là dạng content.md hiện dùng.
 # Trước bản vá này script CHỈ hiểu heading có ĐÁNH SỐ ("## 3) Blog"), nên khi cho ăn
 # đúng template của chính repo thì tách ra 0 khối. Tách theo NEO chứ không theo SỐ MỤC
 # là điều kiện bắt buộc: số mục xê dịch theo từng bài, neo thì không.
@@ -62,7 +62,7 @@ _ANCHOR_TO_KEY = {
 # thân post và biến thành đúng cái lỗi "link trong thân bài" mà cổng G09 đang chặn.
 _COMMENT_RE = re.compile(r"^\s{0,3}(#{2,4})\s*comment_1\s*$", re.I)
 
-# Marker phân mục của CONTENT_TEMPLATE (vd "<!-- BEGIN BLOG -->", "<!-- END FB_POST -->")
+# Marker phân mục của mẫu content (vd "<!-- BEGIN BLOG -->", "<!-- END FB_POST -->")
 # — KHÔNG được lọt vào file kênh (sẽ vào narration/HTML).
 _MARKER_RE = re.compile(r"^\s*<!--\s*(BEGIN|END)\b.*?-->\s*$", re.I)
 
@@ -184,7 +184,7 @@ def write_outputs(parts, out_dir, with_reel=False):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        description="Tách content.md (CONTENT_TEMPLATE) -> blog.md/fb_post.txt/youtube_desc.txt/fb_desc.txt")
+        description="Tách content.md (mẫu content) -> blog.md/fb_post.txt/youtube_desc.txt/fb_desc.txt")
     ap.add_argument("--content-md", required=True, help="instance content.md (mục 1-7)")
     ap.add_argument("--meta", required=True, help="meta.json của bài (giữ tương thích CLI)")
     ap.add_argument("--out-dir", required=True)

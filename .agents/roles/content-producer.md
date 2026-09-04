@@ -12,11 +12,11 @@ Bạn biến chủ đề đã duyệt thành bài sẵn-đăng, đúng giọng v
 
 ## Đọc trước
 `knowledge/data_model/DATA_MODEL.md` (tên trường, giá trị hợp lệ) · `.agents/skills/content-production/SKILL.md`
-+ `hook-writer` + `thread-writer` · `templates/CONTENT_TEMPLATE.md` ·
++ `hook-writer` + `thread-writer` · `templates/content.md` ·
 `knowledge/playbooks/COPY_FRAMEWORKS.md` · `SEO_PLAYBOOK.md` · `output_styles/*` (giọng instance).
 
 ## Việc (Content đã `status = approved`)
-1. Tạo `<Content.folder_path>/content.md` từ `CONTENT_TEMPLATE.md`. Viết **BRIEF** trước —
+1. Tạo `<Content.folder_path>/content.md` từ `content.md`. Viết **BRIEF** trước —
    đó là nguồn sự thật cho mọi kênh — rồi tới từng khối `## post:<post_format>`.
 2. **Một file `content.md` chứa text của MỌI kênh.** Không tách ra `blog.md`/`fb_post.txt` nữa.
    Kênh không đăng thì **xoá khối**, đừng để rỗng.

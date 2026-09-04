@@ -1,8 +1,8 @@
 ---
-content_id: {{TOBI-001}}              # = Content.content_id trong .xlsx
-campaign_code: {{01_Tobi_Posts}}      # = Campaign.campaign_code
-content_name: {{Tên làm việc của content}}
-folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư mục chứa file này
+schema: content/1
+content_id: XXX-001
+campaign_id: CMP-YYMM-slug
+content_name: "Tên làm việc của content"
 ---
 
 # {{content_name}}
@@ -10,7 +10,7 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 > **File này là gì:** MỘT content = MỘT thư mục = MỘT `content.md`. File này chứa **toàn bộ text
 > của mọi kênh**, mỗi kênh một khối `## post:<post_format>`.
 >
-> **Vì sao dùng anchor:** mỗi dòng trong sheet Post trỏ tới đây qua cột `post_content`
+> **Vì sao dùng neo:** mỗi phần tử `posts[]` trong `publish.json` trỏ tới đây qua `post_content`
 > (vd `post:facebook_post`). Agent đọc đúng khối đó, không đoán theo kênh. Cùng một content có
 > nhiều post trùng format → thêm hậu tố: `## post:facebook_post#2`.
 >
@@ -18,9 +18,10 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 > - Heading phải đúng `## post:<post_format>`, viết thường, không thêm chữ.
 > - `<post_format>` phải là giá trị hợp lệ (xem `knowledge/data_model/DATA_MODEL.md` → `post_format`).
 > - Chỉ tạo khối cho kênh có trong `Campaign.channels`. Kênh không đăng thì **xoá khối**, đừng để rỗng.
-> - Mỗi khối phải có một dòng Post tương ứng trong Excel. Có khối mà không có dòng = mồ côi.
+> - Mỗi khối phải có một phần tử tương ứng trong `publish.json → posts[]`. Có khối mà không
+>   có phần tử = mồ côi; `check_tree.py` bắt được.
 >
-> **Trước khi viết, ĐỌC:** `output_styles/` (giọng của instance) ·
+> **Trước khi viết, ĐỌC:** `output_styles/` (giọng của kênh, khai ở `channel.yml:brand_voice`) ·
 > `knowledge/playbooks/COPY_FRAMEWORKS.md` · `knowledge/playbooks/SEO_PLAYBOOK.md` ·
 > hồ sơ campaign `.md` (persona, cái KHÔNG làm, luật cross-post).
 >
@@ -32,7 +33,7 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 # BRIEF — không đăng ở đâu cả
 
 > Nguồn sự thật của content. Mọi khối `post:` bên dưới phải bám mục này. Nội dung mục này
-> đồng bộ với các cột tương ứng ở sheet Content — viết ở đây bản đầy đủ, Excel giữ bản rút gọn.
+> Brief chi tiết nằm ở frontmatter `research.md`; ở đây chỉ cần outline.
 
 - **Mục tiêu content** (`content_goal`): {{kết quả quan sát được sau khi người ta đọc/xem}}
 - **Người xem cụ thể** (`audience_profile`): {{ai, trình độ, đang kẹt ở đâu}}
@@ -181,7 +182,7 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 ## post:carousel
 
 > Mỗi trang một ý. 5–8 trang. Trang 1 là hook, trang cuối là CTA.
-> **Bắt buộc điền `asset_ref`** trong sheet Post — carousel không có asset mặc định.
+> **Bắt buộc điền `asset_ref`** trong `publish.json → posts[]` — carousel không có asset mặc định.
 
 | Trang | Chữ trên hình | Ghi chú thiết kế |
 |---|---|---|

@@ -8,9 +8,9 @@
 
 | Khâu / Nhiệm Vụ | Điểm Bắt Đầu | Tài Liệu Cần Đọc Tiếp | Tài Liệu Tuyệt Đối KHÔNG Đọc |
 |---|---|---|---|
-| **① Khởi tạo Chiến dịch (new)** | `workflows/01_new_campaign.md` | • `templates/CAMPAIGN_TEMPLATE.md`<br>• `knowledge/data_model/DATA_MODEL.md` (Nhóm Strategic Brief) | • `output_styles/*`<br>• `knowledge/playbooks/*`<br>• `knowledge/toolchains/*` |
+| **① Khởi tạo Chiến dịch (new)** | `workflows/01_new_campaign.md` | • `templates/campaign.md`<br>• `knowledge/data_model/DATA_MODEL.md` (Nhóm Strategic Brief) | • `output_styles/*`<br>• `knowledge/playbooks/*`<br>• `knowledge/toolchains/*` |
 | **② Lập Kế hoạch Content (plan)** | `workflows/02_plan_content.md` | • `knowledge/playbooks/SEO_PLAYBOOK.md`<br>• `knowledge/playbooks/COPY_FRAMEWORKS.md`<br>• Sheet `Campaign` trong file `.xlsx` | • `knowledge/toolchains/*`<br>• `output_styles/*` (chưa cần ở bước ý tưởng) |
-| **③ Viết Bài Đa Kênh (produce)** | `workflows/03_produce_content.md` | • `templates/CONTENT_TEMPLATE.md`<br>• `output_styles/<brand_style>.md` (giọng kênh tương ứng)<br>• `.agents/skills/hook-writer/SKILL.md` | • `workflows/06_publish.md`<br>• `knowledge/toolchains/PLATFORM_SETUP.md` |
+| **③ Viết Bài Đa Kênh (produce)** | `workflows/03_produce_content.md` | • `templates/content.md`<br>• `output_styles/<brand_style>.md` (giọng kênh tương ứng)<br>• `.agents/skills/hook-writer/SKILL.md` | • `workflows/06_publish.md`<br>• `knowledge/toolchains/PLATFORM_SETUP.md` |
 | **④ Máy Tự Kiểm Tra (selfqa)** | `workflows/04_self_qa.md` | • `.agents/checklists/QA_ASSET.md`<br>• `output_styles/<brand_style>.md` | • `templates/*`<br>• `knowledge/toolchains/*` |
 | **⑤ Dựng Asset Hình/Tiếng (render)**| `workflows/05_render_assets.md` | • `knowledge/toolchains/ASSET_TOOLCHAIN.md` | • `output_styles/*`<br>• `knowledge/playbooks/*` |
 | **⑥ Đăng Bài & Hẹn Giờ (publish)** | `workflows/06_publish.md` | • `knowledge/toolchains/ATLAS_CHANNEL.md` (trình tự 10 bước một bài blog)<br>• `knowledge/toolchains/PLATFORM_SETUP.md`<br>• Hồ sơ `.md` Mục 5 (Giờ vàng đăng bài) | • `templates/*`<br>• `knowledge/psychology/*` |

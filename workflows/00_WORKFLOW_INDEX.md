@@ -34,7 +34,7 @@ khi trình người — nó không thay được cổng.
 |---|---|
 | **Vai** | `campaign-strategist` |
 | **Vào** | Đề bài của người + `instance.yml` |
-| **Làm** | Hỏi 1 lượt phần còn thiếu → tạo thư mục → **copy** `CAMPAIGN_TEMPLATE.xlsx` và `CAMPAIGN_TEMPLATE.md` vào, đổi tên theo `campaign_code` → điền sheet Campaign |
+| **Làm** | Hỏi 1 lượt phần còn thiếu → tạo thư mục → **copy** `CAMPAIGN_TEMPLATE.xlsx` và `campaign.md` vào, đổi tên theo `campaign_code` → điền sheet Campaign |
 | **Ra** | `Campaign.status = active` |
 
 **Copy, không dựng lại.** Workbook mới = `shutil.copy2(CAMPAIGN_TEMPLATE.xlsx)` rồi chỉ ghi giá
@@ -63,7 +63,7 @@ Người có thể duyệt trước hàng loạt nếu đã thống nhất kế 
 |---|---|
 | **Vai** | `content-producer` · hỗ trợ `seo-specialist`, skill `hook-writer`/`thread-writer` |
 | **Vào** | Content đã `approved` |
-| **Làm** | Tạo `<folder_path>/content.md` từ `CONTENT_TEMPLATE.md`; viết BRIEF rồi từng khối `## post:<post_format>` |
+| **Làm** | Tạo `<folder_path>/content.md` từ `content.md`; viết BRIEF rồi từng khối `## post:<post_format>` |
 | **Ra** | `Content.status = in_production`; mỗi khối = 1 dòng Post, `agent_status = completed` |
 
 Mỗi dòng Post phải điền: `post_id`, `content_id`, `channel`, `post_format`, `post_role`,
