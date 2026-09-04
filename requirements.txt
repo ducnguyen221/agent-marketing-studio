@@ -1,7 +1,7 @@
 # Phụ thuộc của scripts/ — trước 04/09/2026 repo không khai ở đâu cả, ai clone về
 # phải tự đoán. Bản Markdown-là-nguồn-thật cần pyyaml nên khai luôn cho đủ.
 pyyaml>=6.0        # đọc/ghi frontmatter của campaign.md, channel.yml, research.md
-openpyxl>=3.1      # export_excel.py — xuất .xlsx đúng biểu mẫu (copy template rồi điền)
+openpyxl>=3.1      # export_excel.py — XUẤT .xlsx từ Markdown (một chiều; Excel không còn là nguồn)
 requests>=2.31     # register_publish.py verify HTTP · fb_publish.py gọi Graph API
 Pillow>=10.0       # gen_infographic.py fallback, sửa chữ trên ảnh
 pytest>=8.0        # bộ test
