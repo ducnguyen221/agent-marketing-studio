@@ -46,6 +46,22 @@ _LABEL_PATTERNS = [
 # Số mục chuẩn theo CONTENT_TEMPLATE -> khóa kênh.
 _NUM_TO_KEY = {3: "blog", 4: "fb_post", 5: "youtube_desc", 6: "fb_desc"}
 
+# NEO kiểu repo: "## post:facebook_post". Đây là dạng CONTENT_TEMPLATE.md hiện dùng.
+# Trước bản vá này script CHỈ hiểu heading có ĐÁNH SỐ ("## 3) Blog"), nên khi cho ăn
+# đúng template của chính repo thì tách ra 0 khối. Tách theo NEO chứ không theo SỐ MỤC
+# là điều kiện bắt buộc: số mục xê dịch theo từng bài, neo thì không.
+_ANCHOR_RE = re.compile(r"^\s{0,3}(#{2,4})\s*post:\s*([a-z0-9_]+)\s*$", re.I)
+_ANCHOR_TO_KEY = {
+    "blog_article": "blog", "blog": "blog",
+    "facebook_post": "fb_post",
+    "youtube_desc": "youtube_desc", "youtube_video": "youtube_desc",
+    "reel": "fb_desc", "fb_desc": "fb_desc", "fb_caption": "fb_desc",
+}
+# Comment đầu tiên của bài Facebook — nơi DUY NHẤT được chứa link (luật 04/09/2026).
+# Nằm lồng bên trong khối facebook_post nên phải bắt riêng, nếu không nó bị nuốt vào
+# thân post và biến thành đúng cái lỗi "link trong thân bài" mà cổng G09 đang chặn.
+_COMMENT_RE = re.compile(r"^\s{0,3}(#{2,4})\s*comment_1\s*$", re.I)
+
 # Marker phân mục của CONTENT_TEMPLATE (vd "<!-- BEGIN BLOG -->", "<!-- END FB_POST -->")
 # — KHÔNG được lọt vào file kênh (sẽ vào narration/HTML).
 _MARKER_RE = re.compile(r"^\s*<!--\s*(BEGIN|END)\b.*?-->\s*$", re.I)
@@ -59,6 +75,7 @@ def _strip_markers(text):
 _OUT_FILES = {
     "blog": "blog.md",
     "fb_post": "fb_post.txt",
+    "fb_comment": "fb_comment.txt",
     "youtube_desc": "youtube_desc.txt",
     "fb_desc": "fb_desc.txt",
 }
@@ -91,12 +108,24 @@ def split_content(md_text):
     sections = []  # list of (key, level, [lines])
     cur = None     # (key, level, list)
     for raw in lines:
-        m = _SECTION_RE.match(raw)
+        # Thứ tự nhận dạng: neo "## post:x" -> "### comment_1" -> heading đánh số.
+        ma = _ANCHOR_RE.match(raw)
+        mc = _COMMENT_RE.match(raw) if ma is None else None
+        m = _SECTION_RE.match(raw) if (ma is None and mc is None) else None
+        if ma is not None:
+            level = len(ma.group(1))
+            key = _ANCHOR_TO_KEY.get(ma.group(2).lower())
+        elif mc is not None:
+            # comment_1 lồng bên trong facebook_post: đóng khối cha rồi mở khối riêng,
+            # bất kể cấp heading, nên ép level về cấp của khối đang mở.
+            level = cur[1] if cur else len(mc.group(1))
+            key = "fb_comment"
         if m:
             level = len(m.group(1))
             num = int(m.group(2))
             label = m.group(3).strip()
             key = _classify_heading(num, label)
+        if ma is not None or mc is not None or m:
             if key is not None:
                 # Đóng section hiện tại nếu heading mới cùng cấp hoặc nông hơn.
                 if cur and level <= cur[1]:

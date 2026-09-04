@@ -13,7 +13,7 @@
 | **③ Viết Bài Đa Kênh (produce)** | `workflows/03_produce_content.md` | • `templates/CONTENT_TEMPLATE.md`<br>• `output_styles/<brand_style>.md` (giọng kênh tương ứng)<br>• `.agents/skills/hook-writer/SKILL.md` | • `workflows/06_publish.md`<br>• `knowledge/toolchains/PLATFORM_SETUP.md` |
 | **④ Máy Tự Kiểm Tra (selfqa)** | `workflows/04_self_qa.md` | • `.agents/checklists/QA_ASSET.md`<br>• `output_styles/<brand_style>.md` | • `templates/*`<br>• `knowledge/toolchains/*` |
 | **⑤ Dựng Asset Hình/Tiếng (render)**| `workflows/05_render_assets.md` | • `knowledge/toolchains/ASSET_TOOLCHAIN.md` | • `output_styles/*`<br>• `knowledge/playbooks/*` |
-| **⑥ Đăng Bài & Hẹn Giờ (publish)** | `workflows/06_publish.md` | • `knowledge/toolchains/PLATFORM_SETUP.md`<br>• Hồ sơ `.md` Mục 5 (Giờ vàng đăng bài) | • `templates/*`<br>• `knowledge/psychology/*` |
+| **⑥ Đăng Bài & Hẹn Giờ (publish)** | `workflows/06_publish.md` | • `knowledge/toolchains/ATLAS_CHANNEL.md` (trình tự 10 bước một bài blog)<br>• `knowledge/toolchains/PLATFORM_SETUP.md`<br>• Hồ sơ `.md` Mục 5 (Giờ vàng đăng bài) | • `templates/*`<br>• `knowledge/psychology/*` |
 | **⑦ Đo Lường & Báo Cáo (measure)**| `workflows/07_measure.md` | • `knowledge/data_model/DATA_MODEL.md` (Nhóm Measurement)<br>• Hồ sơ `.md` Mục 9 | • `output_styles/*`<br>• `templates/*` |
 
 ---
@@ -46,6 +46,10 @@
 | Tái chế nội dung 30 ngày | `templates/RECYCLING_PLAN_TEMPLATE.md` |
 | Dựng HTML tự chứa để xem trước bài | `scripts/pipeline/build_preview.py` |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
+| **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
+| **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |
+| **Chấm một bài bằng 22 cổng đếm được** | `scripts/pipeline/blog_gates.py <thư mục bài>` |
+| **Số đo thật của bài đã đăng, để đặt ngưỡng** | `fixtures/baseline/blog_baseline.md` |
 | Nguồn chưng cất của kho tri thức (ghi công) | `knowledge/README.md` |
 
 **Luật chống ảo giác:** thư mục chỉ có `README`/`.gitkeep` = kho rỗng — không suy nội dung từ tên thư mục.

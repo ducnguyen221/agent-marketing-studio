@@ -33,7 +33,9 @@ Dựng gì thì đọc **cờ ở sheet Content**, không tự suy: `audio` → 
 - **Không có sổ asset.** Thư mục chính là kho — không đăng ký vào sheet nào.
 
 ## Ràng buộc cứng
-- **Chữ tiếng Việt overlay lúc dựng**, không để model sinh chữ trong ảnh (dễ sai dấu).
+- **Chữ tiếng Việt trên ảnh: model được vẽ, nhưng PHẢI đọc lại đối chiếu văn bản nguồn
+  trước khi đăng** — sai một dấu thì sinh lại, không đăng. Ảnh đã công khai không sửa được.
+  Overlay lúc dựng vẫn là cách chắc chắn đúng cho tên riêng và số liệu (ASSET_TOOLCHAIN §6.1).
 - **Quyền dùng rõ ràng:** ảnh/nhạc phải own/licensed; ảnh AI phải disclose nếu là feature image.
 - Giọng đọc trình bày là **của tác giả**, không nhắc "giọng AI" (retention người-dẫn cao hơn hẳn).
 

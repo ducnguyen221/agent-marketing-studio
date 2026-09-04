@@ -33,7 +33,7 @@ suy ra file theo bảng này:
 | `blog_article` | `thumbnail.png` (+ `audio.mp3` nếu `Content.audio = yes`) |
 | `youtube_video` | `video.mp4` + `thumbnail.png` |
 | `youtube_short` · `reel` | `short.mp4` |
-| `facebook_post` | `thumbnail.png` |
+| `facebook_post` | `fb_image.png` — ảnh riêng khổ đứng 1080×1350 (xem §6.1); dự phòng `thumbnail.png` |
 | `carousel` | **không có mặc định** — bắt buộc điền `asset_ref` |
 | `infographic` | **không có mặc định** — bắt buộc điền `asset_ref` |
 
@@ -107,9 +107,64 @@ Dựng như video dài nhưng project HyperFrames **khổ dọc 9:16**. Hook tro
 
 Nguồn nội dung: khối `## post:carousel` / `## post:infographic` trong `content.md`.
 
-- **Chữ tiếng Việt phải overlay lúc dựng**, không để model sinh chữ trong ảnh — sai dấu.
+- Chữ tiếng Việt: model **được phép** vẽ, kèm cổng kiểm chính tả trước khi đăng (§6.1).
 - Thumbnail: 2–4 từ, **không lặp chữ với title** (title bán keyword + lời hứa, thumbnail bán hook hình).
 - Có số liệu trên hình → **ghi nguồn ngay trên hình**.
+
+### 6.1 Ảnh cho bài Facebook — `fb_image.png`
+
+Bài Facebook nay đăng **kèm ảnh riêng**, không dùng lại cover 16:9 của blog. Lý do đo được:
+cover 16:9 chiếm rất ít chiều cao trên feed điện thoại, trong khi khổ đứng 4:5 chiếm gần
+gấp đôi — cùng một lần lướt, ảnh đứng có nhiều thời gian được nhìn hơn.
+
+```
+Kích cỡ  : 1080×1350 (4:5)   — khổ chiếm nhiều màn hình mobile nhất
+           dự phòng 1200×630 (1,91:1) nếu bài đi bằng preview link
+Tên file : fb_image.png              <- ảnh chính đăng kèm post
+           fb_image-2.png, -3.png    <- nếu đăng nhiều ảnh
+           fb_image.prompt.txt       <- BẮT BUỘC, sidecar ghi nguyên văn prompt
+Nơi lưu  : cùng thư mục bài, cạnh mọi asset khác
+Excel    : Post.asset_ref = "fb_image.png"  (khác mặc định thì PHẢI điền)
+```
+
+**Năm điều không được vi phạm**
+
+1. **Ảnh sinh bằng model KHÔNG tái lập.** Cùng một prompt cho ra ảnh khác. Vì thế phải lưu
+   *cả ảnh lẫn prompt*, và **cấm sinh lại lúc đăng** — sinh lại nghĩa là bài đăng lên mang
+   ảnh khác với ảnh đã duyệt, mà không ai thấy sự khác biệt đó ở đâu.
+2. **Không đặt trùng tên `<slug>.jpg`** nếu ảnh được chép sang atlas. `findThumb` trong
+   `generate-manifest.js` sẽ nhặt nhầm ảnh thân bài làm cover card. Ảnh thân bài đặt
+   `<slug>-1.jpg`, `-2.jpg`…
+3. **Ảnh có số liệu phải ghi nguồn ngay trên hình.** Số liệu rời khỏi bài viết thì mất ngữ
+   cảnh; ảnh bị chia sẻ lại một mình là chuyện bình thường.
+4. **Model không hỗ trợ nền trong suốt** — đừng thiết kế lớp cần alpha.
+5. **Chữ trên ảnh phải được đọc lại và đối chiếu với văn bản nguồn trước khi đăng.**
+   Xem mục ngay dưới.
+
+**Chữ tiếng Việt trên ảnh — đổi từ CẤM sang KIỂM (Đức chốt 04/09/2026)**
+
+Luật cũ: không giao chữ tiếng Việt cho model vẽ, mọi chữ phải overlay lúc dựng. Luật đó
+sinh ra vì model sinh ảnh hay vỡ dấu tiếng Việt — chữ trông như tiếng Việt nhưng sai dấu
+hoặc vô nghĩa — mà **ảnh đã đăng công khai thì không sửa được**.
+
+Luật mới: **model được vẽ cả chữ.** Đổi lại, thêm một cổng bắt buộc:
+
+- Trước khi đăng, **đọc lại từng chữ trên ảnh** và đối chiếu với văn bản nguồn.
+- Sai một dấu cũng **sinh lại**, không đăng, không "tạm chấp nhận".
+- Ảnh không đọc được chữ (mờ, cắt cụt, chồng chữ) xử lý như sai chính tả.
+
+> ⚠️ Rủi ro chuyển từ *cấm* sang *kiểm*, chứ không biến mất. Bỏ luật cấm mà cũng bỏ luôn
+> bước kiểm thì rủi ro cũ quay lại nguyên vẹn — và lần này không còn hàng rào nào.
+
+Overlay lúc dựng vẫn là cách **chắc chắn đúng** cho chữ phải chuẩn tuyệt đối (tên riêng,
+số liệu, tên thương hiệu). Giờ nó là *lựa chọn*, không còn là *bắt buộc*.
+
+**Cổng kiểm ảnh (đếm được, xem `blog_gates.py` G19)**
+
+- `fb_image.png` **và** `fb_image.prompt.txt` — thiếu một trong hai là trượt.
+- Đúng tỉ lệ đã khai (±2 px).
+- Cổng chỉ nói cái nó đo được: báo *"thiếu fb_image.prompt.txt"*, **không** báo
+  *"ảnh không đạt chất lượng"* — cổng không đo được chất lượng, mắt người mới đo được.
 
 ## 7. Sau khi dựng — ghi lại vào Excel
 
