@@ -94,7 +94,7 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 
 ---
 
-## post:youtube_video
+## post:youtube_desc
 
 > Mô tả video YouTube. 2–3 dòng đầu là phần hiện trên preview — quan trọng nhất.
 > 150–300 từ là đủ. Tối đa 3 hashtag.
@@ -112,13 +112,6 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 👉 {{CTA subscribe}}
 
 {{#hashtag1 #hashtag2 #hashtag3}}
-
-### Kịch bản đọc (cho OmniVoice)
-
-> Văn nói, không đọc nguyên bullet. Đây là text đưa vào `-TextFile` khi dựng video.
-> Xem `knowledge/toolchains/ASSET_TOOLCHAIN.md`.
-
-{{Kịch bản lời đọc, chia theo cảnh}}
 
 ---
 

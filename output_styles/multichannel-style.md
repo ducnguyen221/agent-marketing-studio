@@ -11,7 +11,7 @@
 
 ---
 
-## YouTube description (khối `## post:youtube_video`)
+## YouTube description (khối `## post:youtube_desc`)
 
 - **Độ dài:** 150–300 từ là đủ (giới hạn cứng ~5.000 ký tự). Đừng nhồi.
 - **Hook 1–2 dòng đầu = QUAN TRỌNG NHẤT:** chỉ ~2–3 dòng đầu hiện trên preview (trước nút "...thêm")
@@ -33,7 +33,10 @@ Hai sản phẩm FB khác nhau:
 - **`## post:reel` — caption ngắn cho Reel/video:** 1–3 câu hook + link + ít hashtag.
 
 Quy tắc format FB chung:
-- **Link đặt ĐẦU bài** — FB ưu tiên reach khi link xuất hiện sớm + nội dung đầy đủ bên dưới.
+- **Thân bài KHÔNG chứa URL nào** — link đi vào comment đầu tiên. (Dòng cũ ở đây nói
+  ngược lại và sống sót qua đợt đổi luật 04/09 vì nằm ở mục *format* chứ không ở mục
+  *Facebook*. Một file mang hai luật trái nhau là cách luật cũ hồi sinh — nay có
+  `tests/test_docs_khong_troi.py` chặn.)
 - **KHÔNG markdown** — FB render `**`, `#heading`, `_` literal. Nhấn mạnh bằng **Unicode bold**
   (script tự convert tiêu đề phụ), ngắt section bằng `———————`.
 - **Emoji:** nhóm đầu mỗi phần (🧠🚀🪄🎯💡⚠️) + emoji-số cho bước (1️⃣2️⃣3️⃣); action 👉😄🔥 rải 1–2/đoạn.

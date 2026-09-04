@@ -4,7 +4,7 @@
 > 5 giây, không cần bấm gì**. Nó không phải ảnh minh hoạ cho đẹp — nó là bản rút gọn của
 > bài viết, dùng làm ảnh đăng Facebook **và** đặt ở đầu trang blog.
 >
-> Ảnh này thay cho `fb_image.png` cũ (một nền + 3 dòng chữ). Một ảnh, hai chỗ dùng.
+> Ảnh này thay cho ảnh Facebook kiểu cũ (một nền + 3 dòng chữ). Một ảnh, hai chỗ dùng.
 
 ## 1. Ba việc phải làm trước khi viết prompt
 

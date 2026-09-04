@@ -100,7 +100,7 @@ bài không có video hoặc phải sửa lại sau; đăng Facebook trước th
 | **B3** Tách kênh | ③ | ⚙️ | `gen_article.py` tách **theo neo** | `atlas/blog.md` · `facebook/post.txt` · `facebook/comment.txt` · `youtube/description.txt` | mỗi file tồn tại và **>0 byte** |
 | **B4** Tự kiểm | ④ | ⚙️+🤖 | `blog_gates.py` + `fb_format.py --check` + `QA_ASSET.md` | `gates.json` | 23 cổng; đỏ-chặn → `quality_check=failed` |
 | 🔒 **Cổng 2** | | 👤 | `Post.review_status=approved` | | **agent không tự đặt** |
-| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh tóm tắt** (`templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`) | `thumbnail.png` · `audio.mp3` · `video.mp4` · `fb_image.png` + `.prompt.txt` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
+| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh tóm tắt** (`templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`) | `youtube/thumbnail.png` · `atlas/audio.mp3` · `youtube/video.mp4` · `facebook/infographic.png` + `.prompt.txt` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
 | **B6** Dựng trang | ⑤ | ⚙️ | `build_blog_html.py` | `atlas/atlas.html` | **≥6 thẻ `og:`** |
 | **B7** Đăng YouTube | ⑥ | ⚙️ | upload + `publishAt` giờ vàng | `youtube_url` | GET 200 |
 | **B8** Đăng web | ⑥ | ⚙️ | chép 3 file vào `atlas/content/<cat>/` (trang **nhúng video B7**) → `generate-manifest.js` → `git add` **đích danh từng path** → push | `blog_url` | **GET `blog_url` = 200 TRƯỚC khi ghi sổ** |

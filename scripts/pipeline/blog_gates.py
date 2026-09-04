@@ -307,8 +307,8 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     # "file có tồn tại không" — một ảnh 1x1 px cũng tồn tại. Và prompt rỗng thì cũng là
     # không có prompt: sidecar sinh ra để dựng lại được ảnh, rỗng thì dựng lại bằng gì.
     # infographic.png là tên chính thức từ 04/09: một ảnh vừa đăng Facebook vừa đặt đầu bài
-    # blog, thay cho fb_image.png cũ (một nền + ba dòng chữ). Vẫn nhận tên cũ cho bài cũ.
-    # KHÔNG giữ tương thích tên cũ (fb_image.png): "nới một lần là nới mãi" — cùng lý do
+    # blog, thay cho ảnh Facebook kiểu cũ (một nền + ba dòng chữ).
+    # KHÔNG giữ tương thích tên ảnh cũ: "nới một lần là nới mãi" — cùng lý do
     # repo chọn --cho-phep thay vì nới danh sách needle của G21.
     f_anh, f_prompt = PP.p(d, "fb_image"), PP.p(d, "fb_prompt")
     kich_thuoc, prompt_len = None, 0
