@@ -43,12 +43,20 @@ def _inline(s):
     """Render inline markdown an toàn: escape trước, rồi bật **bold**, `code`, [link](url)."""
     s = _esc(s)
     s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
+    # *nghiêng* — phải chạy SAU **đậm**, và không được ăn dấu sao của phép nhân.
+    # Trước bản vá này, mọi cụm *"trích dẫn"* in ra nguyên hai dấu sao trên trang.
+    s = re.sub(r"(?<![\w*])\*(?![\s*])([^*]+?)(?<!\s)\*(?![\w*])", r"<em>\1</em>", s)
     s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
     s = re.sub(r"\[(.+?)\]\((https?://[^\s)]+)\)",
                r'<a href="\2" target="_blank" rel="noopener">\1</a>', s)
     return s
 
 
+# Dòng MỞ một block mới (heading / list / trích dẫn / bảng / hr). Dùng để biết dòng kế tiếp
+# có phải phần NỐI của mục list đang mở hay không. Thiếu nó, một mục list dài xuống dòng bị
+# cắt thành <ol> một phần tử + <p> lẻ, và mọi mục đều đánh số "1." — bài AST-001 dính đúng
+# lỗi này: 2 danh sách in ra thành 6 khối <ol>.
+_MO_BLOCK = re.compile(r"^(#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||-{3,}$)")
 _EMOJI_LEAD = re.compile(r"^\s*([\U0001F000-\U0001FAFF☀-➿←-⇿⬀-⯿])")
 
 
@@ -86,6 +94,12 @@ def md_to_html(md_text):
             i += 1
             continue
 
+        # Dấu ngắt "---" là đường kẻ ngang, không phải đoạn văn có ba dấu gạch.
+        if re.match(r"^(?:-{3,}|\*{3,}|_{3,})$", s):
+            out.append("<hr>")
+            i += 1
+            continue
+
         m = re.match(r"^(#{1,6})\s+(.*)$", s)
         if m:
             lvl = len(m.group(1))
@@ -113,8 +127,12 @@ def md_to_html(md_text):
         if re.match(r"^[-*+]\s+", s):
             items = []
             while i < n and re.match(r"^[-*+]\s+", lines[i].strip()):
-                items.append(_inline(re.sub(r"^[-*+]\s+", "", lines[i].strip())))
+                buf = [re.sub(r"^[-*+]\s+", "", lines[i].strip())]
                 i += 1
+                while i < n and lines[i].strip() and not _MO_BLOCK.match(lines[i].strip()):
+                    buf.append(lines[i].strip())
+                    i += 1
+                items.append(_inline(" ".join(buf)))
             out.append("<ul>" + "".join(f"<li>{it}</li>" for it in items) + "</ul>")
             continue
 
@@ -122,8 +140,12 @@ def md_to_html(md_text):
         if re.match(r"^\d+[.)]\s+", s):
             items = []
             while i < n and re.match(r"^\d+[.)]\s+", lines[i].strip()):
-                items.append(_inline(re.sub(r"^\d+[.)]\s+", "", lines[i].strip())))
+                buf = [re.sub(r"^\d+[.)]\s+", "", lines[i].strip())]
                 i += 1
+                while i < n and lines[i].strip() and not _MO_BLOCK.match(lines[i].strip()):
+                    buf.append(lines[i].strip())
+                    i += 1
+                items.append(_inline(" ".join(buf)))
             out.append("<ol>" + "".join(f"<li>{it}</li>" for it in items) + "</ol>")
             continue
 

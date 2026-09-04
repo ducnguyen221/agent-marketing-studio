@@ -154,7 +154,27 @@ def test_thieu_dau_vao_khong_duoc_bao_xanh(tmp_path):
     assert theo["G01"]["trang_thai"] == "thieu"
     assert theo["G18"]["trang_thai"] == "thieu"
     assert kq["xanh"] == 0, "thư mục rỗng mà có cổng xanh = cổng đang nói dối"
-    assert kq["thieu"] == 21
+    assert kq["thieu"] == 22
+
+
+def test_g23_bat_placeholder_con_sot(bai_xanh):
+    """Placeholder sót lại = bài chưa điền link, nhưng nó im lặng hoàn toàn.
+
+    Vòng 1 chỉ nhìn placeholder GIÁN TIẾP qua G14 (comment phải có URL). Nên
+    youtube_desc.txt mang nguyên {{BLOG_URL}} vẫn qua sạch — đo được trên bài thật 04/09.
+    Với quy trình đăng TAY thì đây là lỗ chết người: người dán nguyên văn lên YouTube.
+    """
+    assert _theo_ma(G.chay(bai_xanh, HOME))["G23"]["trang_thai"] == "xanh"
+
+    (bai_xanh / "youtube_desc.txt").write_text("Bản đầy đủ: {{BLOG_URL}}", encoding="utf-8")
+    r = _theo_ma(G.chay(bai_xanh, HOME))["G23"]
+    assert r["trang_thai"] == "do" and r["muc"] == G.CHAN
+    assert "youtube_desc.txt" in r["ghi_chu"] and "{{BLOG_URL}}" in r["ghi_chu"], \
+        "cổng phải chỉ rõ placeholder nào ở file nào, không chỉ nói 'có placeholder'"
+
+
+def test_thu_muc_rong_van_bao_thieu_G23(tmp_path):
+    assert _theo_ma(G.chay(tmp_path, HOME))["G23"]["trang_thai"] == "thieu"
 
 
 # ------------------------------------------------------------------ 4. miễn trừ G21
@@ -230,4 +250,4 @@ def test_cli_ghi_gates_json_va_exit_khac_0(tmp_path):
     shutil.copytree(BAI_DO, d)
     assert G.main([str(d), "--home-domain", HOME, "--json-only"]) == 1
     ghi = json.loads((d / "gates.json").read_text(encoding="utf-8"))
-    assert ghi["tong"] == 22 and ghi["ket_luan"] == "do"
+    assert ghi["tong"] == 23 and ghi["ket_luan"] == "do"

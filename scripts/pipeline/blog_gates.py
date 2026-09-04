@@ -343,6 +343,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     if not cong_khai:
         s.thieu("G21", "Tên công cụ nội bộ", "chưa có file công khai nào để quét")
         s.thieu("G22", "Tên tổ chức trong bản công khai", "chưa có file công khai nào để quét")
+        s.thieu("G23", "Placeholder {{...}}", "chưa có file công khai nào để quét")
     else:
         hit, mien = [], []
         for ten, t in cong_khai.items():
@@ -354,6 +355,15 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
                     f"{nhan} — MIỄN TRỪ: {cho_phep[x]}" if x in cho_phep else nhan)
         s.do("G21", "Tên công cụ nội bộ", len(hit), "= 0", not hit,
              ghi_chu="; ".join(hit[:6] + mien[:4]))
+        # G23 — placeholder còn sót. Cả quy trình đăng (kể cả đăng tay) đứng trên giả định
+        # "mọi {{...}} đã được thay bằng link thật". Vòng 1 chỉ nhìn placeholder GIÁN TIẾP
+        # qua G14 ở comment, nên youtube_desc.txt và fb_desc.txt mang nguyên {{BLOG_URL}}
+        # vẫn qua sạch — đo được ngày 04/09 trên chính bài này.
+        ph = [f"{ten}:{m}" for ten, t in cong_khai.items()
+              for m in re.findall(r"\{\{[^}\n]*\}\}", t)]
+        s.do("G23", "Placeholder {{...}} trong file công khai", len(ph), "= 0", not ph,
+             ghi_chu="; ".join(ph[:6]))
+
         hit2 = [ten for ten, t in cong_khai.items() if TEN_TO_CHUC.search(t)]
         s.do("G22", "Tên tổ chức trong bản công khai", len(hit2), "= 0 nếu bài sẽ vào repo",
              not hit2, CANH_BAO,
