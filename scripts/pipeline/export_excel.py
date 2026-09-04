@@ -111,15 +111,18 @@ def _dong_post(cam_dir: Path, dong_md: list) -> list[dict]:
                 "publish_plan": p.get("publish_plan", ""),
                 "updated_at": pub.get("at", "") or rev.get("at", ""),
             })
-            for k_xl, k_m in (("actual_view", "view"), ("actual_interaction", "interaction"),
-                              ("actual_reaction", "reaction"), ("actual_comment", "comment"),
-                              ("actual_share", "share"), ("actual_click", "click"),
-                              ("actual_reach", "reach")):
-                v = (p.get("metrics") or {}).get(k_m)
+            # Khoá THẬT trong publish.json là `actual` và `target` — `register_publish
+            # metrics` ghi vào đó. Đọc nhầm tên khoá thì mọi ô số liệu im lặng rỗng.
+            for ten in ("view", "interaction", "reaction", "comment", "share", "click", "reach"):
+                v = (p.get("actual") or {}).get(ten)
                 if v is not None:
-                    o[k_xl] = v
-            if p.get("metrics", {}).get("at"):
-                o["metric_updated_at"] = p["metrics"]["at"]
+                    o["actual_" + ten] = v
+            for ten in ("view", "interaction"):
+                v = (p.get("target") or {}).get(ten)
+                if v is not None:
+                    o["target_" + ten] = v
+            if (p.get("actual") or {}).get("updated_at"):
+                o["metric_updated_at"] = p["actual"]["updated_at"]
             ra.append(o)
     return ra
 

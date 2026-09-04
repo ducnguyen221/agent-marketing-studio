@@ -51,7 +51,8 @@ def cam(tmp_path):
              "review": {"status": "approved", "note": "ok"},
              "publish": {"status": "published", "link": "https://vidu.vn/a.html",
                          "at": "2026-09-04T10:00:00"},
-             "metrics": {"view": 120, "reach": 900, "at": "2026-09-05"}}]},
+             "actual": {"view": 120, "reach": 900, "updated_at": "2026-09-05"},
+             "target": {"view": 500}}]},
         ensure_ascii=False), encoding="utf-8")
     return C
 
@@ -82,6 +83,7 @@ def test_xuat_du_ba_sheet_va_du_lieu_that(cam):
     p = dict(zip(h, [c.value for c in w["Post"][2]]))
     assert p["post_id"] == "AST-001-web" and p["publish_link"] == "https://vidu.vn/a.html"
     assert p["actual_view"] == 120 and p["actual_reach"] == 900
+    assert p["target_view"] == 500, "chỉ tiêu cũng phải sang, để so được với thực tế"
 
 
 def test_dict_long_TRAI_PHANG_chu_khong_vo(cam):

@@ -21,10 +21,13 @@
         "platform_id": "EXAMPLE0001",
         "at": "2026-09-07T09:00:00"
       },
-      "metrics": {
+      "actual": {
         "view": 214,
         "interaction": 19,
-        "at": "2026-09-10"
+        "updated_at": "2026-09-10"
+      },
+      "target": {
+        "view": 400
       }
     },
     {
@@ -44,9 +47,12 @@
         "http": 200,
         "at": "2026-09-07T09:05:00"
       },
-      "metrics": {
+      "actual": {
         "view": 531,
-        "at": "2026-09-10"
+        "updated_at": "2026-09-10"
+      },
+      "target": {
+        "view": 400
       }
     },
     {
@@ -67,12 +73,15 @@
         "comment_id": "111111111111111_222222222222222",
         "at": "2026-09-07T09:10:00"
       },
-      "metrics": {
+      "actual": {
         "reach": 1840,
         "reaction": 37,
         "comment": 6,
         "share": 4,
-        "at": "2026-09-10"
+        "updated_at": "2026-09-10"
+      },
+      "target": {
+        "interaction": 30
       }
     }
   ]

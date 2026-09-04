@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>agent-marketing-studio — Chạy chiến dịch marketing end-to-end bằng AI, người vẫn cầm cương</title>
-<meta name="description" content="agent-marketing-studio là engine mã nguồn mở chạy một chiến dịch marketing từ brief tới báo cáo: lịch nội dung, AI viết nháp, ba cổng phê duyệt trong Excel, đăng kênh và đo kết quả. Nội dung và dữ liệu của bạn nằm ngoài git.">
+<meta name="description" content="agent-marketing-studio là engine mã nguồn mở chạy một chiến dịch marketing từ brief tới báo cáo: lập kế hoạch, AI viết nháp, hai cổng phê duyệt của người, đăng kênh và đo kết quả. Mọi thứ là Markdown và đọc được bằng mắt. Nội dung của bạn nằm ngoài git.">
 <meta name="theme-color" content="#2f6df6" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e0f13" media="(prefers-color-scheme: dark)">
 <meta property="og:title" content="agent-marketing-studio · Chiến dịch marketing end-to-end bằng AI, người vẫn cầm cương">
-<meta property="og:description" content="Một chiến dịch = một workbook 13 sheet. AI dựng lịch và viết nháp, bạn tick ba cổng duyệt, script mới được đăng. Mã nguồn mở, giấy phép MIT.">
+<meta property="og:description" content="Một chiến dịch = một file Markdown + một thư mục cho mỗi bài. AI nghiên cứu và viết nháp, bạn duyệt hai cổng, script mới được đăng. Mã nguồn mở, giấy phép MIT.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://ducnguyen.vn/agent-marketing-studio/">
 <meta property="og:image" content="https://ducnguyen.vn/agent-marketing-studio/og-image.svg">
@@ -405,7 +405,7 @@
         Mã nguồn mở &nbsp;·&nbsp; <b>MIT</b>
       </span>
       <h1>Một chiến dịch chạy từ brief tới báo cáo —<br><span class="hl">AI làm, bạn duyệt.</span></h1>
-      <p class="lead">Repo này là <b>engine</b>: skill, agent, workflow, script và template. Nội dung, dữ liệu và báo cáo của bạn sống ở instance riêng, nằm ngoài git.</p>
+      <p class="lead">Repo này là <b>engine</b>: script, cổng kiểm, quy trình và template. Nội dung, dữ liệu và báo cáo của bạn sống ở một trạm riêng, nằm ngoài git — chỗ nào là do bạn chọn.</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="https://github.com/ducnguyen221/agent-marketing-studio" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.55-1.14-4.55-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 2.5-.34c.85 0 1.71.12 2.5.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.59.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
@@ -419,32 +419,32 @@
       <div class="tech-badges">
         <span class="tb local"><span class="g"></span>Dry-run mặc định</span>
         <span class="tb"><span class="g"></span>MIT License</span>
-        <span class="tb"><span class="g"></span>Excel · 13 sheet</span>
-        <span class="tb"><span class="g"></span>Windows · PowerShell</span>
+        <span class="tb"><span class="g"></span>Markdown là nguồn</span>
+        <span class="tb"><span class="g"></span>Python 3.10+</span>
       </div>
     </div>
 
     <!-- product preview: stylized approval-gate illustration -->
-    <div class="preview" role="img" aria-label="Minh hoạ sheet lịch nội dung của một chiến dịch: ba cổng duyệt approve_topic, approve_content, approve_final quyết định asset nào được đăng.">
+    <div class="preview" role="img" aria-label="Minh hoạ bảng Content trong campaign.md: hai cổng duyệt của người quyết định bài nào được đăng.">
       <div class="pv-top">
         <span class="pv-live"><span class="rec"></span>Chờ bạn duyệt</span>
-        <span class="pv-src">CMP-2026-Q3.xlsx · 03_Calendar</span>
+        <span class="pv-src">campaign.md · bảng Content</span>
       </div>
       <div class="pv-body">
         <div class="line">
           <span class="who s2">A-014</span>
           <span class="say"><span class="orig">Reels · “Mở tài khoản trong 3 phút”</span>
-            <span class="tr"><b>gates</b>topic ✓ · content ✓ · final ✓ → được đăng</span></span>
+            <span class="tr"><b>cổng</b>đề tài ✓ · trước khi đăng ✓ → đã đăng, có URL</span></span>
         </div>
         <div class="line">
           <span class="who s1">A-015</span>
           <span class="say"><span class="orig">Bài dài · “Gửi tiết kiệm online lãi bao nhiêu”</span>
-            <span class="tr"><b>gates</b>topic ✓ · content ✓ · final — → dừng ở đây</span></span>
+            <span class="tr"><b>cổng</b>đề tài ✓ · trước khi đăng — → dừng, chờ bạn</span></span>
         </div>
         <div class="line">
           <span class="who s1">A-016</span>
           <span class="say"><span class="orig">Video ngắn · “Ba lỗi khi vay tiêu dùng”</span>
-            <span class="tr"><b>gates</b>topic ✓ · content — → chưa làm media</span></span>
+            <span class="tr"><b>cổng</b>đề tài — → chưa qua Cổng 1</span></span>
         </div>
         <div class="line">
           <span class="who you">Bạn</span>
@@ -467,28 +467,28 @@
     <div class="bento">
       <article class="feat wide reveal">
         <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 9v12"/></svg></div>
-        <h3>Một workbook, cả vòng đời</h3>
-        <p>Mỗi chiến dịch là <b>một file Excel 13 sheet</b>: brief → chỉ tiêu KPI → lịch nội dung → nội dung → phê duyệt → log đăng → số liệu ngày → tổng hợp → lead → insight. Không phải mười công cụ nối bằng ảnh chụp màn hình, mà một file mở lên là thấy chiến dịch đang ở đâu.</p>
-        <span class="kbd">01_Brief … 10_Insights · _Lists · _Dictionary</span>
+        <h3>Mở bằng mắt, diff bằng git</h3>
+        <p>Mỗi chiến dịch là <b>một file Markdown</b>: brief ở đầu, bảng danh sách bài ở giữa, quyết định và báo cáo ở cuối. Mỗi bài là một thư mục. Không có định dạng nhị phân nào ở giữa bạn và dữ liệu của bạn — mở lên là đọc được, sửa một chữ thì git chỉ ra đúng chữ đó, và không ai khoá file của ai.</p>
+        <span class="kbd">campaign.md · research.md · content.md · publish.json</span>
       </article>
 
       <article class="feat wide reveal">
         <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-        <h3>Người duyệt là cột trong Excel, không phải lời hứa</h3>
-        <p>Ba cổng: <code style="font-family:var(--mono);font-size:.85em">approve_topic</code> mở đường cho viết nháp, <code style="font-family:var(--mono);font-size:.85em">approve_content</code> mở đường cho làm media, <code style="font-family:var(--mono);font-size:.85em">approve_final</code> mở đường cho đăng. Chưa tick thì CLI không trả asset đó ra, agent không có cách nào nhảy bước.</p>
-        <span class="kbd">gate: draft → media → publish</span>
+        <h3>Hai chỗ máy không được tự quyết</h3>
+        <p><b>Cổng 1 — chọn đề tài:</b> script tạo bài ở trạng thái <code style="font-family:var(--mono);font-size:.85em">proposed</code> với ô duyệt để trống. Không có đường nào trong mã tự đặt thành đã duyệt.<br><b>Cổng 2 — trước khi đăng:</b> lệnh duyệt bắt buộc có tên người duyệt và câu duyệt nguyên văn. Duyệt mà không để lại dấu vết thì sáu tháng sau không ai biết ai đã đồng ý với cái gì.</p>
+        <span class="kbd">proposed → approved → published</span>
       </article>
 
       <article class="feat reveal">
         <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></div>
         <h3>Dry-run là mặc định</h3>
-        <p>Adapter đăng bài từ chối chạy thật trừ khi instance đặt <code style="font-family:var(--mono);font-size:.85em">autonomy: full</code> và bạn xác nhận bằng tay. Ba mức tự trị: <b>suggest</b> chỉ đọc và đề xuất, <b>auto_safe</b> được viết nháp, <b>full</b> mới được đăng.</p>
+        <p>Script đăng bài từ chối chạy thật trừ khi kênh đặt <code style="font-family:var(--mono);font-size:.85em">autonomy: full</code> trong <code style="font-family:var(--mono);font-size:.85em">channel.yml</code> và bạn xác nhận bằng tay. Ba mức: <b>suggest</b> chỉ đọc và đề xuất, <b>auto_safe</b> được viết nháp, <b>full</b> mới được đăng.</p>
       </article>
 
       <article class="feat reveal">
         <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></div>
-        <h3>Schema là hợp đồng</h3>
-        <p>Cột nào tồn tại, giá trị nào hợp lệ, tên nào ánh xạ tên nào — tất cả nằm ở YAML trong <code style="font-family:var(--mono);font-size:.85em">schema/</code>. Sửa schema một chỗ thì dropdown trong Excel, validator và mô hình dữ liệu đổi theo, cho mọi chiến dịch.</p>
+        <h3>23 cổng kiểm bằng số</h3>
+        <p>Độ dài bài, số nguồn đã đối chiếu, link còn sống hay đã chết, chữ mẫu còn sót, tên công cụ nội bộ lọt ra bản công khai — mỗi thứ một cổng, trả về một con số so với một ngưỡng. Trạng thái thứ ba là <b>“thiếu”</b>: cổng không chạy được thì <b>không bao giờ</b> được tính là đạt. Không kiểm được là <i>chưa biết</i>, không phải <i>đã qua</i>.</p>
       </article>
 
       <article class="feat reveal">
@@ -500,12 +500,12 @@
       <article class="feat full reveal">
         <div>
           <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
-          <h3>Bộ mẫu chạy được ngay</h3>
-          <p>Instance <code style="font-family:var(--mono);font-size:.85em">content/KPIM</code> là một ngân hàng giả định với dữ liệu mô phỏng: <b>4 chiến dịch</b> theo quý, <b>60 bài đã đăng</b>, <b>5.687 lead từ 7 nguồn</b> (app · hotline · form · social inbox · website · quầy · QR sự kiện) — mỗi nguồn một kiểu định dạng lệch nhau, đúng như đời thật. Clone về là chạy, không cần token, không cần tài khoản kênh nào. Đây cũng là bộ dữ liệu dạy học cho khoá Marketing Analytics.</p>
+          <h3>Một trạm mẫu đã điền sẵn</h3>
+          <p>Thư mục <code style="font-family:var(--mono);font-size:.85em">examples/</code> là một trạm hoàn chỉnh thu nhỏ: một kênh, một chiến dịch, <b>ba bài ở ba trạng thái</b> — đã đăng, đã duyệt đề tài, mới đề xuất. Nó trả lời câu hỏi mà một file mẫu rỗng không trả lời được: <i>điền xong thì trông như thế nào?</i> Kèm cả một báo cáo cổng <b>đang đỏ</b>, để bạn thấy lúc hỏng nó ra sao chứ không chỉ thấy lúc mọi thứ xanh. Clone về là chạy, không cần token, không đăng gì lên đâu. Bộ dữ liệu ngân hàng giả định ở <code style="font-family:var(--mono);font-size:.85em">content/KPIM</code> vẫn còn, dùng cho phần dạy học.</p>
         </div>
         <div class="privacy-tags">
-          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>4 chiến dịch · 60 bài</span>
-          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>5.687 lead · 7 nguồn</span>
+          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>examples/ · 3 trạng thái</span>
+          <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>135 test · 23 cổng</span>
           <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>Không PII · không credential</span>
           <span class="ptag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>Không đăng gì lên đâu</span>
         </div>
@@ -519,8 +519,8 @@
   <div class="wrap">
     <div class="sec-head reveal">
       <span class="eyebrow"><span class="dot"></span>Cách hoạt động</span>
-      <h2>Sáu bước, ba chỗ dừng chờ người</h2>
-      <p>Agent đi liền mạch từ brief tới báo cáo, nhưng dừng lại ở bước 3, 4 và 5 — mỗi lần dừng là một ô checkbox bạn phải tự tick. Bỏ trống thì đường ống đứng yên, không có “mặc định đồng ý”.</p>
+      <h2>Sáu bước, hai chỗ dừng chờ người</h2>
+      <p>Agent đi liền mạch từ brief tới báo cáo, nhưng dừng ở hai chỗ: <b>chọn đề tài</b> và <b>trước khi đăng</b>. Cả hai đều cần bạn điền tay vào file. Bỏ trống thì đường ống đứng yên — không có “mặc định đồng ý”, và không có đường nào trong mã tự điền hộ.</p>
     </div>
   </div>
   <div class="wrap">
@@ -528,33 +528,33 @@
       <div class="pipe">
         <div class="pstep">
           <span class="pnum">01</span>
-          <h3>Brief</h3>
-          <p>Mục tiêu, đối tượng, pillar, chỉ tiêu KPI — bạn điền vào sheet brief.</p>
+          <h3>Brief chiến dịch</h3>
+          <p>Mục tiêu, đối tượng, thông điệp, trụ nội dung — điền vào <code>campaign.md</code>. Chưa đủ thì script không cho tạo bài.</p>
         </div>
         <div class="pstep">
           <span class="pnum">02</span>
-          <h3>Lịch nội dung</h3>
-          <p>Agent rải asset theo pillar và định dạng, validator kiểm trước khi ghi.</p>
+          <h3>Đề xuất bài</h3>
+          <p>Agent đối chiếu sổ bài cũ để khỏi trùng đề tài, rồi thêm dòng vào bảng Content ở trạng thái <i>đề xuất</i>.</p>
         </div>
         <div class="pstep">
           <span class="pnum">03</span>
-          <h3>AI viết nháp</h3>
-          <p>Chỉ những asset đã duyệt chủ đề mới được viết. Nháp dài để ở file Markdown.</p>
+          <h3>Nghiên cứu &amp; viết</h3>
+          <p>Chỉ bài đã qua Cổng 1 mới được viết. Nguồn vào <code>research.md</code> và <b>đóng băng</b> ở đó; bài vào <code>content.md</code>.</p>
         </div>
         <div class="pstep">
           <span class="pnum">04</span>
-          <h3>Bạn duyệt</h3>
-          <p>Checklist QA trong sheet phê duyệt. Đây là bước không ai làm thay bạn.</p>
+          <h3>23 cổng, rồi bạn duyệt</h3>
+          <p>Máy kiểm hình thức bằng số. Còn câu “bài này có đáng đăng không” thì không cổng nào trả lời được — đó là Cổng 2.</p>
         </div>
         <div class="pstep">
           <span class="pnum">05</span>
           <h3>Đăng kênh</h3>
-          <p>Adapter YouTube và Facebook, chạy dry-run nếu chưa bật toàn quyền. <b>Đang xây.</b></p>
+          <p>YouTube → trang blog → Facebook, đúng thứ tự đó vì mỗi bước cần link của bước trước. URL thật ghi ngược vào bảng Content.</p>
         </div>
         <div class="pstep">
           <span class="pnum">06</span>
           <h3>Đo &amp; báo cáo</h3>
-          <p>Thu số liệu qua API, dựng star schema và dashboard Power BI. <b>Đang xây.</b></p>
+          <p>Số liệu vào <code>publish.json</code>, xuất được ra HTML và Excel. Thu tự động qua API <b>còn đang làm</b> — nay nhập tay.</p>
         </div>
       </div>
     </div>
@@ -567,7 +567,7 @@
     <div class="install-copy reveal">
       <span class="eyebrow"><span class="dot"></span>Cài đặt</span>
       <h2 style="margin-top:14px">Ba dòng lệnh và bảy câu hỏi</h2>
-      <p>Clone repo rồi chạy <code style="font-family:var(--mono);font-size:.85em">install.ps1</code>. Installer hỏi bảy câu — tên kênh, nơi đặt nội dung, kênh phát hành, nguồn số liệu, mức tự trị, ngôn ngữ, brand voice — rồi dựng khung thư mục instance cho bạn. Nhấn Enter hết là dùng mặc định trong repo.</p>
+      <p>Clone repo rồi chạy <code style="font-family:var(--mono);font-size:.85em">install.ps1</code>. Nó hỏi <b>đúng một câu</b> — đặt trạm nội dung ở đâu — rồi dựng khung và in ra ba lệnh tiếp theo, dán chạy được ngay. Nhấn Enter là dùng <code style="font-family:var(--mono);font-size:.85em">~/.marketing</code>. Nó <b>không</b> tạo kênh hộ bạn: chỗ lưu kênh là quyết định của bạn, và bước sau sẽ hỏi.</p>
       <div class="req">
         <ul>
           <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span><span><b>Windows</b> với <b>PowerShell 5.1</b> trở lên</span></li>
@@ -593,7 +593,7 @@
       <div class="code-scroll">
 <pre><code id="installCode"><span class="pr">git</span> clone https://github.com/ducnguyen221/agent-marketing-studio
 <span class="pr">cd</span> agent-marketing-studio
-<span class="pr">.\install.ps1</span>                        <span class="cm"># hỏi 7 câu rồi dựng khung thư mục</span></code></pre>
+<span class="pr">.\install.ps1</span>                        <span class="cm"># hỏi 1 câu rồi dựng khung trạm</span></code></pre>
       </div>
     </div>
   </div>
@@ -629,7 +629,7 @@
           </tr>
           <tr>
             <td class="lbl">Dữ liệu &amp; báo cáo</td>
-            <td class="us">Chỉ dữ liệu mô phỏng để học</td>
+            <td class="us">Chỉ dữ liệu ví dụ và mô phỏng</td>
             <td><span class="no">Export số liệu, lead, báo cáo xuất ra</span></td>
           </tr>
           <tr>
@@ -640,7 +640,7 @@
           <tr>
             <td class="lbl">Thông tin cá nhân</td>
             <td class="us"><span class="yes">Không PII</span> — số điện thoại trong bộ mẫu là chuỗi sinh máy</td>
-            <td><span class="no">Dữ liệu khách hàng thật không bao giờ rời instance</span></td>
+            <td><span class="no">Dữ liệu khách hàng thật không bao giờ rời trạm của bạn</span></td>
           </tr>
         </tbody>
       </table>
@@ -648,7 +648,7 @@
 
     <div class="legal reveal" style="margin-top:26px">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
-      <p><b>Đang xây:</b> phần đã dùng được hôm nay là schema, dựng workbook 13 sheet, validator lịch nội dung và bộ mẫu KPIM. Adapter đăng YouTube/Facebook, thu số liệu qua API và dashboard Power BI <b>còn đang làm</b> — đừng kỳ vọng chúng chạy khi vừa clone về.</p>
+      <p><b>Dùng được hôm nay:</b> dựng kênh và chiến dịch, tạo bài lẻ hoặc cả loạt, 23 cổng kiểm, đăng YouTube · trang blog · Facebook (đã chạy thật một bài đủ ba kênh), ghi URL ngược vào sổ, hai bản HTML mở được bằng cách bấm đúp, và xuất Excel. <b>Còn đang làm:</b> thu số liệu tự động qua API và dashboard — hiện số liệu nhập tay. Đừng kỳ vọng hai thứ đó chạy khi vừa clone về.</p>
     </div>
   </div>
 </section>
