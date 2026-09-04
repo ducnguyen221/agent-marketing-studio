@@ -46,7 +46,8 @@
 | Chuỗi email nuôi dưỡng / chuyển đổi | `knowledge/toolchains/EMAIL_SEQUENCES.md` |
 | Newsletter định kỳ | `templates/EMAIL_NEWSLETTER_TEMPLATE.md` |
 | Tái chế nội dung 30 ngày | `templates/RECYCLING_PLAN_TEMPLATE.md` |
-| Dựng HTML tự chứa để xem trước bài | `scripts/pipeline/build_preview.py` |
+| Dựng HTML tự chứa để xem trước bài | `scripts/pipeline/build_blog_html.py` |
+| Xem toàn cảnh chiến dịch / mọi bài | `scripts/pipeline/build_views.py` (mở `index.html` bằng cách bấm đúp) |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
 | **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |

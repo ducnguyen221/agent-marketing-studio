@@ -91,3 +91,26 @@ def test_moi_cho_ghi_file_deu_ep_xuong_dong_LF():
                 dong = s[:m.start()].count("\n") + 1
                 thieu.append(f"{f.relative_to(ROOT)}:{dong} (open w)")
     assert not thieu, "ghi file mà không ép newline='\n': " + ", ".join(thieu)
+
+
+def test_tai_lieu_KHONG_tro_vao_file_ma():
+    """README từng trỏ vào `schema/` và workflows trỏ vào `scripts/workbook/new_campaign.py`
+    — cả hai đã bị xoá từ lâu. Đó là cách tài liệu chết: không sai một chữ nào, chỉ là chỗ
+    nó chỉ tới không còn ở đó nữa.
+
+    Quét mọi đường dẫn trông-như-file trong tài liệu và kiểm nó tồn tại thật.
+    """
+    import re
+    MAU = re.compile(r"`((?:scripts|templates|knowledge|workflows|output_styles|tests|"
+                     r"\.agents|examples|docs|schema)/[A-Za-z0-9_./-]*)`")
+    hong = []
+    for f in list(ROOT.glob("*.md")) + list(ROOT.glob("workflows/*.md")) \
+            + list(ROOT.glob(".agents/**/*.md")) + list(ROOT.glob("knowledge/**/*.md")) \
+            + list(ROOT.glob("examples/*.md")):
+        for m in MAU.finditer(f.read_text(encoding="utf-8")):
+            d = m.group(1)
+            if "<" in d or "*" in d or d.endswith("/"):
+                continue          # mẫu có chỗ trống, hoặc chỉ là thư mục — bỏ qua
+            if not (ROOT / d).exists():
+                hong.append(f"{f.relative_to(ROOT)} → {d}")
+    assert not hong, "tài liệu trỏ vào file không tồn tại:\n  " + "\n  ".join(hong)

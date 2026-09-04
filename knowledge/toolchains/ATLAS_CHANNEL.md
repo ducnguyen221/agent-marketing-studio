@@ -188,6 +188,21 @@ python scripts/pipeline/fb_format.py --check facebook/post.txt --comment faceboo
 python scripts/pipeline/build_blog_html.py --blog-md atlas/blog.md --meta meta.json \n    --infographic youtube/thumbnail.png --summary-img '<slug>-1.jpg' \n    --youtube-url <link> --audio-src '<slug>.mp3' --out atlas/atlas.html
 ```
 
-Điều phối cả bài: `scripts/orchestrator/run-tobi-post.ps1` (dựng) và `publish-tobi.ps1` (đăng).
-Đường dẫn trong hai script phân giải theo `-RootDocs` → `$env:MARKETING_STUDIO_DATA` → `~/.marketing`;
-không đường nào hardcode theo máy.
+**Không còn script điều phối gộp.** Hai file PowerShell cũ (`run-tobi-post.ps1`,
+`publish-tobi.ps1`) đã bỏ: chúng gộp dựng và đăng vào một lệnh, nên một bước hỏng là phải
+chạy lại từ đầu, và cổng duyệt của người bị nuốt vào giữa chuỗi.
+
+Nay mỗi bước một lệnh, chạy lại được từng bước, và hai cổng nằm rõ giữa các lệnh:
+
+```bash
+python scripts/pipeline/register_publish.py <bài> init      # dựng khung posts[]
+#   🔒 người duyệt Cổng 2
+python scripts/pipeline/register_publish.py <bài> approve --by "<tên>" --note "<câu duyệt>"
+#   … đăng YouTube → blog → Facebook …
+python scripts/pipeline/register_publish.py <bài> set --post yt --link <url>
+python scripts/pipeline/check_tree.py --station <trạm>      # phải 0 đỏ
+python scripts/pipeline/build_views.py  --station <trạm>    # sinh lại bản đọc
+```
+
+Trạm phân giải theo `--station` → `$env:MARKETING_STUDIO_DATA` → `~/.marketing`; không đường
+nào hardcode theo máy.
