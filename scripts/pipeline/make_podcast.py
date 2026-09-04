@@ -20,7 +20,8 @@ import os
 import re
 import sys
 
-OMNI_DIR = r"C:\Users\DucNguyen\.tts\omnivoice"
+# Đường dẫn theo MÁY, không theo người: repo này public, không được mang tên ai.
+OMNI_DIR = os.environ.get("OMNIVOICE_DIR") or os.path.join(os.path.expanduser("~"), ".tts", "omnivoice")
 if OMNI_DIR not in sys.path:
     sys.path.insert(0, OMNI_DIR)
 

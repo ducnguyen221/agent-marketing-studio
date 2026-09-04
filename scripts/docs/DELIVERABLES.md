@@ -29,14 +29,14 @@ DOCS\agent\scripts\          (= …\30_MARKETING\agent\scripts\)
 └── (fb_engagement.py, campaign_report.py, register_post.py, register_links.py, prepublish_check.py, update_registry.py …)
 
 A2) SECRET + RUNTIME STATE (gitignored, KHÔNG sync OneDrive) ─
-C:\Users\DucNguyen\.video\tobi\          ← scripts trỏ qua biến $RUNTIME
+~\.video\tobi\          ← scripts trỏ qua biến $RUNTIME
 ├── facebook_config.json     (USER setup 1 lần — token Page)
 ├── .sidecars\<post_id>.json idempotent state
 ├── logs\
 └── .tmp\
 
 B) TRI THỨC + DỮ LIỆU DUYỆT ───────────────────────────────
-C:\Users\DucNguyen\KPIM…\30_MARKETING\
+~\KPIM…\30_MARKETING\
 ├── agent\output-styles\compa-class-blog.md   ✅ (blog style)
 ├── agent\output-styles\tobi-post.md          ✅ (FB style)
 ├── agent\commands\{create_campaign,campaign,report_campaign,scan_engagement}.md  4 command pipeline
@@ -61,7 +61,7 @@ C:\Users\DucNguyen\KPIM…\30_MARKETING\
             └── meta.json          ← title, slug, pillar, category, urls
 
 C) PUBLISHED ──────────────────────────────────────────────
-C:\Users\DucNguyen\Code\atlas\content\<category>\<slug>.html   → live ducnguyen.vn
+~\Code\atlas\content\<category>\<slug>.html   → live ducnguyen.vn
 ```
 
 **Nguyên tắc:** mọi asset 1 bài nằm GỌN trong 1 folder `<post_id>_<slug>`. Excel ánh xạ tới asset bằng **đường dẫn tương đối từ root** `32_PUBLIC_CONTENT\01_ACADEMIC_BLOG\…`.

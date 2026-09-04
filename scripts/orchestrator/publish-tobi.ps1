@@ -36,8 +36,12 @@ $env:PYTHONWARNINGS = 'ignore'   # chặn RequestsDependencyWarning (urllib3) ra
 
 # --- đường dẫn (PIPELINE_CONTRACT.md) ---
 $root      = $PSScriptRoot   # = 30_MARKETING\agent\scripts (folder chuẩn KPIM cho script quy trình)
-$RUNTIME   = 'C:\Users\DucNguyen\.video\tobi'   # secret + state runtime (facebook_config/.sidecars/logs) — KHÔNG sync OneDrive
-$PY        = 'C:\Users\DucNguyen\AppData\Local\Programs\Python\Python312\python.exe'
+$RUNTIME   = "$env:USERPROFILE\.video\tobi"   # secret + state runtime (facebook_config/.sidecars/logs) — KHÔNG sync OneDrive
+$PY        = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+# Danh tinh commit khi day bai len atlas. Mac dinh trung tinh: repo public, khong nhung
+# email that cua ai vao ma nguon. Doi bang bien moi truong neu muon ghi ten that.
+$gitName   = if ($env:ATLAS_GIT_NAME)  { $env:ATLAS_GIT_NAME }  else { "atlas-bot" }
+$gitEmail  = if ($env:ATLAS_GIT_EMAIL) { $env:ATLAS_GIT_EMAIL } else { "atlas-bot@users.noreply.github.com" }
 # Xem ghi chu ROOT_DOCS o run-tobi-post.ps1 — cung luat phan giai.
 if (-not $ROOT_DOCS) {
   $ROOT_DOCS = if ($env:MARKETING_STUDIO_DATA) { $env:MARKETING_STUDIO_DATA }
@@ -45,7 +49,7 @@ if (-not $ROOT_DOCS) {
 }
 $CAMPAIGNS = Join-Path $ROOT_DOCS '31_CAMPAIGNS\01_CAMPAIGNS'
 $ASSET_ROOT = Join-Path $ROOT_DOCS '32_PUBLIC_CONTENT\01_ACADEMIC_BLOG'
-$ATLAS     = 'C:\Users\DucNguyen\Code\ducnguyen221.github.io\atlas'   # monorepo: atlas là thư mục con; push repo ducnguyen221.github.io (cutover 2026-06)
+$ATLAS     = if ($env:ATLAS_REPO) { $env:ATLAS_REPO } else { "$env:USERPROFILE\Code\ducnguyen221.github.io\atlas" }   # monorepo: atlas là thư mục con; push repo ducnguyen221.github.io (cutover 2026-06)
 $SITE      = 'https://ducnguyen.vn/atlas'   # atlas là PROJECT PAGE: phục vụ ở /atlas/ (KHÔNG phải root)
 $PLAYLIST  = 'Học cùng Tobi'
 
@@ -54,11 +58,11 @@ $prepub    = Join-Path $root 'prepublish_check.py'   # GUARDRAIL liệt kê + ki
 $reglinks  = Join-Path $root 'register_links.py'     # ghi link vào hồ sơ campaign md (Mục 13)
 $rp        = Join-Path $root 'register_post.py'       # ghi tóm tắt+key-terms+REF content vào Mục 12
 # Script tái dùng từ .news\engine (KHÔNG viết lại):
-$ytpy      = 'C:\Users\DucNguyen\.news\engine\youtube_upload.py'
-$fbpy      = 'C:\Users\DucNguyen\.news\engine\post_facebook.py'
+$ytpy      = "$env:USERPROFILE\.news\engine\youtube_upload.py"
+$fbpy      = "$env:USERPROFILE\.news\engine\post_facebook.py"
 # YouTube token + FB config theo kênh "Tobi" (reuse .news\ai theo DELIVERABLES §6).
-$env:YT_TOKEN_PATH    = 'C:\Users\DucNguyen\.news\ai\youtube_token.json'
-$env:YT_CLIENT_SECRET = 'C:\Users\DucNguyen\.news\ai\youtube_client_secret.json'
+$env:YT_TOKEN_PATH    = "$env:USERPROFILE\.news\ai\youtube_token.json"
+$env:YT_CLIENT_SECRET = "$env:USERPROFILE\.news\ai\youtube_client_secret.json"
 $FB_TOOL   = $RUNTIME  # facebook_config.json giữ ở .video\tobi (gitignored, KHÔNG sync OneDrive)
 
 $logdir    = Join-Path $RUNTIME 'logs'
@@ -205,7 +209,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "generate-manifest.js failed (exit $LASTEXITCODE)" }
         git add ('content/' + $category + '/' + $slug + '.html') 'data/manifest.json' 2>&1 | ForEach-Object { Log ('git: ' + $_) }
         if ($LASTEXITCODE -ne 0) { throw "git add failed (exit $LASTEXITCODE)" }
-        git -c user.name='Tobi Bot' -c user.email='ducnguyen.ams@gmail.com' commit -m ("tobi: " + $PostId + " - " + $title) 2>&1 | ForEach-Object { Log ('git: ' + $_) }
+        git -c user.name=$gitName -c user.email=$gitEmail commit -m ("tobi: " + $PostId + " - " + $title) 2>&1 | ForEach-Object { Log ('git: ' + $_) }
         # commit có thể exit!=0 nếu không có thay đổi (re-run) — chấp nhận, vẫn push.
         git push origin main 2>&1 | ForEach-Object { Log ('git: ' + $_) }
         if ($LASTEXITCODE -ne 0) { throw "git push failed (exit $LASTEXITCODE)" }
@@ -275,7 +279,7 @@ try {
     try {
       & node (Join-Path $ATLAS 'scripts\generate-manifest.js') 2>&1 | ForEach-Object { Log ('manifest: ' + $_) }
       git add ("content/$category/$slug.html") ("content/$category/$slug.mp3") ("content/$category/$slug.jpg") 'data/manifest.json' 2>&1 | ForEach-Object { Log ('git: ' + $_) }
-      git -c user.name='Tobi Bot' -c user.email='ducnguyen.ams@gmail.com' commit -m ("tobi embed: " + $PostId) 2>&1 | ForEach-Object { Log ('git: ' + $_) }
+      git -c user.name=$gitName -c user.email=$gitEmail commit -m ("tobi embed: " + $PostId) 2>&1 | ForEach-Object { Log ('git: ' + $_) }
       git push origin main 2>&1 | ForEach-Object { Log ('git: ' + $_) }
       if ($LASTEXITCODE -ne 0) { throw "git push (embed) failed (exit $LASTEXITCODE)" }
     } finally { $ErrorActionPreference = $savedEAP; Pop-Location }

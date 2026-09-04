@@ -31,7 +31,8 @@ import time
 import requests
 
 GRAPH = "https://graph.facebook.com/v21.0"  # version giống post_facebook.py
-DEFAULT_FB_CONFIG = r"C:\Users\DucNguyen\.video\tobi\facebook_config.json"
+DEFAULT_FB_CONFIG = os.environ.get("FB_CONFIG") or os.path.join(
+    os.path.expanduser("~"), ".video", "tobi", "facebook_config.json")
 _HERE = os.path.dirname(os.path.abspath(__file__))
 TOBI_EXCEL = os.path.join(_HERE, "tobi_excel.py")
 

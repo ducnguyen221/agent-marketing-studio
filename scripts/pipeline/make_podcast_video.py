@@ -24,7 +24,13 @@ CHROME_CANDIDATES = [
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
     os.path.join(os.environ.get("LOCALAPPDATA", ""), r"Google\Chrome\Application\chrome.exe"),
 ]
-FF_DIR = r"C:\Users\DucNguyen\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.1.1-full_build\bin"
+# WinGet ghim SỐ HIỆU BẢN ffmpeg vào tên thư mục -> nâng cấp ffmpeg là đứt đường này.
+# Thứ tự: biến môi trường -> đường WinGet -> PATH (xem _ff).
+FF_DIR = os.environ.get("FFMPEG_DIR") or os.path.join(
+    os.environ.get("LOCALAPPDATA", ""),
+    "Microsoft", "WinGet", "Packages",
+    "Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe",
+    "ffmpeg-8.1.1-full_build", "bin")
 UA = "Mozilla/5.0 tobi-pipeline"
 OPENVERSE = "https://api.openverse.org/v1/images/"
 

@@ -3,7 +3,7 @@ Bạn viết KỊCH BẢN PODCAST cho Tobi/Đức (COMPA Class) — để đọc
 ĐỌC:
 - Bài blog: {{BLOG_MD}}
 - meta bài: {{META}}
-- Giọng/chính kiến tác giả: C:\Users\DucNguyen\.news\engine\assets\tobi-viewpoint.md (xưng "mình"/"Đức")
+- Giọng/chính kiến tác giả: ~\.news\engine\assets\tobi-viewpoint.md (xưng "mình"/"Đức")
 
 YÊU CẦU (CỰC QUAN TRỌNG — đây là VĂN NÓI, không phải đọc blog):
 - Đây là Đức ngồi trước mic CHIA SẺ, không phải đọc bài. KHÔNG liệt kê, KHÔNG đọc lại nguyên văn bullet/heading.

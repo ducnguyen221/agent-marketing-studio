@@ -22,7 +22,8 @@ import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 FB_ENGAGEMENT = os.path.join(_HERE, "fb_engagement.py")
-DEFAULT_FB_CONFIG = r"C:\Users\DucNguyen\.video\tobi\facebook_config.json"
+DEFAULT_FB_CONFIG = os.environ.get("FB_CONFIG") or os.path.join(
+    os.path.expanduser("~"), ".video", "tobi", "facebook_config.json")
 
 
 # ---------------------------------------------------------------- đọc Excel (read-only, schema-tolerant)

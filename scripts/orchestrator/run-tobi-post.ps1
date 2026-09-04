@@ -42,9 +42,9 @@ $env:PYTHONIOENCODING = 'utf-8'; $env:PYTHONUTF8 = '1'
 
 # --- đường dẫn (theo PIPELINE_CONTRACT.md) ---
 $root      = $PSScriptRoot   # = 30_MARKETING\agent\scripts (folder chuẩn KPIM cho script quy trình)
-$RUNTIME   = 'C:\Users\DucNguyen\.video\tobi'   # secret + state runtime (facebook_config/.sidecars/logs/.tmp) — KHÔNG sync OneDrive
-$PY        = 'C:\Users\DucNguyen\AppData\Local\Programs\Python\Python312\python.exe'
-$OVPY      = 'C:\Users\DucNguyen\.tts\omnivoice\.venv\Scripts\python.exe'  # venv OmniVoice (soundfile+torch) cho mp3/mp4
+$RUNTIME   = "$env:USERPROFILE\.video\tobi"   # secret + state runtime (facebook_config/.sidecars/logs/.tmp) — KHÔNG sync OneDrive
+$PY        = "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe"
+$OVPY      = "$env:USERPROFILE\.tts\omnivoice\.venv\Scripts\python.exe"  # venv OmniVoice (soundfile+torch) cho mp3/mp4
 # ROOT_DOCS: thu muc du lieu chien dich. KHONG hardcode duong dan may/to chuc —
 # repo nay PUBLIC va nguoi khac clone ve se co duong dan khac.
 # Thu tu phan giai: tham so -RootDocs > bien MARKETING_STUDIO_DATA > ~/.marketing

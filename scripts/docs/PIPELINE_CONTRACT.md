@@ -4,14 +4,14 @@
 
 ## Đường dẫn (Windows)
 - SCRIPTS     = `DOCS\agent\scripts`  ← MỌI .py + run-tobi-post.ps1 + publish-tobi.ps1 + prompts\ + PIPELINE_CONTRACT.md/DELIVERABLES.md/README.md sống Ở ĐÂY (OneDrive-sync)
-- RUNTIME     = `C:\Users\DucNguyen\.video\tobi`  ← CHỈ secret + runtime state: `facebook_config.json`, `.sidecars\`, `logs\`, `.tmp\` (gitignored, KHÔNG sync OneDrive). Scripts trỏ qua biến `$RUNTIME`.
+- RUNTIME     = `~\.video\tobi`  ← CHỈ secret + runtime state: `facebook_config.json`, `.sidecars\`, `logs\`, `.tmp\` (gitignored, KHÔNG sync OneDrive). Scripts trỏ qua biến `$RUNTIME`.
 - DOCS        = `$env:MARKETING_STUDIO_DATA (mac dinh ~/.marketing)`
 - TEMPLATES   = `DOCS\agent\templates`        ← chứa CAMPAIGN_TEMPLATE.md + CAMPAIGN_TRACKING_TEMPLATE.xlsx
 - CAMPAIGNS   = `DOCS\31_CAMPAIGNS\01_CAMPAIGNS`  ← mỗi campaign 1 folder `NN_Ten_Campaign` (mẫu CHUẨN = `02_VibeCoding_NonTech`)
 - ASSET_ROOT  = `DOCS\32_PUBLIC_CONTENT\01_ACADEMIC_BLOG`  ← asset bài viết (giữ nguyên, đóng gói theo bài)
-- ATLAS       = `C:\Users\DucNguyen\Code\ducnguyen221.github.io\atlas`
-- OMNI        = `C:\Users\DucNguyen\.tts\omnivoice`  (venv TTS cho make_podcast.py)
-- PY          = `C:\Users\DucNguyen\AppData\Local\Programs\Python\Python312\python.exe`
+- ATLAS       = `~\Code\ducnguyen221.github.io\atlas`
+- OMNI        = `~\.tts\omnivoice`  (venv TTS cho make_podcast.py)
+- PY          = `~\AppData\Local\Programs\Python\Python312\python.exe`
 
 ### Mỗi campaign 1 folder: `CAMPAIGNS\NN_Ten_Campaign\`
 ```
@@ -64,7 +64,7 @@ Mọi script in dòng cuối `OK <abs_path>`; exit!=0 khi lỗi.
 
 ## CLI — fb_engagement.py (NEW) + campaign_report.py (NEW)
 ```
-PY fb_engagement.py   --campaign-xlsx <campaign.xlsx> --fb-config C:\Users\DucNguyen\.video\tobi\facebook_config.json
+PY fb_engagement.py   --campaign-xlsx <campaign.xlsx> --fb-config ~\.video\tobi\facebook_config.json
    # đọc sheet Result -> mỗi fb_post_id GET graph v21.0 ?fields=permalink_url,shares,likes.summary(true),comments.summary(true),reactions.summary(true)
    # reach/impressions: thử /{id}/insights (best-effort, bỏ qua nếu lỗi) -> upsert sheet Engagement
 PY campaign_report.py --campaign-dir <CAMPAIGNS\NN_Ten> [--refresh-engagement]
@@ -106,6 +106,6 @@ publish-tobi.ps1  -Campaign <NN_Ten> -PostId ID [-Uat]
 
 ## INTERPRETER (QUAN TRỌNG)
 - Script thường (tobi_excel, gen_article, gen_infographic, make_podcast_video, build_blog_html, fb_engagement, campaign_report, update_registry) → **PY hệ thống** `…Python312\python.exe`.
-- **TTS/Audio** (make_podcast.py) → **VENV OmniVoice** `C:\Users\DucNguyen\.tts\omnivoice\.venv\Scripts\python.exe` (`$OVPY`). Chạy bằng PY hệ thống sẽ lỗi `ModuleNotFoundError: soundfile`. Orchestrator dùng `Invoke-Py -Exe $OVPY` cho bước này. (make_podcast_video chỉ ghép ảnh+audio bằng ffmpeg → PY hệ thống.)
+- **TTS/Audio** (make_podcast.py) → **VENV OmniVoice** `~\.tts\omnivoice\.venv\Scripts\python.exe` (`$OVPY`). Chạy bằng PY hệ thống sẽ lỗi `ModuleNotFoundError: soundfile`. Orchestrator dùng `Invoke-Py -Exe $OVPY` cho bước này. (make_podcast_video chỉ ghép ảnh+audio bằng ffmpeg → PY hệ thống.)
 - gen_infographic = COVER landscape 1280×720 kiểu hero compaclass (gradient xanh→teal, network/shape trừu tượng, tiêu đề+subtitle, KHÔNG list số).
 ```
