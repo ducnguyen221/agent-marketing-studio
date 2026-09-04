@@ -114,3 +114,50 @@ def test_tai_lieu_KHONG_tro_vao_file_ma():
             if not (ROOT / d).exists():
                 hong.append(f"{f.relative_to(ROOT)} → {d}")
     assert not hong, "tài liệu trỏ vào file không tồn tại:\n  " + "\n  ".join(hong)
+
+
+def test_so_cong_trong_tai_lieu_KHOP_so_cong_thuc_te():
+    """`blog_gates.py` tự ghi '22 cổng' trong khi phát 23 mã — và 3 tài liệu chép theo.
+
+    Con số này người ta trích dẫn khắp nơi (README, trang chủ, checklist). Sai một con số
+    đếm được là dấu hiệu rõ nhất rằng tài liệu đã ngừng theo kịp code.
+    """
+    import re
+    ma = re.findall(r'"(G\d{2})\b', (ROOT / "scripts/pipeline/blog_gates.py")
+                    .read_text(encoding="utf-8"))
+    that = len(set(ma))
+    assert that >= 20, f"không đếm được mã cổng (thấy {that}) — regex hỏng?"
+
+    sai = []
+    for f in list(ROOT.glob("*.md")) + list(ROOT.glob("**/*.md")):
+        if ".git" in f.parts:
+            continue
+        for m in re.finditer(r"(\d{2}) cổng", f.read_text(encoding="utf-8")):
+            if int(m.group(1)) != that:
+                sai.append(f"{f.relative_to(ROOT)} nói {m.group(1)}, thực tế {that}")
+    for m in re.finditer(r"(\d{2}) cổng",
+                         (ROOT / "scripts/pipeline/blog_gates.py").read_text(encoding="utf-8")):
+        if int(m.group(1)) != that:
+            sai.append(f"blog_gates.py tự nói {m.group(1)}, thực tế {that}")
+    assert not sai, "số cổng lệch:\n  " + "\n  ".join(sai)
+
+
+def test_DATA_MODEL_dinh_nghia_DU_moi_cot_dang_chay():
+    """DATA_MODEL tự xưng CANONICAL. Vậy thì mọi cột đang chạy phải có mặt trong đó.
+
+    Đo 05/09: 11 trong 15 cột của bảng Content (`g1 g2 web youtube facebook pillar angle
+    funnel schedule published folder`) KHÔNG được định nghĩa ở đâu cả, trong khi file vẫn
+    mô tả `approved_date`, `folder_path`… của mô hình Excel cũ. Agent đọc file này rồi đi
+    ghi `approved_date` vào bảng Content là ghi vào hư không.
+    """
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "lib"))
+    _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import new_post
+
+    doc = (ROOT / "knowledge/data_model/DATA_MODEL.md").read_text(encoding="utf-8")
+    thieu = [c for c in new_post.COT if f"`{c}`" not in doc]
+    assert not thieu, ("DATA_MODEL không định nghĩa cột đang chạy: " + ", ".join(thieu))
+
+    for k in new_post.BAT_BUOC:
+        assert f"`{k}`" in doc, f"trường bắt buộc {k} không có trong DATA_MODEL"

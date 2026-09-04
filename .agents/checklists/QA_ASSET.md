@@ -38,7 +38,7 @@ Checklist ở trên là phần người đọc. Phần máy đo chạy bằng l�
 vào review** — nói "đã kiểm rồi" mà không có JSON thì coi như chưa kiểm.
 
 ```bash
-python scripts/pipeline/blog_gates.py <thư mục bài>      # 22 cổng -> gates.json, exit!=0 khi đỏ
+python scripts/pipeline/blog_gates.py <thư mục bài>      # 23 cổng -> gates.json, exit!=0 khi đỏ
 python scripts/pipeline/fb_format.py --check facebook/post.txt --comment facebook/comment.txt
 ```
 

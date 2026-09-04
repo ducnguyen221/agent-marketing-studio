@@ -39,13 +39,85 @@ Kế thừa xuôi chiều: giá trị ở tầng trên là **ràng buộc** cho 
   file tối ưu cho agent ghi. Agent gặp giá trị lạ → **báo cáo cho người**, không im lặng bỏ dòng.
 - **Cột `actual_*` ghi đè**, file không lưu lịch sử đo. Cần diễn biến theo thời gian →
   ghi vào Mục 9 của hồ sơ `.md`.
-- Nội dung text sống ở `<folder_path>/content.md`, **không** nằm trong ô Excel.
+- Nội dung text sống ở `<thư mục bài>/content.md`, **không** nằm trong ô Excel.
 
 ---
 
-## Sheet `Campaign`
+## ⚠️ MỘT TRƯỜNG, HAI TÊN — đọc bảng này trước khi ghi bất cứ đâu
 
-*form dọc `field | value`, một campaign một file* — 26 trường.
+File này định nghĩa **ý nghĩa** của từng trường. Nhưng cùng một trường có **hai tên**, tuỳ
+chỗ nó đang nằm:
+
+| Nơi | Tên dùng | Ai ghi |
+|---|---|---|
+| `campaign.md` — frontmatter + bảng Content | tên **ngắn** (`id`, `g1`, `folder`…) | script + người |
+| `publish.json` | cấu trúc **lồng** (`posts[].publish.link`) | `register_publish` |
+| `.xlsx` bản xuất | tên **dài, phẳng** (`campaign_code`, `approved_date`, `publish_link`…) | `export_excel` |
+
+Phần lớn file này viết theo cột **bản xuất Excel** — đó là bộ tên có từ mô hình cũ và được
+giữ nguyên để biểu mẫu, công thức và pivot của người dùng không phải học lại. **Ghi dữ liệu
+thì ghi theo cột trái**, không phải cột phải.
+
+| Ý nghĩa | Tên trong Markdown / `publish.json` (GHI VÀO ĐÂY) | Tên cột trong `.xlsx` |
+|---|---|---|
+| mã chiến dịch | `id` (frontmatter) | `campaign_code` |
+| chỉ tiêu từng kênh | `kpi: {blog:, youtube:, facebook:}` | `kpi_blog_target`… |
+| trụ nội dung của bài | `pillar` | `content_pillar` |
+| tầng phễu | `funnel` | `funnel_stage` |
+| góc tiếp cận | `angle` | `content_angle` |
+| ngày qua **Cổng 1** | `g1` | `approved_date` |
+| ngày qua **Cổng 2** | `g2` (gương của `posts[].review`) | — |
+| ngày dự kiến đăng | `schedule` | `schedule_date` |
+| ngày đã đăng | `published` | `published_date` |
+| thư mục bài | `folder` | `folder_path` |
+| **URL thật** sau khi đăng | `web` · `youtube` · `facebook` | `publish_link` (mỗi post một dòng) |
+| trạng thái duyệt của post | `posts[].review.status` | `review_status` |
+| ghi chú duyệt | `posts[].review.note` | `review_feedback` |
+| ai duyệt | `posts[].review.approved_by` | — |
+| link post | `posts[].publish.link` | `publish_link` |
+| id nền tảng | `posts[].publish.platform_id` | — |
+| id comment (Facebook) | `posts[].publish.comment_id` | — |
+| chỉ tiêu | `posts[].target` | `target_view`, `target_interaction` |
+| số liệu thật | `posts[].actual` | `actual_view`, `actual_reach`… |
+
+> Nguồn sự thật của bộ cột bản xuất là `scripts/pipeline/export_excel.py`
+> (`COT_CONTENT` / `COT_POST`), và có test so trực tiếp với `templates/CAMPAIGN_TEMPLATE.xlsx`.
+
+## Bảng Content trong `campaign.md` — 15 cột đang chạy
+
+Bảng này nằm giữa `<!-- CONTENT:BEGIN -->` và `<!-- CONTENT:END -->`. **Chỉ ghi bằng
+`md_io.upsert_row`**, không bao giờ regex cả file.
+
+| Cột | Nghĩa | Ai ghi | Giá trị hợp lệ |
+|---|---|---|---|
+| `content_id` | mã bài, khoá của bảng | `new_post` | `<PREFIX>-NNN` |
+| `content_name` | tên bài | `new_post` | |
+| `pillar` | trụ nội dung | `new_post` | phải có trong `channel.yml:pillars` |
+| `angle` | góc tiếp cận | người / `new_post` | explainer · how_to · case_study · myth_vs_fact · opinion · comparison · checklist · news_analysis |
+| `funnel` | tầng phễu | người | awareness · consideration · conversion · retention |
+| `priority` | ưu tiên | người | high · medium · low |
+| `status` | trạng thái bài | người (Cổng 1) + `register_publish` | proposed → approved → in_production → scheduled → published → archived |
+| `g1` | **Cổng 1** — ngày người duyệt đề tài | **NGƯỜI** | `YYYY-MM-DD`; script không bao giờ tự điền |
+| `g2` | **Cổng 2** — ngày duyệt trước khi đăng | `register_publish approve` | `YYYY-MM-DD` |
+| `schedule` | ngày dự kiến đăng | người | trong `schedule_start`–`schedule_end` |
+| `published` | ngày đã đăng | `register_publish set` | |
+| `folder` | thư mục bài, tương đối | `new_post` | `./<content_id>_<slug>/` |
+| `web` | **URL thật** bài blog | `register_publish set` | |
+| `youtube` | **URL thật** video | `register_publish set` | |
+| `facebook` | **URL thật** bài Facebook | `register_publish set` | |
+
+Ô rỗng ở `g1`/`g2` **có nghĩa**: chưa qua cổng đó. Đừng điền gì cho "đỡ trống".
+
+---
+
+## Trường của chiến dịch (frontmatter `campaign.md` → sheet `Campaign` khi xuất)
+
+*Ghi vào frontmatter của `campaign.md`. `export_excel` đổ chúng ra sheet `Campaign` dạng
+`field | value`.* — 26 trường.
+
+> Tám trường **bắt buộc** phải điền xong trước khi tạo bài — `new_post.py` chặn:
+> `business_problem · campaign_goal · target_audience · audience_pain_points ·
+> key_message · content_pillar · channels · primary_cta`.
 
 | Trường | Kiểu | Nhóm |
 |---|---|---|

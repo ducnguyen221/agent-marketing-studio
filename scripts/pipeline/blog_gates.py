@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""22 cổng đếm được cho một bài blog. Vào: thư mục bài. Ra: gates.json + JSON ra stdout.
+"""23 cổng đếm được cho một bài blog. Vào: thư mục bài. Ra: gates.json + JSON ra stdout.
 
 LUẬT PHÁT NGÔN — quan trọng hơn bản thân các con số:
 Cổng chỉ được nói **cái nó đo được**, không được suy ra hậu quả.
@@ -399,7 +399,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="22 cổng đếm được cho một bài blog.")
+    ap = argparse.ArgumentParser(description="23 cổng đếm được cho một bài blog.")
     ap.add_argument("thu_muc", help="thư mục bài (chứa blog.md, fb_post.txt...)")
     ap.add_argument("--home-domain", default=None,
                     help="domain nhà, để loại khỏi phép đếm nguồn ngoài")

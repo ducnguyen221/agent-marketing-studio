@@ -183,7 +183,7 @@ export PYTHONIOENCODING=utf-8
 
 python scripts/pipeline/gen_article.py --content-md content.md --meta meta.json --out-dir .
 #   -> atlas/blog.md · facebook/post.txt · facebook/comment.txt · youtube/description.txt
-python scripts/pipeline/blog_gates.py .            # 22 cổng -> gates.json, exit!=0 khi đỏ
+python scripts/pipeline/blog_gates.py .            # 23 cổng -> gates.json, exit!=0 khi đỏ
 python scripts/pipeline/fb_format.py --check facebook/post.txt --comment facebook/comment.txt
 python scripts/pipeline/build_blog_html.py --blog-md atlas/blog.md --meta meta.json \n    --infographic youtube/thumbnail.png --summary-img '<slug>-1.jpg' \n    --youtube-url <link> --audio-src '<slug>.mp3' --out atlas/atlas.html
 ```

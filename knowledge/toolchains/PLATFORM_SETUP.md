@@ -62,7 +62,7 @@ phải chạy lại luồng cấp quyền, nếu không mọi lời gọi Analyt
 có API cũng chỉ đọc được số liệu công khai (view, like, comment).
 
 ### Mã bài để đối soát
-`videoId` 11 ký tự. Ghi vào trường `publish_link` trong `publish.json → posts[]`.
+`videoId` 11 ký tự. Ghi vào `--platform-id` của `register_publish set` (nó vào `posts[].publish.platform_id`), còn `--link` là permalink người bấm được.
 
 ### Nếu KHÔNG cấp được quyền
 YouTube Studio → Analytics → Nâng cao → Xuất CSV. Có `videoId` làm khoá nối.
@@ -100,22 +100,28 @@ tiêu đề trên nền tảng khác `content_name` của Content → ai đó đ
 
 ---
 
-## 4. Cấu hình theo instance
+## 4. Cấu hình theo kênh
 
 `channel.yml` giữ **định danh**, `.env` giữ **bí mật**. Không trộn.
 
+⚠️ `platforms` là **DANH SÁCH**, mỗi mục có khoá `channel:` — không phải map theo tên nền
+tảng. Viết sai dạng thì `register_publish init` duyệt qua và sinh **0 post**, `check_tree`
+cũng không thấy gì bất thường: hỏng **im lặng**, phát hiện lúc sắp đăng. Dạng đúng là dạng
+trong `templates/channel.yml`, và `register_publish.py` đọc `p["channel"]` của từng mục.
+
 ```yaml
 platforms:
-  facebook:
-    enabled: true
+  - channel: facebook
+    handle: "Tên Page"
+    post_formats: [facebook_post]
     page_id: ""                 # định danh — để được ở đây
-    token_env: FB_PAGE_TOKEN__DUCNGUYEN_AI   # TÊN biến, không phải giá trị
-    scopes: [pages_manage_posts, pages_read_engagement, read_insights]
-  youtube:
-    enabled: true
+    secrets_env: { config: FB_CONFIG }        # TÊN biến, không phải giá trị
+    scopes: [pages_manage_posts, pages_read_engagement, pages_manage_engagement, read_insights]
+  - channel: youtube
+    handle: "Tên kênh YouTube"
+    post_formats: [youtube_video]
     channel_id: ""
-    client_secret_env: YT_CLIENT_SECRET__DUCNGUYEN_AI
-    token_env: YT_TOKEN_PATH__DUCNGUYEN_AI
+    secrets_env: { token: YT_TOKEN_PATH, client: YT_CLIENT_SECRET }
     scopes: ["https://www.googleapis.com/auth/youtube",
              "https://www.googleapis.com/auth/yt-analytics.readonly"]
 # File export tải về (Meta Business Suite / YouTube Studio) là TẠM: tải về thư mục
