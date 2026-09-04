@@ -29,7 +29,6 @@ def cay(tmp_path):
     C = K / "CMP-2609-x"
     B = C / "AST-001_slug"
     PP.tao_thu_muc(B)
-    (K / "memory").mkdir(parents=True, exist_ok=True)
     M.write_fm(S / "CHANNELS.md", {"schema": "channels/1", "channels": [
         {"id": "tobi", "label": "Tobi", "path": "./tobi", "status": "active"}]}, "# Sổ\n")
     (K / "channel.yml").write_text(

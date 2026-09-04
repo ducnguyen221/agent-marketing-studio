@@ -69,10 +69,10 @@ def main(argv=None) -> int:
         return 0
 
     # --- thư mục kênh
+    # Thư mục kênh chỉ có FILE PHẲNG + các thư mục chiến dịch. profile/ và memory/ trước
+    # đây mỗi cái chứa đúng MỘT file — lồng thêm một cấp chỉ để phải bấm thêm một lần.
     dich.mkdir(parents=True, exist_ok=True)
-    (dich / "profile").mkdir(exist_ok=True)
-    (dich / "memory").mkdir(exist_ok=True)
-    (dich / "memory" / "continuity.json").write_text("[]\n", encoding="utf-8")
+    (dich / "continuity.json").write_text("[]\n", encoding="utf-8")
 
     yml = (TPL / "channel.yml").read_text(encoding="utf-8")
     yml = (yml.replace("id: ten-kenh", f"id: {a.id}")
@@ -90,13 +90,19 @@ def main(argv=None) -> int:
               .replace("# Sổ chiến dịch — Tên kênh", f"# Sổ chiến dịch — {a.label}"))
     (dich / "CAMPAIGNS.md").write_text(cam, encoding="utf-8", newline="\n")
 
-    if not (dich / "profile" / "viewpoint.md").exists():
-        (dich / "profile" / "viewpoint.md").write_text(
-            "# Chính kiến tác giả\n\n"
-            "> File này chứa thông tin cá nhân và tổ chức thật — **không bao giờ vào repo**.\n"
-            "> Bước B2 đọc nó FAIL-CLOSED: đọc không được thì dừng, không viết bài với\n"
-            "> chính kiến rỗng.\n\n"
-            "## Ai là tác giả\n\n## Cách phân tích một tin\n\n## Giọng và chính kiến\n",
+    if not (dich / "profile.md").exists():
+        (dich / "profile.md").write_text(
+            "# Hồ sơ kênh — giọng, tác phong, chính kiến\n\n"
+            "> MỘT file cho toàn bộ hồ sơ của kênh: tác giả là ai, viết cho ai, giọng thế nào,\n"
+            "> phân tích một chủ đề theo lăng kính gì, câu nào hay dùng, điều gì không bao giờ viết.\n"
+            ">\n"
+            "> Chứa thông tin cá nhân và tổ chức thật — **không bao giờ vào repo**.\n"
+            ">\n"
+            "> Bước viết bài đọc file này **FAIL-CLOSED**: đọc không được thì DỪNG, không viết\n"
+            "> tiếp với chính kiến rỗng. Ba bài đầu của một kênh cũ từng viết với chính kiến\n"
+            "> rỗng suốt mà không ai biết, vì tham số là optional và script im lặng chạy tiếp.\n\n"
+            "## Ai là tác giả\n\n## Viết cho ai\n\n## Cách phân tích một chủ đề\n\n"
+            "## Giọng và chính kiến\n\n## Không bao giờ viết\n",
             encoding="utf-8", newline="\n")
 
     # --- ghi vào sổ kênh

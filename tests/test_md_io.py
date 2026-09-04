@@ -107,3 +107,15 @@ def test_bang_rong_van_doc_duoc_cot():
     assert cot == ["a", "b"] and dong == []
     moi = M.upsert_row(than, "T", "a", {"a": "1", "b": "2"})
     assert M.read_table(moi, "T")[1] == [{"a": "1", "b": "2"}]
+
+
+def test_khoa_la_thi_NEM_LOI_chu_khong_nuot_im_lang():
+    """Bug thật: register_publish ghi cột `web` vào bảng chưa có cột đó → biến mất, không báo."""
+    body = ("<!-- T:BEGIN -->\n| id | x |\n|---|---|\n| a | 1 |\n<!-- T:END -->\n")
+    with pytest.raises(ValueError, match="mất im lặng"):
+        M.upsert_row(body, "T", "id", {"id": "a", "chua_co": "v"})
+
+    ra = M.upsert_row(body, "T", "id", {"id": "a", "chua_co": "v"}, them_cot=True)
+    cot, dong = M.read_table(ra, "T")
+    assert cot == ["id", "x", "chua_co"]
+    assert dong[0] == {"id": "a", "x": "1", "chua_co": "v"}

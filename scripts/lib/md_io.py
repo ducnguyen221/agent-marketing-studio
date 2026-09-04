@@ -134,11 +134,15 @@ def render_table(cot: list[str], dong: list[dict]) -> str:
 
 
 def upsert_row(body: str, ten_moc: str, khoa: str, dong_moi: dict,
-               cot_mac_dinh: list[str] | None = None) -> str:
+               cot_mac_dinh: list[str] | None = None, them_cot: bool = False) -> str:
     """Thêm hoặc cập nhật MỘT dòng theo `khoa`. Chỉ đụng vùng giữa marker.
 
     Cập nhật = trộn: khoá nào không có trong `dong_moi` thì giữ giá trị cũ. Nhờ vậy
     `register_publish` cập nhật cột `published` mà không xoá mất cột người tự điền.
+
+    Khoá KHÔNG có trong bảng: mặc định NÉM LỖI. Trước đây nó bị bỏ im lặng — người gọi
+    tưởng đã ghi, giá trị bốc hơi, và không gì báo. `them_cot=True` để cố ý mở thêm cột
+    (bảng cũ chưa có cột web/youtube/facebook thì register_publish tự nới ra).
     """
     dau, cuoi = _moc(ten_moc)
     i, j = body.find(dau), body.find(cuoi)
@@ -149,6 +153,16 @@ def upsert_row(body: str, ten_moc: str, khoa: str, dong_moi: dict,
         cot = cot_mac_dinh or list(dong_moi)
     if khoa not in cot:
         raise ValueError(f"bảng không có cột khoá {khoa!r}; có: {cot}")
+
+    la = [k for k in dong_moi if k not in cot]
+    if la:
+        if not them_cot:
+            raise ValueError(f"bảng {ten_moc} không có cột {la} — ghi vào sẽ mất im lặng. "
+                             f"Cột đang có: {cot}. Cố ý nới bảng thì truyền them_cot=True.")
+        cot = cot + la
+        for d in dong:
+            for k in la:
+                d.setdefault(k, "")
 
     da_co = False
     for d in dong:

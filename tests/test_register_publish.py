@@ -38,7 +38,6 @@ def bai(tmp_path):
     C = K / "CMP-2609-x"
     B = C / "AST-001_slug"
     PP.tao_thu_muc(B)
-    (K / "memory").mkdir(parents=True, exist_ok=True)
     (K / "channel.yml").write_text(
         "schema: channel/1\nid: tobi\npillars: [ai-agent]\n"
         "platforms:\n"
@@ -123,8 +122,23 @@ def test_thay_placeholder_va_cap_nhat_nguoc(bai):
     assert dong["status"] == "published" and dong["published"]
     kenh = bai.parent.parent
     assert M.read_table(M.read_fm(kenh / "CAMPAIGNS.md")[1], "CAMPAIGNS")[1][0]["đã đăng"] == "1"
-    cont = json.loads((kenh / "memory" / "continuity.json").read_text(encoding="utf-8"))
+    cont = json.loads((kenh / "continuity.json").read_text(encoding="utf-8"))
     assert cont[0]["post_id"] == "AST-001"
+
+
+def test_URL_that_vao_dung_cot_trong_bang_content(bai):
+    """Đức 04/09: mở lại bài phải bấm được từ campaign.md, không phải đi lục publish.json."""
+    _chay(bai, "init")
+    _chay(bai, "approve", "--by", "Đ", "--note", "ok")
+    _chay(bai, "set", "--post", "web", "--link", "https://vidu.vn/a.html", "--no-verify")
+    _chay(bai, "set", "--post", "yt", "--link", "https://youtu.be/XYZ", "--no-verify")
+    _chay(bai, "set", "--post", "fb", "--link", "https://facebook.com/1_2",
+          "--platform-id", "1_2", "--comment-id", "2_3", "--no-verify")
+
+    dong = M.read_table(M.read_fm(bai.parent / "campaign.md")[1], "CONTENT")[1][0]
+    assert dong["web"] == "https://vidu.vn/a.html"
+    assert dong["youtube"] == "https://youtu.be/XYZ"
+    assert dong["facebook"] == "https://facebook.com/1_2",         "URL phải vào ĐÚNG cột của nền tảng — vào nhầm cột thì mở ra sai chỗ"
 
 
 def test_migrate_tu_publish_v1(bai):

@@ -375,9 +375,18 @@ def _cap_nhat_nguoc(bai: Path, pj: dict) -> None:
 
     fm, body = md_io.read_fm(cam_dir / "campaign.md")
     if da_dang:
-        body = md_io.upsert_row(body, "CONTENT", "content_id",
-                                {"content_id": pj.get("post_id", ""),
-                                 "status": "published", "published": ngay})
+        # URL THẬT vào bảng Content — Đức yêu cầu 04/09: mở lại bài sau này không phải đi
+        # lục từng publish.json, và campaign.html render được thành nút bấm.
+        # Duyệt theo THỨ TỰ MẪU, không theo thứ tự trong publish.json: cột sinh ra theo thứ
+        # tự đăng thì mỗi kênh một kiểu bảng, đọc chéo giữa các chiến dịch là rối.
+        COT_LINK = [("web_blog", "web"), ("youtube", "youtube"), ("facebook", "facebook")]
+        dong = {"content_id": pj.get("post_id", ""), "status": "published", "published": ngay}
+        link = {p["channel"]: p["publish"].get("link") for p in da_dang}
+        for kenh_p, c in COT_LINK:
+            if link.get(kenh_p):
+                dong[c] = link[kenh_p]
+        # them_cot: bảng cũ chưa có 3 cột link thì nới ra, đừng nuốt URL.
+        body = md_io.upsert_row(body, "CONTENT", "content_id", dong, them_cot=True)
     md_io.write_fm(cam_dir / "campaign.md", fm, body)
 
     _, body2 = md_io.read_fm(cam_dir / "campaign.md")
@@ -391,7 +400,7 @@ def _cap_nhat_nguoc(bai: Path, pj: dict) -> None:
     md_io.write_fm(so, fm3, body3)
 
     # continuity.json — sổ ở cấp kênh, B0 dùng để khỏi trùng đề tài
-    cont = kenh_dir / "memory" / "continuity.json"
+    cont = kenh_dir / "continuity.json"
     ds = _doc_json(cont, []) or []
     ban = {k: pj.get(k) for k in ("post_id", "slug", "title", "url", "youtube_url",
                                   "fb_permalink", "fb_post_id", "fb_comment_id",

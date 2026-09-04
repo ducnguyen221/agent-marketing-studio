@@ -123,10 +123,14 @@ Giá trị hợp lệ của `content_pillar` khai ở `channel.yml:pillars` — 
 >
 > `g1` = ngày qua Cổng 1 (duyệt đề tài) · `g2` = ngày qua Cổng 2 (duyệt trước khi đăng,
 > mirror của `publish.json → posts[].review`).
+>
+> Ba cột cuối giữ **URL THẬT** của bài đã đăng, `register_publish set` ghi vào. Đây là chỗ
+> mở lại bài sau này mà không phải đi lục từng `publish.json` — và cũng là thứ `campaign.html`
+> render thành nút bấm được.
 
 <!-- CONTENT:BEGIN -->
-| content_id | content_name | pillar | angle | funnel | priority | status | g1 | g2 | schedule | published | folder |
-|---|---|---|---|---|---|---|---|---|---|---|---|
+| content_id | content_name | pillar | angle | funnel | priority | status | g1 | g2 | schedule | published | folder | web | youtube | facebook |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- CONTENT:END -->
 
 Giá trị hợp lệ —

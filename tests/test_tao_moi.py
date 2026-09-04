@@ -28,6 +28,25 @@ def _chay(*a, mong_doi=0):
     return r
 
 
+# Trường campaign.md phải điền xong trước khi đẻ bài. Fixture dưới điền đúng bộ này.
+DU_THONG_TIN = {
+    "business_problem": "Người làm dữ liệu chưa biết dùng agent vào việc thật",
+    "campaign_goal": "300 người đọc hết bài đầu tiên",
+    "target_audience": "Analyst 2-5 năm kinh nghiệm, đã dùng Power BI hằng ngày",
+    "audience_pain_points": "Đọc tin AI thấy hay nhưng không biết áp vào việc của mình",
+    "key_message": "Agent không thay bạn, nó bỏ phần bạn ghét",
+    "content_pillar": "ai-agent",
+    "channels": ["web_blog"],
+    "primary_cta": "Đọc bài dài trên atlas",
+}
+
+
+def _dien_du_campaign(cam_md):
+    fm, body = M.read_fm(cam_md)
+    fm.update(DU_THONG_TIN)
+    M.write_fm(cam_md, fm, body)
+
+
 @pytest.fixture
 def station(tmp_path):
     return tmp_path / "station"
@@ -62,6 +81,14 @@ def test_chuoi_day_du_va_KHONG_tu_dat_approved(station):
           "--path", "./k", "--station", station)
     _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "CMP-2609-t",
           "--name", "CD", "--prefix", "THU", "--station", station)
+
+    # Cổng: campaign.md còn nguyên chữ mẫu thì KHÔNG đẻ bài được.
+    r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
+              "THU-001", "--slug", "a", "--title", "Bài A", "--station", station, mong_doi=2)
+    assert "CHƯA ĐỦ THÔNG TIN" in r.stderr and "target_audience" in r.stderr
+    assert not (station / "k" / "CMP-2609-t" / "THU-001_a").exists(),         "cổng chặn mà vẫn tạo thư mục là chặn giả"
+
+    _dien_du_campaign(station / "k" / "CMP-2609-t" / "campaign.md")
     _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id", "THU-001",
           "--slug", "a", "--title", "Bài A", "--station", station)
 
@@ -99,3 +126,54 @@ def test_id_sai_dinh_dang_thi_tu_choi(station):
 def test_kenh_chua_khai_thi_tu_choi(station):
     _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "khong-co", "--id",
           "CMP-2609-t", "--name", "X", "--prefix", "THU", "--station", station, mong_doi=2)
+
+
+def test_bo_qua_cong_van_tao_duoc_khi_biet_minh_lam_gi(station):
+    """Cổng phải có đường vòng CÓ Ý THỨC — nếu không, người ta sẽ sửa script để lách."""
+    _chay(ROOT / "scripts/pipeline/new_channel.py", "--id", "k", "--label", "K",
+          "--path", "./k", "--station", station)
+    _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "CMP-2609-t",
+          "--name", "CD", "--prefix", "THU", "--station", station)
+    _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id", "THU-001",
+          "--slug", "a", "--title", "Bài A", "--station", station, "--bo-qua-cong")
+    assert (station / "k" / "CMP-2609-t" / "THU-001_a" / "meta.json").is_file()
+
+
+def _cd_san_sang(station):
+    _chay(ROOT / "scripts/pipeline/new_channel.py", "--id", "k", "--label", "K",
+          "--path", "./k", "--station", station)
+    _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "CMP-2609-t",
+          "--name", "CD", "--prefix", "THU", "--station", station)
+    _dien_du_campaign(station / "k" / "CMP-2609-t" / "campaign.md")
+    return station / "k" / "CMP-2609-t"
+
+
+def test_bulk_tao_ca_loat(station, tmp_path):
+    cam = _cd_san_sang(station)
+    tsv = tmp_path / "loat.tsv"
+    tsv.write_text(chr(10).join([
+        "# id<TAB>slug<TAB>title<TAB>angle".replace("<TAB>", chr(9)),
+        chr(9).join(["THU-001", "a", "Bài A", "góc 1"]),
+        chr(9).join(["THU-002", "b", "Bài B"]),
+    ]) + chr(10), encoding="utf-8")
+    _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t",
+          "--bulk", tsv, "--station", station)
+
+    assert (cam / "THU-001_a" / "meta.json").is_file()
+    assert (cam / "THU-002_b" / "meta.json").is_file()
+    dong = M.read_table(M.read_fm(cam / "campaign.md")[1], "CONTENT")[1]
+    assert [d["content_id"] for d in dong] == ["THU-001", "THU-002"]
+    assert dong[0]["angle"] == "góc 1"
+    assert all(d["status"] == "proposed" and d["g1"] == "" for d in dong),         "bulk vẫn phải để Cổng 1 cho người"
+
+
+def test_bulk_loi_MOT_dong_thi_khong_tao_bai_nao(station, tmp_path):
+    """Nửa loạt thành công nửa loạt lỗi là trạng thái khó dọn nhất — kiểm hết rồi mới tạo."""
+    cam = _cd_san_sang(station)
+    tsv = tmp_path / "loat.tsv"
+    tsv.write_text(("THU-001	a	Bài A" + chr(10) +
+                    "SAI-002	b	Bài B" + chr(10)), encoding="utf-8")
+    r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t",
+              "--bulk", tsv, "--station", station, mong_doi=2)
+    assert "KHÔNG tạo bài nào" in r.stderr and "SAI-002" in r.stderr
+    assert not (cam / "THU-001_a").exists(), "dòng hợp lệ đứng trước cũng không được tạo"

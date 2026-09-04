@@ -91,9 +91,29 @@ Thứ tự đăng: **YouTube → Atlas → Facebook**. Đây là thứ tự duy 
 *và* sinh ra `atlas_url` → comment Facebook mới có link atlas để dẫn. Đăng atlas trước thì
 bài không có video hoặc phải sửa lại sau; đăng Facebook trước thì comment chưa có gì để dẫn.
 
+
+### Hợp đồng đọc — ba thứ agent PHẢI đọc trước khi viết một chữ
+
+| # | Đọc gì | Vì sao | Không đọc thì sao |
+|---|---|---|---|
+| 1 | `campaign.md` của chiến dịch | bài toán kinh doanh, đối tượng, thông điệp, trụ nội dung, **mục KHÔNG LÀM** | bài hay nhưng lạc chiến dịch — phát hiện sau khi đã dựng tiếng và hình |
+| 2 | `profile.md` ở gốc kênh | tác giả là ai, giọng gì, chính kiến gì, không bao giờ viết gì | ra bài trung tính, đúng mà nhạt — đây là lỗi từng chạy suốt 3 bài mà không ai thấy |
+| 3 | `research.md` của **chính bài đó** | mục tiêu nghiên cứu và nguồn riêng của bài | viết theo trí nhớ, G05 bắt được nhưng đã mất một vòng |
+
+`new_post.py` chặn ở (1): `campaign.md` còn chữ mẫu thì không đẻ bài — điền đủ 8 trường
+`business_problem · campaign_goal · target_audience · audience_pain_points · key_message ·
+content_pillar · channels · primary_cta` rồi mới tạo. (2) và (3) không có cổng máy nào bắt
+được việc *có đọc hay không* — chỉ bắt được hậu quả (G05 nguồn, G11 giọng). Nên nó nằm ở
+đây thành chữ, và nằm trong docstring của `new_post.py`.
+
+**Tạo hàng loạt** — `new_post.py --campaign <id> --bulk loat.tsv` (`id⇥slug⇥title[⇥angle]`).
+Đọc chiến dịch và hồ sơ MỘT LẦN rồi nghiên cứu và viết cả loạt. Kiểm hết TSV trước khi tạo
+thư mục đầu tiên: sai một dòng thì không bài nào được tạo — nửa loạt xong nửa loạt lỗi là
+trạng thái khó dọn nhất.
+
 | Bước | Khâu | Ai | Việc | Ra | Kiểm bằng SỐ |
 |---|---|---|---|---|---|
-| **B0** Chọn đề tài | ② | 🤖→👤 | Đối chiếu sổ `continuity.json` ở STATION: chưa trùng · nối được bài gần nhất cùng nhóm · **tìm được use-case thật, không thì HOÃN** · ghi lý do chọn | 1 dòng `Content` (`status=proposed`) | `slug` không trùng sổ · lý do chọn ≥1 câu |
+| **B0** Chọn đề tài | ② | 🤖→👤 | Đối chiếu sổ `continuity.json` ở gốc kênh (đọc CÓ LỌC theo slug, đừng nạp cả file): chưa trùng · nối được bài gần nhất cùng nhóm · **tìm được use-case thật, không thì HOÃN** · ghi lý do chọn | 1 dòng `Content` (`status=proposed`) | `slug` không trùng sổ · lý do chọn ≥1 câu |
 | 🔒 **Cổng 1** | | 👤 | `Content.status=approved` + `approved_date` | | **agent không tự đặt** |
 | **B1** Nghiên cứu | ③ | 🤖 | WebSearch: định nghĩa từ nguồn chính chủ · **≥1 use-case doanh nghiệp THẬT có dẫn nguồn** · số liệu có ngày. Không tìm ra use-case → **dừng và báo**, đề xuất hoãn | `research.md`: mỗi nguồn 1 dòng `URL · tổ chức · ngày truy cập · trích 1 câu` | **3–7 nguồn**; `<3` thì DỪNG |
 | **B2** Viết | ③ | 🤖 | Điền `content.md` theo neo `## post:`. **Chính kiến tác giả đọc FAIL-CLOSED** — không đọc được thì DỪNG, không viết tiếp | `content.md` | số khối `## post:` = số dòng `Post` · ≥1 khối `> **Góc nhìn:**` |
@@ -105,7 +125,7 @@ bài không có video hoặc phải sửa lại sau; đăng Facebook trước th
 | **B7** Đăng YouTube | ⑥ | ⚙️ | upload + `publishAt` giờ vàng | `youtube_url` | GET 200 |
 | **B8** Đăng web | ⑥ | ⚙️ | chép 3 file vào `atlas/content/<cat>/` (trang **nhúng video B7**) → `generate-manifest.js` → `git add` **đích danh từng path** → push | `blog_url` | **GET `blog_url` = 200 TRƯỚC khi ghi sổ** |
 | **B9** Đăng Facebook | ⑥ | ⚙️ | ⑨a post + `facebook/infographic.png`, **thân bài không link nào** → `fb_post_id`; ⑨b **comment ngay** bằng `facebook/comment.txt` → `fb_comment_id` | `fb_post_id` · `fb_permalink` · `fb_comment_id` | URL trong thân post = **0** · `fb_comment_id` khác rỗng · comment cách post **≤60 giây** |
-| **B10** Ghi sổ & đo | ⑥→⑦ | ⚙️ | `publish.json` trong thư mục bài **và** `memory/continuity.json` ở STATION (idempotent theo `post_id`) **ngay khi có URL** | `publish.json` | `summary` ≤60 từ · `key_terms_explained` ≥3 |
+| **B10** Ghi sổ & đo | ⑥→⑦ | ⚙️ | `register_publish set` ghi `publish.json` · `continuity.json` ở gốc kênh · **URL THẬT vào 3 cột `web`/`youtube`/`facebook` của bảng Content trong `campaign.md`** (idempotent theo `post_id`) **ngay khi có URL** | `publish.json` | `summary` ≤60 từ · `key_terms_explained` ≥3 |
 
 ### Vì sao verify HTTP 200 trước khi ghi sổ
 
