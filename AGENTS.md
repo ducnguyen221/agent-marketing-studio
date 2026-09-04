@@ -7,7 +7,9 @@ canonical: true
 # AGENTS.md — Quy Chuẩn Quản Trị & Vận Hành Cho AI Agent
 
 > **agent-marketing-studio** là hệ thống điều phối và thực thi chiến dịch marketing toàn diện kết hợp giữa con người và đa tác nhân AI Agent.
-> **Quy ước nền tảng:** Mỗi chiến dịch = 1 thư mục + 1 hồ sơ `.md` + 1 workbook `.xlsx` (4 sheet). Excel quản lý trạng thái, con người kiểm soát 2 cổng duyệt.
+> **Quy ước nền tảng:** Mỗi chiến dịch = 1 thư mục + 1 file `campaign.md`; mỗi bài = 1 thư mục con.
+> **Markdown quản lý trạng thái** (bảng Content giữa marker, và `publish.json` của từng bài);
+> `.xlsx` chỉ là bản xuất một chiều. Con người kiểm soát 2 cổng duyệt.
 
 ---
 
@@ -16,7 +18,7 @@ canonical: true
 - **Pre-approved (Tự động thực thi):**
   - Đọc và phân tích hồ sơ chiến dịch, template, data model, output style.
   - Dự thảo nội dung, viết bài đa kênh vào file `<folder_path>/content.md`.
-  - Đọc/ghi các trường trạng thái của Agent trong Excel (`agent_status`, `quality_check`).
+  - Đọc/ghi các trường trạng thái của Agent trong `publish.json` (`agent_status`, `quality_check`).
   - Chạy script kiểm tra QA nội bộ.
 - **Scope Gate (Phải có con người xác nhận):**
   - Chuyển sang khâu ③ Produce (Cần Cổng 1: `Content.status = approved` + `approved_date`).
@@ -51,10 +53,15 @@ canonical: true
 
 | Cổng Duyệt | Điều Kiện Kích Hoạt | Khâu Được Phép Mở |
 |---|---|---|
-| **Cổng 1 — Duyệt Content** | `Content.status = approved` **và** có ngày `approved_date` | ③ produce |
-| **Cổng 2 — Duyệt Post** | `Post.review_status = approved` | ⑤ render, ⑥ publish |
+| **Cổng 1 — Duyệt đề tài** | bảng Content: `status = approved` **và** có ngày ở ô `g1` | ③ produce |
+| **Cổng 2 — Duyệt trước khi đăng** | `publish.json → posts[].review.status = approved`, kèm `approved_by` + câu duyệt nguyên văn | ⑤ render, ⑥ publish |
 
-- **Quy tắc tạo chiến dịch mới:** Luôn sử dụng lệnh copy từ template (`templates/CAMPAIGN_TEMPLATE.xlsx` và `templates/CAMPAIGN_TEMPLATE.md`), **tuyệt đối không tự dựng lại từ đầu**.
+- **Quy tắc tạo mới:** luôn dùng script — `new_channel.py` → `new_campaign.py` → `new_post.py`
+  (có `--bulk` để tạo cả loạt). Chúng copy từ `templates/` và ghi đúng chỗ.
+  **Tuyệt đối không tự dựng thư mục bằng tay.**
+- **`new_post.py` CHẶN** nếu `campaign.md` chưa điền đủ tám trường bắt buộc. Điền xong hãy tạo bài.
+- **Trước khi viết một chữ, agent PHẢI đọc:** `campaign.md` của chiến dịch · `profile.md` của
+  kênh · `research.md` của chính bài đó. Chi tiết ở `knowledge/toolchains/ATLAS_CHANNEL.md`.
 
 ---
 

@@ -3,42 +3,77 @@
 | Thuộc tính | Chi tiết |
 |---|---|
 | **Vai trò chính** | `campaign-strategist` (hỗ trợ bởi `marketing-director`) |
-| **Đầu vào (Input)** | Đề bài/Brief từ con người + Cấu hình instance |
-| **Công cụ (Tools)** | `openpyxl` / `shutil.copy2` |
-| **Đầu ra (Output)** | Thư mục chiến dịch + Hồ sơ `<NN_Ten>.md` + Workbook `<NN_Ten>.xlsx` với `Campaign.status = active` |
+| **Đầu vào (Input)** | Đề bài/Brief từ con người + `channel.yml` của kênh |
+| **Công cụ (Tools)** | `scripts/pipeline/new_campaign.py` |
+| **Đầu ra (Output)** | Thư mục chiến dịch + `campaign.md` đã điền đủ, `status: active` |
 
 ---
 
 ## 1. Trình Tự Thực Thi
 
-1. **Thu thập thông tin:** Tiếp nhận đề bài. Nếu còn thiếu ngân sách, mục tiêu, kênh hoặc đối tượng, hỏi lại con người 1 lượt rõ ràng.
-2. **Khởi tạo bằng SCRIPT — không làm tay:**
-   ```
-   python scripts/workbook/new_campaign.py --code <NN_Ten> [--meta campaign_meta.json] [--instance <ten>]
-   ```
-   Script làm trọn: dựng thư mục + `assets/`, `shutil.copy2` cả hai template, dọn dữ liệu
-   mẫu ở `Content`/`Post`, đổ sheet `Campaign`, đặt `status = active` và `created` = hôm nay.
-   Thêm `--dry-run` để xem đích trước khi ghi.
+### Bước 0 — Đã có kênh chưa?
 
-   **TUYỆT ĐỐI KHÔNG DỰNG LẠI WORKBOOK TỪ ĐẦU.** Script copy template rồi mới sửa giá trị ô.
-   Dựng mới bằng `openpyxl.Workbook()` sẽ mất sạch màu, độ rộng cột, freeze pane — tức mất
-   đúng phần làm file này đọc được bằng mắt người. Template là hợp đồng HÌNH THỨC, không chỉ
-   là danh sách cột. (`scripts/workbook/build_workbook.py` làm ngược lại và đã bị thay.)
+Chiến dịch sống **bên trong một kênh**. Chưa có kênh thì tạo trước:
 
-3. **Chiến dịch sống ở STATION, KHÔNG ở repo.** Script tự phân giải, dừng ở cái đầu tiên thấy:
-   `--station` → thư mục làm việc hiện tại nếu có `.marketing-studio/` hoặc `instance.yml`
-   → biến `MARKETING_STUDIO_DATA` → `~/.marketing`.
-   Nghĩa là làm việc trong folder dự án riêng thì asset sinh THẲNG vào đó. `content/` trong repo
-   chỉ chứa **fixture mẫu**, không chứa chiến dịch thật.
+```
+python scripts/pipeline/new_channel.py --id <ten-kenh> --label "<Tên kênh>" --path <ĐƯỜNG/DẪN>
+```
 
-4. **Điền nốt sheet Campaign:** script cảnh báo rõ trường nào còn trống. Điền đủ 26 trường
-   (định nghĩa tại [`../knowledge/data_model/DATA_MODEL.md`](../knowledge/data_model/DATA_MODEL.md))
-   trước khi sang khâu ②.
+`--path` **không có giá trị mặc định**, và đó là chủ ý: chỗ lưu kênh là quyết định của người,
+không phải của máy. Kênh có thể nằm trên ổ khác, trong thư mục công ty, hay trong một kho
+đồng bộ riêng — `CHANNELS.md` giữ địa chỉ. Thiếu `--path` thì script thoát với **mã 3** và in
+ra đúng câu cần hỏi. **Gặp mã 3 thì HỎI NGƯỜI DÙNG, đừng tự chọn.**
 
-   ⚠️ `campaign_code` **luôn** lấy từ `--code`, meta không đè được — ô trong sheet phải khớp
-   tên thư mục và tên file, lệch là mọi tra cứu theo mã đều trượt.
+### Bước 1 — Thu thập thông tin
+
+Tiếp nhận đề bài. Còn thiếu bài toán kinh doanh, mục tiêu, đối tượng hay kênh thì hỏi lại
+con người **một lượt rõ ràng**, không hỏi nhỏ giọt.
+
+### Bước 2 — Khởi tạo bằng SCRIPT, không làm tay
+
+```
+python scripts/pipeline/new_campaign.py --channel <ten-kenh> --id CMP-YYMM-slug \
+    --name "<Tên chiến dịch>" --prefix XXX [--station <trạm>]
+```
+
+Script copy `templates/campaign.md` vào thư mục chiến dịch và ghi dòng vào `CAMPAIGNS.md` của
+kênh. `--prefix` là tiền tố mã bài (viết HOA), ví dụ `AST` → `AST-001`.
+
+**Dùng script, không dựng tay.** Tự tạo thư mục rồi tự chép file là sớm muộn lệch cấu trúc —
+và `check_tree.py` mới là chỗ phát hiện ra, sau khi đã làm được vài bài.
+
+### Bước 3 — Chiến dịch sống ở TRẠM, không ở repo
+
+Trạm phân giải theo thứ tự, dừng ở cái đầu tiên thấy: `--station` → biến môi trường
+`MARKETING_STUDIO_DATA` → `~/.marketing`.
+
+Kênh **không bắt buộc** nằm trong trạm. `CHANNELS.md` là cạnh **duy nhất** được phép trỏ ra
+ngoài; script đọc nó chứ không quét thư mục. Kênh nằm trong trạm thì đường ghi **tương đối**
+— để chép trạm sang máy khác vẫn chạy.
+
+`examples/` trong repo là một trạm mẫu để đọc, không phải chỗ chứa chiến dịch thật.
+
+### Bước 4 — Điền `campaign.md` cho ĐỦ
+
+Frontmatter (bản một câu, máy đọc) **và** Mục 1–4 (bản dài, người đọc).
+
+`new_post.py` **chặn** khi tám trường này còn nguyên chữ mẫu:
+
+```
+business_problem · campaign_goal · target_audience · audience_pain_points
+key_message · content_pillar · channels · primary_cta
+```
+
+Vì sao chặn ở đây: bài viết ra từ một chiến dịch chưa rõ đối tượng và thông điệp thì viết
+xong mới biết lệch — và lúc đó đã tốn cả vòng nghiên cứu, dựng tiếng và dựng hình. Chặn ở
+khâu tạo rẻ hơn nhiều. Biết mình đang làm gì thì `--bo-qua-cong` bỏ chặn.
+
+⚠️ `id` trong frontmatter phải **khớp tên thư mục**. Lệch là mọi tra cứu theo mã đều trượt,
+và `check_tree.py` báo đỏ.
 
 ## 2. Tiêu Chuẩn Nghiệm Thu (Acceptance Criteria)
-- [ ] Workbook mở được bình thường, giữ nguyên 4 sheet (`Campaign`, `Content`, `Post`, `_Legend`), giữ nguyên màu và độ rộng cột.
-- [ ] Hồ sơ `.md` có đầy đủ thông tin bối cảnh, persona, và danh sách những điều KHÔNG làm (Mục 4).
+
+- [ ] `check_tree.py --station <trạm>` báo **0 đỏ**.
+- [ ] `campaign.md` điền đủ tám trường bắt buộc — thử `new_post.py --dry-run`, không bị chặn.
+- [ ] Mục 4 có danh sách **cái KHÔNG làm** — đây là cổng lọc ở khâu đề xuất chủ đề.
 - [ ] Chuyển tiếp sang [Khâu ② (Plan)](02_plan_content.md).

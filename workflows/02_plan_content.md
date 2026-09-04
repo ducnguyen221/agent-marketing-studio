@@ -3,9 +3,9 @@
 | Thuộc tính | Chi tiết |
 |---|---|
 | **Vai trò chính** | `content-strategist` (hỗ trợ bởi `seo-specialist`) |
-| **Đầu vào (Input)** | Sheet `Campaign` + Hồ sơ `.md` Mục 4 (Những điều KHÔNG làm) + Content đã có |
-| **Công cụ (Tools)** | `openpyxl` |
-| **Đầu ra (Output)** | N dòng mới trong sheet `Content` với `status = proposed` |
+| **Đầu vào (Input)** | frontmatter `campaign.md` + Mục 4 (Những điều KHÔNG làm) + `continuity.json` của kênh (tránh trùng đề tài) |
+| **Công cụ (Tools)** | `scripts/pipeline/new_post.py` (có `--bulk` cho cả đợt) |
+| **Đầu ra (Output)** | N dòng mới trong bảng Content, `status = proposed`, ô `g1` **rỗng** |
 
 ---
 

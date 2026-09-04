@@ -3,9 +3,17 @@
 | Thuộc tính | Chi tiết |
 |---|---|
 | **Vai trò chính** | `qa-reviewer` (kiểm tra tuân thủ & chặn lỗi) · `content-editor` (tư vấn chất lượng) |
-| **Đầu vào (Input)** | Dòng `Post` có `agent_status = completed` |
-| **Công cụ (Tools)** | [`.agents/checklists/QA_ASSET.md`](../.agents/checklists/QA_ASSET.md) |
-| **Đầu ra (Output)** | `quality_check = passed` / `needs_review` / `failed` trong sheet `Post` |
+| **Đầu vào (Input)** | `publish.json → posts[]` có `agent_status = completed` |
+| **Công cụ (Tools)** | `scripts/pipeline/blog_gates.py` (23 cổng, kiểm bằng số) + [`.agents/checklists/QA_ASSET.md`](../.agents/checklists/QA_ASSET.md) |
+| **Đầu ra (Output)** | `gates.json` + `quality_check = passed` / `needs_review` / `failed` trong `publish.json` |
+
+> **Ba trạng thái, không phải hai.** Mỗi cổng trả về xanh · đỏ · **thiếu**. "Thiếu" nghĩa là
+> cổng không chạy được — thiếu file, thiếu tham số. Nó **không bao giờ** được cộng vào
+> "xanh": không kiểm được là *chưa biết*, không phải *đã qua*. Một hệ mà "không kiểm được"
+> bị tính là "đạt" thì càng nhiều cổng càng nguy hiểm.
+>
+> Miễn trừ một cổng thì **ghi lý do**: `--cho-phep "tên=lý do"`. Nới danh sách từ khoá cho
+> đỡ đỏ là làm hỏng cổng đó cho mọi bài về sau.
 
 ---
 
