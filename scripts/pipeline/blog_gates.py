@@ -35,6 +35,11 @@ import fb_format as FF  # noqa: E402
 CHAN, CANH_BAO = "chan", "canh_bao"
 
 _URL = re.compile(r"https?://[^\s)>\]\"']+", re.I)
+# URL TRẦN: Facebook tự biến "ducnguyen.vn/atlas/x" hay "www.abc.com" thành link, nên
+# về mặt luật "thân bài 0 URL" chúng cũng là URL. Bản đầu chỉ bắt có scheme https:// nên
+# bỏ link trần vào thân bài là qua được cổng G09.
+_URL_TRAN = re.compile(r"(?<![\w/@.])(?:www\.[\w-]+|[\w-]+\.(?:vn|com|net|org|io|ai|dev))"
+                       r"(?:\.[\w-]+)*/[^\s)>\]\"']*", re.I)
 _H2 = re.compile(r"^##\s+\S", re.M)
 _BANG = re.compile(r"^\s*\|.*\|\s*$", re.M)
 _SO_THU_TU = re.compile(r"^\s*\d+\.\s+\S", re.M)
@@ -44,7 +49,10 @@ _CALLOUT = re.compile("^>\\s*[\U0001F300-\U0001FAFF←-➿⬀-⯿]", re.M)
 _GOC_NHIN = re.compile(r"^>\s*\*\*Góc nhìn:", re.M)
 _THEO_NGUON = re.compile(r"\bTheo\s+(?!mình\b|tôi\b)[A-ZĐÀ-Ỹ]", re.U)
 _THEO_MINH = re.compile(r"\bTheo\s+(?:mình|tôi)\b|\bmình\s+(?:nghĩ|cho rằng)\b", re.I | re.U)
-_KIEM_CHUNG = re.compile(r"\[KIỂM CHỨNG\]")
+# Bắt cả chữ thường và các biến thể. Bản đầu chỉ khớp đúng "[KIỂM CHỨNG]" hoa, nên
+# "[kiểm chứng]", "[CẦN KIỂM]" hay "TODO:" lọt sạch — mà chúng cùng nghĩa: còn nợ.
+_KIEM_CHUNG = re.compile(r"\[\s*(?:KIỂM\s*CHỨNG|CẦN\s*KIỂM|CHƯA\s*KIỂM)\s*\]|(?<!\w)TODO\s*:",
+                         re.I | re.U)
 _OG = re.compile(r'property\s*=\s*"og:', re.I)
 
 # Tên công cụ nội bộ không được lộ ra bản công khai (G21).
@@ -131,10 +139,39 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         co = len(_CALLOUT.findall(blog))
         s.do("G04", "Callout emoji", co, "3-8", 3 <= co <= 8, CANH_BAO)
         ngoai = sorted({u for u in _URL.findall(blog) if home_domain not in u})
-        s.do("G05", "Nguồn ngoài (domain khác)", len(ngoai), "3-7", 3 <= len(ngoai) <= 7,
-             ghi_chu="; ".join(ngoai[:6]))
+        # Không chỉ ĐẾM URL: đối chiếu với research.md. Đếm suông thì 6 đường dẫn bịa ra
+        # cũng cho G05 xanh — mà cổng này tồn tại đúng để chặn việc bịa nguồn.
+        # Không có research.md -> chỉ đếm được, và nói rõ là chỉ đếm được.
+        nc = _doc(d / "research.md")
+        if nc is None:
+            s.do("G05", "Nguồn ngoài (chỉ đếm — không có research.md)", len(ngoai),
+                 "3-7", 3 <= len(ngoai) <= 7,
+                 ghi_chu="không đối chiếu được: thiếu research.md")
+        else:
+            # So theo host, không so nguyên URL: bài hay trích link sâu hơn bảng nguồn.
+            def _host(u):
+                return re.sub(r"^https?://(?:www\.)?([^/]+).*$", r"\1", u).lower()
+            host_nguon = {_host(u) for u in _URL.findall(nc)}
+            lac = sorted({u for u in ngoai if _host(u) not in host_nguon})
+            s.do("G05", "Nguồn ngoài (có trong research.md)",
+                 f"{len(ngoai)} nguồn, {len(lac)} lạc", "3-7 và không nguồn nào lạc",
+                 3 <= len(ngoai) <= 7 and not lac,
+                 ghi_chu=("URL không có trong research.md: " + "; ".join(lac[:4]))
+                 if lac else "; ".join(ngoai[:5]))
         gn = len(_GOC_NHIN.findall(blog))
-        s.do("G06", "Khối > **Góc nhìn:**", gn, ">=1", gn >= 1)
+        # Đếm chữ THỰC SỰ có trong khối chính kiến. Bản đầu chỉ khớp dòng tiêu đề, nên
+        # một khối rỗng hoàn toàn vẫn cho G06 xanh — tức cổng bảo đảm một thứ không tồn tại.
+        tu_gn = 0
+        for m_gn in _GOC_NHIN.finditer(blog):
+            khoi = []
+            for dong in blog[m_gn.start():].splitlines():
+                if khoi and not dong.lstrip().startswith(">"):
+                    break
+                khoi.append(dong.lstrip("> ").strip())
+            tu_gn = max(tu_gn, len(" ".join(khoi).split()) - 2)   # trừ "**Góc nhìn:**"
+        s.do("G06", "Khối > **Góc nhìn:** (số từ)", f"{gn} khối / {tu_gn} từ",
+             ">=1 khối và >=40 từ", gn >= 1 and tu_gn >= 40,
+             ghi_chu="" if tu_gn >= 40 else "khối chính kiến quá ngắn hoặc rỗng")
         tn, tm = len(_THEO_NGUON.findall(blog)), len(_THEO_MINH.findall(blog))
         s.do("G07", "Dẫn nguồn / nêu ý riêng", f"{tn} / {tm}", "mỗi loại >=1",
              tn >= 1 and tm >= 1, CANH_BAO)
@@ -151,8 +188,10 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
             s.thieu(ma, ten, "không có fb_post.txt")
     else:
         m = FF.check(fb, cmt)
-        s.do("G09", "URL trong thân post", m["so_url_than_bai"], "= 0",
-             m["so_url_than_bai"] == 0, ghi_chu="; ".join(m["url_than_bai"]))
+        tran = [u for u in _URL_TRAN.findall(fb.split(FF.MARKER_COMMENT)[0])]
+        tong_url = m["so_url_than_bai"] + len(tran)
+        s.do("G09", "URL trong thân post (kể cả link trần)", tong_url, "= 0",
+             tong_url == 0, ghi_chu="; ".join(m["url_than_bai"] + tran[:3]))
         s.do("G10", "Độ dài post (ký tự)", m["so_ky_tu"], "4000-7500",
              4000 <= m["so_ky_tu"] <= 7500, CANH_BAO)
         # G11 hai tầng. Tầng 1: có chữ đậm không. Tầng 2: chữ đậm có GIỮ ĐƯỢC DẤU không.
@@ -176,9 +215,17 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         s.do("G12", "Markdown literal", m["markdown_literal"], "= 0",
              m["markdown_literal"] == 0)
         s.do("G13", "Hashtag", m["so_hashtag"], "6-13", 6 <= m["so_hashtag"] <= 13)
-        s.do("G14", "Comment đầu có link", m["so_url_comment"], ">=1 URL",
-             m["so_url_comment"] >= 1,
-             ghi_chu="" if m["co_comment"] else "không thấy fb_comment.txt lẫn neo ### comment_1")
+        # Không chỉ đòi "có URL": đòi URL trỏ về NHÀ hoặc YouTube. Một comment dẫn sang
+        # example.com vẫn thoả "có 1 URL" mà chẳng đưa ai về bài cả.
+        url_cmt = _URL.findall(cmt)
+        dung_dich = [u for u in url_cmt
+                     if home_domain in u or "youtu" in u.lower()]
+        s.do("G14", "Comment đầu có link về nhà/YouTube", len(dung_dich), ">=1",
+             len(dung_dich) >= 1,
+             ghi_chu=("không thấy fb_comment.txt lẫn neo ### comment_1"
+                      if not m["co_comment"] else
+                      f"có {len(url_cmt)} URL nhưng không URL nào về {home_domain}/YouTube"
+                      if url_cmt and not dung_dich else ""))
 
     # ---------------------------------------------------------------- audio / video
     pod = _doc(d / "podcast.txt")
@@ -214,7 +261,20 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
                      "mảng ở cấp cao nhất", False,
                      ghi_chu="renderer lặp thẳng trên JSON -> bọc trong {\"scenes\": [...]} sẽ vỡ")
             else:
-                s.do("G17", "Số scene", len(js), f"= {can} ({loai})", len(js) == can)
+                # Không chỉ ĐẾM. Scene rỗng {} vẫn qua phép đếm, rồi renderer dựng ra
+                # slide trắng với nhãn mặc định của một dự án khác — video 8 cảnh trống
+                # mà cổng báo xanh.
+                HOP_LE = {"cover", "concept", "versus", "list", "image", "closing"}
+                hong = [i for i, sc_ in enumerate(js)
+                        if not isinstance(sc_, dict)
+                        or sc_.get("kind") not in HOP_LE
+                        or not (sc_.get("title") or sc_.get("lines")
+                                or sc_.get("src") or sc_.get("img_query"))]
+                s.do("G17", "Số scene (và hình dạng)",
+                     f"{len(js)} scene, {len(hong)} thiếu nội dung",
+                     f"= {can} ({loai}) và mọi scene có kind + nội dung",
+                     len(js) == can and not hong,
+                     ghi_chu=f"scene rỗng/sai kind ở vị trí {hong[:5]}" if hong else "")
         except json.JSONDecodeError as e:
             s.do("G17", "Số scene", f"JSON hỏng: {e}", "đọc được", False)
 
@@ -223,13 +283,39 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     if html is None:
         s.thieu("G18", "Thẻ Open Graph", "không có atlas.html")
     else:
-        og = len(_OG.findall(html))
-        s.do("G18", "Thẻ og:", og, ">=6", og >= 6)
+        # Đếm thẻ KHÁC NHAU. Đếm tổng thì 6 lần og:title cũng ra 6 — mà bài vẫn không có
+        # ảnh preview, tức mất đúng thứ cả cổng này sinh ra để bảo vệ.
+        loai_og = set(re.findall(r'property\s*=\s*"og:([a-z_:]+)"', html, re.I))
+        CAN_CO = {"title", "description", "image", "url", "type"}
+        thieu_og = CAN_CO - loai_og
+        s.do("G18", "Thẻ og: khác nhau", f"{len(loai_og)} loại",
+             "đủ title/description/image/url/type", not thieu_og,
+             ghi_chu=f"thiếu: {', '.join(sorted(thieu_og))}" if thieu_og else "")
 
     # ---------------------------------------------------------------- ảnh Facebook
-    anh, prompt = (d / "fb_image.png").exists(), (d / "fb_image.prompt.txt").exists()
-    s.do("G19", "Ảnh FB + sidecar prompt", f"png={anh} prompt={prompt}", "cả hai",
-         anh and prompt,
+    # Đọc KÍCH THƯỚC THẬT từ khối IHDR của PNG (8 byte tại offset 16) thay vì chỉ hỏi
+    # "file có tồn tại không" — một ảnh 1x1 px cũng tồn tại. Và prompt rỗng thì cũng là
+    # không có prompt: sidecar sinh ra để dựng lại được ảnh, rỗng thì dựng lại bằng gì.
+    f_anh, f_prompt = d / "fb_image.png", d / "fb_image.prompt.txt"
+    kich_thuoc, prompt_len = None, 0
+    if f_anh.exists():
+        try:
+            b = f_anh.read_bytes()[:24]
+            # Chu ky PNG dung bang bytes([...]) chu khong viet literal: chuoi nay chua
+            # ky tu dieu khien, ma moi tang cong cu tren duong di lai an mot lop escape
+            # — da lam hong dung file nay mot lan.
+            PNG_SIG = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+            if len(b) >= 24 and b[:8] == PNG_SIG:
+                kich_thuoc = (int.from_bytes(b[16:20], "big"), int.from_bytes(b[20:24], "big"))
+        except OSError:
+            pass
+    if f_prompt.exists():
+        prompt_len = len((_doc(f_prompt) or "").strip())
+    du_lon = bool(kich_thuoc) and kich_thuoc[0] >= 800 and kich_thuoc[1] >= 800
+    s.do("G19", "Ảnh FB (kích thước) + sidecar prompt",
+         f"{kich_thuoc or 'không có PNG'} · prompt {prompt_len} ký tự",
+         ">=800x800 và prompt >=100 ký tự",
+         du_lon and prompt_len >= 100,
          ghi_chu="ảnh sinh bằng model KHÔNG tái lập - mất prompt là mất cách dựng lại")
 
     # ---------------------------------------------------------------- sổ continuity
@@ -240,7 +326,9 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         try:
             c = json.loads(cont)
             tt = _tu(str(c.get("summary", "")))
-            kt = len(c.get("key_terms_explained", []) or [])
+            # Đếm key-term CÓ NỘI DUNG. ["", "", ""] có 3 phần tử mà không giải thích gì.
+            kt = len([x for x in (c.get("key_terms_explained") or [])
+                      if len(str(x).split()) >= 2])
             s.do("G20", "Continuity (tóm tắt từ / key-term)", f"{tt} / {kt}",
                  "<=60 va >=3", tt <= 60 and kt >= 3)
         except json.JSONDecodeError as e:

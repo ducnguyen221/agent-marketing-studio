@@ -1,22 +1,22 @@
 [
   {
-    "id": 1,
-    "type": "concept"
+    "kind": "concept",
+    "title": "Scene 1"
   },
   {
-    "id": 2,
-    "type": "concept"
+    "kind": "concept",
+    "title": "Scene 2"
   },
   {
-    "id": 3,
-    "type": "concept"
+    "kind": "concept",
+    "title": "Scene 3"
   },
   {
-    "id": 4,
-    "type": "concept"
+    "kind": "concept",
+    "title": "Scene 4"
   },
   {
-    "id": 5,
-    "type": "concept"
+    "kind": "concept",
+    "title": "Scene 5"
   }
 ]

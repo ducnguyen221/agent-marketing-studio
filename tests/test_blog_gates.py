@@ -64,13 +64,13 @@ def test_so_do_dung_chu_khong_chi_do(do):
     """Đây là phần phân biệt 'đỏ' với 'đỏ đúng lý do'."""
     assert do["G02"]["do_duoc"] == 3            # 3 H2, ngưỡng 6-12
     assert do["G05"]["do_duoc"] == 0            # 0 nguồn ngoài
-    assert do["G06"]["do_duoc"] == 0            # 0 khối chính kiến
+    assert do["G06"]["do_duoc"] == "0 khối / 0 từ"   # không có khối chính kiến nào
     assert do["G08"]["do_duoc"] == 2            # 2 dấu [KIỂM CHỨNG] còn mở
     assert do["G09"]["do_duoc"] == 2            # 2 URL trong thân post
     assert do["G11"]["do_duoc"] == 0            # 0 ký tự bold
     assert do["G13"]["do_duoc"] == 2            # 2 hashtag, ngưỡng 6-13
-    assert do["G17"]["do_duoc"] == 5            # 5 scene, cần 8
-    assert do["G18"]["do_duoc"] == 0            # 0 thẻ og:
+    assert do["G17"]["do_duoc"] == "5 scene, 0 thiếu nội dung"   # đỏ thuần vì đếm sai
+    assert do["G18"]["do_duoc"] == "0 loại"      # không thẻ og: nào
     assert do["G20"]["do_duoc"] == "95 / 1"     # tóm tắt 95 từ, 1 key-term
 
 
@@ -101,7 +101,9 @@ def bai_xanh(tmp_path):
         "# Tiêu đề\n\n" + than + "\n\n"
         + "| a | b |\n|---|---|\n| 1 | 2 |\n\n"
         + "".join(f"> 💡 Callout số {i}\n\n" for i in range(1, 5))
-        + "> **Góc nhìn:** chính kiến của tác giả.\n\n"
+        # >=40 từ: một khối chính kiến rỗng hoặc cụt không phải là chính kiến, mà cổng
+        # bản đầu vẫn cho xanh vì nó chỉ khớp dòng tiêu đề của khối.
+        + "> **Góc nhìn:** " + "chính kiến của tác giả nói rõ ra. " * 12 + "\n\n"
         + "Theo Reuters, số liệu như vậy. Theo mình thì khác.\n\n"
         + "\n".join(f"- Nguồn {i}: https://vidu{i}.com/bai-viet (truy cập 04/09/2026)"
                     for i in range(1, 5))
@@ -116,17 +118,24 @@ def bai_xanh(tmp_path):
         "Bản đầy đủ 👇\nhttps://ducnguyen.vn/atlas/content/ai/x.html\n", encoding="utf-8")
     (d / "podcast.txt").write_text("từ " * 850, encoding="utf-8")
     (d / "scenes.json").write_text(
-        json.dumps([{"id": i} for i in range(8)]), encoding="utf-8")
+        json.dumps([{"kind": "concept", "title": f"Scene {i}"} for i in range(8)]),
+        encoding="utf-8")
     (d / "atlas.html").write_text(
         "".join(f'<meta property="og:{k}" content="x">'
                 for k in ("type", "title", "description", "url", "image", "site_name")),
         encoding="utf-8")
     (d / "continuity.json").write_text(
         json.dumps({"summary": "Tóm tắt ngắn gọn.",
-                    "key_terms_explained": ["a", "b", "c"]}, ensure_ascii=False),
+                    "key_terms_explained": ["thuật ngữ một", "thuật ngữ hai",
+                                            "thuật ngữ ba"]}, ensure_ascii=False),
         encoding="utf-8")
-    (d / "fb_image.png").write_bytes(b"\x89PNG\r\n\x1a\n")
-    (d / "fb_image.prompt.txt").write_text("prompt đã dùng để sinh ảnh", encoding="utf-8")
+    # PNG tối thiểu nhưng CÓ THẬT kích thước trong IHDR — cổng đọc 8 byte tại offset 16,
+    # nên một file chỉ có chữ ký (như bản fixture cũ) không còn qua được.
+    _sig = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+    (d / "fb_image.png").write_bytes(
+        _sig + bytes(4) + b"IHDR" + (1080).to_bytes(4, "big") + (1350).to_bytes(4, "big"))
+    (d / "fb_image.prompt.txt").write_text("prompt đã dùng để sinh ảnh. " * 6,
+                                          encoding="utf-8")
     return d
 
 
