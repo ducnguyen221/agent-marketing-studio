@@ -102,11 +102,37 @@ def _classify_heading(num, label):
     return _NUM_TO_KEY.get(num)
 
 
-def split_content(md_text):
+def _bo_huong_dan_dau_khoi(text):
+    """Bỏ khối trích dẫn HƯỚNG DẪN nằm ngay đầu một khối, trả `(nội_dung, phần_đã_bỏ)`.
+
+    Mẫu `content.md` đặt hướng dẫn viết bài trong một khối `>` ngay dưới mỗi neo
+    `## post:`. Đó là chỉ dẫn cho người viết, KHÔNG phải nội dung — để lọt là nó đăng
+    thẳng lên blog và YouTube. Bài đầu tiên của xưởng thoát nạn chỉ vì người viết xoá tay;
+    thứ gì phụ thuộc vào việc nhớ xoá tay thì sớm muộn cũng quên.
+
+    Chỉ bỏ khối `>` đứng NGAY ĐẦU, trước mọi nội dung khác — trích dẫn giữa bài giữ nguyên.
+    Phần bỏ được TRẢ VỀ để ghi vào báo cáo: bỏ im lặng thì một trích dẫn mở bài hợp lệ
+    biến mất mà không ai biết.
+    """
+    dong = text.split("\n")
+    i = 0
+    while i < len(dong) and not dong[i].strip():
+        i += 1
+    if i >= len(dong) or not dong[i].lstrip().startswith(">"):
+        return text, ""
+    dau = i
+    while i < len(dong) and dong[i].lstrip().startswith(">"):
+        i += 1
+    return "\n".join(dong[i:]).strip("\n"), "\n".join(dong[dau:i]).strip("\n")
+
+
+def split_content(md_text, da_bo=None):
     """Tách content.md -> dict {key: text} cho 4 kênh.
 
     Quét theo heading mục (## / ###). Mỗi heading mục mở 1 'section'; nội dung
     chạy tới heading mục CÙNG CẤP (hoặc cấp nông hơn) tiếp theo.
+
+    `da_bo`: dict tuỳ chọn — nhận phần hướng dẫn đã bỏ của từng kênh, để người gọi báo lại.
     """
     lines = md_text.replace("\r\n", "\n").split("\n")
     sections = []  # list of (key, level, [lines])
@@ -151,10 +177,13 @@ def split_content(md_text):
     out = {}
     for key, _level, buf in sections:
         text = "\n".join(buf).strip("\n")
+        text, bo = _bo_huong_dan_dau_khoi(text)
         # Giữ bản đầy đủ nhất nếu mục lặp (lấy bản dài hơn).
         if key not in out or len(text) > len(out[key]):
             if text.strip():
                 out[key] = text
+                if bo and da_bo is not None:
+                    da_bo[key] = bo
     return out
 
 
@@ -197,7 +226,8 @@ def main(argv=None):
     with open(args.meta, encoding="utf-8-sig") as f:
         json.load(f)
 
-    parts = split_content(md_text)
+    da_bo = {}
+    parts = split_content(md_text, da_bo)
     if "blog" not in parts:
         raise ValueError(
             "Không tách được khối blog từ content.md — cần neo '## post:blog_article' "
@@ -207,7 +237,11 @@ def main(argv=None):
     missing = [k for k in _OUT_FILES if k not in written]   # reel không tính là thiếu
     print(json.dumps({"out_dir": os.path.abspath(args.out_dir),
                       "written": written,
-                      "missing_sections": missing},
+                      "missing_sections": missing,
+                      # Hướng dẫn của mẫu đã được bỏ khỏi bản đăng. Liệt kê ra để nếu
+                      # người viết mở bài BẰNG một trích dẫn thật thì thấy ngay là nó mất.
+                      "guidance_stripped": {k: v.splitlines()[0][:70] + " …"
+                                            for k, v in da_bo.items()}},
                      ensure_ascii=False, indent=2))
     print(f"OK {os.path.abspath(args.out_dir)}")
     return 0

@@ -84,3 +84,32 @@ def test_ghi_file_va_bao_thieu(tmp_path):
     assert set(da_ghi) >= {"blog", "fb_post", "fb_comment"}
     for k, p in da_ghi.items():
         assert Path(p).stat().st_size > 0, f"{k} ghi ra file 0 byte"
+
+
+def test_KHONG_de_khoi_huong_dan_cua_mau_lot_ra_ban_dang():
+    """Lỗi thật 04/09: khối `>` dưới mỗi neo là chỉ dẫn cho người viết, không phải nội dung.
+
+    Bài đầu tiên của xưởng thoát nạn chỉ vì người viết xoá tay. Thứ gì phụ thuộc vào việc
+    nhớ xoá tay thì sớm muộn cũng quên — nên nó phải là việc của script.
+    """
+    parts = G.split_content(TEMPLATE.read_text(encoding="utf-8"))
+    for k, t in parts.items():
+        dau = t.lstrip().split("\n")[0]
+        assert not dau.startswith(">"), f"khối {k} vẫn mở đầu bằng hướng dẫn: {dau[:60]}"
+    assert "Bản FULL cho feed" not in parts.get("fb_post", "")
+    assert "Sapo in đậm" not in parts.get("blog", "")
+
+
+def test_bo_huong_dan_thi_BAO_LAI_chu_khong_lang_le():
+    """Bỏ im lặng thì một trích dẫn mở bài HỢP LỆ biến mất mà không ai biết."""
+    da_bo = {}
+    G.split_content(TEMPLATE.read_text(encoding="utf-8"), da_bo)
+    assert "blog" in da_bo and da_bo["blog"].lstrip().startswith(">")
+
+
+def test_trich_dan_GIUA_bai_van_giu_nguyen():
+    """Chỉ khối `>` đứng NGAY ĐẦU bị bỏ — callout giữa bài là nội dung thật."""
+    ra = G.split_content("## post:blog_article\n\n> hướng dẫn\n\n# Tiêu đề\n\nA\n\n"
+                         "> 💡 callout giữa bài\n\nB\n")
+    assert "💡 callout giữa bài" in ra["blog"]
+    assert "hướng dẫn" not in ra["blog"]
