@@ -1,24 +1,22 @@
-{
-  "scenes": [
-    {
-      "id": 1,
-      "type": "concept"
-    },
-    {
-      "id": 2,
-      "type": "concept"
-    },
-    {
-      "id": 3,
-      "type": "concept"
-    },
-    {
-      "id": 4,
-      "type": "concept"
-    },
-    {
-      "id": 5,
-      "type": "concept"
-    }
-  ]
-}
+[
+  {
+    "id": 1,
+    "type": "concept"
+  },
+  {
+    "id": 2,
+    "type": "concept"
+  },
+  {
+    "id": 3,
+    "type": "concept"
+  },
+  {
+    "id": 4,
+    "type": "concept"
+  },
+  {
+    "id": 5,
+    "type": "concept"
+  }
+]

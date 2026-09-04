@@ -185,9 +185,19 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     else:
         try:
             js = json.loads(sc)
-            arr = js if isinstance(js, list) else js.get("scenes", [])
             can = 8 if loai == "full" else 4
-            s.do("G17", "Số scene", len(arr), f"= {can} ({loai})", len(arr) == can)
+            if not isinstance(js, list):
+                # make_podcast_video.py làm `scenes = json.load(f)` rồi lặp thẳng, nên nó đòi
+                # MẢNG ở cấp cao nhất. Bọc trong {"scenes": [...]} thì nó lặp qua các KHOÁ,
+                # gặp chuỗi và chết bằng "'str' object has no attribute 'get'".
+                # Cổng từng chấp nhận cả hai dạng và báo xanh trong khi renderer không chạy
+                # được — cổng dễ dãi hơn công cụ thật thì tệ hơn là không có cổng, vì nó
+                # cấp một lời bảo đảm sai. Nay cổng đo đúng hợp đồng của renderer.
+                s.do("G17", "Số scene", f"JSON là {type(js).__name__}, không phải mảng",
+                     "mảng ở cấp cao nhất", False,
+                     ghi_chu="renderer lặp thẳng trên JSON -> bọc trong {\"scenes\": [...]} sẽ vỡ")
+            else:
+                s.do("G17", "Số scene", len(js), f"= {can} ({loai})", len(js) == can)
         except json.JSONDecodeError as e:
             s.do("G17", "Số scene", f"JSON hỏng: {e}", "đọc được", False)
 

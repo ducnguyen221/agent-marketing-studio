@@ -116,7 +116,7 @@ def bai_xanh(tmp_path):
         "Bản đầy đủ 👇\nhttps://ducnguyen.vn/atlas/content/ai/x.html\n", encoding="utf-8")
     (d / "podcast.txt").write_text("từ " * 850, encoding="utf-8")
     (d / "scenes.json").write_text(
-        json.dumps({"scenes": [{"id": i} for i in range(8)]}), encoding="utf-8")
+        json.dumps([{"id": i} for i in range(8)]), encoding="utf-8")
     (d / "atlas.html").write_text(
         "".join(f'<meta property="og:{k}" content="x">'
                 for k in ("type", "title", "description", "url", "image", "site_name")),
@@ -191,6 +191,23 @@ def test_mien_tru_mot_ten_khong_mo_duong_cho_ten_khac(tmp_path):
     theo = _theo_ma(G.chay(d, HOME, cho_phep={"codex": "chủ đề bài"}))
     assert theo["G21"]["trang_thai"] == "do", "omnivoice không được miễn trừ nên vẫn phải chặn"
     assert "omnivoice" in theo["G21"]["ghi_chu"]
+
+
+def test_g17_bat_dang_dict_du_dem_dung_8(tmp_path):
+    """Cổng phải đo đúng HỢP ĐỒNG CỦA CÔNG CỤ, không chỉ đếm cho có.
+
+    Ca thật 04/09: scenes.json viết dạng {"scenes": [...]} với đủ 8 phần tử. Cổng bản cũ
+    chấp nhận cả hai dạng nên báo XANH, trong khi make_podcast_video.py `json.load` rồi
+    lặp thẳng, gặp chuỗi và chết bằng "'str' object has no attribute 'get'".
+    Cổng dễ dãi hơn công cụ thật thì tệ hơn không có cổng — nó cấp một lời bảo đảm sai.
+    """
+    d = tmp_path / "bai"
+    d.mkdir()
+    (d / "scenes.json").write_text(
+        json.dumps({"scenes": [{"kind": "concept"} for _ in range(8)]}), encoding="utf-8")
+    r = _theo_ma(G.chay(d, HOME))["G17"]
+    assert r["trang_thai"] == "do", "đủ 8 phần tử nhưng sai dạng thì renderer vẫn vỡ"
+    assert "mảng" in r["luat"]
 
 
 def test_cli_tu_choi_mien_tru_khong_ly_do(tmp_path, capsys):
