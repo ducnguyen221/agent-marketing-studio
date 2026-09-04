@@ -140,9 +140,8 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 ## post:facebook_post
 
 > Bản FULL cho feed, không phải teaser cụt. Facebook-native: **không markdown literal**,
-> tiêu đề phụ dùng Unicode bold, ngắt bằng `———`, đoạn ngắn 2–4 câu. Link đặt ĐẦU bài.
-
-{{[Link blog] — đặt đầu bài}}
+> tiêu đề phụ dùng Unicode bold, ngắt bằng `———`, đoạn ngắn 2–4 câu.
+> **Thân bài KHÔNG chứa URL nào.** Mọi link đi vào khối `### comment_1` bên dưới.
 
 {{Hook 1–2 câu}} 🚀
 
@@ -160,6 +159,17 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 {{CTA mềm}}
 
 {{6–13 hashtag: 2–3 hashtag thương hiệu cố định + hashtag chủ đề}}
+
+### comment_1
+
+> Comment ĐẦU TIÊN, đăng ngay sau post (≤60 giây). Đây là chỗ DUY NHẤT chứa link.
+> Tách ra file `fb_comment.txt` ở bước B3. Thiếu khối này = bài chưa đăng xong.
+
+{{1 câu dẫn, vd: "Bản đầy đủ mình để ở đây nhé 👇"}}
+
+{{BLOG_URL}}
+
+🎬 Xem video: {{YOUTUBE_URL}}
 
 ---
 

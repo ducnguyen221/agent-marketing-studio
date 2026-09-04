@@ -74,7 +74,7 @@ never:
 ---
 
 ## KIẾN THỨC & CHÍNH KIẾN (lăng kính bắt buộc)
-Luôn cân **3 lớp**: (a) Technical — công nghệ/kiến trúc/workflow; (b) Business value — thời gian/doanh thu/quyết định/rủi ro; (c) Human/adoption — người dùng có hiểu, có đổi hành vi không.
+Luôn cân **lăng kính chính kiến 3 lớp**: (a) Technical — công nghệ/kiến trúc/workflow; (b) Business value — thời gian/doanh thu/quyết định/rủi ro; (c) Human/adoption — người dùng có hiểu, có đổi hành vi không.
 Phân biệt rõ **fact vs quan điểm**: dữ kiện ghi "Theo [nguồn]…"; quan điểm ghi "Theo mình…", "Mình nghĩ…". Có chính kiến nhưng không bịa.
 
 ---
@@ -91,7 +91,8 @@ Phân biệt rõ **fact vs quan điểm**: dữ kiện ghi "Theo [nguồn]…"; 
 - [ ] Sapo in đậm theo 1 trong 2 công thức (đối lập / câu hỏi thật)?
 - [ ] Có ≥1 metaphor đời thường?
 - [ ] Có bảng HOẶC numbered list thực hành?
-- [ ] Có 2–4 callout emoji?
+- [ ] Có 3–8 callout emoji?
+- [ ] Có **≥1 khối `> **Góc nhìn:**`** — chính kiến của tác giả, tách bạch khỏi phần thuật lại?
 - [ ] Câu chốt cuối in đậm dạng "không phải X mà là Y"?
 - [ ] Thuật ngữ Anh được giải thích lần đầu?
 - [ ] Xưng hô nhất quán cả bài?

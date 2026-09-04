@@ -29,8 +29,25 @@ Kết quả ghi vào `05_Approval` (10 cột `chk_*`) khi người duyệt xác 
 
 - [ ] `chk_hashtag_ok` — đúng giới hạn: YouTube ≤3 · Shorts ≤6 · Facebook 6–13
 - [ ] Định dạng đúng kênh (FB dùng Unicode bold + `———` chứ không dùng markdown)
-- [ ] Link đặt đúng chỗ theo kênh (Facebook: **đầu bài**)
+- [ ] Link đặt đúng chỗ theo kênh (Facebook: link ở **COMMENT đầu tiên**; thân bài **không có URL ngoài**)
 - [ ] Độ dài trong khoảng của kênh (xem `MULTICHANNEL_MATRIX.md`)
+
+## Cổng đếm được — chạy máy, không chấm bằng cảm giác
+
+Checklist ở trên là phần người đọc. Phần máy đo chạy bằng lệnh, và **kết quả phải được dán
+vào review** — nói "đã kiểm rồi" mà không có JSON thì coi như chưa kiểm.
+
+```bash
+python scripts/pipeline/blog_gates.py <thư mục bài>      # 22 cổng -> gates.json, exit!=0 khi đỏ
+python scripts/pipeline/fb_format.py --check fb_post.txt # định dạng FB -> JSON
+```
+
+**Luật phát ngôn của cổng:** cổng chỉ được nói **cái nó đo được**.
+
+- Đúng: *"`fb_post.txt` có 2 URL trong thân bài (dòng 1, dòng 7); luật hiện hành = 0"*.
+- Sai: *"bài này sẽ bị Facebook bóp reach"* — cổng không đo được reach, đó là suy đoán.
+
+Cổng đỏ → `quality_check = failed` + ghi `review_feedback`. **Không** tự sửa rồi cho qua im lặng.
 
 ## Tuân thủ và an toàn
 

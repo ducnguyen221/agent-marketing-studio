@@ -52,7 +52,10 @@ YÊU CẦU TỪNG MỤC (ghi đủ, đúng số mục — script tách content.m
    tiêu đề phá định kiến → sapo in đậm + hạ kỳ vọng → 6-12 H2 (gồm các mục: định nghĩa + key-term, framework/khung tư duy, quy trình áp dụng, use-case thật, khái niệm liên quan, góc nhìn thẳng) → bảng/numbered list khi hợp → 3-5 callout emoji →
    kết luận + câu chốt "không phải X mà là Y" → CTA mềm. **2.500-4.000 từ** (deep-dive, đủ dày cho podcast dài). Đây là phần sẽ thành blog.md.
 4. FB post (chi tiết) — bài Facebook FB-native FULL-CONTENT (KHÔNG teaser), theo STYLE FB:
-   **PHẢI có CẢ 2 link:** blog `{{BLOG_URL}}` (đầu bài) + video `{{YOUTUBE_URL}}` (vd dòng "🎬 Xem video: {{YOUTUBE_URL}}").
+   **THÂN BÀI KHÔNG ĐƯỢC CHỨA URL NÀO** — không {{BLOG_URL}}, không {{YOUTUBE_URL}}, không link trần.
+   Cả 2 link đi vào một khối riêng cuối output, đánh dấu đúng chữ `### comment_1`, gồm:
+   dòng dẫn 1 câu + `{{BLOG_URL}}` + `🎬 Xem video: {{YOUTUBE_URL}}`. Khối này thành fb_comment.txt,
+   được đăng làm comment ĐẦU TIÊN ngay sau khi post lên.
    Tiêu đề phụ Unicode-bold (KHÔNG **/##), ngắt ———————, emoji số cho bước,
    6-13 hashtag cuối (#COMPAClass #HọcCùngAI #NghềCủaĐức + theo pillar). Thành fb_post.txt.
    (publish sẽ thay {{BLOG_URL}}/{{YOUTUBE_URL}} bằng link thật + đảm bảo đủ cả 2 link.)

@@ -27,7 +27,8 @@
 
 Hai sản phẩm FB khác nhau:
 
-- **`## post:facebook_post` — bài dài full-content:** 2.000–3.500 từ, viết lại trọn lập luận của blog.
+- **`## post:facebook_post` — bài dài full-content:** 4.000–7.500 ký tự, viết lại trọn lập luận của blog.
+  **Thân bài không chứa URL nào** — mọi link đi vào comment đầu tiên (khối `### comment_1`).
   KHÔNG teaser cụt. Giọng + cấu trúc theo `tobi-post.md`.
 - **`## post:reel` — caption ngắn cho Reel/video:** 1–3 câu hook + link + ít hashtag.
 
@@ -58,9 +59,9 @@ Quy tắc format FB chung:
 
 | Kênh | Độ dài | Định dạng | Hashtag | Vị trí link | CTA |
 |------|--------|-----------|---------|-------------|-----|
-| **Blog (Atlas)** | 2.500–4.000 từ | Markdown đầy đủ (H1/H2/H3, bảng, callout) | — (SEO keyword thay hashtag) | Internal ≥2 + external ≥2 trong bài | Mời KPIM/COMPA, mềm |
+| **Blog (Atlas)** | 2.500–4.000 từ | Markdown đầy đủ (H1/H2/H3, bảng, callout) | — (SEO keyword thay hashtag) | Internal ≥2 + **3–7 nguồn ngoài, mỗi nguồn có ngày truy cập** | Mời đối tác, mềm |
 | **YouTube desc** | 150–300 từ | Text thuần + timestamps `mm:ss` | **≤3** (hiện trên tiêu đề) | Khối giữa/cuối; blog trước | Subscribe |
-| **Facebook post** | 2.000–3.500 từ | Unicode bold + `———` + emoji, KHÔNG markdown | **6–13** (brand + pillar) | **ĐẦU bài** | Mềm, build kỳ vọng bài sau |
+| **Facebook post** | 4.000–7.500 ký tự | Unicode bold + `———` + emoji, KHÔNG markdown | **6–13** (brand + pillar) | **COMMENT đầu (thân bài 0 URL)** | Mềm, build kỳ vọng bài sau |
 | **FB caption (Reel)** | 1–3 câu | Hook + emoji nhẹ, KHÔNG markdown | ≤6 | Sau hook | Mời xem bản đầy đủ |
 | **X / Threads** *(chưa bật)* | ≤280 ký tự/tweet, thread đánh số | Text thuần, KHÔNG markdown | **1–2** | Tweet cuối thread | Đọc full ở blog |
 
