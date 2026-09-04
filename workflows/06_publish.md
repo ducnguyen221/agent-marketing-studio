@@ -26,8 +26,11 @@ không chứa link, nên người đọc không có đường nào đi tiếp.
 1. **Kiểm token & quyền.** Đọc cấu hình ở `.env`. Thiếu token → **dừng và báo người**
    ([`PLATFORM_SETUP.md`](../knowledge/toolchains/PLATFORM_SETUP.md)), không retry mù.
 
-2. **Kiểm mức tự trị.** Mặc định **dry-run**. Chỉ đăng thật khi `channel.yml` đặt
-   `autonomy: full` **và** người xác nhận lượt này.
+2. **Cổng tự trị — cổng MÁY, không phải lời dặn.** `fb_publish.py --bai <thư mục bài>`
+   đọc `autonomy` từ `channel.yml` của kênh chứa bài. Khác `full` → **thoát mã 4**, không
+   gọi Graph. Không tìm thấy `channel.yml`, hoặc thiếu `--bai` → cũng mã 4 (fail-closed:
+   không biết mức tự trị mà vẫn đăng là đúng kiểu lỗi tệ nhất).
+   `--dry-run` luôn chạy được kể cả khi `suggest` — kiểm thử mà bị chặn thì người ta bỏ kiểm.
 
 3. **Đăng theo giờ vàng** đã khai ở `campaign.md` Mục 5.
 

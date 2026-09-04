@@ -482,7 +482,7 @@
       <article class="feat reveal">
         <div class="ficon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></div>
         <h3>Dry-run là mặc định</h3>
-        <p>Script đăng bài từ chối chạy thật trừ khi kênh đặt <code style="font-family:var(--mono);font-size:.85em">autonomy: full</code> trong <code style="font-family:var(--mono);font-size:.85em">channel.yml</code> và bạn xác nhận bằng tay. Ba mức: <b>suggest</b> chỉ đọc và đề xuất, <b>auto_safe</b> được viết nháp, <b>full</b> mới được đăng.</p>
+        <p>Script đăng bài đọc <code style="font-family:var(--mono);font-size:.85em">autonomy</code> trong <code style="font-family:var(--mono);font-size:.85em">channel.yml</code> và <b>thoát với mã 4</b> nếu chưa phải <code style="font-family:var(--mono);font-size:.85em">full</code> — không gọi API. Không tìm thấy file cấu hình cũng vậy: không biết mức tự trị mà vẫn đăng là đúng kiểu lỗi tệ nhất. Ba mức: <b>suggest</b> chỉ đọc và đề xuất, <b>auto_safe</b> được viết nháp, <b>full</b> mới được đăng. Đổi mức là việc của người, không phải của agent.</p>
       </article>
 
       <article class="feat reveal">

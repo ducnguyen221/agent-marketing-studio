@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+from pathlib import Path
 import re
 import sys
 import time
@@ -76,6 +77,31 @@ def dang_comment(cfg: dict, object_id: str, message: str) -> str:
     return r.json().get("id", "")
 
 
+def _muc_tu_tri(duong_bai: str | None) -> tuple[str, str]:
+    """Đọc `autonomy` từ `channel.yml` của kênh chứa bài. Trả (mức, nguồn).
+
+    Tài liệu và trang công khai đều hứa: *"script từ chối chạy thật trừ khi kênh đặt
+    `autonomy: full`"*. Trước bản vá này KHÔNG script nào đọc `autonomy` — lời hứa an toàn
+    đó chỉ là luật cho agent đọc, không phải cổng máy. Một lời bảo đảm mà không có gì thi
+    hành thì tệ hơn không hứa: người ta dựa vào nó.
+
+    Không tìm được kênh → trả `("?", …)`, và người gọi coi đó là CHƯA CHO PHÉP.
+    """
+    if not duong_bai:
+        return "?", "không biết bài thuộc kênh nào (thiếu --bai)"
+    d = Path(duong_bai).resolve()
+    for cha in [d] + list(d.parents):
+        f = cha / "channel.yml"
+        if f.is_file():
+            try:
+                import yaml
+                muc = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("autonomy")
+                return (muc or "?"), str(f)
+            except Exception as e:          # noqa: BLE001
+                return "?", f"{f} đọc không được: {e}"
+    return "?", f"không thấy channel.yml ở bất kỳ thư mục cha nào của {d}"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Đăng post + ảnh, rồi comment đầu chứa link.")
     ap.add_argument("--config", required=True, help="facebook_config.json (page_id + page_token)")
@@ -83,6 +109,7 @@ def main(argv=None) -> int:
     ap.add_argument("--image", required=True, help="ảnh infographic đính kèm")
     ap.add_argument("--comment-file", required=True, help="comment đầu — PHẢI có ít nhất 1 URL")
     ap.add_argument("--dry-run", action="store_true", help="kiểm hết nhưng không gọi Graph")
+    ap.add_argument("--bai", help="thư mục bài — để tìm channel.yml và đọc autonomy")
     a = ap.parse_args(argv)
 
     for p in (a.config, a.message_file, a.image, a.comment_file):
@@ -111,6 +138,22 @@ def main(argv=None) -> int:
     if a.dry_run:
         print("  [dry-run] mọi cổng đã qua, KHÔNG gọi Graph.")
         return 0
+
+    # --- CỔNG TỰ TRỊ: chỉ `full` mới được đăng thật ------------------------------
+    muc, nguon = _muc_tu_tri(a.bai)
+    if muc != "full":
+        sys.stderr.write(chr(10).join([
+            "",
+            f"KHÔNG đăng thật — mức tự trị của kênh là {muc!r}, cần 'full'.",
+            f"  đọc từ: {nguon}",
+            "",
+            "Mọi cổng nội dung đã qua. Muốn đăng thì chọn một trong hai:",
+            "  · người tự đăng bằng tay (mặc định, và là ý của chủ kênh);",
+            "  · hoặc sửa `autonomy: full` trong channel.yml — do NGƯỜI sửa, không phải agent.",
+            "",
+            "Chạy lại với --dry-run để chỉ kiểm mà không đăng.",
+            ""]))
+        return 4
 
     photo_id, post_id = dang_anh(cfg, msg, a.image)
     print(f"  FB_PHOTO_ID={photo_id}")
