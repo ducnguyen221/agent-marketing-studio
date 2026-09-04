@@ -13,9 +13,9 @@ pillar, atomization, đề xuất chủ đề. (Khác campaign-strategist: vai �
 chiến dịch; khác content-producer: vai đó VIẾT.) Không lo viết chữ.
 
 ## Đọc trước
-`knowledge/data_model/DATA_MODEL.md` (23 trường sheet Content) · hồ sơ `.md` **Mục 4** (trụ nội dung
+`knowledge/data_model/DATA_MODEL.md` (23 trường bảng Content trong `campaign.md`) · hồ sơ `.md` **Mục 4** (trụ nội dung
 + **cái KHÔNG làm**) · `output_styles/multichannel-style.md` · `output_styles/tobi-post.md` ·
-sheet Campaign của chiến dịch.
+frontmatter `campaign.md` của chiến dịch.
 
 ## Việc — sinh dòng Content (khâu ② `plan`)
 Mỗi ý tưởng = **một dòng Content**, chưa gắn kênh (kênh là việc của tầng Post). Điền đủ:

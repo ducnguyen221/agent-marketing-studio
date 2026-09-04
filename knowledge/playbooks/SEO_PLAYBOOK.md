@@ -42,7 +42,7 @@ người-đọc-trước** thắng. Cụ thể:
 
 ## 5. Nối vào quy trình repo
 - Kiểm on-page ở khâu ③ produce (khối `## post:blog_article` trong `content.md`) và ở ④ selfqa qua `checklists/QA_ASSET.md`.
-- Từ khoá + cluster do `.agents/roles/seo-specialist.md` lo (nếu instance dùng vai này).
+- Từ khoá + cluster do `.agents/roles/seo-specialist.md` lo (nếu kênh dùng vai này).
 
 ## Liên kết
 - Tiêu đề: `knowledge/playbooks/COPY_FRAMEWORKS.md` · YouTube SEO: `YOUTUBE_PLAYBOOK.md`.

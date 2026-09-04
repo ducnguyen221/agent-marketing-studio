@@ -1,7 +1,7 @@
 # Công thức copywriting — headline, khung bài, hook
 
 Bộ công thức để agent viết tiêu đề, cấu trúc bài và hook có căn cứ, không viết mò.
-Đây là tri thức chuẩn ngành — dùng làm khung, luôn format lại theo giọng của instance
+Đây là tri thức chuẩn ngành — dùng làm khung, luôn format lại theo giọng của kênh (`profile.md`)
 (`output_styles/`), đừng dán công thức lộ ra ngoài.
 
 > Chưng cất từ: `coreyhaines31/marketingskills` (MIT, 41k★) · `zubair-trabzada/ai-marketing-claude` (MIT).

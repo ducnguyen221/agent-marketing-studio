@@ -23,16 +23,16 @@ description: >
 
 ## Luôn bắt đầu bằng hiện trạng
 
-Đếm Content theo `status`, Post theo `post_status`, rồi báo: đang tắc ở đâu, ai cần đặt cột
-nào thành gì. Rồi mới hỏi người muốn chạy khâu nào (trừ khi họ đã nói rõ).
+Chạy `check_tree.py --station <trạm>` rồi đếm bảng Content theo `status` và `posts[]` theo
+`post_status`, rồi báo: đang tắc ở đâu, NGƯỜI cần đặt ô nào thành gì. Rồi mới hỏi người muốn chạy khâu nào (trừ khi họ đã nói rõ).
 
 ## Ba tầng — nhớ đúng quan hệ
 
 ```
-Campaign  →  Content (ý tưởng)  →  Post (1 kênh × 1 format)
-                  ↓                      ↓
-            folder_path/           post_content = anchor
-            content.md      ←──────  trỏ vào đúng khối '## post:<format>'
+Kênh  →  Chiến dịch  →  Bài (ý tưởng)  →  posts[] (1 kênh × 1 format)
+channel.yml  campaign.md      ↓                    ↓
+profile.md   bảng Content   <thư mục bài>/   post_content = neo
+continuity     (15 cột)      content.md   ←──  trỏ vào đúng khối '## post:<format>'
 ```
 
 ---
@@ -40,13 +40,14 @@ Campaign  →  Content (ý tưởng)  →  Post (1 kênh × 1 format)
 ## Hợp đồng từng khâu
 
 ### ① `new` — dựng chiến dịch
-**Vào:** đề bài của người · **Làm:** `shutil.copy2` hai template vào thư mục campaign, đổi tên
-theo `campaign_code`, xoá dữ liệu mẫu, điền sheet Campaign · **Ra:** `Campaign.status = active`.
-Copy — **không** dựng lại workbook từ đặc tả.
+**Vào:** đề bài của người · **Làm:** `new_channel.py` (nếu chưa có kênh — `--path` phải HỎI
+NGƯỜI) → `new_campaign.py` → điền frontmatter và Mục 1–6 · **Ra:** `status: active`.
+Dùng script — **không** dựng thư mục bằng tay.
 
 ### ② `plan` — đề xuất content
-**Vào:** sheet Campaign + hồ sơ `.md` Mục 4 (cái KHÔNG làm) + content đã có.
-**Làm:** sinh N dòng Content, điền đủ nhóm Strategy / Knowledge / SEO / Creativity / Governance.
+**Vào:** frontmatter `campaign.md` + hồ sơ `.md` Mục 4 (cái KHÔNG làm) + content đã có.
+**Làm:** `new_post.py` (hoặc `--bulk` cho cả đợt), rồi điền frontmatter `research.md` của từng
+bài: Strategy / Knowledge / SEO / Creativity / Governance.
 `schedule_date` nằm trong khoảng campaign, rải theo `cadence`.
 **Ra:** `status = proposed` → **dừng, chờ cổng 1**.
 
@@ -54,9 +55,9 @@ Copy — **không** dựng lại workbook từ đặc tả.
 
 ### ③ `produce` — viết nội dung + sinh Post
 **Vào:** Content `approved`.
-**Làm:** tạo `<folder_path>/content.md` từ `content.md` — viết BRIEF trước, rồi từng
-khối `## post:<post_format>`. Mỗi khối sinh đúng **một** dòng Post với `post_content` = anchor
-tương ứng, `channel` lấy từ `Campaign.channels`, `target_*` kế thừa `kpi_*_target`.
+**Làm:** đọc đủ ba thứ (chiến dịch · hồ sơ kênh · nghiên cứu của bài) rồi điền `content.md`
+sẵn có — BRIEF trước, rồi từng khối `## post:<post_format>`. `register_publish init` sinh
+đúng **một** phần tử `posts[]` cho mỗi khối, `channel` lấy từ `channels` của chiến dịch.
 **Ra:** `Content.status = in_production`, `Post.agent_status = completed`.
 
 ### ④ `selfqa` — máy tự kiểm

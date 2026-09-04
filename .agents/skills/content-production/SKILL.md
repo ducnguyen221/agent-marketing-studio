@@ -14,7 +14,7 @@ description: >
 Biến brief đã duyệt + dữ kiện đã xác minh → asset sẵn-đăng đúng format từng kênh.
 
 ## Quy trình
-1. Đọc sheet Campaign + dòng Content (`core_brief`, `audience_profile`, `constraints`,
+1. Đọc frontmatter `campaign.md` + dòng Content (`core_brief`, `audience_profile`, `constraints`,
    `key_sources`, `creative_direction`), hồ sơ `.md` Mục 4 và Mục 5.
 2. Chọn công thức phù hợp: tiêu đề + khung bài (`COPY_FRAMEWORKS.md`), giọng theo kênh
    (`output_styles/`). Cùng 1 nội dung gốc → FORMAT LẠI theo từng kênh, không copy y nguyên.
@@ -24,7 +24,7 @@ Biến brief đã duyệt + dữ kiện đã xác minh → asset sẵn-đăng đ
    nội bộ = rỗng; đúng giới hạn hashtag theo kênh; không lộ PII).
 
 ## Đầu ra
-- **Một** file `<Content.folder_path>/content.md` chứa text của MỌI kênh, tách bằng heading
+- **Một** file `content.md` trong thư mục bài chứa text của MỌI kênh, tách bằng heading
   `## post:<post_format>`. Không tách ra nhiều file `.txt`/`.md` theo kênh.
 - **Một dòng Post cho mỗi khối**, với `post_content` = anchor tương ứng (vd `post:facebook_post`;
   trùng format thì thêm `#2`). `channel` chỉ lấy từ `Campaign.channels`.
@@ -35,5 +35,5 @@ Biến brief đã duyệt + dữ kiện đã xác minh → asset sẵn-đăng đ
 
 ## Ranh giới (bắt buộc)
 - KHÔNG bịa kết quả hiệu quả, lời khách hàng, logo, endorsement, điều khoản ưu đãi.
-- Nội dung public phải đúng brand voice của instance (`output_styles/`).
+- Nội dung public phải đúng giọng của kênh: `profile.md` ở gốc kênh + `output_styles/`.
 - Phát hành và phân phối trả phí cần người duyệt — cổng 2 (`Post.review_status = approved`).

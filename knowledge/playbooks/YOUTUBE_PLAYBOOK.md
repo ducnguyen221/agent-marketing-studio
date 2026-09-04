@@ -62,7 +62,7 @@ người-dẫn giữ chân tốt hơn hẳn.
 
 ## 4. Nối vào quy trình repo
 
-- Số liệu này về các cột **`actual_*` của sheet Post** khi kéo YouTube Analytics (retention, CTR, engaged_views). Nhớ chốt số vào hồ sơ `.md` Mục 9 TRƯỚC khi ghi đè.
+- Số liệu này về **`posts[].actual`** trong `publish.json` khi kéo YouTube Analytics (retention, CTR, engaged_views). Nhớ chốt số vào hồ sơ `.md` Mục 9 TRƯỚC khi ghi đè.
 - Khi báo cáo (hồ sơ `.md` Mục 9): so với **baseline của chính kênh**, không so benchmark ở đây.
 - Kịch bản retention → viết ở khâu ③ produce, trong khối `## post:youtube_desc` (mục *Kịch bản đọc*). Thumbnail brief → khâu ⑤ render.
 

@@ -11,8 +11,8 @@ model: opus
 Triết lý: **chạy thí nghiệm, không chạy ý kiến.**
 
 ## Đọc trước
-`knowledge/data_model/DATA_MODEL.md` · sheet **Post** của workbook (cột `target_*` vs `actual_*`) ·
-sheet Campaign (`kpi_*_target`) · hồ sơ `.md` **Mục 9** (các báo cáo đã chốt trước đó).
+`knowledge/data_model/DATA_MODEL.md` · `publish.json → posts[]` (cột `target_*` vs `actual_*`) ·
+frontmatter `campaign.md` (`kpi_*_target`) · hồ sơ `.md` **Mục 9** (các báo cáo đã chốt trước đó).
 
 ## Việc (Post `publish_status = published`)
 - Kéo số về các cột `actual_*` + `metric_updated_at`; đối chiếu với `target_view` /

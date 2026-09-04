@@ -21,7 +21,7 @@ thật chỗ yếu, không khen xã giao.
 2. **Luận điểm** — có MỘT ý chính rõ, hay lan man?
 3. **Bằng chứng** — có ví dụ/số thật, hay nói chung chung?
 4. **Cấu trúc** — khung bài hợp loại nội dung (AIDA/PAS/…)? nhịp đoạn ổn?
-5. **Giọng** — đúng brand voice instance? có chính kiến, không sáo rỗng AI?
+5. **Giọng** — đúng giọng của kênh (`profile.md`)? có chính kiến, không sáo rỗng AI?
 6. **Kết + CTA** — chốt mạnh (không "tuỳ nhu cầu"), CTA đúng chỗ?
 7. **Fit kênh** — độ dài/format/hashtag đúng kênh?
 

@@ -1,6 +1,7 @@
-<!-- CANONICAL. Đây là NGUỒN SỰ THẬT về mô hình dữ liệu campaign.
-     File .xlsx KHÔNG còn chứa sheet Data Dictionary — mọi định nghĩa trường sống ở đây.
-     Sửa trường / thêm giá trị hợp lệ → sửa file này TRƯỚC, rồi mới đổi cột trong .xlsx. -->
+<!-- CANONICAL. Đây là NGUỒN SỰ THẬT về ĐỊNH NGHĨA trường.
+     Dữ liệu thật sống trong campaign.md (frontmatter + bảng Content) và publish.json.
+     Sửa trường / thêm giá trị hợp lệ → sửa file này TRƯỚC, rồi mới đổi templates/campaign.md
+     và bộ cột trong scripts/pipeline/export_excel.py. -->
 
 # DATA_MODEL — mô hình dữ liệu campaign
 
@@ -10,9 +11,10 @@
 ## Ba tầng
 
 ```
-Campaign  brief chiến lược          1 campaign = 1 file .xlsx + 1 file .md
-   └─ Content   ý tưởng gốc, chưa gắn kênh        1 Campaign → N Content
-        └─ Post      1 đầu ra cho 1 kênh × format      1 Content → N Post
+Channel   một giọng, một tập người đọc     channel.yml + profile.md + continuity.json
+ └─ Campaign  brief chiến lược             1 campaign = 1 thư mục + 1 campaign.md
+     └─ Content   ý tưởng gốc, chưa gắn kênh     1 dòng trong bảng Content + 1 thư mục bài
+          └─ Post      1 đầu ra cho 1 nền tảng × format   1 phần tử publish.json → posts[]
 ```
 
 Kế thừa xuôi chiều: giá trị ở tầng trên là **ràng buộc** cho tầng dưới, không phải gợi ý.

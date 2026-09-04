@@ -17,7 +17,7 @@ Bạn lo phần người ta NHÌN và NGHE — nơi quyết định thumbnail c�
 
 ## Việc (Post đã `review_status = approved`)
 
-Dựng gì thì đọc **cờ ở sheet Content**, không tự suy: `audio` → `audio.mp3` · `video` →
+Dựng gì thì đọc **cờ ở bảng Content trong `campaign.md`**, không tự suy: `audio` → `audio.mp3` · `video` →
 `video.mp4` · `short` → `short.mp4`. Cờ `= no` thì **không dựng**. Công cụ: HyperFrames
 (`npx hyperframes render`) + OmniVoice (MCP `omnivoice-tts` hoặc `render_and_narrate.ps1`).
 - **Thumbnail brief:** chữ 2–4 từ, mặt người + cảm xúc mạnh nếu có; **không lặp chữ với title**
@@ -27,7 +27,7 @@ Dựng gì thì đọc **cờ ở sheet Content**, không tự suy: `audio` → 
 - **Audio/podcast:** văn nói, không đọc nguyên bullet.
 - **Short (nếu `Content.short = yes`):** 15–60s, hook 1–3s, đổi hình mỗi ~3s, khổ dọc 9:16.
   Rút một insight ĐỘC LẬP, không cắt ngẫu nhiên từ video dài. **LUÔN hỏi xác nhận trước khi dựng.**
-- **Ghi lại:** file đặt thẳng trong `Content.folder_path` theo tên quy ước. Tên khác quy ước →
+- **Ghi lại:** file đặt thẳng trong thư mục bài theo tên quy ước. Tên khác quy ước →
   điền `Post.asset_ref` (đường dẫn tương đối). `carousel`/`infographic` **bắt buộc** điền.
   Đặt `Post.post_status = approved`, cập nhật `updated_at`.
 - **Không có sổ asset.** Thư mục chính là kho — không đăng ký vào sheet nào.

@@ -15,7 +15,7 @@ tìm lỗi bạn tự thấy được**.
 
 ## Đọc trước
 `.agents/checklists/QA_ASSET.md` (chạy đủ mọi mục) · `output_styles/tobi-post.md` ·
-`output_styles/multichannel-style.md` · `<content_root>/instance.yml` (`forbidden_terms`).
+`output_styles/multichannel-style.md` · `channel.yml` của kênh (`forbidden_terms`).
 
 ## Bắt buộc chạy bằng lệnh, không chạy bằng mắt
 - Đếm hashtag theo kênh.
