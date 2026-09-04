@@ -1,0 +1,20 @@
+Bạn sinh file scenes.json cho video bài viết Tobi (make_podcast_video.py). Đọc bài blog rồi chia thành các "beat" hình ảnh. Tiếng Việt cho text hiển thị, ENGLISH cho img_query.
+
+ĐỌC: blog {{BLOG_MD}} + meta {{META}}.
+
+scenes.json = MẢNG JSON các scene. Mỗi scene 1 trong các dạng:
+- COVER (luôn là scene ĐẦU TIÊN): {"kind":"image","src":"thumbnail.png","raw":true,"weight":1.0}
+- ẢNH THẬT: {"kind":"image","kick":"<nhãn ngắn>","caption":"<1 câu tóm ý, tiếng Việt>","img_query":"<2-4 english keywords tả ĐÚNG ý đang nói>","weight":1.2}
+- INFOGRAPHIC concept: {"kind":"concept","kick":"<nhãn>","title":"<tiêu đề TỐI GIẢN 1-4 từ>","lines":["<ý ngắn>","<ý ngắn>"],"weight":1.1}
+- INFOGRAPHIC versus: {"kind":"versus","kick":"<nhãn>","title":"<A vs B>","lines":["<vế trái>","<vế phải>"],"weight":1.2}
+- INFOGRAPHIC list: {"kind":"list","kick":"<nhãn>","title":"<tiêu đề tối giản>","lines":["<ý>","<ý>","<ý>"],"weight":1.3}
+- CLOSING: {"kind":"closing","kick":"Chốt lại","title":"<câu chốt ngắn>","lines":["<vế sau>","<CTA mềm>"],"weight":1.0}
+
+QUY TẮC:
+- MODE = "{{MODE}}". full → ĐÚNG 8 scene; short → 4 scene (portrait).
+- Scene đầu = COVER thumbnail. Các scene sau XEN KẼ ~50% ẢNH THẬT / ~50% INFOGRAPHIC (full: 3-4 ảnh + 3-4 infographic).
+- Tiêu đề/caption TỐI GIẢN, dễ đọc (tham khảo style ai-news). KHÔNG dài dòng.
+- img_query phải tả ĐÚNG nội dung beat (vd "chef cooking kitchen", "person typing laptop", "team meeting whiteboard"); tránh keyword chung chung.
+- Bám sát mạch blog: nền/khái niệm → ẩn dụ → so sánh → ý chính → chốt.
+
+GHI RA FILE: {{OUT}} (UTF-8, JSON HỢP LỆ, không kèm giải thích). Tự kiểm json.load được. Ghi xong báo "DONE {{OUT}}".
