@@ -167,3 +167,26 @@ console.log("JS OK");
     r = subprocess.run([NODE, str(f)], capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == 0, f"JS thật lỗi:\n{r.stdout}\n{r.stderr}"
     assert "JS OK" in r.stdout
+
+
+def test_kenh_NGOAI_tram_van_bam_duoc(tmp_path):
+    """`studio_paths` nói rõ kênh có thể nằm ngoài trạm. Link cứng `<trạm>/<id>/` thì bấm
+    vào là 404 — mà 404 trong một trang tổng quan thì không ai báo cho bạn."""
+    S, K = tmp_path / "st", tmp_path / "ngoai" / "kenhx"
+    C = K / "CMP-2609-y"
+    C.mkdir(parents=True)
+    S.mkdir()
+    M.write_fm(S / "CHANNELS.md", {"schema": "channels/1", "channels": [
+        {"id": "kenhx", "label": "Kênh ngoài", "path": str(K), "status": "active"}]}, "# Sổ\n")
+    (K / "channel.yml").write_text("schema: channel/1\nid: kenhx\n", encoding="utf-8")
+    M.write_fm(C / "campaign.md", {"id": "CMP-2609-y", "name": "CD ngoài", "channel": "kenhx"},
+               "\n<!-- CONTENT:BEGIN -->\n" + M.render_table(COT, DONG[:1]) + "\n<!-- CONTENT:END -->\n")
+    BV.main(["--station", str(S)])
+
+    t = (S / "index.html").read_text(encoding="utf-8")
+    m = re.search(r'href="([^"]*campaign\.html)"', t)
+    assert m, "không có link tới campaign.html"
+    dich = (S / m.group(1)).resolve() if not Path(m.group(1)).is_absolute() \
+        else Path(m.group(1))
+    assert dich.is_file() or (C / "campaign.html").samefile(dich), \
+        f"link {m.group(1)!r} không trỏ tới file có thật — bấm vào là 404"

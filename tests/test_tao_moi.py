@@ -35,7 +35,7 @@ DU_THONG_TIN = {
     "target_audience": "Analyst 2-5 năm kinh nghiệm, đã dùng Power BI hằng ngày",
     "audience_pain_points": "Đọc tin AI thấy hay nhưng không biết áp vào việc của mình",
     "key_message": "Agent không thay bạn, nó bỏ phần bạn ghét",
-    "content_pillar": "ai-agent",
+    "content_pillar": "tru-cot-1",   # phải nằm trong pillars của channel.yml — cổng kiểm thật
     "channels": ["web_blog"],
     "primary_cta": "Đọc bài dài trên atlas",
 }
@@ -177,3 +177,84 @@ def test_bulk_loi_MOT_dong_thi_khong_tao_bai_nao(station, tmp_path):
               "--bulk", tsv, "--station", station, mong_doi=2)
     assert "KHÔNG tạo bài nào" in r.stderr and "SAI-002" in r.stderr
     assert not (cam / "THU-001_a").exists(), "dòng hợp lệ đứng trước cũng không được tạo"
+
+
+def test_content_id_trung_thi_TU_CHOI_chu_khong_xoa_Cong_1(station):
+    """Lỗi thật (Fable 05/09): chỉ kiểm THƯ MỤC nên `--id THU-001 --slug b` ghi đè dòng đã
+    `approved` về `proposed` với g1 rỗng — máy xoá quyết định của người, không báo."""
+    cam = _cd_san_sang(station)
+    _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
+          "THU-001", "--slug", "a", "--title", "Bài A", "--station", station)
+
+    # người duyệt Cổng 1
+    fm, body = M.read_fm(cam / "campaign.md")
+    body = M.upsert_row(body, "CONTENT", "content_id",
+                        {"content_id": "THU-001", "status": "approved", "g1": "2026-09-05"})
+    M.write_fm(cam / "campaign.md", fm, body)
+
+    r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
+              "THU-001", "--slug", "b", "--title", "Bài A lần 2", "--station", station,
+              mong_doi=2)
+    assert "đã có trong bảng Content" in r.stderr
+
+    d = M.read_table(M.read_fm(cam / "campaign.md")[1], "CONTENT")[1][0]
+    assert d["status"] == "approved" and d["g1"] == "2026-09-05", \
+        "quyết định của NGƯỜI ở Cổng 1 không được phép bị máy ghi đè"
+    assert not (cam / "THU-001_b").exists()
+
+
+def test_bulk_cung_TU_CHOI_id_da_co_trong_bang(station, tmp_path):
+    cam = _cd_san_sang(station)
+    _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
+          "THU-001", "--slug", "a", "--title", "Bài A", "--station", station)
+    tsv = tmp_path / "loat.tsv"
+    tsv.write_text(chr(9).join(["THU-001", "khac", "Trùng id"]) + chr(10), encoding="utf-8")
+    r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t",
+              "--bulk", tsv, "--station", station, mong_doi=2)
+    assert "đã có trong bảng Content" in r.stderr
+
+
+def test_cong_bat_MOI_truong_van_xuoi_con_nguyen_mau(station):
+    """Cổng cũ so với chuỗi chép tay nên chỉ bắt 3: `campaign_goal: "Kết quả mong muốn, đo
+    được"` lọt qua và bài vẫn đẻ ra từ chiến dịch rỗng. Nay so với CHÍNH template.
+
+    Sáu trường văn xuôi phải bị bắt. `channels`/`primary_cta` thì KHÔNG — mẫu chọn sẵn một
+    giá trị hợp lệ, nên trùng mẫu là câu trả lời thật (test dưới kiểm chiều còn lại).
+    """
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import new_post
+
+    fm, _ = M.read_fm(ROOT / "templates" / "campaign.md")
+    bat = {x.split()[0].split("=")[0] for x in new_post._campaign_da_du(fm)}
+    van_xuoi = [k for k in new_post.BAT_BUOC if k not in new_post.CHON_TU_DANH_SACH]
+    assert set(van_xuoi) <= bat, f"lọt trường văn xuôi: {set(van_xuoi) - bat}"
+    assert "content_pillar" in bat, "pillar mẫu ('tru-cot') không phải trụ thật"
+
+    du = dict(fm, **DU_THONG_TIN)
+    assert new_post._campaign_da_du(du, ["tru-cot-1", "tru-cot-2"]) == [], \
+        "điền đủ rồi mà vẫn chặn = cổng kêu oan, và cổng kêu oan thì người ta tắt cổng"
+
+
+def test_channels_va_cta_RONG_thi_van_bi_bat(station):
+    """Chiều còn lại: chúng được miễn so-với-mẫu, KHÔNG được miễn kiểm rỗng."""
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import new_post
+
+    fm, _ = M.read_fm(ROOT / "templates" / "campaign.md")
+    du = dict(fm, **DU_THONG_TIN)
+    for k in ("channels", "primary_cta"):
+        thieu = new_post._campaign_da_du(dict(du, **{k: [] if k == "channels" else ""}),
+                                         ["tru-cot-1", "tru-cot-2"])
+        assert thieu == [k], f"{k} rỗng phải bị bắt, đang: {thieu}"
+
+
+def test_pillar_ngoai_danh_sach_cua_kenh_thi_CHAN(station):
+    cam = _cd_san_sang(station)
+    fm, body = M.read_fm(cam / "campaign.md")
+    fm["content_pillar"] = "khong-co-trong-kenh"
+    M.write_fm(cam / "campaign.md", fm, body)
+    r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
+              "THU-001", "--slug", "a", "--title", "X", "--station", station, mong_doi=2)
+    assert "không có trong pillars của kênh" in r.stderr

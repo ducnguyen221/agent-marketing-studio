@@ -45,17 +45,54 @@ TPL = REPO / "templates"
 BAT_BUOC = ["business_problem", "campaign_goal", "target_audience", "audience_pain_points",
             "key_message", "content_pillar", "channels", "primary_cta"]
 
+# Trường CHỌN TỪ DANH SÁCH: mẫu chọn sẵn một giá trị hợp lệ, nên trùng mẫu KHÔNG có nghĩa
+# là chưa điền. Kiểm chúng bằng "có giá trị" thôi (riêng content_pillar so với channel.yml).
+CHON_TU_DANH_SACH = {"channels", "primary_cta", "content_pillar"}
 
-def _campaign_da_du(fm: dict) -> list[str]:
-    """Trả về danh sách trường CHƯA điền. Rỗng = đủ."""
+
+def _gia_tri_mau() -> dict:
+    """Đọc giá trị mẫu THẲNG TỪ `templates/campaign.md`.
+
+    Bản trước so với một danh sách chuỗi chép tay, nên chỉ bắt được 3 trong 8 trường:
+    `campaign_goal: "Kết quả mong muốn, đo được"` lọt qua và bài vẫn đẻ ra từ một chiến
+    dịch rỗng. Chép tay thì template đổi một chữ là cổng mù, mà không gì báo.
+    """
+    try:
+        fm, _ = md_io.read_fm(TPL / "campaign.md")
+        return {k: (v.strip() if isinstance(v, str) else v) for k, v in fm.items()}
+    except Exception:      # noqa: BLE001 — thiếu template thì cổng vẫn phải chạy được
+        return {}
+
+
+def _campaign_da_du(fm: dict, pillars: list | None = None) -> list[str]:
+    """Trả về danh sách trường CHƯA điền. Rỗng = đủ.
+
+    Hai loại trường, kiểm khác nhau — gộp một luật là sai một trong hai chiều:
+
+    · **Văn xuôi** (`business_problem`, `key_message`…): giá trị mẫu là câu MÔ TẢ CHỖ CẦN
+      ĐIỀN ("Kết quả mong muốn, đo được"). Trùng mẫu = chưa điền, chắc chắn.
+    · **Chọn từ danh sách** (`channels`, `primary_cta`): mẫu chọn sẵn một giá trị HỢP LỆ.
+      Một chiến dịch đăng cả ba kênh thì `channels` trùng mẫu là câu trả lời THẬT — bắt lỗi
+      ở đây là cổng kêu oan, mà cổng kêu oan thì người ta tắt cổng.
+      Với `content_pillar`, phép thử đúng là **có nằm trong `pillars` của kênh không**.
+    """
+    mau = _gia_tri_mau()
     thieu = []
     for k in BAT_BUOC:
         v = fm.get(k)
         if v is None or v == "" or v == []:
             thieu.append(k)
-        elif isinstance(v, str) and ("{{" in v or v.strip().startswith("Vấn đề kinh doanh")
-                                     or v.strip() in ("Ai", "Họ đau gì")):
-            thieu.append(k + " (còn nguyên chữ mẫu)")
+            continue
+        vs = v.strip() if isinstance(v, str) else v
+        if isinstance(vs, str) and "{{" in vs:
+            thieu.append(k + " (còn chữ mẫu)")
+        elif k == "content_pillar":
+            if pillars and vs not in pillars:
+                thieu.append(f"content_pillar={vs!r} không có trong pillars của kênh {pillars}")
+            elif not pillars and k in mau and vs == mau[k]:
+                thieu.append(k + " (còn nguyên giá trị mẫu)")
+        elif k not in CHON_TU_DANH_SACH and k in mau and vs == mau[k]:
+            thieu.append(k + " (còn nguyên giá trị mẫu)")
     return thieu
 
 
@@ -93,6 +130,8 @@ def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
         dong_tsv.append((o[0], o[1], o[2], o[3] if len(o) > 3 else ""))
 
     prefix = fm_cam.get("id_prefix", "")
+    _, dong_co = md_io.read_table(md_io.read_fm(cam_dir / "campaign.md")[1], "CONTENT")
+    da_co = {d.get("content_id") for d in dong_co}
     loi = []
     for cid, slug, _t, _g in dong_tsv:
         if prefix and not cid.startswith(prefix + "-"):
@@ -101,6 +140,8 @@ def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
             loi.append(f"slug {slug!r} phải a-z0-9-")
         if (cam_dir / f"{cid}_{slug}").exists():
             loi.append(f"{cid}_{slug} đã có — không ghi đè")
+        if cid in da_co:
+            loi.append(f"{cid} đã có trong bảng Content — không ghi đè dòng cũ")
     if len({c for c, *_ in dong_tsv}) != len(dong_tsv):
         loi.append("có content_id trùng nhau trong file")
     if loi:
@@ -172,7 +213,20 @@ def main(argv=None) -> int:
 
     fm_cam, body_cam = md_io.read_fm(cam_dir / "campaign.md")
 
-    thieu = _campaign_da_du(fm_cam)
+    # pillars của kênh: phép thử đúng cho content_pillar. Đọc được thì dùng; không đọc
+    # được (kênh lạ, file hỏng) thì lùi về so với mẫu — cổng không được TẮT vì thiếu dữ liệu.
+    pillars = None
+    try:
+        import yaml
+        for c in SP.channels(a.station):
+            if (c["dir"] / "channel.yml").is_file() and cam_dir.is_relative_to(c["dir"]):
+                pillars = (yaml.safe_load((c["dir"] / "channel.yml").read_text(encoding="utf-8"))
+                           or {}).get("pillars")
+                break
+    except Exception:      # noqa: BLE001
+        pillars = None
+
+    thieu = _campaign_da_du(fm_cam, pillars)
     if thieu and not a.bo_qua_cong:
         sys.stderr.write("\n".join([
             "campaign.md CHƯA ĐỦ THÔNG TIN — chưa tạo bài được.",
@@ -193,6 +247,15 @@ def main(argv=None) -> int:
     prefix = fm_cam.get("id_prefix", "")
     if prefix and not a.id.startswith(prefix + "-"):
         sys.stderr.write(f"--id {a.id!r} không khớp id_prefix {prefix!r} của chiến dịch\n")
+        return 2
+
+    # content_id đã có trong bảng = bài đã tồn tại, dù slug khác. Trước bản vá này chỉ kiểm
+    # THƯ MỤC, nên `--id THU-001 --slug b` khi THU-001 đang `approved` sẽ ghi đè dòng đó về
+    # `proposed` với ô g1 rỗng: MÁY XOÁ quyết định của NGƯỜI ở Cổng 1, và không báo gì.
+    _, dong_co = md_io.read_table(body_cam, "CONTENT")
+    if any(d.get("content_id") == a.id for d in dong_co):
+        sys.stderr.write(f"{a.id} đã có trong bảng Content của {cam_dir.name} — dừng.\n"
+                         f"Đổi --id, hoặc sửa thẳng dòng đó trong campaign.md.\n")
         return 2
 
     dich = cam_dir / f"{a.id}_{a.slug}"
@@ -250,6 +313,7 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     except Exception:
         pass
     raise SystemExit(main())

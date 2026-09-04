@@ -119,3 +119,15 @@ def test_khoa_la_thi_NEM_LOI_chu_khong_nuot_im_lang():
     cot, dong = M.read_table(ra, "T")
     assert cot == ["id", "x", "chua_co"]
     assert dong[0] == {"id": "a", "x": "1", "chua_co": "v"}
+
+
+def test_chi_cap_nhat_thi_KHONG_de_dong_ma():
+    """register_publish soi gương g2/URL về bảng Content. `content_id` lạ nghĩa là meta.json
+    sai — thêm một dòng rỗng vào sổ chỉ giấu cái sai đó đi."""
+    body = "<!-- T:BEGIN -->\n| id | x |\n|---|---|\n| a | 1 |\n<!-- T:END -->\n"
+    with pytest.raises(KeyError, match="chỉ-cập-nhật"):
+        M.upsert_row(body, "T", "id", {"id": "LA", "x": "9"}, chi_cap_nhat=True)
+
+    # dòng có thật thì vẫn cập nhật bình thường
+    ra = M.upsert_row(body, "T", "id", {"id": "a", "x": "9"}, chi_cap_nhat=True)
+    assert M.read_table(ra, "T")[1][0]["x"] == "9"

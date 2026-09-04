@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import html as _html
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -264,7 +265,20 @@ document.getElementById('csv').onclick=function(){{xuatCSV(DL.cot,DL.dong,DL.id+
 
 # ══════════════════════════════════════════════════════════════════ index.html
 
-def html_index(kenhs: list, ten_station: str) -> str:
+def _duong_toi(goc: Path, dich: Path) -> str:
+    """Đường từ `index.html` tới một file, ưu tiên TƯƠNG ĐỐI.
+
+    Kênh không bắt buộc nằm trong trạm (`studio_paths` nói rõ). Ghép cứng `<trạm>/<id>/`
+    thì bấm vào là 404 — mà 404 trong một trang tổng quan thì không ai báo cho bạn.
+    Khác ổ đĩa thì relpath không tính được, lúc đó dùng `file:///` tuyệt đối.
+    """
+    try:
+        return os.path.relpath(dich, goc).replace("\\", "/")
+    except ValueError:
+        return dich.resolve().as_uri()
+
+
+def html_index(kenhs: list, ten_station: str, goc: Path | None = None) -> str:
     hang, tong, dang = [], 0, 0
     for k in kenhs:
         for c in k["campaigns"]:
@@ -284,7 +298,8 @@ def html_index(kenhs: list, ten_station: str) -> str:
     the_kenh = ""
     for k in kenhs:
         ds = "".join(
-            f'<li><a href="{_e(k["id"])}/{_e(c["dir"])}/campaign.html">{_e(c["name"] or c["id"])}</a>'
+            f'<li><a href="{_e(_duong_toi(goc, Path(k["dir"]) / c["dir"] / "campaign.html"))}">'
+            f'{_e(c["name"] or c["id"])}</a>'
             f' <span class="mo nho">· {c["da_dang"]}/{c["so_bai"]} đã đăng</span></li>'
             for c in k["campaigns"]) or '<li class="mo">chưa có chiến dịch nào</li>'
         the_kenh += (f'<div class="the"><b>{_e(k["label"])}</b>'
@@ -357,7 +372,8 @@ def main(argv=None) -> int:
             p = Path(k["dir"]) / c["dir"] / "campaign.html"
             md_io.ghi_nguyen_tu(p, html_campaign(c))
             n += 1
-    md_io.ghi_nguyen_tu(station / "index.html", html_index(kenhs, station.name))
+    md_io.ghi_nguyen_tu(station / "index.html",
+                        html_index(kenhs, station.name, station))
     print(f"  {n} campaign.html")
     print(f"  {station / 'index.html'}  ← mở bằng cách bấm đúp")
     return 0
@@ -366,6 +382,7 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     except Exception:
         pass
     raise SystemExit(main())

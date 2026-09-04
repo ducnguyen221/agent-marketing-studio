@@ -72,7 +72,7 @@ def test_HTML_sinh_lai_KHONG_doi():
 
     kenhs = [BV.doc_kenh(k) for k in __import__("studio_paths").channels(VD)]
     cu = GIO.sub("", (VD / "index.html").read_text(encoding="utf-8"))
-    assert cu == GIO.sub("", BV.html_index(kenhs, VD.name)), \
+    assert cu == GIO.sub("", BV.html_index(kenhs, VD.name, VD)), \
         "index.html đã trôi — chạy build_views.py --station ./examples"
 
 

@@ -136,11 +136,16 @@ def render_table(cot: list[str], dong: list[dict]) -> str:
 
 
 def upsert_row(body: str, ten_moc: str, khoa: str, dong_moi: dict,
-               cot_mac_dinh: list[str] | None = None, them_cot: bool = False) -> str:
+               cot_mac_dinh: list[str] | None = None, them_cot: bool = False,
+               chi_cap_nhat: bool = False) -> str:
     """Thêm hoặc cập nhật MỘT dòng theo `khoa`. Chỉ đụng vùng giữa marker.
 
     Cập nhật = trộn: khoá nào không có trong `dong_moi` thì giữ giá trị cũ. Nhờ vậy
     `register_publish` cập nhật cột `published` mà không xoá mất cột người tự điền.
+
+    `chi_cap_nhat=True`: dòng không tồn tại thì NÉM LỖI thay vì thêm mới. Dùng cho các
+    chỗ *soi gương* (register_publish ghi ngược g2/URL): ở đó `content_id` lạ nghĩa là
+    `meta.json` sai, và thêm một dòng rỗng vào sổ chỉ giấu cái sai đó đi.
 
     Khoá KHÔNG có trong bảng: mặc định NÉM LỖI. Trước đây nó bị bỏ im lặng — người gọi
     tưởng đã ghi, giá trị bốc hơi, và không gì báo. `them_cot=True` để cố ý mở thêm cột
@@ -173,6 +178,10 @@ def upsert_row(body: str, ten_moc: str, khoa: str, dong_moi: dict,
             da_co = True
             break
     if not da_co:
+        if chi_cap_nhat:
+            raise KeyError(f"bảng {ten_moc} không có dòng {khoa}={dong_moi.get(khoa)!r} — "
+                           f"không thêm dòng mới ở chế độ chỉ-cập-nhật. "
+                           f"Kiểm lại meta.json/publish.json của bài.")
         dong.append({c: dong_moi.get(c, "") for c in cot})
 
     return body[:i + len(dau)] + "\n" + render_table(cot, dong) + "\n" + body[j:]

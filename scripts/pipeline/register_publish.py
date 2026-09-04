@@ -362,7 +362,7 @@ def _mirror_g2(bai: Path, ngay: str) -> None:
     meta = _doc_json(bai / "meta.json", {})
     fm, body = md_io.read_fm(cam_dir / "campaign.md")
     body = md_io.upsert_row(body, "CONTENT", "content_id",
-                            {"content_id": meta.get("post_id", ""), "g2": ngay})
+                            {"content_id": meta.get("post_id", ""), "g2": ngay}, chi_cap_nhat=True)
     md_io.write_fm(cam_dir / "campaign.md", fm, body)
 
 
@@ -386,7 +386,8 @@ def _cap_nhat_nguoc(bai: Path, pj: dict) -> None:
             if link.get(kenh_p):
                 dong[c] = link[kenh_p]
         # them_cot: bảng cũ chưa có 3 cột link thì nới ra, đừng nuốt URL.
-        body = md_io.upsert_row(body, "CONTENT", "content_id", dong, them_cot=True)
+        body = md_io.upsert_row(body, "CONTENT", "content_id", dong,
+                                them_cot=True, chi_cap_nhat=True)
     md_io.write_fm(cam_dir / "campaign.md", fm, body)
 
     _, body2 = md_io.read_fm(cam_dir / "campaign.md")
@@ -463,6 +464,7 @@ def main(argv=None) -> int:
 if __name__ == "__main__":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     except Exception:
         pass
     raise SystemExit(main())
