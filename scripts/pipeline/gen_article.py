@@ -160,6 +160,10 @@ def write_outputs(parts, out_dir):
     written = {}
     for key, fname in _OUT_FILES.items():
         text = _strip_markers(parts.get(key, ""))
+        # Bỏ dấu ngắt "---" mà content.md dùng để tách khối. Nó là ký hiệu CỦA FILE NGUỒN,
+        # không thuộc về bản giao cho kênh — để sót thì nó lên thẳng phần mô tả YouTube và
+        # vào comment Facebook nguyên văn ba dấu gạch.
+        text = re.sub(r"(?:\n\s*(?:-{3,}|\*{3,}|_{3,})\s*)+$", "", text).strip()
         if not text or not text.strip():
             continue
         path = os.path.join(out_dir, fname)

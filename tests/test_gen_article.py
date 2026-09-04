@@ -46,6 +46,25 @@ def test_link_khong_lot_tu_comment_vao_than_post(theo_template):
     assert "BLOG_URL" in theo_template["fb_comment"]
 
 
+def test_bo_dau_ngat_cuoi_khoi():
+    """`---` là ký hiệu CỦA content.md, không thuộc bản giao cho kênh.
+
+    Để sót thì ba dấu gạch lên thẳng phần mô tả YouTube và vào comment Facebook nguyên văn.
+    Đã xảy ra thật trên AST-001: 3/5 file kênh kết thúc bằng "---".
+    """
+    # Dựng bằng join thay vì chuỗi có escape: nguồn này đi qua nhiều tầng công cụ, mỗi
+    # tầng ăn một lớp escape — đã làm hỏng đúng file test này một lần.
+    nguon = "\n".join(["## post:blog_article", "", "Nội dung.", "", "---", "",
+                       "## post:reel", "", "Caption.", ""])
+    ra = G.split_content(nguon)
+    import tempfile
+    d = Path(tempfile.mkdtemp())
+    da_ghi = G.write_outputs(ra, str(d))
+    for k, f in da_ghi.items():
+        cuoi = Path(f).read_text(encoding="utf-8").rstrip().splitlines()[-1].strip()
+        assert not cuoi.startswith("---"), f"{k} còn dấu ngắt cuối file: {cuoi!r}"
+
+
 def test_kieu_danh_so_cu_van_chay():
     """Bài cũ viết theo Mục 3/4/5/6 phải tách được y như trước — không phá bản cũ."""
     cu = "## 3) Blog\n\nNội dung blog.\n\n## 4) FB post\n\nNội dung fb.\n"
