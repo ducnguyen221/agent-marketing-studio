@@ -49,6 +49,12 @@ BAT_BUOC = ["business_problem", "campaign_goal", "target_audience", "audience_pa
 # là chưa điền. Kiểm chúng bằng "có giá trị" thôi (riêng content_pillar so với channel.yml).
 CHON_TU_DANH_SACH = {"channels", "primary_cta", "content_pillar"}
 
+# Giá trị hợp lệ của primary_cta — khai ở knowledge/data_model/DATA_MODEL.md.
+# Không kiểm thì một câu văn xuôi ("Đọc bài dài trên atlas") cũng lọt, và cột
+# này mất tác dụng phân loại ngay từ bài đầu tiên.
+CTA_HOP_LE = {"awareness", "engagement", "traffic", "lead_generation",
+              "conversion", "community", "retention"}
+
 
 def _gia_tri_mau() -> dict:
     """Đọc giá trị mẫu THẲNG TỪ `templates/campaign.md`.
@@ -64,7 +70,8 @@ def _gia_tri_mau() -> dict:
         return {}
 
 
-def _campaign_da_du(fm: dict, pillars: list | None = None) -> list[str]:
+def _campaign_da_du(fm: dict, pillars: list | None = None,
+                    platforms: list | None = None) -> list[str]:
     """Trả về danh sách trường CHƯA điền. Rỗng = đủ.
 
     Hai loại trường, kiểm khác nhau — gộp một luật là sai một trong hai chiều:
@@ -91,6 +98,15 @@ def _campaign_da_du(fm: dict, pillars: list | None = None) -> list[str]:
                 thieu.append(f"content_pillar={vs!r} không có trong pillars của kênh {pillars}")
             elif not pillars and k in mau and vs == mau[k]:
                 thieu.append(k + " (còn nguyên giá trị mẫu)")
+        elif k == "primary_cta" and vs not in CTA_HOP_LE:
+            thieu.append(f"primary_cta={vs!r} không hợp lệ; chọn một trong "
+                         + ", ".join(sorted(CTA_HOP_LE)))
+        elif k == "channels" and platforms:
+            la_kenh = [c for c in (vs if isinstance(vs, list) else [vs]) if c not in platforms]
+            if la_kenh:
+                thieu.append(f"channels có {la_kenh} không nằm trong platforms của kênh "
+                             f"{platforms} — chiến dịch không đăng được lên nền tảng "
+                             f"mà kênh chưa khai")
         elif k not in CHON_TU_DANH_SACH and k in mau and vs == mau[k]:
             thieu.append(k + " (còn nguyên giá trị mẫu)")
     return thieu
@@ -215,18 +231,20 @@ def main(argv=None) -> int:
 
     # pillars của kênh: phép thử đúng cho content_pillar. Đọc được thì dùng; không đọc
     # được (kênh lạ, file hỏng) thì lùi về so với mẫu — cổng không được TẮT vì thiếu dữ liệu.
-    pillars = None
+    pillars = platforms = None
     try:
         import yaml
         for c in SP.channels(a.station):
             if (c["dir"] / "channel.yml").is_file() and cam_dir.is_relative_to(c["dir"]):
-                pillars = (yaml.safe_load((c["dir"] / "channel.yml").read_text(encoding="utf-8"))
-                           or {}).get("pillars")
+                cy = yaml.safe_load((c["dir"] / "channel.yml").read_text(encoding="utf-8")) or {}
+                pillars = cy.get("pillars")
+                platforms = [x.get("channel") for x in (cy.get("platforms") or [])
+                             if isinstance(x, dict)]
                 break
     except Exception:      # noqa: BLE001
-        pillars = None
+        pillars = platforms = None
 
-    thieu = _campaign_da_du(fm_cam, pillars)
+    thieu = _campaign_da_du(fm_cam, pillars, platforms)
     if thieu and not a.bo_qua_cong:
         sys.stderr.write("\n".join([
             "campaign.md CHƯA ĐỦ THÔNG TIN — chưa tạo bài được.",

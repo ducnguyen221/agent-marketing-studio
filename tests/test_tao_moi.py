@@ -37,7 +37,7 @@ DU_THONG_TIN = {
     "key_message": "Agent không thay bạn, nó bỏ phần bạn ghét",
     "content_pillar": "tru-cot-1",   # phải nằm trong pillars của channel.yml — cổng kiểm thật
     "channels": ["web_blog"],
-    "primary_cta": "Đọc bài dài trên atlas",
+    "primary_cta": "traffic",   # enum, không phải câu văn xuôi
 }
 
 
@@ -258,3 +258,53 @@ def test_pillar_ngoai_danh_sach_cua_kenh_thi_CHAN(station):
     r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
               "THU-001", "--slug", "a", "--title", "X", "--station", station, mong_doi=2)
     assert "không có trong pillars của kênh" in r.stderr
+
+
+def test_platforms_thuc_su_LOC_chu_khong_bi_bo_qua(station):
+    """Codex chỉ ra 05/09: `--platforms` khai ra nhưng KHÔNG được đọc — người dùng gõ
+    `--platforms web_blog` rồi nhận về channel.yml đủ ba nền tảng, không ai báo.
+    Cờ khai ra mà không làm gì tệ hơn không có cờ: nó nói dối về việc mình đã làm."""
+    _chay(ROOT / "scripts/pipeline/new_channel.py", "--id", "k", "--label", "K",
+          "--path", "./k", "--station", station, "--platforms", "web_blog,facebook")
+    t = (station / "k" / "channel.yml").read_text(encoding="utf-8")
+    assert "- channel: web_blog" in t and "- channel: facebook" in t
+    assert "- channel: youtube" not in t, "nền tảng không chọn phải bị bỏ"
+    assert "kpi_default:" in t and "# ⚠️ Số ở đây phải đến từ" in t, \
+        "lọc không được ăn mất phần còn lại của file, và phải giữ chú thích"
+
+
+def test_platforms_gia_tri_la_thi_TU_CHOI(station):
+    r = _chay(ROOT / "scripts/pipeline/new_channel.py", "--id", "k", "--label", "K",
+              "--path", "./k", "--station", station, "--platforms", "tiktok", mong_doi=2)
+    assert "giá trị lạ" in r.stderr and "tiktok" in r.stderr
+    assert not (station / "k").exists() or not (station / "k" / "channel.yml").exists()
+
+
+def test_primary_cta_phai_la_ENUM_khong_phai_cau_van(station):
+    """Codex 05/09: không kiểm enum thì "Đọc bài dài trên atlas" cũng lọt, và cột này mất
+    tác dụng phân loại ngay từ bài đầu tiên."""
+    cam = _cd_san_sang(station)
+    fm, body = M.read_fm(cam / "campaign.md")
+    fm["primary_cta"] = "Đọc bài dài trên atlas"
+    M.write_fm(cam / "campaign.md", fm, body)
+    r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
+              "THU-001", "--slug", "a", "--title", "X", "--station", station, mong_doi=2)
+    assert "primary_cta" in r.stderr and "không hợp lệ" in r.stderr
+
+
+def test_channels_phai_la_TAP_CON_cua_platforms_kenh(station):
+    """Chiến dịch khai đăng YouTube trong khi kênh chưa khai nền tảng đó = post mồ côi
+    ngay từ `register_publish init`."""
+    cam = _cd_san_sang(station)
+    fm, body = M.read_fm(cam / "campaign.md")
+    fm["channels"] = ["web_blog", "youtube"]
+    M.write_fm(cam / "campaign.md", fm, body)
+    # kênh chỉ khai web_blog
+    yml = (station / "k" / "channel.yml").read_text(encoding="utf-8")
+    i = yml.index("  - channel: youtube")
+    j = yml.index("  - channel: facebook")
+    (station / "k" / "channel.yml").write_text(yml[:i] + yml[j:], encoding="utf-8")
+
+    r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
+              "THU-001", "--slug", "a", "--title", "X", "--station", station, mong_doi=2)
+    assert "youtube" in r.stderr and "platforms của kênh" in r.stderr

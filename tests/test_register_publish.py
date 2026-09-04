@@ -164,3 +164,19 @@ def test_qa_lay_ket_luan_tu_gates(bai):
     assert all(p["quality_check"] == "failed" for p in _pj(bai)["posts"])
     r = _chay(bai, "approve", "--by", "Đ", "--note", "ok", mong_doi=2)
     assert "override-qa" in r.stderr, "cổng kỹ thuật đỏ thì duyệt phải nêu lý do"
+
+
+def test_approve_KHONG_khop_post_nao_thi_TU_CHOI(bai):
+    """Codex chỉ ra 05/09: `--post fbb` gõ sai → n=0, nhưng code vẫn ghi g2 và trả về 0.
+
+    Cổng 2 khi đó NÓI DỐI: sổ bảo "đã duyệt ngày X" trong khi không có gì được duyệt.
+    """
+    _chay(bai, "init")
+    r = subprocess.run([PY, str(RP), str(bai), "approve", "--by", "Đ", "--note", "ok",
+                        "--post", "fbb"], capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 2, "duyệt 0 post phải là lỗi, không phải thành công"
+    assert "KHÔNG post nào khớp" in r.stderr
+    assert "Hậu tố hợp lệ" in r.stderr, "phải chỉ ra hậu tố nào dùng được"
+
+    dong = M.read_table(M.read_fm(bai.parent / "campaign.md")[1], "CONTENT")[1][0]
+    assert not dong.get("g2"), "g2 không được ghi khi chưa duyệt gì"

@@ -35,13 +35,35 @@ HỎI NGƯỜI DÙNG: "Anh muốn lưu kênh này ở đâu?"
 Đừng tự chọn hộ."""
 
 
+PLATFORM_HOP_LE = {"web_blog", "youtube", "facebook"}
+
+
+def _loc_platforms(yml: str, giu: list[str]) -> str:
+    """Bỏ khỏi `channel.yml` những mục `- channel: X` không nằm trong `giu`.
+
+    Cắt theo dòng, không dùng thư viện YAML: `yaml.safe_dump` sẽ **xoá sạch chú thích**, mà
+    chú thích trong file này chính là phần giải thích vì sao mỗi trường tồn tại — thứ người
+    mở file ra cần đọc nhất.
+    """
+    ra, bo = [], False
+    for d in yml.splitlines():
+        if d.startswith("  - channel:"):
+            bo = d.split(":", 1)[1].strip() not in giu
+        elif bo and d and not d[0].isspace():
+            bo = False          # hết khối platforms
+        if not bo:
+            ra.append(d)
+    return "\n".join(ra) + "\n"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Tạo kênh mới.")
     ap.add_argument("--id", required=True, help="a-z0-9- ; cũng là tên thư mục")
     ap.add_argument("--label", required=True)
     ap.add_argument("--path", default=None, help="BẮT BUỘC — hỏi người dùng, đừng đoán")
     ap.add_argument("--station", default=None)
-    ap.add_argument("--platforms", default="web_blog,youtube,facebook")
+    ap.add_argument("--platforms", default="web_blog,youtube,facebook",
+                    help="nền tảng kênh này đăng, phân tách bằng dấu phẩy")
     ap.add_argument("--home-domain", default="")
     ap.add_argument("--owner", default="")
     ap.add_argument("--dry-run", action="store_true")
@@ -82,6 +104,18 @@ def main(argv=None) -> int:
         yml = yml.replace("home_domain: example.vn", f"home_domain: {a.home_domain}")
     if a.owner:
         yml = yml.replace('owner: "Người phụ trách"', f'owner: "{a.owner}"')
+
+    # --platforms: trước bản vá này CỜ NÀY BỊ BỎ QUA HOÀN TOÀN — người dùng khai
+    # `--platforms web_blog` rồi nhận về một channel.yml có đủ ba nền tảng, không ai báo.
+    # Cờ khai ra mà không làm gì tệ hơn không có cờ: nó nói dối về việc mình đã làm.
+    chon = [x.strip() for x in a.platforms.split(",") if x.strip()]
+    la = [x for x in chon if x not in PLATFORM_HOP_LE]
+    if la:
+        sys.stderr.write(f"--platforms có giá trị lạ: {la}. Hợp lệ: "
+                         f"{', '.join(sorted(PLATFORM_HOP_LE))}\n")
+        return 2
+    if set(chon) != PLATFORM_HOP_LE:
+        yml = _loc_platforms(yml, chon)
     (dich / "channel.yml").write_text(yml, encoding="utf-8", newline="\n")
 
     cam = (TPL / "CAMPAIGNS.md").read_text(encoding="utf-8")

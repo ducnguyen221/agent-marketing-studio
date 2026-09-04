@@ -150,6 +150,16 @@ def cmd_approve(bai: Path, by: str, note: str, chi_post: str, feedback: str,
         p["post_status"] = "approved"
         p["updated_at"] = _now()
         n += 1
+    if n == 0:
+        # Duyệt 0 post mà vẫn ghi g2 = Cổng 2 nói dối: sổ bảo "đã duyệt" trong khi không có
+        # gì được duyệt. `--post fbb` gõ sai là ra đúng trạng thái đó, và trả về mã 0.
+        hop_le = ", ".join(sorted(x["post_id"].rsplit("-", 1)[-1] for x in pj["posts"]))
+        sys.stderr.write(chr(10).join([
+            f"KHÔNG post nào khớp --post {chi_post!r} — không ghi gì.",
+            f"Hậu tố hợp lệ: {hop_le}",
+            ""]))
+        return 2
+
     _ghi_json(PP.p(bai, "publish"), pj)
     _mirror_g2(bai, str(date.today()))
     print(f"  duyệt {n} post bởi {by} — đã ghi dấu vết vào publish.json và ô g2")

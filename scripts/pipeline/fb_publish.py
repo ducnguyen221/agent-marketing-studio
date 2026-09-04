@@ -102,6 +102,50 @@ def _muc_tu_tri(duong_bai: str | None) -> tuple[str, str]:
     return "?", f"không thấy channel.yml ở bất kỳ thư mục cha nào của {d}"
 
 
+def _cong_2(bai: Path, message_file: str, comment_file: str) -> tuple[bool, str]:
+    """Kiểm bài ĐÃ QUA CỔNG 2 chưa, và `--bai` có đúng là chỗ chứa nội dung đang đăng không.
+
+    Hai điều, vì thiếu điều nào cũng đủ để đăng nhầm:
+
+    1. **`--bai` phải chứa chính file đang đăng.** Nếu không, trỏ `--bai` vào một kênh đang
+       `autonomy: full` là mở được cổng cho nội dung của kênh khác — cổng tự trị thành ra
+       vô nghĩa vì nó gác một thứ không liên quan tới thứ sắp đăng.
+    2. **`posts[]` của kênh facebook phải `review.status == approved`, có `approved_by`,**
+       và `quality_check` không `failed`. Cổng tự trị trả lời "kênh này có được đăng tự động
+       không"; Cổng 2 trả lời "bài NÀY có được đăng không". Hai câu khác nhau.
+    """
+    d = Path(bai).resolve()
+    for f in (message_file, comment_file):
+        try:
+            Path(f).resolve().relative_to(d)
+        except ValueError:
+            return False, (f"--bai {d} không chứa {f} — cổng phải gác đúng nội dung sắp "
+                           f"đăng, không phải một thư mục bất kỳ")
+
+    pj_p = d / "publish.json"
+    if not pj_p.is_file():
+        return False, f"không có {pj_p} — chưa qua Cổng 2 (chạy register_publish init/approve)"
+    try:
+        pj = json.loads(pj_p.read_text(encoding="utf-8"))
+    except Exception as e:            # noqa: BLE001
+        return False, f"{pj_p} đọc không được: {e}"
+
+    fb = [p for p in pj.get("posts", []) if p.get("channel") == "facebook"]
+    if not fb:
+        return False, "publish.json không có post nào kênh facebook"
+    for p in fb:
+        rv = p.get("review") or {}
+        if rv.get("status") != "approved":
+            return False, (f"{p.get('post_id')}: review.status={rv.get('status')!r}, "
+                           f"cần 'approved' — Cổng 2 là của NGƯỜI")
+        if not (rv.get("approved_by") or "").strip():
+            return False, f"{p.get('post_id')}: duyệt mà không ghi approved_by"
+        if p.get("quality_check") == "failed":
+            return False, f"{p.get('post_id')}: quality_check=failed"
+    ai = (fb[0].get("review") or {}).get("approved_by")
+    return True, f"Cổng 2 OK — {len(fb)} post facebook, duyệt bởi {ai}"
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Đăng post + ảnh, rồi comment đầu chứa link.")
     ap.add_argument("--config", required=True, help="facebook_config.json (page_id + page_token)")
@@ -109,7 +153,7 @@ def main(argv=None) -> int:
     ap.add_argument("--image", required=True, help="ảnh infographic đính kèm")
     ap.add_argument("--comment-file", required=True, help="comment đầu — PHẢI có ít nhất 1 URL")
     ap.add_argument("--dry-run", action="store_true", help="kiểm hết nhưng không gọi Graph")
-    ap.add_argument("--bai", help="thư mục bài — để tìm channel.yml và đọc autonomy")
+    ap.add_argument("--bai", help="thư mục bài — nguồn của cổng tự trị VÀ cổng 2. Bắt buộc khi đăng thật.")
     a = ap.parse_args(argv)
 
     for p in (a.config, a.message_file, a.image, a.comment_file):
@@ -138,6 +182,27 @@ def main(argv=None) -> int:
     if a.dry_run:
         print("  [dry-run] mọi cổng đã qua, KHÔNG gọi Graph.")
         return 0
+
+    # --- CỔNG 2: bài NÀY đã được người duyệt chưa -------------------------------
+    if not a.bai:
+        sys.stderr.write(chr(10).join([
+            "",
+            "Thiếu --bai. Đăng thật bắt buộc có nó, vì hai cổng đều đọc từ thư mục bài:",
+            "  · Cổng 2   — publish.json: người đã duyệt chưa, ai duyệt",
+            "  · tự trị   — channel.yml: kênh có được đăng tự động không",
+            "",
+            "Chạy lại với --bai <thư mục bài>, hoặc --dry-run để chỉ kiểm.",
+            ""]))
+        return 4
+    ok2, vi_sao = _cong_2(Path(a.bai), a.message_file, a.comment_file)
+    if not ok2:
+        sys.stderr.write(chr(10).join([
+            "", f"KHÔNG đăng thật — chưa qua Cổng 2: {vi_sao}", "",
+            "Cổng 2 là dấu vết của NGƯỜI, không phải cái cờ:",
+            '  register_publish.py <bài> approve --by "<tên>" --note "<câu duyệt nguyên văn>"',
+            ""]))
+        return 4
+    print(f"  cổng 2   : {vi_sao}")
 
     # --- CỔNG TỰ TRỊ: chỉ `full` mới được đăng thật ------------------------------
     muc, nguon = _muc_tu_tri(a.bai)
