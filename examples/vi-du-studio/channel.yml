@@ -1,0 +1,60 @@
+# channel.yml — hồ sơ MỘT KÊNH.
+#
+# Kênh = một thương hiệu / tài khoản có giọng riêng, đăng lên nhiều NỀN TẢNG.
+# Thư mục chứa file này là gốc kênh; tên thư mục phải bằng `id` bên dưới.
+#
+# Nội dung thật (bài, ảnh, số liệu) sống ở đây, KHÔNG vào repo engine.
+# Chỉ ghi TÊN biến môi trường của secret, không bao giờ ghi giá trị.
+schema: channel/1
+id: vi-du-studio
+label: "Ví dụ · Xưởng nội dung"
+created: 2026-09-04
+purpose: "Kể cách một xưởng nội dung chạy bằng agent hoạt động, cho người làm data"
+owner: "Người phụ trách (ví dụ)"
+language: vi
+timezone: Asia/Ho_Chi_Minh
+
+# suggest = người duyệt cả hai cổng · auto_safe = agent tự làm phần an toàn · full
+autonomy: suggest
+
+# blog_gates dùng để phân biệt link "về nhà" với nguồn ngoài
+home_domain: example.vn
+
+# Hồ sơ giọng, đường dẫn trong repo engine (không phải trong kênh)
+brand_voice: output_styles/tobi-ai.md
+
+# Giá trị hợp lệ của content_pillar CHO KÊNH NÀY. Mỗi kênh một bộ khác nhau —
+# đây là lý do bộ trụ cột không nên nằm cứng trong DATA_MODEL.
+pillars: [ai-agent, quy-trinh, cong-cu]
+
+# `platforms` chứ không phải `channels`: sau khi "kênh" là thư mục này, dùng lại chữ
+# "channels" cho danh sách nền tảng là đọc sai ngay dòng đầu. Cột Excel `Post.channel`
+# giữ nguyên tên để tương thích biểu mẫu.
+platforms:
+  - channel: web_blog
+    handle: "Ví dụ · example.vn/blog"
+    base_url: https://example.vn/blog/content
+    post_formats: [blog_article]
+  - channel: youtube
+    handle: "Ví dụ · kênh YouTube"
+    post_formats: [youtube_video]
+    secrets_env: { token: YT_TOKEN_PATH, client: YT_CLIENT_SECRET }
+  - channel: facebook
+    handle: "Ví dụ · Page Facebook"
+    post_formats: [facebook_post]
+    secrets_env: { config: FB_CONFIG }
+
+# KPI mặc định cho chiến dịch mới của kênh. Chiến dịch nào có mục tiêu riêng thì ghi đè
+# trong campaign.md.
+# ⚠️ Số ở đây phải đến từ SỐ LIỆU THẬT của các bài đã đăng, không phải từ cảm giác.
+#    Chưa có bài nào để so thì để trống — ô rỗng nói "chưa biết", số 0 nói "đo được là 0".
+kpi_default:
+  blog:        # để trống = CHƯA BIẾT. Điền khi đã có bài để so.
+  youtube:
+  facebook:
+
+# Thư mục kênh chỉ có FILE PHẲNG + các thư mục chiến dịch. Không lồng thêm cấp:
+# profile/ và memory/ mỗi cái chứa đúng một file, lồng thêm chỉ để phải bấm thêm một lần.
+paths:
+  profile: profile.md          # giọng, tác phong, chính kiến — dữ liệu cá nhân, KHÔNG vào repo
+  continuity: continuity.json  # sổ bài đã đăng; B0 đọc CÓ LỌC (so slug), đừng nạp cả file

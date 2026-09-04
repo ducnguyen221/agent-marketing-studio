@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Toàn cảnh — examples</title>
+<style>
+:root{--nen:#0f1115;--the:#171a21;--vien:#252a35;--chu:#e6e9ef;--mo:#98a2b3;
+      --nhan:#7dd3fc;--ok:#4ade80;--cho:#fbbf24;--tat:#64748b}
+@media (prefers-color-scheme:light){:root{--nen:#f7f8fa;--the:#fff;--vien:#e3e6ec;
+      --chu:#1a1d24;--mo:#5b6472;--nhan:#0369a1}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--nen);color:var(--chu);font:15px/1.55 -apple-system,
+     "Segoe UI",Roboto,"Be Vietnam Pro",sans-serif}
+.bao{max-width:1180px;margin:0 auto;padding:28px 20px 64px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:17px;margin:30px 0 10px}
+.mo{color:var(--mo)}.nho{font-size:13px}
+.dau{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;justify-content:space-between}
+.the{background:var(--the);border:1px solid var(--vien);border-radius:10px;padding:14px 16px}
+.luoi{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0}
+.so{font-size:26px;font-weight:600}
+.cuon{overflow-x:auto;border:1px solid var(--vien);border-radius:10px;background:var(--the)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--vien);white-space:nowrap}
+th{position:sticky;top:0;background:var(--the);font-weight:600;font-size:12.5px;
+   color:var(--mo);text-transform:uppercase;letter-spacing:.03em;cursor:pointer;user-select:none}
+th:hover{color:var(--chu)}
+tbody tr:hover{background:rgba(125,211,252,.06)}
+td.ten{white-space:normal;min-width:230px}
+a{color:var(--nhan);text-decoration:none}a:hover{text-decoration:underline}
+.chip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;
+      border:1px solid var(--vien);color:var(--mo)}
+.chip.dang{color:var(--ok);border-color:var(--ok)}
+.chip.cho{color:var(--cho);border-color:var(--cho)}
+.thanh{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0}
+input[type=search],select{background:var(--the);border:1px solid var(--vien);color:var(--chu);
+      border-radius:8px;padding:7px 11px;font:inherit;font-size:14px}
+input[type=search]{min-width:230px}
+button{background:var(--the);border:1px solid var(--vien);color:var(--chu);border-radius:8px;
+      padding:7px 13px;font:inherit;font-size:14px;cursor:pointer}
+button:hover{border-color:var(--nhan);color:var(--nhan)}
+.kv{display:grid;grid-template-columns:190px 1fr;gap:5px 16px;font-size:14px}
+.kv dt{color:var(--mo)}.kv dd{margin:0}
+footer{margin-top:44px;color:var(--mo);font-size:12.5px;border-top:1px solid var(--vien);
+      padding-top:14px}
+.trong{padding:22px;color:var(--mo);text-align:center}
+</style></head><body><div class="bao">
+
+<div class="dau"><div>
+  <h1>Toàn cảnh nội dung</h1>
+  <div class="mo nho">examples · 1 kênh</div>
+</div></div>
+
+<div class="luoi">
+  <div class="the"><div class="so">1</div><div class="mo nho">kênh</div></div>
+  <div class="the"><div class="so">1</div>
+       <div class="mo nho">chiến dịch</div></div>
+  <div class="the"><div class="so">3</div><div class="mo nho">bài</div></div>
+  <div class="the"><div class="so">1</div><div class="mo nho">đã đăng</div></div>
+</div>
+
+<h2>Kênh &amp; chiến dịch</h2>
+<div class="luoi"><div class="the"><b>Ví dụ · Xưởng nội dung</b><div class="mo nho">vi-du-studio · 1 chiến dịch</div><ul style="margin:9px 0 0;padding-left:18px"><li><a href="vi-du-studio/CMP-2609-gioi-thieu/campaign.html">Giới thiệu xưởng nội dung</a> <span class="mo nho">· 1/3 đã đăng</span></li></ul></div></div>
+
+<h2>Mọi bài</h2>
+<div class="thanh">
+  <input type="search" id="q" placeholder="Tìm bài, kênh, chiến dịch…">
+  <select id="tt"><option value="">Mọi trạng thái</option>
+    <option value="proposed">đề xuất</option><option value="approved">đã duyệt</option><option value="in_progress">đang làm</option><option value="review">chờ duyệt</option><option value="published">đã đăng</option><option value="paused">tạm dừng</option><option value="done">xong</option><option value="archived">lưu trữ</option></select>
+  <span class="mo nho" id="dem"></span>
+  <button id="csv">⤓ Xuất CSV</button>
+</div>
+<div class="cuon"><table id="bang"><thead><tr><th>Kênh</th><th>Mã chiến dịch</th><th>Chiến dịch</th><th>Mã</th><th>Tên bài</th><th>Trạng thái</th><th>Lịch</th><th>Đã đăng</th><th>Web</th><th>YouTube</th><th>Facebook</th></tr></thead><tbody><tr data-tt="published"><td>Ví dụ · Xưởng nội dung</td><td>CMP-2609-gioi-thieu</td><td>Giới thiệu xưởng nội dung</td><td>GTX-001</td><td class="ten">Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người</td><td><span class="chip dang">đã đăng</span></td><td>2026-09-07</td><td>2026-09-07</td><td><a href="https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html" target="_blank" rel="noopener">mở ↗</a></td><td><a href="https://youtu.be/EXAMPLE0001" target="_blank" rel="noopener">mở ↗</a></td><td><a href="https://www.facebook.com/000000000000000/posts/111111111111111" target="_blank" rel="noopener">mở ↗</a></td></tr><tr data-tt="approved"><td>Ví dụ · Xưởng nội dung</td><td>CMP-2609-gioi-thieu</td><td>Giới thiệu xưởng nội dung</td><td>GTX-002</td><td class="ten">Kiểm bài bằng số, không bằng cảm giác: 23 cổng làm gì</td><td><span class="chip cho">đã duyệt</span></td><td>2026-09-14</td><td class="mo">—</td><td class="mo">—</td><td class="mo">—</td><td class="mo">—</td></tr><tr data-tt="proposed"><td>Ví dụ · Xưởng nội dung</td><td>CMP-2609-gioi-thieu</td><td>Giới thiệu xưởng nội dung</td><td>GTX-003</td><td class="ten">Chúng tôi bỏ Excel làm nguồn sự thật — và đây là cái đã sai trước đó</td><td><span class="chip ">đề xuất</span></td><td>2026-09-21</td><td class="mo">—</td><td class="mo">—</td><td class="mo">—</td><td class="mo">—</td></tr></tbody></table></div>
+
+<footer>Sinh bởi <code>build_views.py</code> lúc 04/09/2026 23:07 —
+bản ĐỌC. Nguồn duy nhất là các file <code>.md</code>; sửa ở đó rồi sinh lại.</footer>
+</div>
+<script>
+function csvO(v){v=(v==null?'':String(v));
+  return /[",\n;]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;}
+function xuatCSV(cot,dong,ten){
+  // BOM: thiếu nó thì Excel bản Việt mở ra "Trá»‹" thay vì "Trị". Đã dính một lần.
+  var s='﻿'+cot.map(csvO).join(',')+'\n'
+      +dong.map(function(d){return cot.map(function(c){return csvO(d[c]);}).join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([s],{type:'text/csv;charset=utf-8'}));
+  a.download=ten; document.body.appendChild(a); a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},0);
+}
+function sapXep(tb,i){
+  var t=tb.tBodies[0], ds=Array.prototype.slice.call(t.rows);
+  var nguoc = tb.__cot===i ? !tb.__nguoc : false;
+  ds.sort(function(a,b){
+    var x=a.cells[i].innerText.trim(), y=b.cells[i].innerText.trim();
+    var r = (x===''&&y!=='') ? 1 : (y===''&&x!=='') ? -1
+          : x.localeCompare(y,'vi',{numeric:true});
+    return nguoc ? -r : r;});
+  ds.forEach(function(r){t.appendChild(r);});
+  tb.__cot=i; tb.__nguoc=nguoc;
+}
+function locBang(tb,q,tt){
+  q=(q||'').toLowerCase(); var n=0;
+  Array.prototype.forEach.call(tb.tBodies[0].rows,function(r){
+    var hop = (!q || r.innerText.toLowerCase().indexOf(q)>=0)
+           && (!tt || (r.dataset.tt||'')===tt);
+    r.style.display = hop ? '' : 'none'; if(hop) n++;});
+  return n;
+}
+function gan(tb){
+  Array.prototype.forEach.call(tb.tHead.rows[0].cells,function(th,i){
+    th.title='Bấm để sắp xếp'; th.onclick=function(){sapXep(tb,i);};});
+}
+
+var DL={"cot": ["kenh", "campaign_id", "campaign_name", "content_id", "content_name", "status", "schedule", "published", "web", "youtube", "facebook"], "dong": [{"kenh": "Ví dụ · Xưởng nội dung", "campaign_id": "CMP-2609-gioi-thieu", "campaign_name": "Giới thiệu xưởng nội dung", "content_id": "GTX-001", "content_name": "Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người", "status": "published", "schedule": "2026-09-07", "published": "2026-09-07", "web": "https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html", "youtube": "https://youtu.be/EXAMPLE0001", "facebook": "https://www.facebook.com/000000000000000/posts/111111111111111"}, {"kenh": "Ví dụ · Xưởng nội dung", "campaign_id": "CMP-2609-gioi-thieu", "campaign_name": "Giới thiệu xưởng nội dung", "content_id": "GTX-002", "content_name": "Kiểm bài bằng số, không bằng cảm giác: 23 cổng làm gì", "status": "approved", "schedule": "2026-09-14", "published": "", "web": "", "youtube": "", "facebook": ""}, {"kenh": "Ví dụ · Xưởng nội dung", "campaign_id": "CMP-2609-gioi-thieu", "campaign_name": "Giới thiệu xưởng nội dung", "content_id": "GTX-003", "content_name": "Chúng tôi bỏ Excel làm nguồn sự thật — và đây là cái đã sai trước đó", "status": "proposed", "schedule": "2026-09-21", "published": "", "web": "", "youtube": "", "facebook": ""}]};
+var tb=document.getElementById('bang');
+if(tb){ gan(tb);
+  function lam(){ var n=locBang(tb,document.getElementById('q').value,
+                                document.getElementById('tt').value);
+    document.getElementById('dem').textContent=n+'/'+DL.dong.length+' dòng'; }
+  document.getElementById('q').oninput=lam; document.getElementById('tt').onchange=lam; lam();
+}
+document.getElementById('csv').onclick=function(){xuatCSV(DL.cot,DL.dong,'toan_canh.csv');};
+</script></body></html>

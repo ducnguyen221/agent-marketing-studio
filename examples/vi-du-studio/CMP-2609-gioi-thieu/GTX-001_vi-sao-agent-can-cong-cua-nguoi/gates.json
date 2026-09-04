@@ -1,0 +1,219 @@
+{
+  "thu_muc": "examples\\vi-du-studio\\CMP-2609-gioi-thieu\\GTX-001_vi-sao-agent-can-cong-cua-nguoi",
+  "mien_tru": {},
+  "tong": 23,
+  "xanh": 9,
+  "do_chan": 7,
+  "do_canh_bao": 3,
+  "thieu": 4,
+  "ket_luan": "do",
+  "cong": [
+    {
+      "ma": "G01",
+      "cong": "Độ dài blog (từ)",
+      "do_duoc": 588,
+      "luat": "2500-4000",
+      "trang_thai": "do",
+      "muc": "chan",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G02",
+      "cong": "Số H2",
+      "do_duoc": 5,
+      "luat": "6-12",
+      "trang_thai": "do",
+      "muc": "chan",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G03",
+      "cong": "Bảng hoặc danh sách đánh số",
+      "do_duoc": 0,
+      "luat": ">=1",
+      "trang_thai": "do",
+      "muc": "chan",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G04",
+      "cong": "Callout emoji",
+      "do_duoc": 1,
+      "luat": "3-8",
+      "trang_thai": "do",
+      "muc": "canh_bao",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G05",
+      "cong": "Nguồn ngoài (có trong research.md)",
+      "do_duoc": "0 nguồn, 0 lạc",
+      "luat": "3-7 và không nguồn nào lạc",
+      "trang_thai": "do",
+      "muc": "chan",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G06",
+      "cong": "Khối > **Góc nhìn:** (số từ)",
+      "do_duoc": "0 khối / 0 từ",
+      "luat": ">=1 khối và >=40 từ",
+      "trang_thai": "do",
+      "muc": "chan",
+      "ghi_chu": "khối chính kiến quá ngắn hoặc rỗng"
+    },
+    {
+      "ma": "G07",
+      "cong": "Dẫn nguồn / nêu ý riêng",
+      "do_duoc": "0 / 0",
+      "luat": "mỗi loại >=1",
+      "trang_thai": "do",
+      "muc": "canh_bao",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G08",
+      "cong": "[KIỂM CHỨNG] còn mở",
+      "do_duoc": 0,
+      "luat": "= 0",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G09",
+      "cong": "URL trong thân post (kể cả link trần)",
+      "do_duoc": 0,
+      "luat": "= 0",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G10",
+      "cong": "Độ dài post (ký tự)",
+      "do_duoc": 800,
+      "luat": "4000-7500",
+      "trang_thai": "do",
+      "muc": "canh_bao",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G11",
+      "cong": "Ký tự Unicode bold",
+      "do_duoc": 39,
+      "luat": "> 0",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": "18 dấu trong vùng đậm"
+    },
+    {
+      "ma": "G12",
+      "cong": "Markdown literal",
+      "do_duoc": 0,
+      "luat": "= 0",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G13",
+      "cong": "Hashtag",
+      "do_duoc": 6,
+      "luat": "6-13",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G14",
+      "cong": "Comment đầu có link về nhà/YouTube",
+      "do_duoc": 2,
+      "luat": ">=1",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G15",
+      "cong": "Độ dài podcast",
+      "do_duoc": null,
+      "luat": "—",
+      "trang_thai": "thieu",
+      "muc": "",
+      "ghi_chu": "không có podcast.txt"
+    },
+    {
+      "ma": "G16",
+      "cong": "Video khớp audio",
+      "do_duoc": null,
+      "luat": "—",
+      "trang_thai": "thieu",
+      "muc": "",
+      "ghi_chu": "thiếu audio.mp3, video.mp4 hoặc không gọi được ffprobe"
+    },
+    {
+      "ma": "G17",
+      "cong": "Số scene",
+      "do_duoc": null,
+      "luat": "—",
+      "trang_thai": "thieu",
+      "muc": "",
+      "ghi_chu": "không có scenes.json"
+    },
+    {
+      "ma": "G18",
+      "cong": "Thẻ Open Graph",
+      "do_duoc": null,
+      "luat": "—",
+      "trang_thai": "thieu",
+      "muc": "",
+      "ghi_chu": "không có atlas/atlas.html"
+    },
+    {
+      "ma": "G19",
+      "cong": "Ảnh FB (kích thước) + sidecar prompt",
+      "do_duoc": "không có PNG · prompt 0 ký tự",
+      "luat": ">=800x800 và prompt >=100 ký tự",
+      "trang_thai": "do",
+      "muc": "chan",
+      "ghi_chu": "ảnh sinh bằng model KHÔNG tái lập - mất prompt là mất cách dựng lại"
+    },
+    {
+      "ma": "G20",
+      "cong": "Continuity (tóm tắt từ / key-term)",
+      "do_duoc": "0 / 0",
+      "luat": "<=60 va >=3",
+      "trang_thai": "do",
+      "muc": "chan",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G21",
+      "cong": "Tên công cụ nội bộ",
+      "do_duoc": 0,
+      "luat": "= 0",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G23",
+      "cong": "Placeholder {{...}} trong file công khai",
+      "do_duoc": 0,
+      "luat": "= 0",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    },
+    {
+      "ma": "G22",
+      "cong": "Tên tổ chức trong bản công khai",
+      "do_duoc": 0,
+      "luat": "= 0 nếu bài sẽ vào repo",
+      "trang_thai": "xanh",
+      "muc": "",
+      "ghi_chu": ""
+    }
+  ]
+}

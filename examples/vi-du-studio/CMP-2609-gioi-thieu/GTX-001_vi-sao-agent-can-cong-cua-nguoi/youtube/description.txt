@@ -1,0 +1,20 @@
+Bài do AI viết nghe trôi chảy mà vẫn rỗng — và đi qua được mọi khâu kiểm tra tự động.
+Video này chỉ ra hai chỗ trong quy trình nội dung với AI agent mà máy không nên tự quyết.
+
+Mình dựng một xưởng nội dung chạy bằng agent với 23 cổng kiểm bằng số. Cổng bắt được link
+gãy, chữ mẫu còn sót, tên công cụ lọt ra ngoài. Không cổng nào trả lời được câu "bài này
+có đáng đăng không". Video đi qua đúng chỗ đó: vì sao chọn đề tài và duyệt trước khi đăng
+phải là quyết định của người, và cái giá phải trả khi bỏ hai cổng ấy.
+
+⏱️ Nội dung chính:
+00:00 Một bài rỗng đi qua được mọi cổng
+01:20 Ba trạng thái: xanh, đỏ, và "thiếu"
+03:05 Chỗ thứ nhất máy không nên tự quyết: chọn đề tài
+05:10 Chỗ thứ hai: duyệt trước khi đăng
+07:30 Cổng người làm chậm — đo thế nào cho đúng
+
+📖 Bản blog đầy đủ: https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html
+
+👉 Đăng ký kênh nếu bạn đang đưa agent vào việc thật.
+
+#AIAgent #QuyTrinhNoiDung #Data
