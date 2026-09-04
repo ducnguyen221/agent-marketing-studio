@@ -164,7 +164,7 @@ def render_chrome(html, out_png):
         return False
     tmpdir = tempfile.mkdtemp(prefix="tobi_infg_")
     html_path = os.path.join(tmpdir, "infographic.html")
-    with open(html_path, "w", encoding="utf-8") as f:
+    with open(html_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(html)
     cmd = [chrome, "--headless=new", "--disable-gpu", "--no-sandbox",
            "--hide-scrollbars", "--force-device-scale-factor=1",

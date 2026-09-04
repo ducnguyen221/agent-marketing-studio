@@ -162,7 +162,10 @@ def xuat(cam_dir: Path, out: Path | None = None) -> Path:
         else:
             ws.append([k, ", ".join(map(str, v)) if isinstance(v, list) else v, ""])
     ws.append(["", "", ""])
-    ws.append(["⚠️ NGUỒN SỰ THẬT", str(cam_dir / "campaign.md"),
+    # Đường dẫn TƯƠNG ĐỐI (kênh/chiến_dịch/campaign.md). Đường tuyệt đối mang theo tên
+    # người dùng và tên máy — file .xlsx này được gửi đi và có bản nằm trong repo công khai.
+    neo = f"{cam_dir.parent.name}/{cam_dir.name}/campaign.md"
+    ws.append(["⚠️ NGUỒN SỰ THẬT", neo,
                "File Excel này là BẢN XUẤT. Sửa ở đây KHÔNG quay ngược về Markdown — "
                "sửa campaign.md rồi xuất lại."])
     ws.cell(ws.max_row, 1).font = Font(bold=True, color="C00000")

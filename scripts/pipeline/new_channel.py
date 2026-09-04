@@ -72,7 +72,7 @@ def main(argv=None) -> int:
     # Thư mục kênh chỉ có FILE PHẲNG + các thư mục chiến dịch. profile/ và memory/ trước
     # đây mỗi cái chứa đúng MỘT file — lồng thêm một cấp chỉ để phải bấm thêm một lần.
     dich.mkdir(parents=True, exist_ok=True)
-    (dich / "continuity.json").write_text("[]\n", encoding="utf-8")
+    (dich / "continuity.json").write_text("[]\n", encoding="utf-8", newline="\n")
 
     yml = (TPL / "channel.yml").read_text(encoding="utf-8")
     yml = (yml.replace("id: ten-kenh", f"id: {a.id}")

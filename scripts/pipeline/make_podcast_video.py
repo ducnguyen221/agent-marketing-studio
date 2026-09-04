@@ -200,7 +200,7 @@ def render_slide(html, out_png, W, H):
         raise RuntimeError("Không tìm thấy Chrome")
     tmp = tempfile.mkdtemp(prefix="pv_")
     hp = os.path.join(tmp, "s.html")
-    with open(hp, "w", encoding="utf-8") as f:
+    with open(hp, "w", encoding="utf-8", newline="\n") as f:
         f.write(html)
     cmd = [chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
            "--allow-file-access-from-files", "--force-device-scale-factor=1",

@@ -429,7 +429,8 @@ def main(argv=None) -> int:
             return 2
         cho_phep[ten.strip()] = ly_do.strip()
     kq = chay(d, home, a.loai, cho_phep)
-    PP.p(d, "gates").write_text(json.dumps(kq, ensure_ascii=False, indent=2), encoding="utf-8")
+    PP.p(d, "gates").write_text(json.dumps(kq, ensure_ascii=False, indent=2) + "\n",
+                                encoding="utf-8", newline="\n")
 
     if a.json_only:
         sys.stdout.write(json.dumps(kq, ensure_ascii=False, indent=2) + "\n")

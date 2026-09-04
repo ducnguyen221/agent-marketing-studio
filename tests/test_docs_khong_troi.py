@@ -69,3 +69,25 @@ def test_mot_file_khong_duoc_mang_hai_luat_link():
         if "Thân bài không chứa URL" in noi_dung or "thân bài 0 URL" in noi_dung.lower():
             assert "đặt ĐẦU bài" not in noi_dung, \
                 f"{ten} mang hai luật link trái nhau trong cùng một file"
+
+
+def test_moi_cho_ghi_file_deu_ep_xuong_dong_LF():
+    """Windows tự đổi \n thành CRLF nếu không ép — và mỗi lần sinh lại là cả file 'đổi'.
+
+    Trong một repo lấy git làm lịch sử, diff giả làm mất luôn khả năng nhìn ra diff thật.
+    """
+    import re
+    thieu = []
+    for f in (ROOT / "scripts").rglob("*.py"):
+        s = f.read_text(encoding="utf-8")
+        for m in re.finditer(r"\.write_text\((.*?)\)\n", s, re.S):
+            goi = m.group(1)
+            if "encoding=" in goi and "newline=" not in goi:
+                dong = s[:m.start()].count("\n") + 1
+                thieu.append(f"{f.relative_to(ROOT)}:{dong}")
+        for m in re.finditer(r"\bopen\((?!.*['\"]rb?['\"])(.*?)\)", s):
+            goi = m.group(1)
+            if '"w"' in goi and "newline=" not in goi:
+                dong = s[:m.start()].count("\n") + 1
+                thieu.append(f"{f.relative_to(ROOT)}:{dong} (open w)")
+    assert not thieu, "ghi file mà không ép newline='\n': " + ", ".join(thieu)

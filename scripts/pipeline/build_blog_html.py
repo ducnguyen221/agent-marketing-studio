@@ -456,7 +456,7 @@ def main(argv=None):
     html = build_html_full(md_text, meta, args.infographic, args.youtube_url, args.audio_src,
                            args.summary_img)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
-    with open(args.out, "w", encoding="utf-8") as f:
+    with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write(html)
 
     pillar = (meta.get("pillar") or "").strip().lower()
