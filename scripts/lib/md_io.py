@@ -47,10 +47,12 @@ def write_fm(path, fm: dict, body: str) -> None:
     txt = ("---\n"
            + yaml.safe_dump(fm, allow_unicode=True, sort_keys=False, width=100)
            + "---\n" + body)
-    _ghi_nguyen_tu(path, txt)
+    ghi_nguyen_tu(path, txt)
 
 
-def _ghi_nguyen_tu(path, text: str) -> None:
+def ghi_nguyen_tu(path, text: str) -> None:
+    """Ghi một file bất kỳ, nguyên tử. Công khai vì build_views cũng cần:
+    trang HTML ghi dở dang mà người vừa bấm mở là trang trắng."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(p.parent), suffix=".tmp")
