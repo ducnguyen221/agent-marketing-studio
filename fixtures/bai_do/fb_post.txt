@@ -1,0 +1,10 @@
+Đọc bài đầy đủ: https://ducnguyen.vn/atlas/content/ai/bai-do.html
+
+**Tiêu đề in đậm kiểu markdown** — Facebook sẽ hiện đúng hai dấu sao này ra màn hình.
+
+Bài quá ngắn so với ngưỡng 4000 ký tự, không có ký tự Unicode bold nào,
+và có link ngay trong thân bài — cả ba đều là lỗi mà cổng phải bắt.
+
+🎬 Xem video: https://youtu.be/xxxxxxxxxxx
+
+#AI #Data
