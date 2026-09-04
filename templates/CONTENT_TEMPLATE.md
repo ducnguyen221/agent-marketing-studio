@@ -163,7 +163,7 @@ folder_path: {{assets/TOBI-001_slug}} # = Content.folder_path, chính là thư m
 ### comment_1
 
 > Comment ĐẦU TIÊN, đăng ngay sau post (≤60 giây). Đây là chỗ DUY NHẤT chứa link.
-> Tách ra file `fb_comment.txt` ở bước B3. Thiếu khối này = bài chưa đăng xong.
+> Tách ra `facebook/comment.txt` ở bước B3. Thiếu khối này = bài chưa đăng xong.
 
 {{1 câu dẫn, vd: "Bản đầy đủ mình để ở đây nhé 👇"}}
 

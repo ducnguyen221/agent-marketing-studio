@@ -11,7 +11,33 @@ Ký hiệu: 👤 người quyết · 🤖 agent · ⚙️ script.
 
 ---
 
-## 1. Bộ file của một bài trên web
+## 1. Bố cục thư mục một bài
+
+```
+AST-001_gpt6-astra/                  ← Content.folder_path — MỘT thư mục, không tách handoff
+│  # gốc = NGHIÊN CỨU và VIẾT (thứ người làm bài đọc và sửa)
+├─ meta.json          định danh bài. KHÔNG chứa URL sau đăng — URL ở publish.json
+├─ research.md        B1 · ĐÓNG BĂNG sau B1, chỉ được append mục "Kiểm sau"
+├─ content.md         B2 · nguồn DUY NHẤT của text mọi kênh
+├─ podcast.txt        B5 · kịch bản đọc
+├─ scenes.json        B5 · kịch bản cảnh (src phân giải theo thư mục CỦA scenes.json)
+├─ gates.json         B4 · nhật ký 23 cổng
+├─ publish.json       B10 · gộp result.json + continuity.json cũ
+│  # thư mục con = ĐEM ĐI ĐĂNG, theo KÊNH, đọc theo thứ tự đăng
+├─ youtube/   video.mp4 · thumbnail.png · description.txt
+├─ atlas/     blog.md · atlas.html · audio.mp3
+└─ facebook/  post.txt · comment.txt · infographic.png · infographic.prompt.txt
+              reel.txt  ← CHỈ khi bài có short.mp4 (gen_article --with-reel)
+```
+
+Tên file khai ở đúng một chỗ: `scripts/lib/post_paths.py`. Đổi tên file thì sửa ở đó,
+không đi sửa 14 chỗ rải rác.
+
+⚠️ **Không chép file sang thư mục kênh khác.** Kênh khác cần cùng một ảnh thì script DẪN
+XUẤT sang đích (vd `facebook/infographic.png` → atlas `<slug>-1.jpg`). Có hai bản là sớm
+muộn hai bản lệch, và không ai biết bản nào đã đăng.
+
+## 1b. Bộ file của một bài trên web
 
 Mỗi bài xuất bản thành **ba file cùng tên, cùng thư mục**:
 
@@ -71,15 +97,15 @@ bài không có video hoặc phải sửa lại sau; đăng Facebook trước th
 | 🔒 **Cổng 1** | | 👤 | `Content.status=approved` + `approved_date` | | **agent không tự đặt** |
 | **B1** Nghiên cứu | ③ | 🤖 | WebSearch: định nghĩa từ nguồn chính chủ · **≥1 use-case doanh nghiệp THẬT có dẫn nguồn** · số liệu có ngày. Không tìm ra use-case → **dừng và báo**, đề xuất hoãn | `research.md`: mỗi nguồn 1 dòng `URL · tổ chức · ngày truy cập · trích 1 câu` | **3–7 nguồn**; `<3` thì DỪNG |
 | **B2** Viết | ③ | 🤖 | Điền `content.md` theo neo `## post:`. **Chính kiến tác giả đọc FAIL-CLOSED** — không đọc được thì DỪNG, không viết tiếp | `content.md` | số khối `## post:` = số dòng `Post` · ≥1 khối `> **Góc nhìn:**` |
-| **B3** Tách kênh | ③ | ⚙️ | `gen_article.py` tách **theo neo** | `blog.md` · `fb_post.txt` · `fb_comment.txt` · `youtube_desc.txt` · `fb_desc.txt` | mỗi file tồn tại và **>0 byte** |
-| **B4** Tự kiểm | ④ | ⚙️+🤖 | `blog_gates.py` + `fb_format.py --check` + `QA_ASSET.md` | `gates.json` | 22 cổng; đỏ-chặn → `quality_check=failed` |
+| **B3** Tách kênh | ③ | ⚙️ | `gen_article.py` tách **theo neo** | `atlas/blog.md` · `facebook/post.txt` · `facebook/comment.txt` · `youtube/description.txt` | mỗi file tồn tại và **>0 byte** |
+| **B4** Tự kiểm | ④ | ⚙️+🤖 | `blog_gates.py` + `fb_format.py --check` + `QA_ASSET.md` | `gates.json` | 23 cổng; đỏ-chặn → `quality_check=failed` |
 | 🔒 **Cổng 2** | | 👤 | `Post.review_status=approved` | | **agent không tự đặt** |
-| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh FB** (`ASSET_TOOLCHAIN.md` §6.1) | `thumbnail.png` · `audio.mp3` · `video.mp4` · `fb_image.png` + `.prompt.txt` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
-| **B6** Dựng trang | ⑤ | ⚙️ | `build_blog_html.py` | `atlas.html` | **≥6 thẻ `og:`** |
+| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh tóm tắt** (`templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`) | `thumbnail.png` · `audio.mp3` · `video.mp4` · `fb_image.png` + `.prompt.txt` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
+| **B6** Dựng trang | ⑤ | ⚙️ | `build_blog_html.py` | `atlas/atlas.html` | **≥6 thẻ `og:`** |
 | **B7** Đăng YouTube | ⑥ | ⚙️ | upload + `publishAt` giờ vàng | `youtube_url` | GET 200 |
 | **B8** Đăng web | ⑥ | ⚙️ | chép 3 file vào `atlas/content/<cat>/` (trang **nhúng video B7**) → `generate-manifest.js` → `git add` **đích danh từng path** → push | `blog_url` | **GET `blog_url` = 200 TRƯỚC khi ghi sổ** |
-| **B9** Đăng Facebook | ⑥ | ⚙️ | ⑨a post + `fb_image.png`, **thân bài không link nào** → `fb_post_id`; ⑨b **comment ngay** bằng `fb_comment.txt` → `fb_comment_id` | `fb_post_id` · `fb_permalink` · `fb_comment_id` | URL trong thân post = **0** · `fb_comment_id` khác rỗng · comment cách post **≤60 giây** |
-| **B10** Ghi sổ & đo | ⑥→⑦ | ⚙️ | `continuity.json` ở STATION (idempotent theo `post_id`) **ngay khi có URL** · sheet `Result` · hồ sơ `.md` | bản ghi continuity | `summary` ≤60 từ · `key_terms_explained` ≥3 |
+| **B9** Đăng Facebook | ⑥ | ⚙️ | ⑨a post + `facebook/infographic.png`, **thân bài không link nào** → `fb_post_id`; ⑨b **comment ngay** bằng `facebook/comment.txt` → `fb_comment_id` | `fb_post_id` · `fb_permalink` · `fb_comment_id` | URL trong thân post = **0** · `fb_comment_id` khác rỗng · comment cách post **≤60 giây** |
+| **B10** Ghi sổ & đo | ⑥→⑦ | ⚙️ | `publish.json` trong thư mục bài **và** `memory/continuity.json` ở STATION (idempotent theo `post_id`) **ngay khi có URL** | `publish.json` | `summary` ≤60 từ · `key_terms_explained` ≥3 |
 
 ### Vì sao verify HTTP 200 trước khi ghi sổ
 
@@ -92,7 +118,7 @@ URL vào sổ phải là URL đã mở được, không phải URL đã tính ra
 | | Trước | Nay | Vì |
 |---|---|---|---|
 | 1 | Link atlas + video **trong thân post** | **Trong comment đầu**, thân post 0 URL | Chốt 04/09 |
-| 2 | Ảnh kèm post = cover 16:9 dùng lại | **`fb_image.png` riêng, khổ đứng** | `ASSET_TOOLCHAIN.md` §6.1 |
+| 2 | Ảnh kèm post = cover 16:9 dùng lại | **`facebook/infographic.png` — ảnh tóm tắt cả bài, cũng đặt ở đầu trang blog** | `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` |
 | 3 | `atlas.html` không có `og:` | **≥6 thẻ** | Link ở comment thì preview là gần như tất cả |
 | 4 | Nguồn ngoài 0–5, không đo | **3–7, có cổng chặn** | 2/3 bài cũ có 0 nguồn |
 | 5 | Chính kiến rỗng, im lặng | **fail-closed** | Cả 3 bài cũ viết với chính kiến rỗng |
@@ -136,9 +162,10 @@ Nó sống ở STATION và được phân giải lúc chạy.
 export PYTHONIOENCODING=utf-8
 
 python scripts/pipeline/gen_article.py --content-md content.md --meta meta.json --out-dir .
+#   -> atlas/blog.md · facebook/post.txt · facebook/comment.txt · youtube/description.txt
 python scripts/pipeline/blog_gates.py .            # 22 cổng -> gates.json, exit!=0 khi đỏ
-python scripts/pipeline/fb_format.py --check fb_post.txt
-python scripts/pipeline/build_blog_html.py --blog-md blog.md --meta meta.json --out atlas.html
+python scripts/pipeline/fb_format.py --check facebook/post.txt --comment facebook/comment.txt
+python scripts/pipeline/build_blog_html.py --blog-md atlas/blog.md --meta meta.json \n    --infographic youtube/thumbnail.png --summary-img '<slug>-1.jpg' \n    --youtube-url <link> --audio-src '<slug>.mp3' --out atlas/atlas.html
 ```
 
 Điều phối cả bài: `scripts/orchestrator/run-tobi-post.ps1` (dựng) và `publish-tobi.ps1` (đăng).

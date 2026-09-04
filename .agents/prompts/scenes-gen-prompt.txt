@@ -3,7 +3,7 @@ Bạn sinh file scenes.json cho video bài viết Tobi (make_podcast_video.py). 
 ĐỌC: blog {{BLOG_MD}} + meta {{META}}.
 
 scenes.json = MẢNG JSON các scene. Mỗi scene 1 trong các dạng:
-- COVER (luôn là scene ĐẦU TIÊN): {"kind":"image","src":"thumbnail.png","raw":true,"weight":1.0}
+- COVER (luôn là scene ĐẦU TIÊN): {"kind":"image","src":"youtube/thumbnail.png","raw":true,"weight":1.0}
 - ẢNH THẬT: {"kind":"image","kick":"<nhãn ngắn>","caption":"<1 câu tóm ý, tiếng Việt>","img_query":"<2-4 english keywords tả ĐÚNG ý đang nói>","weight":1.2}
 - INFOGRAPHIC concept: {"kind":"concept","kick":"<nhãn>","title":"<tiêu đề TỐI GIẢN 1-4 từ>","lines":["<ý ngắn>","<ý ngắn>"],"weight":1.1}
 - INFOGRAPHIC versus: {"kind":"versus","kick":"<nhãn>","title":"<A vs B>","lines":["<vế trái>","<vế phải>"],"weight":1.2}

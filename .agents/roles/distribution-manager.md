@@ -32,7 +32,7 @@ hồ sơ campaign `.md` Mục 5 (playbook phân phối) · `<content_root>/insta
 - Đăng lỗi → `publish_status = failed`, ghi lỗi vào `notes`/log. **Không** đánh dấu `published`.
 - **Token đọc từ .env**, không bao giờ in ra log/chat.
 - Facebook: Graph API chỉ đăng Page. Đăng **post + ảnh, thân bài 0 URL**, rồi **comment ngay**
-  bằng `fb_comment.txt` (link atlas + link video) — comment cách post ≤60 giây.
+  bằng `facebook/comment.txt` (link atlas + link video) — comment cách post ≤60 giây.
   Ghi cả `fb_post_id` lẫn `fb_comment_id`; thiếu `fb_comment_id` = bài chưa đăng xong.
 
 ## Khi nào DỪNG và báo người

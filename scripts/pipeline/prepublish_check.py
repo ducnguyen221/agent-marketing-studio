@@ -16,14 +16,21 @@ CLI:
 """
 from __future__ import annotations
 import argparse, json, os, sys
+from pathlib import Path
 
-# (tên file, bắt buộc?)
-ASSETS = [
-    ("meta.json", True), ("content.md", False), ("blog.md", True),
-    ("fb_post.txt", True), ("youtube_desc.txt", True), ("fb_desc.txt", False),
-    ("thumbnail.png", True), ("audio.mp3", False), ("video.mp4", True),
-    ("atlas.html", True),
-]
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import post_paths as PP  # noqa: E402
+
+# (khoá trong post_paths.LAYOUT, bắt buộc?)
+# comment.txt và infographic.* nay là BẮT BUỘC: luật 04/09 đòi thân bài Facebook 0 URL
+# (nên link phải nằm ở comment) và đòi ảnh tóm tắt kèm sidecar prompt.
+ASSETS = [(PP.LAYOUT[k], b) for k, b in [
+    ("meta", True), ("research", True), ("content", False),
+    ("blog", True), ("atlas_html", True), ("audio", False),
+    ("yt_desc", True), ("yt_thumb", True), ("yt_video", True),
+    ("fb_post", True), ("fb_comment", True),
+    ("fb_image", True), ("fb_prompt", True),
+]]
 LINKS_REQUIRED = ["blog_url", "youtube_url"]  # phải đủ trước khi đăng FB
 
 

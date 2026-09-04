@@ -39,12 +39,12 @@ vào review** — nói "đã kiểm rồi" mà không có JSON thì coi như ch�
 
 ```bash
 python scripts/pipeline/blog_gates.py <thư mục bài>      # 22 cổng -> gates.json, exit!=0 khi đỏ
-python scripts/pipeline/fb_format.py --check fb_post.txt # định dạng FB -> JSON
+python scripts/pipeline/fb_format.py --check facebook/post.txt --comment facebook/comment.txt
 ```
 
 **Luật phát ngôn của cổng:** cổng chỉ được nói **cái nó đo được**.
 
-- Đúng: *"`fb_post.txt` có 2 URL trong thân bài (dòng 1, dòng 7); luật hiện hành = 0"*.
+- Đúng: *"`facebook/post.txt` có 2 URL trong thân bài (dòng 1, dòng 7); luật hiện hành = 0"*.
 - Sai: *"bài này sẽ bị Facebook bóp reach"* — cổng không đo được reach, đó là suy đoán.
 
 Cổng đỏ → `quality_check = failed` + ghi `review_feedback`. **Không** tự sửa rồi cho qua im lặng.

@@ -21,6 +21,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
 import blog_gates as G  # noqa: E402
+sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+import post_paths as PP  # noqa: E402
 import fb_format as FF  # noqa: E402
 
 BAI_DO = ROOT / "fixtures" / "bai_do"
@@ -39,7 +41,7 @@ def do():
 
 
 def test_fixture_do_ton_tai():
-    assert (BAI_DO / "blog.md").exists(), "fixture đỏ bị xoá -> mọi khẳng định dưới đây vô nghĩa"
+    assert PP.p(BAI_DO, "blog").exists(), "fixture đỏ bị xoá -> mọi khẳng định dưới đây vô nghĩa"
 
 
 def test_dung_tap_cong_bi_chan(do):
@@ -69,7 +71,8 @@ def test_so_do_dung_chu_khong_chi_do(do):
     assert do["G09"]["do_duoc"] == 2            # 2 URL trong thân post
     assert do["G11"]["do_duoc"] == 0            # 0 ký tự bold
     assert do["G13"]["do_duoc"] == 2            # 2 hashtag, ngưỡng 6-13
-    assert do["G17"]["do_duoc"] == "5 scene, 0 thiếu nội dung"   # đỏ thuần vì đếm sai
+    # đỏ THUẦN vì đếm sai (5≠8): hình dạng đúng, ảnh src đúng — để phép đếm giữ nguyên ý nghĩa
+    assert do["G17"]["do_duoc"] == "5 scene, 0 thiếu nội dung, 0 mất ảnh src"
     assert do["G18"]["do_duoc"] == "0 loại"      # không thẻ og: nào
     assert do["G20"]["do_duoc"] == "95 / 1"     # tóm tắt 95 từ, 1 key-term
 
@@ -94,10 +97,11 @@ def test_khong_suy_dien_hau_qua(do):
 def bai_xanh(tmp_path):
     d = tmp_path / "bai"
     d.mkdir()
+    PP.tao_thu_muc(d)
     than = "\n\n".join(
         [f"## Mục {i}\n\nMột đoạn nội dung. " * 3 for i in range(1, 9)]
     )
-    (d / "blog.md").write_text(
+    (PP.p(d, "blog")).write_text(
         "# Tiêu đề\n\n" + than + "\n\n"
         + "| a | b |\n|---|---|\n| 1 | 2 |\n\n"
         + "".join(f"> 💡 Callout số {i}\n\n" for i in range(1, 5))
@@ -111,20 +115,20 @@ def bai_xanh(tmp_path):
         # 900 cho ra 4748 từ và làm G01 đỏ — tức fixture sai, không phải cổng sai.
         + "\n\n" + "thêm chữ cho đủ dài. " * 500,
         encoding="utf-8")
-    (d / "fb_post.txt").write_text(
+    (PP.p(d, "fb_post")).write_text(
         FF.bold("Tiêu đề đậm") + "\n\n" + "Nội dung bài. " * 400 + "\n\n"
         + "#AI #Data #CongNghe #Prompt #Agent #HocMai\n", encoding="utf-8")
-    (d / "fb_comment.txt").write_text(
+    (PP.p(d, "fb_comment")).write_text(
         "Bản đầy đủ 👇\nhttps://ducnguyen.vn/atlas/content/ai/x.html\n", encoding="utf-8")
-    (d / "podcast.txt").write_text("từ " * 850, encoding="utf-8")
-    (d / "scenes.json").write_text(
+    (PP.p(d, "podcast")).write_text("từ " * 850, encoding="utf-8")
+    (PP.p(d, "scenes")).write_text(
         json.dumps([{"kind": "concept", "title": f"Scene {i}"} for i in range(8)]),
         encoding="utf-8")
-    (d / "atlas.html").write_text(
+    (PP.p(d, "atlas_html")).write_text(
         "".join(f'<meta property="og:{k}" content="x">'
                 for k in ("type", "title", "description", "url", "image", "site_name")),
         encoding="utf-8")
-    (d / "continuity.json").write_text(
+    (PP.p(d, "publish")).write_text(
         json.dumps({"summary": "Tóm tắt ngắn gọn.",
                     "key_terms_explained": ["thuật ngữ một", "thuật ngữ hai",
                                             "thuật ngữ ba"]}, ensure_ascii=False),
@@ -132,9 +136,9 @@ def bai_xanh(tmp_path):
     # PNG tối thiểu nhưng CÓ THẬT kích thước trong IHDR — cổng đọc 8 byte tại offset 16,
     # nên một file chỉ có chữ ký (như bản fixture cũ) không còn qua được.
     _sig = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
-    (d / "fb_image.png").write_bytes(
+    (PP.p(d, "fb_image")).write_bytes(
         _sig + bytes(4) + b"IHDR" + (1080).to_bytes(4, "big") + (1350).to_bytes(4, "big"))
-    (d / "fb_image.prompt.txt").write_text("prompt đã dùng để sinh ảnh. " * 6,
+    (PP.p(d, "fb_prompt")).write_text("prompt đã dùng để sinh ảnh. " * 6,
                                           encoding="utf-8")
     return d
 
@@ -166,10 +170,10 @@ def test_g23_bat_placeholder_con_sot(bai_xanh):
     """
     assert _theo_ma(G.chay(bai_xanh, HOME))["G23"]["trang_thai"] == "xanh"
 
-    (bai_xanh / "youtube_desc.txt").write_text("Bản đầy đủ: {{BLOG_URL}}", encoding="utf-8")
+    (PP.p(bai_xanh, "yt_desc")).write_text("Bản đầy đủ: {{BLOG_URL}}", encoding="utf-8")
     r = _theo_ma(G.chay(bai_xanh, HOME))["G23"]
     assert r["trang_thai"] == "do" and r["muc"] == G.CHAN
-    assert "youtube_desc.txt" in r["ghi_chu"] and "{{BLOG_URL}}" in r["ghi_chu"], \
+    assert "description.txt" in r["ghi_chu"] and "{{BLOG_URL}}" in r["ghi_chu"], \
         "cổng phải chỉ rõ placeholder nào ở file nào, không chỉ nói 'có placeholder'"
 
 
@@ -182,7 +186,8 @@ def test_thu_muc_rong_van_bao_thieu_G23(tmp_path):
 def _bai_co_ten_tool(tmp_path, ten="codex"):
     d = tmp_path / "bai"
     d.mkdir()
-    (d / "blog.md").write_text(f"# Bài\n\nBài này nói về {ten} của một hãng khác.\n",
+    PP.tao_thu_muc(d)
+    (PP.p(d, "blog")).write_text(f"# Bài\n\nBài này nói về {ten} của một hãng khác.\n",
                                encoding="utf-8")
     return d
 
@@ -216,7 +221,8 @@ def test_mien_tru_mot_ten_khong_mo_duong_cho_ten_khac(tmp_path):
     """Miễn trừ phải hẹp đúng cái tên được nêu."""
     d = tmp_path / "bai"
     d.mkdir()
-    (d / "blog.md").write_text("Bài nhắc codex và nhắc cả omnivoice.", encoding="utf-8")
+    PP.tao_thu_muc(d)
+    (PP.p(d, "blog")).write_text("Bài nhắc codex và nhắc cả omnivoice.", encoding="utf-8")
     theo = _theo_ma(G.chay(d, HOME, cho_phep={"codex": "chủ đề bài"}))
     assert theo["G21"]["trang_thai"] == "do", "omnivoice không được miễn trừ nên vẫn phải chặn"
     assert "omnivoice" in theo["G21"]["ghi_chu"]
@@ -232,7 +238,8 @@ def test_g17_bat_dang_dict_du_dem_dung_8(tmp_path):
     """
     d = tmp_path / "bai"
     d.mkdir()
-    (d / "scenes.json").write_text(
+    PP.tao_thu_muc(d)
+    (PP.p(d, "scenes")).write_text(
         json.dumps({"scenes": [{"kind": "concept"} for _ in range(8)]}), encoding="utf-8")
     r = _theo_ma(G.chay(d, HOME))["G17"]
     assert r["trang_thai"] == "do", "đủ 8 phần tử nhưng sai dạng thì renderer vẫn vỡ"

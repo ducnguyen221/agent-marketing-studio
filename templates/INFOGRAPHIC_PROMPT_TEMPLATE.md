@@ -120,7 +120,7 @@ giữ vignette, dùng đúng font/cỡ). Sinh lại là mất ảnh đã duyệt
 
 ## 5. Sidecar bắt buộc
 
-Lưu `infographic.prompt.txt` cạnh ảnh, ghi: prompt đã dùng · **nguyên văn mọi chuỗi chữ
+Lưu `facebook/infographic.prompt.txt` cạnh ảnh, ghi: prompt đã dùng · **nguyên văn mọi chuỗi chữ
 trên ảnh** · ngày kiểm chính tả và kết quả · mọi lần sửa sau đó và lý do.
 
 Model **không tái lập**: cùng prompt cho ra ảnh khác. Mất prompt là mất cách dựng lại, và

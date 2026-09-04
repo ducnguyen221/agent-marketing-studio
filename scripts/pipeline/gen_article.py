@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
-r"""gen_article.py — TÁCH content.md (instance CONTENT_TEMPLATE) ra các file kênh.
+r"""gen_article.py — TÁCH content.md ra các file kênh, theo bố cục post_paths.LAYOUT.
 
-Mô hình MỚI (CONTRACT v3): KHÔNG còn .docx. Stage draft cho claude điền ĐẦY ĐỦ
-instance CONTENT_TEMPLATE (mục 1-7) ra `content.md`; script này tách content.md
-thành 4 file thực thi trong cùng folder:
+`content.md` là nguồn DUY NHẤT của mọi text đem đăng. Script này tách nó thành các file
+mà công cụ đăng thật sự ăn được (mọi tool đăng nhận ĐƯỜNG DẪN FILE, không nhận chuỗi):
 
-  - blog.md         <- mục 3 (Blog chi tiết)        : markdown bài blog
-  - fb_post.txt     <- mục 4 (FB post chi tiết)      : bài Facebook FB-native
-  - youtube_desc.txt<- mục 5 (YouTube description)   : mô tả video YouTube
-  - fb_desc.txt     <- mục 6 (FB description/caption): caption ngắn (vd reel)
+  atlas/blog.md            <- ## post:blog_article
+  facebook/post.txt        <- ## post:facebook_post      (thân bài, 0 URL)
+  facebook/comment.txt     <- ### comment_1              (nơi DUY NHẤT chứa link)
+  youtube/description.txt  <- ## post:youtube_desc
+  facebook/reel.txt        <- ## post:reel   — CHỈ khi có cờ --with-reel
 
-CLI (theo PIPELINE_CONTRACT):
-  python gen_article.py --content-md F --meta meta.json --out-dir FOLDER
-→ FOLDER\{blog.md, fb_post.txt, youtube_desc.txt, fb_desc.txt}
-  in JSON các path + dòng cuối `OK <abs_path out-dir>`.
+CLI:
+  python gen_article.py --content-md F --meta meta.json --out-dir FOLDER [--with-reel]
+→ in JSON các path + dòng cuối `OK <abs_path out-dir>`.
 
-Cách tách: dò các heading mục cấp 2/3 (## / ###) theo SỐ MỤC (3..6) hoặc theo
-NHÃN tương ứng (Blog / FB post / YouTube desc / FB desc). Nội dung của 1 mục =
-mọi dòng cho tới heading mục cùng cấp tiếp theo (heading cấp sâu hơn vẫn giữ trong
-mục — vd ## trong blog). Bóc bỏ chính dòng heading mục.
+Tách theo NEO `## post:<tên>`, không theo số mục: số mục xê dịch theo từng bài, neo thì
+không. Vẫn nhận dạng cũ (`## 3) Blog`) để bài cũ không vỡ.
 """
 from __future__ import annotations
 
@@ -27,6 +24,9 @@ import json
 import os
 import re
 import sys
+
+sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[1] / "lib"))
+import post_paths as PP  # noqa: E402
 
 # Heading mục cấp section: "## 3) Blog", "### 4. FB post", "## 5 - YouTube desc"...
 # Bắt: dấu #, số mục (1-9), dấu ngăn tùy ý, phần nhãn còn lại.
@@ -72,13 +72,17 @@ def _strip_markers(text):
 
 
 # Khóa kênh -> tên file output.
+# Tên file lấy từ post_paths.LAYOUT — một nguồn sự thật. Đường dẫn có thư mục con
+# (vd "facebook/post.txt") nên write_outputs phải tạo thư mục cha.
 _OUT_FILES = {
-    "blog": "blog.md",
-    "fb_post": "fb_post.txt",
-    "fb_comment": "fb_comment.txt",
-    "youtube_desc": "youtube_desc.txt",
-    "fb_desc": "fb_desc.txt",
+    "blog": PP.LAYOUT["blog"],
+    "fb_post": PP.LAYOUT["fb_post"],
+    "fb_comment": PP.LAYOUT["fb_comment"],
+    "youtube_desc": PP.LAYOUT["yt_desc"],
 }
+# reel CHỈ sinh khi bài có short.mp4 — bài thường không dùng tới, sinh ra là rác và còn
+# chứa link blog (trái luật "thân bài Facebook 0 URL").
+_OUT_REEL = {"fb_desc": PP.LAYOUT["fb_reel"]}
 
 
 def _read(path):
@@ -154,11 +158,14 @@ def split_content(md_text):
     return out
 
 
-def write_outputs(parts, out_dir):
+def write_outputs(parts, out_dir, with_reel=False):
     """Ghi 4 file (chỉ ghi file có nội dung). Trả về dict key->abs_path đã ghi."""
     os.makedirs(out_dir, exist_ok=True)
     written = {}
-    for key, fname in _OUT_FILES.items():
+    bang = dict(_OUT_FILES)
+    if with_reel:
+        bang.update(_OUT_REEL)
+    for key, fname in bang.items():
         text = _strip_markers(parts.get(key, ""))
         # Bỏ dấu ngắt "---" mà content.md dùng để tách khối. Nó là ký hiệu CỦA FILE NGUỒN,
         # không thuộc về bản giao cho kênh — để sót thì nó lên thẳng phần mô tả YouTube và
@@ -167,6 +174,7 @@ def write_outputs(parts, out_dir):
         if not text or not text.strip():
             continue
         path = os.path.join(out_dir, fname)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         # blog.md: chuẩn hoá xuống dòng cuối; .txt: 1 newline cuối.
         with open(path, "w", encoding="utf-8", newline="\n") as f:
             f.write(text.rstrip("\n") + "\n")
@@ -180,6 +188,8 @@ def main(argv=None):
     ap.add_argument("--content-md", required=True, help="instance content.md (mục 1-7)")
     ap.add_argument("--meta", required=True, help="meta.json của bài (giữ tương thích CLI)")
     ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--with-reel", action="store_true",
+                    help="sinh thêm facebook/reel.txt — CHỈ dùng khi bài có short.mp4")
     args = ap.parse_args(argv)
 
     md_text = _read(args.content_md)
@@ -190,11 +200,11 @@ def main(argv=None):
     parts = split_content(md_text)
     if "blog" not in parts:
         raise ValueError(
-            "Không tách được mục Blog (3) từ content.md — kiểm tra heading "
-            "'## 3) Blog ...' trong instance CONTENT_TEMPLATE.")
-    written = write_outputs(parts, args.out_dir)
+            "Không tách được khối blog từ content.md — cần neo '## post:blog_article' "
+            "(hoặc heading đánh số '## 3) Blog' theo kiểu cũ).")
+    written = write_outputs(parts, args.out_dir, args.with_reel)
 
-    missing = [k for k in _OUT_FILES if k not in written]
+    missing = [k for k in _OUT_FILES if k not in written]   # reel không tính là thiếu
     print(json.dumps({"out_dir": os.path.abspath(args.out_dir),
                       "written": written,
                       "missing_sections": missing},

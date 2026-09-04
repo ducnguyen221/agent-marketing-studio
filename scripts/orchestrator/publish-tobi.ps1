@@ -1,4 +1,15 @@
-﻿# publish-tobi.ps1 — Publish 1 bài tobi_post theo ĐÚNG thứ tự: Atlas → YouTube → Facebook → Result.
+﻿# ============================================================================
+# CANH BAO 04/09/2026 — SCRIPT NAY CHUA CHAY DUOC TRONG REPO agent-marketing-studio.
+# Do that, ba diem chan:
+#   1. $root = $PSScriptRoot tro vao scripts\orchestrator\, nhung moi .py nam o
+#      scripts\pipeline\ — moi loi goi Join-Path $root '<x>.py' deu tro hut.
+#   2. Goi tobi_excel.py — repo chi co campaign_excel.py (mo hinh 5 sheet chua port).
+#   3. $ASSET_ROOT tro vao kho cong ty, trong khi STATION la ~/.marketing/instances/.
+# Bai AST-001 da dang bang cach chay TUNG BUOC bang tay, khong qua script nay.
+# Ngoai ra script chua biet bo cuc thu muc moi (youtube/ atlas/ facebook/) — xem
+# scripts/lib/post_paths.py. SUA HET BA DIEM TREN roi hay chay.
+# ============================================================================
+# publish-tobi.ps1 — Publish 1 bài tobi_post theo ĐÚNG thứ tự: Atlas → YouTube → Facebook → Result.
 #
 # Đọc meta.json + Excel Post row. Idempotent qua sidecar .sidecars\<post_id>.json
 # (giống publish-hot-news.ps1): bước nào đã xong (blog_committed/video_id/fb_post_id) thì SKIP.

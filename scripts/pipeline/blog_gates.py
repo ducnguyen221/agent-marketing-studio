@@ -31,6 +31,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fb_format as FF  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import post_paths as PP  # noqa: E402
 
 CHAN, CANH_BAO = "chan", "canh_bao"
 
@@ -61,8 +63,8 @@ TOOL_NOI_BO = ["omnivoice", "hyperframes", "claude code", "codex", "antigravity"
 TEN_TO_CHUC = re.compile(r"KPIM|COMPA|Tobi", re.I)
 
 # Tên file bản công khai — thứ thật sự đến tay người đọc.
-FILE_CONG_KHAI = ("blog.md", "fb_post.txt", "fb_comment.txt",
-                  "youtube_desc.txt", "fb_desc.txt", "atlas.html")
+# Tên file lấy từ post_paths.LAYOUT — một nguồn sự thật cho cả pipeline.
+FILE_CONG_KHAI = tuple(PP.LAYOUT[k] for k in PP.FILE_CONG_KHAI)
 
 
 def _doc(p: Path) -> str | None:
@@ -123,12 +125,12 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     s = SoKetQua()
 
     # ---------------------------------------------------------------- blog.md
-    blog = _doc(d / "blog.md")
+    blog = _doc(PP.p(d, "blog"))
     if blog is None:
         for ma, ten in [("G01", "Độ dài blog"), ("G02", "Số H2"), ("G03", "Bảng/list"),
                         ("G04", "Callout"), ("G05", "Nguồn ngoài"), ("G06", "Khối chính kiến"),
                         ("G07", "Fact vs opinion"), ("G08", "[KIỂM CHỨNG] còn mở")]:
-            s.thieu(ma, ten, "không có blog.md")
+            s.thieu(ma, ten, f"không có {PP.LAYOUT['blog']}")
     else:
         n = _tu(blog)
         s.do("G01", "Độ dài blog (từ)", n, "2500-4000", 2500 <= n <= 4000)
@@ -142,7 +144,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         # Không chỉ ĐẾM URL: đối chiếu với research.md. Đếm suông thì 6 đường dẫn bịa ra
         # cũng cho G05 xanh — mà cổng này tồn tại đúng để chặn việc bịa nguồn.
         # Không có research.md -> chỉ đếm được, và nói rõ là chỉ đếm được.
-        nc = _doc(d / "research.md")
+        nc = _doc(PP.p(d, "research"))
         if nc is None:
             s.do("G05", "Nguồn ngoài (chỉ đếm — không có research.md)", len(ngoai),
                  "3-7", 3 <= len(ngoai) <= 7,
@@ -179,13 +181,13 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         s.do("G08", "[KIỂM CHỨNG] còn mở", kc, "= 0", kc == 0)
 
     # ---------------------------------------------------------------- facebook
-    fb = _doc(d / "fb_post.txt")
-    cmt = _doc(d / "fb_comment.txt") or ""
+    fb = _doc(PP.p(d, "fb_post"))
+    cmt = _doc(PP.p(d, "fb_comment")) or ""
     if fb is None:
         for ma, ten in [("G09", "URL trong thân post"), ("G10", "Độ dài post"),
                         ("G11", "Ký tự Unicode bold"), ("G12", "Markdown literal"),
                         ("G13", "Hashtag"), ("G14", "Comment đầu")]:
-            s.thieu(ma, ten, "không có fb_post.txt")
+            s.thieu(ma, ten, f"không có {PP.LAYOUT['fb_post']}")
     else:
         m = FF.check(fb, cmt)
         tran = [u for u in _URL_TRAN.findall(fb.split(FF.MARKER_COMMENT)[0])]
@@ -228,24 +230,24 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
                       if url_cmt and not dung_dich else ""))
 
     # ---------------------------------------------------------------- audio / video
-    pod = _doc(d / "podcast.txt")
+    pod = _doc(PP.p(d, "podcast"))
     if pod is None:
-        s.thieu("G15", "Độ dài podcast", "không có podcast.txt")
+        s.thieu("G15", "Độ dài podcast", f"không có {PP.LAYOUT['podcast']}")
     else:
         n = _tu(pod)
         s.do("G15", "Độ dài podcast (từ)", n, "750-1000", 750 <= n <= 1000, CANH_BAO,
              ghi_chu=f"~{n / 3.8:.0f}s khi đọc ở 3,8 từ/giây (đo thật, xem baseline)")
 
-    da, dv = _thoi_luong(d / "audio.mp3"), _thoi_luong(d / "video.mp4")
+    da, dv = _thoi_luong(PP.p(d, "audio")), _thoi_luong(PP.p(d, "yt_video"))
     if da is None or dv is None:
         thieu_gi = ", ".join(x for x, v in (("audio.mp3", da), ("video.mp4", dv)) if v is None)
         s.thieu("G16", "Video khớp audio", f"thiếu {thieu_gi} hoặc không gọi được ffprobe")
     else:
         s.do("G16", "|video - audio| (giây)", round(abs(dv - da), 2), "<=1", abs(dv - da) <= 1.0)
 
-    sc = _doc(d / "scenes.json")
+    sc = _doc(PP.p(d, "scenes"))
     if sc is None:
-        s.thieu("G17", "Số scene", "không có scenes.json")
+        s.thieu("G17", "Số scene", f"không có {PP.LAYOUT['scenes']}")
     else:
         try:
             js = json.loads(sc)
@@ -270,18 +272,26 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
                         or sc_.get("kind") not in HOP_LE
                         or not (sc_.get("title") or sc_.get("lines")
                                 or sc_.get("src") or sc_.get("img_query"))]
-                s.do("G17", "Số scene (và hình dạng)",
-                     f"{len(js)} scene, {len(hong)} thiếu nội dung",
-                     f"= {can} ({loai}) và mọi scene có kind + nội dung",
-                     len(js) == can and not hong,
-                     ghi_chu=f"scene rỗng/sai kind ở vị trí {hong[:5]}" if hong else "")
+                # scene có "src" phải trỏ tới file CÓ THẬT. make_podcast_video phân giải
+                # tương đối theo thư mục scenes.json; dời ảnh sang youtube/ mà quên sửa
+                # src là cover rơi mất, video vẫn dựng ra và không ai báo.
+                mat_src = [i for i, sc_ in enumerate(js)
+                           if isinstance(sc_, dict) and sc_.get("src")
+                           and not (d / sc_["src"]).exists()]
+                s.do("G17", "Số scene (hình dạng + ảnh src có thật)",
+                     f"{len(js)} scene, {len(hong)} thiếu nội dung, {len(mat_src)} mất ảnh src",
+                     f"= {can} ({loai}), mọi scene có kind + nội dung, src tồn tại",
+                     len(js) == can and not hong and not mat_src,
+                     ghi_chu="; ".join(filter(None, [
+                         f"scene rỗng/sai kind ở vị trí {hong[:5]}" if hong else "",
+                         f"src không tồn tại ở vị trí {mat_src[:5]}" if mat_src else ""])))
         except json.JSONDecodeError as e:
             s.do("G17", "Số scene", f"JSON hỏng: {e}", "đọc được", False)
 
     # ---------------------------------------------------------------- trang web
-    html = _doc(d / "atlas.html")
+    html = _doc(PP.p(d, "atlas_html"))
     if html is None:
-        s.thieu("G18", "Thẻ Open Graph", "không có atlas.html")
+        s.thieu("G18", "Thẻ Open Graph", f"không có {PP.LAYOUT['atlas_html']}")
     else:
         # Đếm thẻ KHÁC NHAU. Đếm tổng thì 6 lần og:title cũng ra 6 — mà bài vẫn không có
         # ảnh preview, tức mất đúng thứ cả cổng này sinh ra để bảo vệ.
@@ -298,10 +308,9 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     # không có prompt: sidecar sinh ra để dựng lại được ảnh, rỗng thì dựng lại bằng gì.
     # infographic.png là tên chính thức từ 04/09: một ảnh vừa đăng Facebook vừa đặt đầu bài
     # blog, thay cho fb_image.png cũ (một nền + ba dòng chữ). Vẫn nhận tên cũ cho bài cũ.
-    f_anh = d / "infographic.png"
-    f_prompt = d / "infographic.prompt.txt"
-    if not f_anh.exists() and (d / "fb_image.png").exists():
-        f_anh, f_prompt = d / "fb_image.png", d / "fb_image.prompt.txt"
+    # KHÔNG giữ tương thích tên cũ (fb_image.png): "nới một lần là nới mãi" — cùng lý do
+    # repo chọn --cho-phep thay vì nới danh sách needle của G21.
+    f_anh, f_prompt = PP.p(d, "fb_image"), PP.p(d, "fb_prompt")
     kich_thuoc, prompt_len = None, 0
     if f_anh.exists():
         try:
@@ -324,9 +333,9 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
          ghi_chu="ảnh sinh bằng model KHÔNG tái lập - mất prompt là mất cách dựng lại")
 
     # ---------------------------------------------------------------- sổ continuity
-    cont = _doc(d / "continuity.json")
+    cont = _doc(PP.p(d, "publish"))
     if cont is None:
-        s.thieu("G20", "Bản ghi continuity", "không có continuity.json")
+        s.thieu("G20", "Bản ghi continuity", f"không có {PP.LAYOUT['publish']}")
     else:
         try:
             c = json.loads(cont)
@@ -420,7 +429,7 @@ def main(argv=None) -> int:
             return 2
         cho_phep[ten.strip()] = ly_do.strip()
     kq = chay(d, home, a.loai, cho_phep)
-    (d / "gates.json").write_text(json.dumps(kq, ensure_ascii=False, indent=2), encoding="utf-8")
+    PP.p(d, "gates").write_text(json.dumps(kq, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if a.json_only:
         sys.stdout.write(json.dumps(kq, ensure_ascii=False, indent=2) + "\n")

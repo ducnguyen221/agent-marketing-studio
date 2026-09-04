@@ -1,4 +1,15 @@
-﻿# run-tobi-post.ps1 — Orchestrator pipeline "tobi_post" (COMPA / "Học cùng Tobi").
+﻿# ============================================================================
+# CANH BAO 04/09/2026 — SCRIPT NAY CHUA CHAY DUOC TRONG REPO agent-marketing-studio.
+# Do that, ba diem chan:
+#   1. $root = $PSScriptRoot tro vao scripts\orchestrator\, nhung moi .py nam o
+#      scripts\pipeline\ — moi loi goi Join-Path $root '<x>.py' deu tro hut.
+#   2. Goi tobi_excel.py — repo chi co campaign_excel.py (mo hinh 5 sheet chua port).
+#   3. $ASSET_ROOT tro vao kho cong ty, trong khi STATION la ~/.marketing/instances/.
+# Bai AST-001 da dang bang cach chay TUNG BUOC bang tay, khong qua script nay.
+# Ngoai ra script chua biet bo cuc thu muc moi (youtube/ atlas/ facebook/) — xem
+# scripts/lib/post_paths.py. SUA HET BA DIEM TREN roi hay chay.
+# ============================================================================
+# run-tobi-post.ps1 — Orchestrator pipeline "tobi_post" (COMPA / "Học cùng Tobi").
 #
 # MÔ HÌNH MỚI (v3): mỗi campaign = 1 folder + 1 Excel riêng.
 # Resolve -Campaign -> folder CAMPAIGNS\<NN_Ten> + EXCEL = <folder>\<NN_Ten>.xlsx,

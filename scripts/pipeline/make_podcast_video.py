@@ -11,7 +11,8 @@ Style tham khảo ai-news/data-news. Font Inter.
 scenes.json item:
   infographic: {"kind":"concept|versus|list|closing","kick":"...","title":"...","lines":[...],"weight":1.0}
   ảnh thật:    {"kind":"image","kick":"...","caption":"...","img_query":"keyword en","weight":1.0}
-  cover ảnh:   {"kind":"image","src":"thumbnail.png","raw":true,"weight":1.0}
+  cover ảnh:   {"kind":"image","src":"youtube/thumbnail.png","raw":true,"weight":1.0}
+               (src phân giải TƯƠNG ĐỐI theo thư mục của scenes.json)
 
 CLI: python make_podcast_video.py --audio A\audio.mp3 --scenes scenes.json --meta meta.json
        --out A\video.mp4 [--size 1280x720] [--no-images]
@@ -320,7 +321,11 @@ def main(argv=None):
     W, H = (int(x) for x in a.size.lower().split("x"))
     with open(a.scenes, encoding="utf-8-sig") as f:
         scenes = json.load(f)
-    base_dir = os.path.dirname(os.path.abspath(a.audio))
+    # Đường tương đối trong scenes.json phân giải theo thư mục CỦA CHÍNH scenes.json,
+    # không theo thư mục audio. Trước bản vá này hai thứ tình cờ trùng nhau; từ khi
+    # audio dời sang atlas/ còn scenes.json ở gốc thì mọi "src" đều trỏ hụt — và ảnh
+    # cover rơi mất mà video vẫn dựng ra, không ai báo.
+    base_dir = os.path.dirname(os.path.abspath(a.scenes))
     out = build_video(a.audio, scenes, a.out, base_dir, W, H, use_images=not a.no_images)
     print(json.dumps({"out": out, "scenes": len(scenes)}, ensure_ascii=False))
     print(f"OK {out}")
