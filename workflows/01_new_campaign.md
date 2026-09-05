@@ -19,6 +19,11 @@ Chiến dịch sống **bên trong một kênh**. Chưa có kênh thì tạo tr�
 python scripts/pipeline/new_channel.py --id <ten-kenh> --label "<Tên kênh>" --path <ĐƯỜNG/DẪN>
 ```
 
+Kênh cần token để đăng bài — nối theo [`SECRETS.md`](../knowledge/toolchains/SECRETS.md):
+`channel.yml` chỉ khai **tên biến** (`secrets_env`), không bao giờ khai giá trị.
+Tài khoản đã có trong mục lục thì chép lại tên biến; tài khoản mới thì thêm một dòng vào
+mục lục trước, rồi mới khai.
+
 `--path` **không có giá trị mặc định**, và đó là chủ ý: chỗ lưu kênh là quyết định của người,
 không phải của máy. Kênh có thể nằm trên ổ khác, trong thư mục công ty, hay trong một kho
 đồng bộ riêng — `CHANNELS.md` giữ địa chỉ. Thiếu `--path` thì script thoát với **mã 3** và in

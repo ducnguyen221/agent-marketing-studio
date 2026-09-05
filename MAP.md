@@ -22,7 +22,8 @@
 
 | Tác Vụ Đặc Thù | Điểm Bắt Đầu | Tài Liệu Cần Đọc Tiếp |
 |---|---|---|
-| **Thêm kênh mạng xã hội mới** | `knowledge/toolchains/PLATFORM_SETUP.md` | `knowledge/data_model/DATA_MODEL.md` (enum `channels`) |
+| **Thêm kênh mạng xã hội mới** | `knowledge/toolchains/PLATFORM_SETUP.md` | `knowledge/toolchains/SECRETS.md` (nối token) · `knowledge/data_model/DATA_MODEL.md` (enum `channels`) |
+| **Nối token/mật khẩu cho kênh mới** | `knowledge/toolchains/SECRETS.md` | mục lục bí mật của trạm (`~/.secret/README.md`) |
 | **Thêm giọng văn thương hiệu mới** | `output_styles/README.md` | `output_styles/compa-class-blog.md` (file mẫu) |
 | **Sửa đổi trường dữ liệu** | `knowledge/data_model/DATA_MODEL.md` | `templates/campaign.md` · `scripts/pipeline/export_excel.py` (bộ cột bản xuất) |
 | **Dựng trạm nội dung mới** | `install.ps1` | `examples/README.md` (trạm mẫu đã điền) · `README.md` §3 |

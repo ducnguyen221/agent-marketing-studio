@@ -178,6 +178,8 @@ def main(argv=None) -> int:
     print(f"  kênh   : {dich}")
     print(f"  sổ kênh: {so}  ({len(ds)} kênh)")
     print(f"  tiếp   : new_campaign.py --channel {a.id} --id CMP-YYMM-slug --name \"…\" --prefix XXX")
+    print("  token  : channel.yml mới khai tên biến MẪU — nối vào tài khoản thật theo")
+    print("           knowledge/toolchains/SECRETS.md. Cấu hình giữ TÊN BIẾN, không giữ giá trị.")
     return 0
 
 

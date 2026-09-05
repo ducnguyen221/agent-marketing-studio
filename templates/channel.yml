@@ -5,6 +5,7 @@
 #
 # Nội dung thật (bài, ảnh, số liệu) sống ở đây, KHÔNG vào repo engine.
 # Chỉ ghi TÊN biến môi trường của secret, không bao giờ ghi giá trị.
+# Cách nối, và vì sao ba tầng (cấu hình → biến → file): knowledge/toolchains/SECRETS.md
 schema: channel/1
 id: ten-kenh
 label: "Tên kênh đọc được"
