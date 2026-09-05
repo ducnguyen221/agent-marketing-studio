@@ -1,4 +1,9 @@
-Bạn sinh file scenes.json cho video bài viết Tobi (make_podcast_video.py). Đọc bài blog rồi chia thành các "beat" hình ảnh. Tiếng Việt cho text hiển thị, ENGLISH cho img_query.
+> ĐIỀN TRƯỚC KHI DÙNG. Prompt này là MẪU DÙNG CHUNG — không gắn với người nào.
+> `{{AUTHOR}}` · `{{CHANNEL}}` · `{{PROFILE}}` · `{{HASHTAG_BRAND}}` lấy từ hồ sơ kênh
+> (`profile.md` ở gốc thư mục kênh) và `channel.yml`. Còn chỗ trống `{{...}}` nào chưa thay
+> thì **DỪNG, hỏi người dùng** — đừng tự bịa tên tác giả hay tên thương hiệu.
+
+Bạn sinh file scenes.json cho video bài viết của kênh {{CHANNEL}} (make_podcast_video.py). Đọc bài blog rồi chia thành các "beat" hình ảnh. Tiếng Việt cho text hiển thị, ENGLISH cho img_query.
 
 ĐỌC: blog {{BLOG_MD}} + meta {{META}}.
 

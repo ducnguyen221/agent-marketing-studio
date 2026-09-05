@@ -109,3 +109,38 @@ def test_fixtures_trung_tinh():
             for p, noi_dung in FILES
             if p.parts[len(ROOT.parts):][:1] == ("fixtures",) and ten.search(noi_dung)]
     assert not dinh, f"fixtures/ phải trung tính, còn tên tổ chức ở: {dinh}"
+
+
+def test_prompt_MAU_khong_khoa_vao_mot_nguoi():
+    """Repo public. Prompt mở đầu bằng tên thật thì ai clone về cũng viết bằng danh tính
+    của người khác — template hỏng, không phải secret rò rỉ.
+
+    Danh tính phải là chỗ trống lấy từ `profile.md` của kênh, đúng hợp đồng mà `new_post.py`
+    đã ghi. Tên ở đây dựng bằng mã ký tự để CHÍNH FILE TEST không chứa thứ nó đi săn —
+    một cổng tự miễn trừ mình là cổng vô dụng.
+    """
+    import unicodedata
+    cam = [unicodedata.normalize("NFC", x) for x in
+           ("Nguy" + chr(0x1EC5) + "n Quang " + chr(0x110) + chr(0x1EE9) + "c",
+            "COMPA Class", "T" + "obi", "KP" + "IM")]
+    thu_muc = ROOT / ".agents" / "prompts"
+    assert thu_muc.is_dir(), "không thấy .agents/prompts — đường dẫn đổi?"
+
+    dinh = []
+    for f in sorted(thu_muc.glob("*.txt")):
+        t = unicodedata.normalize("NFC", f.read_text(encoding="utf-8"))
+        for x in cam:
+            if x in t:
+                dinh.append(f"{f.name} còn {x!r}")
+    assert not dinh, ("prompt mẫu bị khoá vào một người/tổ chức:\n  " + "\n  ".join(dinh))
+
+
+def test_prompt_MAU_co_du_cho_trong_va_co_dan_cach_dien():
+    """Bỏ tên mà không để chỗ trống thì agent sẽ tự bịa một cái tên."""
+    thu_muc = ROOT / ".agents" / "prompts"
+    for f in sorted(thu_muc.glob("*.txt")):
+        t = f.read_text(encoding="utf-8")
+        if "{{AUTHOR}}" in t or "{{CHANNEL}}" in t:
+            assert "ĐIỀN TRƯỚC KHI DÙNG" in t, \
+                f"{f.name} có chỗ trống danh tính nhưng không dặn cách điền"
+            assert "profile.md" in t, f"{f.name} không chỉ ra nguồn của danh tính"

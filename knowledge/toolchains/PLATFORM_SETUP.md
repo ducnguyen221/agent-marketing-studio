@@ -23,7 +23,8 @@ Và dù có đủ token, agent vẫn **không đăng thật** khi `channel.yml` 
 2. Thêm sản phẩm **Facebook Login** và **Pages API**.
 3. Graph API Explorer → chọn App → **Get Page Access Token** → tick đủ 4 quyền trên.
 4. Đổi token ngắn hạn thành **token dài hạn** (60 ngày) rồi lấy **Page token vĩnh viễn**.
-5. Điền vào `.env`: `FB_PAGE_ID__<INSTANCE>` và `FB_PAGE_TOKEN__<INSTANCE>`.
+5. Lưu page_id + token vào MỘT file JSON, rồi trỏ `FB_CONFIG` trong `.env` tới đường dẫn đó
+   (tên biến do `channel.yml:secrets_env` của kênh khai — không có sơ đồ hậu tố bắt buộc).
 6. Kiểm: `GET /{page-id}?fields=name,id` — trả về tên Page là xong.
 
 ### Mã bài để đối soát
@@ -52,7 +53,8 @@ cá nhân thì chỉ còn đường xuất tay.
 1. Google Cloud Console → tạo project → bật **YouTube Data API v3** và **YouTube Analytics API**.
 2. Tạo **OAuth client ID** loại *Desktop app* → tải `client_secret.json`.
 3. Chạy luồng OAuth một lần, chọn đúng kênh, cấp **cả hai** scope ở trên.
-4. Lưu đường dẫn vào `.env`: `YT_CLIENT_SECRET__<INSTANCE>`, `YT_TOKEN_PATH__<INSTANCE>`.
+4. Lưu đường dẫn vào `.env`: `YT_CLIENT_SECRET`, `YT_TOKEN_PATH` (hoặc tên khác, miễn khớp
+   `channel.yml:secrets_env` của kênh đó).
 5. Kiểm: `channels.list(part="id,snippet", mine=True)` — trả đúng kênh của bạn là xong.
 
 ⚠️ **Đã có token cũ chỉ với scope `youtube`?** Thêm scope **không tự động** mở rộng token cũ —
