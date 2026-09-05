@@ -3,17 +3,11 @@
     "post_id": "GTX-001",
     "slug": "vi-sao-agent-can-cong-cua-nguoi",
     "title": "Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người",
-    "pillar": "ai-agent",
-    "published": "2026-09-07",
-    "links": {
-      "web": "https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html",
-      "youtube": "https://youtu.be/EXAMPLE0001"
-    },
-    "summary": "Cổng máy kiểm được hình thức; chọn đề tài và duyệt trước khi đăng phải là quyết định của người.",
-    "key_terms_explained": [
-      "cổng kiểm bằng số",
-      "trạng thái thiếu",
-      "hai cổng duyệt"
-    ]
+    "url": "https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html",
+    "youtube_url": "https://youtu.be/EXAMPLE0001",
+    "fb_permalink": "https://www.facebook.com/000000000000000/posts/111111111111111",
+    "fb_post_id": "000000000000000_111111111111111",
+    "fb_comment_id": "111111111111111_222222222222222",
+    "published_at": "2026-09-05T00:18:09+00:00"
   }
 ]

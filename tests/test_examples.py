@@ -57,11 +57,16 @@ def test_bai_da_dang_co_URL_that_trong_bang():
 
 def test_moi_URL_trong_vi_du_deu_la_ten_mien_VI_DU():
     """Ví dụ không được trỏ vào địa chỉ thật của ai — kể cả của chính mình."""
-    cho_phep = ("example.vn", "youtu.be/EXAMPLE", "facebook.com/000000000000000")
-    for f in list(VD.rglob("*.md")) + list(VD.rglob("*.json")) + list(VD.rglob("*.txt")):
+    from urllib.parse import urlparse
+    # So theo TÊN MIỀN. So chuỗi con thì `https://evil.com/?r=example.vn` lọt — một bộ lọc
+    # an ninh dùng `in` là bộ lọc mở.
+    mien_ok = {"example.vn", "www.example.vn", "youtu.be", "www.facebook.com",
+               "fonts.googleapis.com", "fonts.gstatic.com"}
+    for f in (list(VD.rglob("*.md")) + list(VD.rglob("*.json")) + list(VD.rglob("*.txt"))
+              + list(VD.rglob("*.yml")) + list(VD.rglob("*.html"))):
         for m in re.finditer(r"https?://[^\s\"'()<>]+", f.read_text(encoding="utf-8")):
-            u = m.group()
-            assert any(c in u for c in cho_phep), f"{f.name}: URL thật lọt vào ví dụ: {u}"
+            mien = urlparse(m.group()).netloc
+            assert mien in mien_ok,                 f"{f.relative_to(VD)}: URL ngoài danh sách ví dụ: {m.group()} (miền {mien})"
 
 
 def test_HTML_sinh_lai_KHONG_doi():
@@ -85,17 +90,23 @@ def test_file_dem_dang_khop_content_md(tmp_path):
     import gen_article as GA
     GA.write_outputs(GA.split_content((BAI / "content.md").read_text(encoding="utf-8")),
                      str(tmp_path))
-    for tuong_ung in (("blog.md", "atlas/blog.md"),
-                      ("youtube/description.txt", "youtube/description.txt"),
-                      ("facebook/post.txt", "facebook/post.txt")):
-        moi, cu = tmp_path / tuong_ung[0], BAI / tuong_ung[1]
-        if not moi.is_file():
-            continue
+    # Đường dẫn lấy từ chính LAYOUT — chép tay thì lệch, và cái `continue` cũ đã che đúng
+    # lỗi đó suốt: file so sánh không tồn tại nên test bỏ qua rồi báo xanh.
+    import post_paths as PP
+    for khoa in ("blog", "yt_desc", "fb_post", "fb_comment"):
+        ten = PP.LAYOUT[khoa]
+        moi, cu = tmp_path / ten, BAI / ten
+        assert moi.is_file(), f"gen_article không còn sinh ra {ten} — neo đã đổi?"
+        assert cu.is_file(), f"ví dụ thiếu {ten}"
         a, b = moi.read_text(encoding="utf-8"), cu.read_text(encoding="utf-8")
-        # comment.txt và description.txt đã được thay URL sau khi đăng — bỏ qua chỗ đó.
         if "{{" in a:
+            # File này có placeholder URL, và bản trong ví dụ đã được `register_publish set`
+            # thay bằng link thật. So phần NGOÀI placeholder — bỏ qua cả file là tự miễn:
+            # gen_article ngừng sinh file cũng vẫn xanh.
+            kh = re.compile(r"\{\{[A-Z_]+\}\}|https?://\S+")
+            assert kh.sub("§", a) == kh.sub("§", b),                 f"{ten} lệch content.md ở phần ngoài link"
             continue
-        assert a == b, f"{tuong_ung[1]} lệch content.md — chạy lại gen_article.py"
+        assert a == b, f"{ten} lệch content.md — chạy lại gen_article.py"
     blog = (BAI / "atlas" / "blog.md").read_text(encoding="utf-8")
     assert not blog.lstrip().startswith(">"), "hướng dẫn của mẫu lọt vào bản đăng"
 
@@ -136,3 +147,43 @@ def test_bai_CHUA_viet_van_giu_nguyen_mau():
     """Mặt kia của cùng một luật: GTX-003 phải còn nguyên khung, nếu không ví dụ mất ý."""
     t = (CAM / "GTX-003_vi-sao-bo-excel-lam-nguon" / "content.md").read_text(encoding="utf-8")
     assert "{{" in t, "bài ở trạng thái proposed phải còn là khung mẫu"
+
+
+def test_publish_json_vi_du_DU_KHOA_nhu_code_sinh():
+    """Ví dụ là tài liệu — người ta chép hình dạng của nó. Trước 05/09 hai file JSON của ví dụ
+    viết TAY nên lệch thứ `register_publish` sinh ra (`review.at` thay vì `approved_at`,
+    thiếu 6 khoá), và người chép theo tạo ra dữ liệu mà `export_excel` đọc không ra.
+    """
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import register_publish as RP
+
+    khung = RP._khung("X-001-web", "X-001", "web_blog", "blog_article", {})
+    that = json.loads((BAI / "publish.json").read_text(encoding="utf-8"))["posts"][0]
+    thieu = [k for k in khung if k not in that]
+    assert not thieu, f"publish.json của ví dụ thiếu khoá {thieu} so với _khung()"
+    assert "approved_at" in that["review"], "dấu vết Cổng 2 phải có approved_at"
+    assert that["review"].get("approved_by"), "phải ghi ai duyệt"
+
+
+def test_continuity_vi_du_dung_khoa_ma_B0_doc():
+    cont = json.loads((KENH / "continuity.json").read_text(encoding="utf-8"))
+    assert cont and isinstance(cont, list)
+    for k in ("post_id", "slug", "title", "url", "published_at"):
+        assert k in cont[0], f"continuity.json thiếu khoá {k} mà register_publish ghi"
+
+
+def test_Excel_vi_du_KHONG_bo_trong_cot_trang_thai():
+    """Excel là bản xuất chính thức. Ô trống ở đây nói 'chưa qua cổng kỹ thuật' — nói dối."""
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import export_excel as EX
+    import md_io as _M
+
+    _, dong = _M.read_table(_M.read_fm(CAM / "campaign.md")[1], "CONTENT")
+    hang = EX._dong_post(CAM, dong)
+    assert hang, "phải có dòng Post cho bài đã đăng"
+    for o in hang:
+        for c in ("quality_check", "agent_status", "post_status", "review_status",
+                  "publish_status", "publish_link", "updated_at"):
+            assert o[c], f"{o['post_id']}: cột {c} rỗng dù publish.json có dữ liệu"

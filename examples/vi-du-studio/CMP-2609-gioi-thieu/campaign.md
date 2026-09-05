@@ -153,7 +153,7 @@ Giá trị hợp lệ của `content_pillar` khai ở `channel.yml:pillars` — 
 <!-- CONTENT:BEGIN -->
 | content_id | content_name | pillar | angle | funnel | priority | status | g1 | g2 | schedule | published | folder | web | youtube | facebook |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| GTX-001 | Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người | ai-agent | opinion | awareness | medium | published | 2026-09-05 | 2026-09-07 | 2026-09-07 | 2026-09-07 | ./GTX-001_vi-sao-agent-can-cong-cua-nguoi/ | https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html | https://youtu.be/EXAMPLE0001 | https://www.facebook.com/000000000000000/posts/111111111111111 |
+| GTX-001 | Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người | ai-agent | opinion | awareness | medium | published | 2026-09-05 | 2026-09-05 | 2026-09-07 | 2026-09-05 | ./GTX-001_vi-sao-agent-can-cong-cua-nguoi/ | https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html | https://youtu.be/EXAMPLE0001 | https://www.facebook.com/000000000000000/posts/111111111111111 |
 | GTX-002 | Kiểm bài bằng số, không bằng cảm giác: 23 cổng làm gì | ai-agent | explainer | awareness | medium | approved | 2026-09-05 |  | 2026-09-14 |  | ./GTX-002_kiem-bang-so-khong-phai-bang-cam-giac/ |  |  |  |
 | GTX-003 | Chúng tôi bỏ Excel làm nguồn sự thật — và đây là cái đã sai trước đó | ai-agent | case_study | awareness | medium | proposed |  |  | 2026-09-21 |  | ./GTX-003_vi-sao-bo-excel-lam-nguon/ |  |  |  |
 <!-- CONTENT:END -->

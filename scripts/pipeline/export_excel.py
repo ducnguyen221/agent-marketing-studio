@@ -101,15 +101,28 @@ def _dong_post(cam_dir: Path, dong_md: list) -> list[dict]:
         for p in pj.get("posts", []):
             o = {k: "" for k in COT_POST}
             pub, rev = p.get("publish", {}), p.get("review", {})
+            # Ba lỗi đọc-nhầm-khoá đã sửa 05/09, đều làm ô im lặng rỗng hoặc sai nội dung:
+            #   · `publish_plan` nằm ở `publish.plan`, không phải ở gốc post;
+            #   · `updated_at` của review là `approved_at`, không phải `at`;
+            #   · `review_feedback` là `review.feedback` (góp ý), còn `review.note` là CÂU
+            #     DUYỆT nguyên văn — lấy nhầm thì cột góp ý in ra lời chấp thuận.
+            # Và năm cột trạng thái trước đây không được ánh xạ gì cả, nên mọi file .xlsx
+            # xuất ra đều trống ở đó dù publish.json ghi rõ passed/completed/published —
+            # người nhận Excel tưởng bài chưa qua cổng kỹ thuật.
             o.update({
                 "post_id": p.get("post_id", ""), "content_id": pj.get("post_id", ""),
                 "channel": p.get("channel", ""), "post_format": p.get("post_format", ""),
                 "post_role": p.get("post_role", ""), "post_content": p.get("post_content", ""),
+                "asset_ref": p.get("asset_ref", ""),
+                "quality_check": p.get("quality_check", ""),
+                "agent_status": p.get("agent_status", ""),
+                "post_status": p.get("post_status", ""),
                 "review_status": rev.get("status", ""),
-                "review_feedback": rev.get("note", ""),
+                "review_feedback": rev.get("feedback", ""),
                 "publish_status": pub.get("status", ""), "publish_link": pub.get("link", ""),
-                "publish_plan": p.get("publish_plan", ""),
-                "updated_at": pub.get("at", "") or rev.get("at", ""),
+                "publish_plan": pub.get("plan", ""),
+                "updated_at": p.get("updated_at", "") or pub.get("at", "")
+                              or rev.get("approved_at", ""),
             })
             # Khoá THẬT trong publish.json là `actual` và `target` — `register_publish
             # metrics` ghi vào đó. Đọc nhầm tên khoá thì mọi ô số liệu im lặng rỗng.

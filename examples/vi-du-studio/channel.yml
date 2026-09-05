@@ -21,7 +21,7 @@ autonomy: suggest
 home_domain: example.vn
 
 # Hồ sơ giọng, đường dẫn trong repo engine (không phải trong kênh)
-brand_voice: output_styles/tobi-ai.md
+brand_voice: output_styles/tobi-post.md
 
 # Giá trị hợp lệ của content_pillar CHO KÊNH NÀY. Mỗi kênh một bộ khác nhau —
 # đây là lý do bộ trụ cột không nên nằm cứng trong DATA_MODEL.

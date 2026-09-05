@@ -3,86 +3,147 @@
   "post_id": "GTX-001",
   "campaign_id": "CMP-2609-gioi-thieu",
   "channel_id": "vi-du-studio",
+  "slug": "vi-sao-agent-can-cong-cua-nguoi",
+  "title": "Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người",
   "posts": [
     {
-      "post_id": "GTX-001-yt",
-      "channel": "youtube",
-      "post_format": "youtube_video",
-      "post_content": "post:youtube_desc",
+      "post_id": "GTX-001-web",
+      "content_id": "GTX-001",
+      "channel": "web_blog",
+      "post_format": "blog_article",
+      "post_role": "",
+      "post_content": "post:blog_article",
+      "asset_ref": "",
+      "quality_check": "failed",
+      "agent_status": "blocked",
       "review": {
         "status": "approved",
+        "feedback": "",
         "approved_by": "Người phụ trách (ví dụ)",
-        "note": "Duyệt: mở bài đúng vấn đề, không hứa quá.",
-        "at": "2026-09-07T08:40:00"
+        "approved_at": "2026-09-05",
+        "note": "Duyệt: đủ nguồn, phần phản biện đứng được, thân bài Facebook không có link. [override-qa: Bài ví dụ cố tình ngắn và không có media; cổng độ dài đỏ là đúng, không phải lỗi bài.]"
       },
+      "post_status": "published",
       "publish": {
+        "plan": "",
+        "status": "published",
+        "link": "https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html",
+        "platform_id": "",
+        "comment_id": "",
+        "at": "2026-09-05T00:18:09+00:00",
+        "http": null
+      },
+      "target": {
+        "view": null,
+        "interaction": null
+      },
+      "actual": {
+        "view": 531,
+        "interaction": null,
+        "reaction": null,
+        "comment": null,
+        "share": null,
+        "click": null,
+        "reach": null,
+        "updated_at": "2026-09-05T00:18:09+00:00"
+      },
+      "updated_at": "2026-09-05T00:18:09+00:00"
+    },
+    {
+      "post_id": "GTX-001-yt",
+      "content_id": "GTX-001",
+      "channel": "youtube",
+      "post_format": "youtube_video",
+      "post_role": "",
+      "post_content": "post:youtube_desc",
+      "asset_ref": "",
+      "quality_check": "failed",
+      "agent_status": "blocked",
+      "review": {
+        "status": "approved",
+        "feedback": "",
+        "approved_by": "Người phụ trách (ví dụ)",
+        "approved_at": "2026-09-05",
+        "note": "Duyệt: đủ nguồn, phần phản biện đứng được, thân bài Facebook không có link. [override-qa: Bài ví dụ cố tình ngắn và không có media; cổng độ dài đỏ là đúng, không phải lỗi bài.]"
+      },
+      "post_status": "published",
+      "publish": {
+        "plan": "",
         "status": "published",
         "link": "https://youtu.be/EXAMPLE0001",
-        "platform_id": "EXAMPLE0001",
-        "at": "2026-09-07T09:00:00"
+        "platform_id": "",
+        "comment_id": "",
+        "at": "2026-09-05T00:18:09+00:00",
+        "http": null
+      },
+      "target": {
+        "view": 200,
+        "interaction": null
       },
       "actual": {
         "view": 214,
         "interaction": 19,
-        "updated_at": "2026-09-10"
+        "reaction": null,
+        "comment": null,
+        "share": null,
+        "click": null,
+        "reach": null,
+        "updated_at": "2026-09-05T00:18:09+00:00"
       },
-      "target": {
-        "view": 400
-      }
-    },
-    {
-      "post_id": "GTX-001-web",
-      "channel": "web_blog",
-      "post_format": "blog_article",
-      "post_content": "post:blog_article",
-      "review": {
-        "status": "approved",
-        "approved_by": "Người phụ trách (ví dụ)",
-        "note": "Duyệt: đủ nguồn, phần phản biện đứng được.",
-        "at": "2026-09-07T08:40:00"
-      },
-      "publish": {
-        "status": "published",
-        "link": "https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html",
-        "http": 200,
-        "at": "2026-09-07T09:05:00"
-      },
-      "actual": {
-        "view": 531,
-        "updated_at": "2026-09-10"
-      },
-      "target": {
-        "view": 400
-      }
+      "updated_at": "2026-09-05T00:18:09+00:00"
     },
     {
       "post_id": "GTX-001-fb",
+      "content_id": "GTX-001",
       "channel": "facebook",
       "post_format": "facebook_post",
+      "post_role": "",
       "post_content": "post:facebook_post",
+      "asset_ref": "",
+      "quality_check": "failed",
+      "agent_status": "blocked",
       "review": {
         "status": "approved",
+        "feedback": "",
         "approved_by": "Người phụ trách (ví dụ)",
-        "note": "Duyệt: thân bài không có link, comment dẫn về bài dài.",
-        "at": "2026-09-07T08:40:00"
+        "approved_at": "2026-09-05",
+        "note": "Duyệt: đủ nguồn, phần phản biện đứng được, thân bài Facebook không có link. [override-qa: Bài ví dụ cố tình ngắn và không có media; cổng độ dài đỏ là đúng, không phải lỗi bài.]"
       },
+      "post_status": "published",
       "publish": {
+        "plan": "",
         "status": "published",
         "link": "https://www.facebook.com/000000000000000/posts/111111111111111",
         "platform_id": "000000000000000_111111111111111",
         "comment_id": "111111111111111_222222222222222",
-        "at": "2026-09-07T09:10:00"
+        "at": "2026-09-05T00:18:09+00:00",
+        "http": null
+      },
+      "target": {
+        "view": 40,
+        "interaction": null
       },
       "actual": {
-        "reach": 1840,
+        "view": null,
+        "interaction": null,
         "reaction": 37,
         "comment": 6,
         "share": 4,
-        "updated_at": "2026-09-10"
+        "click": null,
+        "reach": 1840,
+        "updated_at": "2026-09-05T00:18:09+00:00"
       },
-      "target": {
-        "interaction": 30
-      }
+      "updated_at": "2026-09-05T00:18:09+00:00"
     }
-  ]
+  ],
+  "summary": "",
+  "key_terms_explained": [],
+  "claims_cited": [],
+  "published_at": "2026-09-05T00:18:09+00:00",
+  "youtube_url": "https://youtu.be/EXAMPLE0001",
+  "blog_url": "https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html",
+  "url": "https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html",
+  "fb_permalink": "https://www.facebook.com/000000000000000/posts/111111111111111",
+  "fb_post_id": "000000000000000_111111111111111",
+  "fb_comment_id": "111111111111111_222222222222222"
 }

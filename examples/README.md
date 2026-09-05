@@ -60,6 +60,12 @@ mọi thứ xanh.
 Đáng chú ý là cột thứ tư: **`thiếu`**. Cổng không chạy được — thiếu file, thiếu tham số —
 không bao giờ được cộng vào `xanh`. Không kiểm được là *chưa biết*, không phải *đã qua*.
 
+Và đây cũng là chỗ ví dụ dạy nốt **đường miễn trừ**: `publish.json` của GTX-001 có
+`quality_check: failed`, nhưng vẫn qua Cổng 2 vì người duyệt dùng
+`approve --override-qa "<lý do>"` — lý do được chép thẳng vào `review.note`. Chặn cứng
+một cổng đỏ nghe có vẻ an toàn hơn, nhưng thực tế nó khiến người ta đi sửa `gates.json`
+cho xanh. Một lý do được ghi lại tốt hơn nhiều.
+
 ```bash
 python scripts/pipeline/blog_gates.py \
   examples/vi-du-studio/CMP-2609-gioi-thieu/GTX-001_vi-sao-agent-can-cong-cua-nguoi \
@@ -68,7 +74,9 @@ python scripts/pipeline/blog_gates.py \
 
 ## Chạy thử trên chính thư mục này
 
-Mọi lệnh dưới đây an toàn — chúng chỉ đọc và sinh lại file trong `examples/`.
+Mọi lệnh dưới đây chỉ đọc và sinh lại file trong `examples/` — không đụng gì ngoài đó.
+Sinh lại thì `git diff` sẽ thấy đổi (bản HTML mang giờ sinh, `.xlsx` là nhị phân);
+`git checkout examples/` trả lại như cũ.
 
 ```bash
 # kiểm liên kết hai chiều ở mọi cạnh (phải ra 0 đỏ)

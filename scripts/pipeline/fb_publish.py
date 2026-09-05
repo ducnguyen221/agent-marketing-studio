@@ -158,8 +158,12 @@ def _cong_2(bai: Path, message_file: str, comment_file: str) -> tuple[bool, str]
                            f"cần 'approved' — Cổng 2 là của NGƯỜI")
         if not (rv.get("approved_by") or "").strip():
             return False, f"{p.get('post_id')}: duyệt mà không ghi approved_by"
-        if p.get("quality_check") == "failed":
-            return False, f"{p.get('post_id')}: quality_check=failed"
+        if p.get("quality_check") == "failed" and "[override-qa:" not in (rv.get("note") or ""):
+            # Cổng kỹ thuật đỏ vẫn đăng được, nhưng CHỈ qua đường miễn trừ có ghi lý do:
+            # `approve --override-qa "…"` chép lý do vào review.note. Chặn cứng ở đây sẽ
+            # khiến người ta sửa gates.json cho xanh — tệ hơn nhiều so với một lý do được ghi.
+            return False, (f"{p.get('post_id')}: quality_check=failed và không có miễn trừ. "
+                           f"Muốn đăng vẫn được: approve --override-qa \"<lý do>\"")
     ai = (fb[0].get("review") or {}).get("approved_by")
     return True, f"Cổng 2 OK — {len(fb)} post facebook, duyệt bởi {ai}"
 
