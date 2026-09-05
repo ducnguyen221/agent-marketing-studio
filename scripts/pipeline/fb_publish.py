@@ -77,7 +77,7 @@ def dang_comment(cfg: dict, object_id: str, message: str) -> str:
     return r.json().get("id", "")
 
 
-def _muc_tu_tri(duong_bai: str | None) -> tuple[str, str]:
+def _muc_tu_tri(duong_bai: str | None, station: str | None = None) -> tuple[str, str]:
     """Đọc `autonomy` từ `channel.yml` của kênh chứa bài. Trả (mức, nguồn).
 
     Tài liệu và trang công khai đều hứa: *"script từ chối chạy thật trừ khi kênh đặt
@@ -90,16 +90,34 @@ def _muc_tu_tri(duong_bai: str | None) -> tuple[str, str]:
     if not duong_bai:
         return "?", "không biết bài thuộc kênh nào (thiếu --bai)"
     d = Path(duong_bai).resolve()
+
+    # Kênh phải CÓ TRONG SỔ. Trước bản vá này hàm lấy `channel.yml` đầu tiên gặp khi đi ngược
+    # cây — nghĩa là một file `channel.yml` với `autonomy: full` đặt lạc vào thư mục bài là
+    # mở được cổng. Cổng này tồn tại để chặn agent, nên nó không được tin một file mà agent
+    # tạo ra được: sổ kênh mới là thứ người giữ.
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+        import studio_paths as SP
+        dang_ky = [c["dir"].resolve() for c in SP.channels(station) if c.get("dir")]
+    except Exception as e:                  # noqa: BLE001
+        return "?", f"không đọc được CHANNELS.md: {e}"
+    if not dang_ky:
+        return "?", "CHANNELS.md rỗng hoặc không có — chưa kênh nào được đăng ký"
+
     for cha in [d] + list(d.parents):
+        if cha not in dang_ky:
+            continue
         f = cha / "channel.yml"
-        if f.is_file():
-            try:
-                import yaml
-                muc = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("autonomy")
-                return (muc or "?"), str(f)
-            except Exception as e:          # noqa: BLE001
-                return "?", f"{f} đọc không được: {e}"
-    return "?", f"không thấy channel.yml ở bất kỳ thư mục cha nào của {d}"
+        if not f.is_file():
+            return "?", f"{cha} có trong CHANNELS.md nhưng thiếu channel.yml"
+        try:
+            import yaml
+            muc = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("autonomy")
+            return (muc or "?"), str(f)
+        except Exception as e:              # noqa: BLE001
+            return "?", f"{f} đọc không được: {e}"
+    return "?", (f"{d} không nằm trong kênh nào của CHANNELS.md "
+                 f"({len(dang_ky)} kênh đã đăng ký)")
 
 
 def _cong_2(bai: Path, message_file: str, comment_file: str) -> tuple[bool, str]:
@@ -154,6 +172,8 @@ def main(argv=None) -> int:
     ap.add_argument("--comment-file", required=True, help="comment đầu — PHẢI có ít nhất 1 URL")
     ap.add_argument("--dry-run", action="store_true", help="kiểm hết nhưng không gọi Graph")
     ap.add_argument("--bai", help="thư mục bài — nguồn của cổng tự trị VÀ cổng 2. Bắt buộc khi đăng thật.")
+    ap.add_argument("--station", default=None,
+                    help="trạm chứa CHANNELS.md (mặc định: như studio_paths)")
     a = ap.parse_args(argv)
 
     for p in (a.config, a.message_file, a.image, a.comment_file):
@@ -205,7 +225,7 @@ def main(argv=None) -> int:
     print(f"  cổng 2   : {vi_sao}")
 
     # --- CỔNG TỰ TRỊ: chỉ `full` mới được đăng thật ------------------------------
-    muc, nguon = _muc_tu_tri(a.bai)
+    muc, nguon = _muc_tu_tri(a.bai, a.station)
     if muc != "full":
         sys.stderr.write(chr(10).join([
             "",

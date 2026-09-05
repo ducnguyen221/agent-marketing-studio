@@ -241,7 +241,16 @@ def main(argv=None) -> int:
                 platforms = [x.get("channel") for x in (cy.get("platforms") or [])
                              if isinstance(x, dict)]
                 break
-    except Exception:      # noqa: BLE001
+    except Exception as e:      # noqa: BLE001
+        # KHÔNG fail-open. Trước bản vá này đọc lỗi thì lùi về so-với-mẫu, nên một pillar tuỳ ý
+        # lọt qua và `check_tree` chỉ bắt SAU khi bài đã tạo. Cổng đã có đường vòng tường minh
+        # (`--bo-qua-cong`) nên không cần cửa sau im lặng.
+        if not a.bo_qua_cong:
+            sys.stderr.write(chr(10).join([
+                f"đọc channel.yml của kênh không được: {e}",
+                "Cổng trụ nội dung cần file đó. Sửa nó, hoặc --bo-qua-cong nếu biết mình làm gì.",
+                ""]))
+            return 2
         pillars = platforms = None
 
     thieu = _campaign_da_du(fm_cam, pillars, platforms)
@@ -280,6 +289,18 @@ def main(argv=None) -> int:
     if dich.exists():
         sys.stderr.write(f"đã có {dich} — dừng, không ghi đè\n")
         return 2
+    # Kiểm bảng NHẬN ĐƯỢC dòng trước khi tạo thư mục. Trước bản vá này thứ tự ngược lại: tạo
+    # thư mục + 3 file rồi mới `upsert_row`; bảng thiếu cột (campaign.md cũ, hoặc sửa tay) là
+    # ném lỗi và để lại một thư mục mồ côi, chạy lại thì bị chặn "đã có" và phải xoá bằng tay.
+    cot_co, _ = md_io.read_table(body_cam, "CONTENT")
+    thieu_cot = [c for c in COT if cot_co and c not in cot_co]
+    if thieu_cot:
+        sys.stderr.write(
+            f"bảng Content của {cam_dir.name} thiếu cột {thieu_cot} — chưa tạo gì cả.\n"
+            f"Thêm cột vào bảng (giữa marker CONTENT) rồi chạy lại; mẫu đủ cột ở "
+            f"templates/campaign.md.\n")
+        return 2
+
     if a.dry_run:
         print(f"  [dry-run] sẽ tạo {dich} và thêm dòng vào {cam_dir / 'campaign.md'}")
         return 0

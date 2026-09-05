@@ -24,6 +24,11 @@ def bai(tmp_path):
     K = tmp_path / "kenh"
     B = K / "CMP-2609-x" / "AST-001_a" / "facebook"
     B.mkdir(parents=True)
+    # Sổ kênh: cổng tự trị chỉ tin kênh CÓ TRONG SỔ, không tin channel.yml gặp đầu tiên.
+    sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+    import md_io as _M
+    _M.write_fm(tmp_path / "CHANNELS.md", {"schema": "channels/1", "channels": [
+        {"id": "k", "label": "K", "path": str(K), "status": "active"}]}, "# Sổ\n")
     (K / "channel.yml").write_text("schema: channel/1\nid: k\nautonomy: suggest\n",
                                    encoding="utf-8")
     (B / "post.txt").write_text("Thân bài không có URL nào cả.\n", encoding="utf-8")
@@ -44,7 +49,8 @@ def _chay(tmp, B, bai_dir, them=()):
     return subprocess.run(
         [PY, str(SCRIPT), "--config", str(tmp / "cfg.json"),
          "--message-file", str(B / "post.txt"), "--image", str(B / "anh.png"),
-         "--comment-file", str(B / "comment.txt"), "--bai", str(bai_dir), *them],
+         "--comment-file", str(B / "comment.txt"), "--bai", str(bai_dir),
+         "--station", str(tmp), *them],
         capture_output=True, text=True, encoding="utf-8")
 
 
@@ -61,7 +67,7 @@ def test_KHONG_tim_thay_channel_yml_thi_coi_nhu_CHUA_CHO_PHEP(bai):
     tmp, K, B = bai
     (K / "channel.yml").unlink()
     r = _chay(tmp, B, B.parent)
-    assert r.returncode == 4 and "không thấy channel.yml" in r.stderr
+    assert r.returncode == 4 and "thiếu channel.yml" in r.stderr
 
 
 def test_thieu_bai_cung_la_CHUA_CHO_PHEP(bai):
@@ -69,7 +75,7 @@ def test_thieu_bai_cung_la_CHUA_CHO_PHEP(bai):
     r = subprocess.run(
         [PY, str(SCRIPT), "--config", str(tmp / "cfg.json"),
          "--message-file", str(B / "post.txt"), "--image", str(B / "anh.png"),
-         "--comment-file", str(B / "comment.txt")],
+         "--comment-file", str(B / "comment.txt"), "--station", str(tmp)],
         capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == 4
     assert "Thiếu --bai" in r.stderr and "Cổng 2" in r.stderr
@@ -140,3 +146,29 @@ def test_qua_ca_hai_cong_thi_di_tiep(bai):
     r = _chay(tmp, B, B.parent)
     assert r.returncode != 4, f"đủ cả hai cổng mà vẫn bị chặn:\n{r.stderr}"
     assert "Cổng 2 OK" in r.stdout
+
+
+def test_channel_yml_LAC_CHO_khong_mo_duoc_cong(bai, tmp_path):
+    """Codex 05/09: cổng đi ngược cây lấy `channel.yml` đầu tiên — một file lạc chỗ với
+    `autonomy: full` là đăng thật được. Cổng chặn agent thì không được tin file agent tạo."""
+    tmp, K, B = bai
+    (B.parent / "channel.yml").write_text("schema: channel/1\nid: gia\nautonomy: full\n",
+                                          encoding="utf-8")
+    r = _chay(tmp, B, B.parent)
+    assert r.returncode == 4
+    assert "'suggest'" in r.stderr,         "phải đọc channel.yml của kênh TRONG SỔ, không phải file lạc chỗ gần hơn"
+
+
+def test_bai_ngoai_moi_kenh_dang_ky_thi_TU_CHOI(bai, tmp_path):
+    tmp, K, B = bai
+    ngoai = tmp_path / "ngoai" / "fb"
+    ngoai.mkdir(parents=True)
+    for f in ("post.txt", "comment.txt", "anh.png"):
+        (ngoai / f).write_bytes((B / f).read_bytes())
+    (ngoai.parent / "publish.json").write_bytes((B.parent / "publish.json").read_bytes())
+    r = subprocess.run(
+        [PY, str(SCRIPT), "--config", str(tmp / "cfg.json"),
+         "--message-file", str(ngoai / "post.txt"), "--image", str(ngoai / "anh.png"),
+         "--comment-file", str(ngoai / "comment.txt"), "--bai", str(ngoai.parent),
+         "--station", str(tmp)], capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 4 and "không nằm trong kênh nào" in r.stderr

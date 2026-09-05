@@ -86,6 +86,21 @@ def main(argv=None) -> int:
         sys.stderr.write(f"đã có kênh ở {dich} — dừng, không ghi đè\n")
         return 2
 
+    # Mã kênh đã có trong SỔ = kênh đã tồn tại, dù ở đường khác. Trước bản vá này script chỉ
+    # kiểm ĐÍCH MỚI, rồi lặng lẽ thay dòng cũ trong CHANNELS.md bằng đường mới — kênh thật với
+    # mọi chiến dịch biến mất khỏi index.html, check_tree và Excel mà không dòng nào báo, vì
+    # mọi script tìm kênh QUA SỔ chứ không dò thư mục. Đổi chỗ kênh = sửa `path` trong sổ.
+    so_cu = station / "CHANNELS.md"
+    if so_cu.is_file():
+        fm_cu, _ = md_io.read_fm(so_cu)
+        trung = [c for c in (fm_cu.get("channels") or []) if c.get("id") == a.id]
+        if trung:
+            sys.stderr.write(
+                f"mã kênh {a.id!r} đã có trong {so_cu}, đang trỏ {trung[0].get('path')!r}.\n"
+                f"Tạo lại sẽ XOÁ đăng ký cũ — kênh đó biến mất khỏi mọi công cụ mà không báo.\n"
+                f"Đổi chỗ kênh thì sửa `path` trong CHANNELS.md; kênh khác thì đổi --id.\n")
+            return 2
+
     if a.dry_run:
         print(f"  [dry-run] sẽ tạo {dich} và thêm dòng vào {station / 'CHANNELS.md'}")
         return 0
