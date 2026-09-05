@@ -161,3 +161,47 @@ def test_DATA_MODEL_dinh_nghia_DU_moi_cot_dang_chay():
 
     for k in new_post.BAT_BUOC:
         assert f"`{k}`" in doc, f"trường bắt buộc {k} không có trong DATA_MODEL"
+
+
+def test_tai_lieu_KHONG_khai_trang_thai_ma_code_khong_sinh():
+    """Đo 05/09: tài liệu khai 6 giá trị `agent_status` và 12 `post_status`; code chỉ sinh
+    3 và 3, và **không lệnh nào** đặt được phần còn lại. Agent làm đúng theo tài liệu sẽ ghi
+    một giá trị không ai định nghĩa vào sổ, rồi nó in thẳng ra Excel.
+    """
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "lib"))
+    import post_paths as PP
+
+    # Giá trị đã bị bỏ — không được xuất hiện lại trong tài liệu như thể dùng được.
+    da_bo = {"not_started", "generating", "ai_qa_passed", "ai_qa_failed", "ai_qa",
+             "human_review", "revision", "measuring", "needs_review", "publish_failed",
+             "cancelled"}
+    hop_le = set().union(*PP.GIA_TRI_HOP_LE.values())
+    assert not (da_bo & hop_le), "giá trị vừa nằm trong danh sách bỏ vừa hợp lệ — mâu thuẫn"
+
+    sai = []
+    for f in list(ROOT.glob("workflows/*.md")) + list(ROOT.glob(".agents/**/*.md")) \
+            + list(ROOT.glob("knowledge/**/*.md")) + [ROOT / "AGENTS.md"]:
+        t = f.read_text(encoding="utf-8")
+        for g in da_bo:
+            if g in t:
+                sai.append(f"{f.relative_to(ROOT)} còn nhắc {g!r}")
+    assert not sai, ("tài liệu khai trạng thái code không sinh:\n  " + "\n  ".join(sai))
+
+
+def test_GIA_TRI_HOP_LE_phu_moi_gia_tri_code_THAT_SU_ghi():
+    """Chiều ngược lại: code sinh một giá trị mà danh sách thiếu thì `check_tree` báo đỏ oan
+    — đúng chuyện vừa xảy ra với `blocked` (register_publish.py:178)."""
+    import re
+    import sys as _s
+    _s.path.insert(0, str(ROOT / "scripts" / "lib"))
+    import post_paths as PP
+
+    src = (ROOT / "scripts/pipeline/register_publish.py").read_text(encoding="utf-8")
+    for truong in ("agent_status", "post_status", "quality_check"):
+        viet = set(re.findall(rf'\["{truong}"\]\s*=\s*"([a-z_]+)"', src))
+        viet |= set(re.findall(rf'"{truong}":\s*"([a-z_]+)"', src))
+        viet |= set(re.findall(rf'\["{truong}"\]\s*=\s*"[a-z_]+" if .* else "([a-z_]+)"', src))
+        thieu = viet - PP.GIA_TRI_HOP_LE[truong]
+        assert not thieu, (f"register_publish ghi {truong}={thieu} mà GIA_TRI_HOP_LE thiếu — "
+                           f"check_tree sẽ báo đỏ oan")

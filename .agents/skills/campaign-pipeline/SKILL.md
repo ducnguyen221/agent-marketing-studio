@@ -65,10 +65,12 @@ sẵn có — BRIEF trước, rồi từng khối `## post:<post_format>`. `regi
 **Làm:** chạy `../../checklists/QA_ASSET.md`. Kiểm: đúng giọng · không lộ tên tool nội bộ ·
 hashtag đúng giới hạn kênh · không còn `[KIỂM CHỨNG]` mở · claim có trong `key_sources` ·
 Facebook không markdown literal.
-**Ra:** `quality_check` + `post_status = human_review`. **Nghi ngờ → `needs_review`.**
+**Ra:** `quality_check` + `agent_status` (do `register_publish qa` đặt từ `gates.json`).
+**Nghi ngờ → để `failed` và ghi lý do, đừng tự xác nhận `passed`.**
 
 ### 🔒 Cổng 2 — người duyệt Post
-`changes_requested` → đọc `review_feedback`, sửa, `post_status = revision`, quay lại ④.
+`changes_requested` → đọc `review.feedback`, sửa, chạy lại ④. Không có trạng thái trung gian
+nào để đặt — `post_status` chỉ nhận `not_created` · `approved` · `published`.
 Không xoá feedback cũ.
 
 ### ⑤ `render` — hình & tiếng

@@ -23,6 +23,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import md_io  # noqa: E402
+import post_paths as PP  # noqa: E402
 import studio_paths as SP  # noqa: E402
 
 
@@ -83,6 +84,17 @@ def kiem_bai(bai: Path, cam_id: str, kenh_id: str, s: So) -> None:
         neo = p.get("post_content", "")
         if neo and content and f"## {neo}" not in content:
             s.loi(f"{ten}/{pid}: trỏ neo {neo!r} mà content.md không có khối đó")
+        # Giá trị trạng thái phải nằm trong tập code THẬT SỰ sinh ra. Không kiểm thì một
+        # giá trị agent chép từ tài liệu cũ (`human_review`, `ai_qa_failed`…) nằm im trong sổ
+        # rồi in thẳng ra Excel — không lệnh nào đặt được nó, và không ai định nghĩa nó.
+        for truong, hop_le in PP.GIA_TRI_HOP_LE.items():
+            gt = (p.get("review", {}).get("status") if truong == "review_status"
+                  else p.get("publish", {}).get("status") if truong == "publish_status"
+                  else p.get(truong))
+            if gt is not None and gt not in hop_le:
+                s.loi(f"{ten}/{pid}: {truong}={gt!r} không hợp lệ; "
+                      f"hợp lệ: {', '.join(sorted(x for x in hop_le if x))}")
+
         rv = p.get("review", {})
         if rv.get("status") == "approved" and not rv.get("approved_by"):
             s.loi(f"{ten}/{pid}: đã approved nhưng không ghi AI duyệt — Cổng 2 phải có dấu vết")

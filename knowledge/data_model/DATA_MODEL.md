@@ -797,9 +797,12 @@ Nội dung của Post — lưu dưới dạng ANCHOR trỏ tới đúng đoạn 
 
 Kết quả kiểm tra fact, brand safety, quyền sử dụng và quy định nền tảng.
 
-**Giá trị hợp lệ:** `pending` · `passed` · `failed` · `needs_review`
+**Giá trị hợp lệ:** `failed` · `passed`
 
-> **Luật cho agent:** Tự kiểm tra post content dạng nội dung text có trong asset trước khi gửi human review; chọn needs_review/failed khi còn nghi ngờ thay vì tự xác nhận passed.
+> Danh sách này là **tập code THẬT SỰ sinh ra** — nguồn ở `scripts/lib/post_paths.py:GIA_TRI_HOP_LE`, và `check_tree.py` báo đỏ nếu gặp giá trị ngoài tập. Thêm trạng thái mới thì thêm ở đó **trước**, rồi mới viết lệnh đặt nó — không phải ngược lại.
+
+> **Luật cho agent:** `register_publish qa` đọc thẳng `gates.json` và đặt trường này, nên
+> agent không tự gõ. Còn nghi ngờ thì để `failed` và ghi lý do — đừng tự xác nhận `passed`.
 
 *Ví dụ:* `passed`
 
@@ -809,11 +812,15 @@ Kết quả kiểm tra fact, brand safety, quyền sử dụng và quy định n
 
 Trạng thái agent tạo, sửa hoặc tự QA Post.
 
-**Giá trị hợp lệ:** `not_started` · `generating` · `ai_qa_passed` · `ai_qa_failed` · `blocked` · `completed`
+**Giá trị hợp lệ:** `blocked` · `completed` · `draft`
 
-> **Luật cho agent:** Cập nhật theo công việc thực tế; khi ai_qa_failed phải nêu lỗi ở review_feedback hoặc notes liên quan.
+> Danh sách này là **tập code THẬT SỰ sinh ra** — nguồn ở `scripts/lib/post_paths.py:GIA_TRI_HOP_LE`, và `check_tree.py` báo đỏ nếu gặp giá trị ngoài tập. Thêm trạng thái mới thì thêm ở đó **trước**, rồi mới viết lệnh đặt nó.
 
-*Ví dụ:* `ai_qa_passed`
+> **Luật cho agent:** `register_publish qa` đặt `completed` hoặc `blocked` theo kết quả cổng.
+> `blocked` thì lỗi đã nằm sẵn trong `gates.json`; muốn duyệt vẫn được nhưng phải nêu lý do:
+> `approve --override-qa "…"`.
+
+*Ví dụ:* `completed`
 
 ### `review_status`
 
@@ -843,7 +850,9 @@ Phản hồi cụ thể của người duyệt và yêu cầu chỉnh sửa.
 
 Trạng thái vận hành tổng từ tạo đến đo hiệu quả.
 
-**Giá trị hợp lệ:** `not_created` · `generating` · `ai_qa` · `human_review` · `revision` · `approved` · `scheduled` · `published` · `measuring` · `completed` · `publish_failed` · `cancelled`
+**Giá trị hợp lệ:** `approved` · `not_created` · `published`
+
+> Danh sách này là **tập code THẬT SỰ sinh ra** — nguồn ở `scripts/lib/post_paths.py:GIA_TRI_HOP_LE`, và `check_tree.py` báo đỏ nếu gặp giá trị ngoài tập. Thêm trạng thái mới thì thêm ở đó **trước**, rồi mới viết lệnh đặt nó.
 
 > **Luật cho agent:** Tuân thủ luồng; chỉ scheduled/published khi review_status approved và quality_check passed.
 

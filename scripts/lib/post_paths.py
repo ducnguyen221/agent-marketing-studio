@@ -68,3 +68,22 @@ def tao_thu_muc(thu_muc_bai) -> None:
     d = Path(thu_muc_bai)
     for t in THU_MUC_KENH:
         (d / t).mkdir(parents=True, exist_ok=True)
+
+
+# ── Giá trị hợp lệ của các trường trạng thái trong publish.json ────────────────────────
+#
+# Đây là NGUỒN SỰ THẬT, và nó cố tình HẸP: chỉ liệt kê giá trị mà code THẬT SỰ sinh ra.
+#
+# Trước 05/09 tài liệu khai 6 giá trị cho `agent_status`, 12 cho `post_status`, 5 cho
+# `quality_check` — trong khi không lệnh nào đặt được những giá trị đó, và không cổng nào
+# kiểm. Agent làm đúng theo tài liệu sẽ ghi một giá trị không ai định nghĩa vào sổ, rồi nó
+# nằm im ở đó và in ra Excel. Tài liệu tả thứ không tồn tại tệ hơn không tả.
+#
+# Thêm trạng thái mới thì thêm ở ĐÂY trước, rồi mới viết lệnh đặt nó — không phải ngược lại.
+GIA_TRI_HOP_LE = {
+    "agent_status":   {"", "draft", "completed", "blocked"},
+    "post_status":    {"", "not_created", "approved", "published"},
+    "quality_check":  {"", "passed", "failed"},
+    "review_status":  {"", "pending", "approved", "changes_requested"},
+    "publish_status": {"", "not_published", "scheduled", "published", "failed"},
+}

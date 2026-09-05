@@ -94,19 +94,19 @@ Mỗi phần tử `posts[]` phải có: `post_id`, `channel`, `post_format`, `po
 | **Vai** | `qa-reviewer` (tuân thủ, chặn phát hành) · `content-editor` (hay/rõ, tư vấn) |
 | **Vào** | Post `agent_status = completed` |
 | **Làm** | Chạy `blog_gates.py` (23 cổng, kiểm bằng số) + `../.agents/checklists/QA_ASSET.md`: giọng đúng kênh · không lộ tên công cụ nội bộ · hashtag đúng giới hạn · không còn `[KIỂM CHỨNG]` mở · claim có trong `research.md` · Facebook không markdown literal |
-| **Ra** | `quality_check = passed` / `needs_review` / `failed`; `post_status = human_review` |
+| **Ra** | `quality_check = passed` / `failed` + `agent_status = completed` / `blocked` (cả hai do `register_publish qa` đặt từ `gates.json`) |
 
 Trạng thái cổng có **ba** giá trị: xanh · đỏ · **thiếu**. Cổng không chạy được là *chưa biết*,
 **không bao giờ** được cộng vào xanh. Miễn trừ một cổng thì phải ghi lý do:
 `--cho-phep "tên=lý do"` — nới danh sách từ khoá để đỡ đỏ là làm hỏng cổng cho mọi bài sau.
 
-**Còn nghi ngờ thì chọn `needs_review`, không tự xác nhận `passed`.** Trượt → `agent_status
-= ai_qa_failed`, ghi lý do vào `review_feedback`, sửa rồi kiểm lại.
+**Còn nghi ngờ thì để `failed` và ghi lý do, đừng tự xác nhận `passed`.** `register_publish qa`
+đọc thẳng `gates.json` nên nó không đoán — nhưng nó cũng chỉ thấy thứ cổng đo được.
 
 ### 🔒 Cổng 2 — người duyệt trước khi đăng
 `register_publish approve --by "<tên>" --note "<câu duyệt nguyên văn>"`. **Bắt buộc cả hai**:
 duyệt mà không để lại dấu vết thì sáu tháng sau không ai biết ai đã đồng ý với cái gì. Nếu `changes_requested` → đọc `review_feedback`, sửa,
-`post_status = revision`, quay lại ④. **Không xoá feedback cũ.**
+sửa rồi chạy lại ④. **Không xoá feedback cũ** — nó nằm ở `posts[].review.feedback`.
 
 ### ⑤ render — dựng hình & tiếng
 | | |
@@ -135,7 +135,7 @@ Mặc định dry-run trừ khi `channel.yml` đặt `autonomy: full` **và** ng
 | **Vai** | `growth-analyst` |
 | **Vào** | Post `publish_status = published` |
 | **Làm** | `register_publish metrics` ghi vào `posts[].actual`; đối chiếu `posts[].target`. Thu tự động qua API **chưa có** — hiện nhập tay |
-| **Ra** | `post_status = measuring` → `completed`; append `### Báo cáo <ngày>` vào hồ sơ `.md` Mục 9 |
+| **Ra** | `posts[].actual` + append `### Báo cáo <ngày>` vào `campaign.md` Mục 9 |
 
 > ⚠️ **Cột `actual_*` GHI ĐÈ — file Excel không giữ lịch sử đo.** Muốn so D+1 với D+30 thì
 > **bắt buộc** chốt số vào Mục 9 của hồ sơ `.md` mỗi lần đo. Bỏ bước này là mất vĩnh viễn.
