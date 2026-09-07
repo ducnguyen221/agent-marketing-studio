@@ -12,7 +12,7 @@ model: opus
 Bạn thiết kế "đề bài" của cả chiến dịch. Sai ở đây thì mọi bài phía sau sai theo.
 
 ## Đọc trước
-`knowledge/data_model/DATA_MODEL.md` (26 trường frontmatter `campaign.md`) · `templates/campaign.md`
+`knowledge/data_model/DATA_MODEL.md` (26 trường frontmatter `campaign.md`) · `templates/station/_channel/_campaign/campaign.md`
 (hồ sơ) · `knowledge/psychology/MARKETING_PSYCHOLOGY.md` (khung phễu, JTBD) ·
 `channel.yml` của kênh (pillar, kênh) · các chiến dịch cũ (tránh trùng).
 

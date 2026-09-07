@@ -25,6 +25,13 @@ import studio_paths as SP  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 TPL = REPO / "templates"
+# Cây mẫu phản chiếu ĐÚNG hình dạng một trạm thật — mở `templates/station/` ra là thấy
+# ngay kênh lồng chiến dịch lồng bài. Trước đây 15 file nằm phẳng một chỗ, đọc tên phải
+# tự đoán cái nào lồng trong cái nào.
+TPL_STATION = TPL / "station"
+TPL_KENH    = TPL_STATION / "_channel"
+TPL_CAM     = TPL_KENH / "_campaign"
+TPL_BAI     = TPL_CAM / "_content"
 
 CAU_HOI = """Chưa biết lưu kênh ở đâu.
 
@@ -111,7 +118,7 @@ def main(argv=None) -> int:
     dich.mkdir(parents=True, exist_ok=True)
     (dich / "continuity.json").write_text("[]\n", encoding="utf-8", newline="\n")
 
-    yml = (TPL / "channel.yml").read_text(encoding="utf-8")
+    yml = (TPL_KENH / "channel.yml").read_text(encoding="utf-8")
     yml = (yml.replace("id: ten-kenh", f"id: {a.id}")
               .replace('label: "Tên kênh đọc được"', f'label: "{a.label}"')
               .replace("created: 2026-01-01", f"created: {date.today()}"))
@@ -133,32 +140,51 @@ def main(argv=None) -> int:
         yml = _loc_platforms(yml, chon)
     (dich / "channel.yml").write_text(yml, encoding="utf-8", newline="\n")
 
-    cam = (TPL / "CAMPAIGNS.md").read_text(encoding="utf-8")
+    cam = (TPL_KENH / "CAMPAIGNS.md").read_text(encoding="utf-8")
     cam = (cam.replace("channel: ten-kenh", f"channel: {a.id}")
               .replace("updated: 2026-01-01", f"updated: {date.today()}")
               .replace("# Sổ chiến dịch — Tên kênh", f"# Sổ chiến dịch — {a.label}"))
     (dich / "CAMPAIGNS.md").write_text(cam, encoding="utf-8", newline="\n")
 
-    if not (dich / "profile.md").exists():
-        (dich / "profile.md").write_text(
-            "# Hồ sơ kênh — giọng, tác phong, chính kiến\n\n"
-            "> MỘT file cho toàn bộ hồ sơ của kênh: tác giả là ai, viết cho ai, giọng thế nào,\n"
-            "> phân tích một chủ đề theo lăng kính gì, câu nào hay dùng, điều gì không bao giờ viết.\n"
-            ">\n"
-            "> Chứa thông tin cá nhân và tổ chức thật — **không bao giờ vào repo**.\n"
-            ">\n"
-            "> Bước viết bài đọc file này **FAIL-CLOSED**: đọc không được thì DỪNG, không viết\n"
-            "> tiếp với chính kiến rỗng. Ba bài đầu của một kênh cũ từng viết với chính kiến\n"
-            "> rỗng suốt mà không ai biết, vì tham số là optional và script im lặng chạy tiếp.\n\n"
-            "## Ai là tác giả\n\n## Viết cho ai\n\n## Cách phân tích một chủ đề\n\n"
-            "## Giọng và chính kiến\n\n## Không bao giờ viết\n",
-            encoding="utf-8", newline="\n")
+    # `brand.md` — hồ sơ kênh cho NGƯỜI đọc: nhận diện, giọng, chính kiến, cái không làm.
+    #
+    # Trước 07/09/2026 chỗ này sinh `profile.md`, và câu chữ nhận diện (tagline, welcome…)
+    # nằm ở một `brand.json` riêng. Hai file cho một thứ nghĩa là sớm muộn chúng nói khác
+    # nhau. Nay gộp làm một; khoá MÁY thì về `channel.yml:brand`.
+    #
+    # Bước viết bài đọc file này FAIL-CLOSED: đọc không được thì DỪNG, không viết tiếp với
+    # chính kiến rỗng. Ba bài đầu của một kênh cũ từng viết với chính kiến rỗng suốt mà
+    # không ai biết, vì tham số là optional và script im lặng chạy tiếp.
+    if not (dich / "brand.md").exists():
+        mau = TPL_KENH / "brand.md"
+        if mau.is_file():
+            fm_b, body_b = md_io.read_fm(mau)
+            fm_b.update({"channel": a.id, "label": a.label})
+            md_io.write_fm(dich / "brand.md", fm_b,
+                           body_b.replace("<Tên kênh>", a.label))
+        else:
+            shutil.copy2(TPL_KENH / "channel.yml", dich / "brand.md")  # không nên xảy ra
+
+    # ── Script cấp kênh: chỉ chép khi kênh THẬT SỰ có nền tảng cần tới chúng.
+    #
+    # Kênh chỉ đăng YouTube (audio truyện chẳng hạn) mà nhận `build-index.ps1` và
+    # `subscribe.gs` thì mang theo bốn file không ai chạy — sáu tháng sau không ai dám xoá
+    # vì không biết chúng có được dùng không. Thà thiếu rồi chép thêm, hơn là thừa rồi ngại.
+    #
+    # `build-index.ps1` được chưng cất TỪ BẢN ĐANG CHẠY THẬT (13 số tuần), không phải viết
+    # mới: chạy lại nó trên repo cũ ra HTML trùng từng byte (md5 71d13765d65727b0).
+    # Nhận diện đọc từ bản chụp `-Config`; không có thì dùng mặc định trong file.
+    CAN_WEB = {"build-index.ps1": "web_blog", "subscribe.gs": "web_blog",
+               "send_newsletter.py": "web_blog", "build_yt_desc.py": "youtube"}
+    for ten, nen in CAN_WEB.items():
+        if nen in chon and (TPL_KENH / ten).is_file() and not (dich / ten).exists():
+            shutil.copy2(TPL_KENH / ten, dich / ten)
 
     # --- ghi vào sổ kênh
     so = station / "CHANNELS.md"
     if not so.exists():
         station.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(TPL / "CHANNELS.md", so)
+        shutil.copy2(TPL_STATION / "CHANNELS.md", so)
         fm, body = md_io.read_fm(so)
         fm["channels"] = []
         body = body.replace("## ten-kenh\nKênh này của ai, đăng ở đâu, vì sao tách riêng.\n", "")

@@ -60,7 +60,7 @@ canonical: true
   (có `--bulk` để tạo cả loạt). Chúng copy từ `templates/` và ghi đúng chỗ.
   **Tuyệt đối không tự dựng thư mục bằng tay.**
 - **`new_post.py` CHẶN** nếu `campaign.md` chưa điền đủ tám trường bắt buộc. Điền xong hãy tạo bài.
-- **Trước khi viết một chữ, agent PHẢI đọc:** `campaign.md` của chiến dịch · `profile.md` của
+- **Trước khi viết một chữ, agent PHẢI đọc:** `campaign.md` của chiến dịch · `brand.md` của
   kênh · `research.md` của chính bài đó. Chi tiết ở `knowledge/toolchains/ATLAS_CHANNEL.md`.
 
 ---

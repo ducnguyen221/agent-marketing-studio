@@ -4,7 +4,7 @@
 - **Tuyệt đối cấm commit API token** (Facebook Graph API, YouTube Data API, OpenAI/Claude API keys, Mailchimp/Klaviyo tokens) vào kho Git.
 - Mọi token phải được cấu hình qua file `.env` ở cấp máy tính hoặc cấp trạm, và đã được khai
   báo trong `.gitignore`.
-- **Trạm nội dung nằm ngoài git.** `profile.md` (hồ sơ cá nhân của tác giả) và `publish.json`
+- **Trạm nội dung nằm ngoài git.** `brand.md` (hồ sơ cá nhân của tác giả) và `publish.json`
   (link thật, ID bài) không bao giờ được commit lên repo công khai. `channel.yml` chỉ ghi
   **TÊN biến môi trường** của secret, không bao giờ ghi giá trị.
 - Dự án chỉ cung cấp file mẫu `.env.example` với các trường biến giả định.

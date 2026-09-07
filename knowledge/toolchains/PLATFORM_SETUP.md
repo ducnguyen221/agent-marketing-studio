@@ -109,7 +109,7 @@ tiêu đề trên nền tảng khác `content_name` của Content → ai đó đ
 ⚠️ `platforms` là **DANH SÁCH**, mỗi mục có khoá `channel:` — không phải map theo tên nền
 tảng. Viết sai dạng thì `register_publish init` duyệt qua và sinh **0 post**, `check_tree`
 cũng không thấy gì bất thường: hỏng **im lặng**, phát hiện lúc sắp đăng. Dạng đúng là dạng
-trong `templates/channel.yml`, và `register_publish.py` đọc `p["channel"]` của từng mục.
+trong `templates/station/_channel/channel.yml`, và `register_publish.py` đọc `p["channel"]` của từng mục.
 
 ```yaml
 platforms:

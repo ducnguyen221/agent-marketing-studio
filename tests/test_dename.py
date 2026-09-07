@@ -115,7 +115,7 @@ def test_prompt_MAU_khong_khoa_vao_mot_nguoi():
     """Repo public. Prompt mở đầu bằng tên thật thì ai clone về cũng viết bằng danh tính
     của người khác — template hỏng, không phải secret rò rỉ.
 
-    Danh tính phải là chỗ trống lấy từ `profile.md` của kênh, đúng hợp đồng mà `new_post.py`
+    Danh tính phải là chỗ trống lấy từ `brand.md` của kênh, đúng hợp đồng mà `new_post.py`
     đã ghi. Tên ở đây dựng bằng mã ký tự để CHÍNH FILE TEST không chứa thứ nó đi săn —
     một cổng tự miễn trừ mình là cổng vô dụng.
     """
@@ -143,4 +143,58 @@ def test_prompt_MAU_co_du_cho_trong_va_co_dan_cach_dien():
         if "{{AUTHOR}}" in t or "{{CHANNEL}}" in t:
             assert "ĐIỀN TRƯỚC KHI DÙNG" in t, \
                 f"{f.name} có chỗ trống danh tính nhưng không dặn cách điền"
-            assert "profile.md" in t, f"{f.name} không chỉ ra nguồn của danh tính"
+            assert "brand.md" in t, f"{f.name} không chỉ ra nguồn của danh tính"
+
+
+def test_TEMPLATE_khong_mang_nhan_dien_that():
+    """`templates/station/` là khuôn mọi kênh mọc ra từ đó — nó phải TRUNG TÍNH.
+
+    Cạm bẫy đã suýt trả giá (07/09/2026): bốn script cấp kênh (`build-index.ps1`,
+    `send_newsletter.py`, `build_yt_desc.py`, `subscribe.gs`) được chưng cất từ bản đang
+    chạy thật, và mang theo nguyên tên miền, email, tên người và **id Meta Pixel** vào một
+    repo MIT công khai. Hai hậu quả khác nhau, đều nặng:
+
+    · Rò rỉ: email và id pixel là dữ liệu thật, push lên là công khai vĩnh viễn.
+    · Khuôn hỏng: ai clone về cũng xuất bản dưới danh nghĩa người khác và gửi dữ liệu
+      người đọc tới một tài khoản quảng cáo lạ — mà không hề biết.
+
+    Cổng `test_prompt_MAU_khong_khoa_vao_mot_nguoi` ở trên chỉ soi `.agents/prompts/`,
+    nên nó không bắt được. Cổng này soi cả cây khuôn.
+
+    Chuỗi cấm dựng bằng mã ký tự để CHÍNH FILE TEST không chứa thứ nó đi săn.
+    """
+    import re
+    import unicodedata
+
+    tm = ROOT / "templates"
+    assert tm.is_dir(), "không thấy templates/ — đường dẫn đổi?"
+
+    # Tên miền, email, tên người, id pixel của kênh đầu tiên.
+    cam = [
+        "ducng" + "uyen.vn", "ducng" + "uyen221", "ducng" + "uyen.ams",
+        "Duc Ngu" + "yen", "17170417" + "32866196",
+        "C:" + chr(92) + "Users" + chr(92) + "Duc" + "Nguyen",
+    ]
+    cam = [unicodedata.normalize("NFC", x) for x in cam]
+    # Tên kênh thật: bắt cả "AI News" lẫn "Data News" mà không đụng chữ "news" chung.
+    mau_kenh = re.compile(r"\b(AI|Data)\s+News\b")
+
+    dinh = []
+    for f in sorted(tm.rglob("*")):
+        if not f.is_file() or f.suffix.lower() in {".xlsx", ".png", ".jpg", ".svg"}:
+            continue
+        try:
+            t = unicodedata.normalize("NFC", f.read_text(encoding="utf-8"))
+        except UnicodeDecodeError:
+            continue
+        ten = f.relative_to(ROOT).as_posix()
+        for x in cam:
+            if x in t:
+                dinh.append(f"{ten} còn {x!r}")
+        m = mau_kenh.search(t)
+        if m:
+            dinh.append(f"{ten} còn tên kênh thật {m.group()!r}")
+
+    assert not dinh, (
+        "khuôn trong templates/ mang nhận diện thật — sửa thành khoá cấu hình "
+        "hoặc chỗ trống:\n  " + "\n  ".join(dinh))

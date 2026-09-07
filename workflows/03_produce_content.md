@@ -14,7 +14,7 @@
 | # | Đọc gì | Không đọc thì sao |
 |---|---|---|
 | 1 | `campaign.md` của chiến dịch — đối tượng, thông điệp, **Mục 4: cái KHÔNG làm** | bài hay nhưng lạc chiến dịch, phát hiện sau khi đã dựng tiếng và hình |
-| 2 | `profile.md` ở gốc kênh — tác giả là ai, giọng gì, chính kiến gì | ra bài trung tính, đúng mà nhạt — lỗi từng chạy suốt ba bài mà không ai thấy |
+| 2 | `brand.md` ở gốc kênh — tác giả là ai, giọng gì, chính kiến gì | ra bài trung tính, đúng mà nhạt — lỗi từng chạy suốt ba bài mà không ai thấy |
 | 3 | `research.md` của **chính bài đó** — mục tiêu và nguồn riêng của bài | viết theo trí nhớ; G05 bắt được nhưng đã mất một vòng |
 
 Đọc (2) **fail-closed**: đọc không được thì **DỪNG**, đừng viết tiếp với chính kiến rỗng.
@@ -24,7 +24,7 @@ kỷ luật, và nó được ghi ở ba chỗ: đây, docstring `new_post.py`, 
 
 ## 1. Trình Tự Thực Thi
 
-1. **Nội dung nằm sẵn ở đó.** `new_post.py` đã copy `templates/content.md` vào thư mục bài.
+1. **Nội dung nằm sẵn ở đó.** `new_post.py` đã copy `templates/station/_channel/_campaign/_content/content.md` vào thư mục bài.
    Không tạo lại file, chỉ điền.
 
 2. **Soạn BRIEF rồi từng khối kênh:**

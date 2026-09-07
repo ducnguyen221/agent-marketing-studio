@@ -31,7 +31,7 @@ Chạy `check_tree.py --station <trạm>` rồi đếm bảng Content theo `stat
 ```
 Kênh  →  Chiến dịch  →  Bài (ý tưởng)  →  posts[] (1 kênh × 1 format)
 channel.yml  campaign.md      ↓                    ↓
-profile.md   bảng Content   <thư mục bài>/   post_content = neo
+brand.md     bảng Content   <thư mục bài>/   post_content = neo
 continuity     (15 cột)      content.md   ←──  trỏ vào đúng khối '## post:<format>'
 ```
 

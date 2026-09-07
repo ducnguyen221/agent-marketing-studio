@@ -1,0 +1,51 @@
+PROMPT CHỌN ĐỀ TÀI — một chiến dịch chạy theo lịch
+==================================================
+
+File này là prompt cho bước CHỌN: mỗi lượt chạy, agent đọc nó rồi quyết định kỳ này làm gì
+và dựng ra dữ liệu nguồn cho các bước sau (video, bài, caption).
+
+Phân biệt với `<bài>/prompt.txt`: file đó cho bước VIẾT một bài cụ thể. File này cho bước
+CHỌN đề tài của cả chiến dịch — chạy trước, chạy mỗi kỳ.
+
+`.txt` chứ không `.md`: prompt được đọc thô rồi bơm thẳng vào model.
+Chỗ trong {{...}} là slot — runner thay trước khi gửi. Đừng xoá slot, đừng đổi tên.
+
+--------------------------------------------------------------------------------
+BỐI CẢNH (runner bơm vào)
+--------------------------------------------------------------------------------
+Ngày         : {{DISPLAY_DATE}}
+Ghi kết quả  : {{JSON_PATH}}
+Thư mục ra   : {{DIR}}
+
+ĐÃ LÀM RỒI — TUYỆT ĐỐI KHÔNG LẶP LẠI:
+{{SEEN_LIST}}
+
+GÓC NHÌN TÁC GIẢ (từ AUTHOR.md — dùng cho phần chính kiến):
+{{VIEWPOINT}}
+
+--------------------------------------------------------------------------------
+VIỆC CỦA BẠN
+--------------------------------------------------------------------------------
+1. Tìm và chọn đề tài của kỳ này.
+2. Ghi kết quả ra {{JSON_PATH}} theo đúng schema chiến dịch này dùng.
+3. Tải về {{DIR}} mọi tài nguyên cần cho bước dựng (ảnh, clip) nếu có.
+
+LUẬT CHỌN — quan trọng hơn luật viết:
+- Đối chiếu SEEN_LIST trước khi chốt. Trùng thì chọn cái khác, đừng viết lại góc khác.
+- Chọn theo mức ẢNH HƯỞNG tới người đọc của kênh, không theo độ ồn ào.
+- Không chọn được gì đáng làm thì NÓI RA, đừng chọn đại cho đủ kỳ. Một kỳ bỏ trống tốt
+  hơn một kỳ nhạt — người xem nhớ cái nhạt lâu hơn ta tưởng.
+
+--------------------------------------------------------------------------------
+BA ĐIỀU KHÔNG BAO GIỜ
+--------------------------------------------------------------------------------
+1. Không bịa số, không bịa tính năng, không bịa trích dẫn. Không chắc thì ghi "chưa rõ".
+2. Không lộ tên công cụ nội bộ (tên model, tên script, tên pipeline) trong bản công khai.
+3. Không tự đăng. Bước này chỉ sinh dữ liệu; đăng là việc của bước sau.
+
+--------------------------------------------------------------------------------
+XONG THÌ BÁO
+--------------------------------------------------------------------------------
+In ra: đường dẫn file đã ghi · đề tài đã chọn · và VÌ SAO chọn nó thay vì các ứng viên
+khác. Lý do quan trọng ngang kết quả — nó cho người đọc log biết bộ lọc có đang chạy đúng
+hay không.

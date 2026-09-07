@@ -97,7 +97,7 @@ bài không có video hoặc phải sửa lại sau; đăng Facebook trước th
 | # | Đọc gì | Vì sao | Không đọc thì sao |
 |---|---|---|---|
 | 1 | `campaign.md` của chiến dịch | bài toán kinh doanh, đối tượng, thông điệp, trụ nội dung, **mục KHÔNG LÀM** | bài hay nhưng lạc chiến dịch — phát hiện sau khi đã dựng tiếng và hình |
-| 2 | `profile.md` ở gốc kênh | tác giả là ai, giọng gì, chính kiến gì, không bao giờ viết gì | ra bài trung tính, đúng mà nhạt — đây là lỗi từng chạy suốt 3 bài mà không ai thấy |
+| 2 | `brand.md` ở gốc kênh | tác giả là ai, giọng gì, chính kiến gì, không bao giờ viết gì | ra bài trung tính, đúng mà nhạt — đây là lỗi từng chạy suốt 3 bài mà không ai thấy |
 | 3 | `research.md` của **chính bài đó** | mục tiêu nghiên cứu và nguồn riêng của bài | viết theo trí nhớ, G05 bắt được nhưng đã mất một vòng |
 
 `new_post.py` chặn ở (1): `campaign.md` còn chữ mẫu thì không đẻ bài — điền đủ 8 trường
@@ -170,7 +170,7 @@ Nó sống ở STATION và được phân giải lúc chạy.
 | Đang làm | Đọc | KHÔNG đọc |
 |---|---|---|
 | Chọn đề tài | file này §3 (B0) + sổ continuity ở STATION | `output_styles/*`, playbooks |
-| Viết `content.md` | `templates/content.md` + `output_styles/<giọng>.md` + `COPY_FRAMEWORKS.md` | toolchains, `PLATFORM_SETUP.md` |
+| Viết `content.md` | `templates/station/_channel/_campaign/_content/content.md` + `output_styles/<giọng>.md` + `COPY_FRAMEWORKS.md` | toolchains, `PLATFORM_SETUP.md` |
 | Tự kiểm | `.agents/checklists/QA_ASSET.md` + chạy `blog_gates.py` | templates |
 | Dựng asset | `knowledge/toolchains/ASSET_TOOLCHAIN.md` | `output_styles/*` |
 | Đăng | file này §3 (B7–B10) + `PLATFORM_SETUP.md` | templates, psychology |

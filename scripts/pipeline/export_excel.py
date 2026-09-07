@@ -75,13 +75,22 @@ def _dong_content(cam_dir: Path, dong_md: list) -> list[dict]:
         r = cam_dir / thu_muc / "research.md"
         if thu_muc and r.is_file():
             fm, _ = md_io.read_fm(r)
+            # Danh sách này phải phủ MỌI khoá `research.md` có mà sheet Content cũng có.
+            # Ba khoá cuối (`key_sources`, `content_relationship`, `notes`) trước đây bị bỏ
+            # quên: template `research.md` khai chúng, sheet Content có đúng cột cho chúng,
+            # mà vòng lặp này không đọc — nên nguồn tham khảo, quan hệ giữa các bài và ghi
+            # chú của người viết KHÔNG BAO GIỜ ra tới Excel. Không có dòng lỗi nào; người
+            # nhận file chỉ thấy ba cột trắng và tưởng chưa ai điền.
             for xl_k, fm_k in (("content_goal", "content_goal"),
                                ("audience_profile", "audience_profile"),
                                ("core_brief", "core_brief"),
+                               ("key_sources", "key_sources"),
                                ("target_keyword", "target_keyword"),
                                ("creative_direction", "creative_direction"),
                                ("constraints", "constraints"),
-                               ("audio", "audio"), ("video", "video"), ("short", "short")):
+                               ("content_relationship", "content_relationship"),
+                               ("audio", "audio"), ("video", "video"), ("short", "short"),
+                               ("notes", "notes")):
                 v = fm.get(fm_k)
                 if v not in (None, "", []):
                     o[xl_k] = ", ".join(v) if isinstance(v, list) else str(v)

@@ -126,8 +126,11 @@ Ba điều trong khuôn đó, mỗi điều đổi lấy một lần hỏng:
 
 ### Ba điều tuyệt đối không làm
 
-1. **Không hardcode đường dẫn.** `C:\Users\<tên>\...` trong code là code chỉ chạy trên đúng
-   một máy, và mang theo tên người dùng.
+1. **Không hardcode đường dẫn tuyệt đối.** Một đường dẫn bắt đầu bằng ổ đĩa và thư mục người
+   dùng là code chỉ chạy trên đúng một máy, và nó **mang theo tên người dùng** vào mọi bản sao.
+   Dùng biến môi trường hoặc thư mục nhà do hệ điều hành trả về.
+   *(Ví dụ minh hoạ ở đây cố tình không viết ra đường dẫn thật — chính cổng `test_dename` của
+   repo này sẽ đỏ nếu ai viết, kể cả khi viết để làm ví dụ. Đã dính một lần 06/09/2026.)*
 2. **Không `print` giá trị bí mật**, kể cả khi gỡ lỗi. Kể cả một phần. Log tồn tại lâu hơn
    phiên gỡ lỗi.
 3. **Không liệt kê biến môi trường theo tiền tố rồi in ra.** Có biến giữ *đường dẫn*, có

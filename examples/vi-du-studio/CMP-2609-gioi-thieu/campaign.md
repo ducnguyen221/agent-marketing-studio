@@ -108,7 +108,7 @@ dừng lại, trỏ sang đó.
 - **Claim bị cấm**: "tự động hoá 100%", "thay thế người viết", bất kỳ con số hiệu quả nào
   không đo được từ chính repo này.
 - **Giọng**: thẳng, có chính kiến, không hoa mỹ. Câu đúng giọng: *"Bài trôi chảy mà rỗng vẫn
-  đi qua mọi khâu — đó mới là vấn đề."* Chi tiết ở `profile.md` của kênh.
+  đi qua mọi khâu — đó mới là vấn đề."* Chi tiết ở `brand.md` của kênh.
 - **CTA chính**: traffic — đưa người về repo.
 - **Offer**: repo MIT, clone là chạy.
 

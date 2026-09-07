@@ -40,7 +40,7 @@ khi trình người — nó không thay được cổng.
 | **Làm** | Hỏi 1 lượt phần còn thiếu → `new_campaign.py --channel … --id CMP-YYMM-slug --name … --prefix XXX` → **điền cho đủ** frontmatter và Mục 1–4 của `campaign.md` |
 | **Ra** | `status: active` trong frontmatter |
 
-**Dùng script, không dựng tay.** `new_campaign.py` copy từ `templates/campaign.md` và ghi đúng
+**Dùng script, không dựng tay.** `new_campaign.py` copy từ `templates/station/_channel/_campaign/campaign.md` và ghi đúng
 chỗ. Tự tạo thư mục bằng tay là sớm muộn lệch cấu trúc, và `check_tree.py` mới phát hiện ra.
 
 **Điền cho ĐỦ trước khi tạo bài.** `new_post.py` chặn khi tám trường bắt buộc còn nguyên chữ
@@ -70,7 +70,7 @@ Người có thể duyệt trước hàng loạt nếu đã thống nhất kế 
 |---|---|
 | **Vai** | `content-producer` · hỗ trợ `seo-specialist`, skill `hook-writer`/`thread-writer` |
 | **Vào** | Content đã `approved` |
-| **Làm** | **Đọc đủ ba thứ trước khi viết một chữ**: `campaign.md` của chiến dịch · `profile.md` của kênh · `research.md` của chính bài. Rồi điền `content.md`: BRIEF, sau đó từng khối `## post:<post_format>` |
+| **Làm** | **Đọc đủ ba thứ trước khi viết một chữ**: `campaign.md` của chiến dịch · `brand.md` của kênh · `research.md` của chính bài. Rồi điền `content.md`: BRIEF, sau đó từng khối `## post:<post_format>` |
 | **Ra** | `status = in_production`; mỗi khối = 1 phần tử trong `publish.json → posts[]`, `agent_status = completed` |
 
 > **Hợp đồng đọc.** Không cổng máy nào bắt được việc *có đọc hay không* — chỉ bắt được hậu
@@ -195,7 +195,7 @@ có việc" trong khi thật ra dữ liệu sai.
 
 | Vùng | |
 |---|---|
-| `templates/campaign.md` · `channel.yml` · `CHANNELS.md` | ✅ chuẩn hiện hành |
+| `templates/station/_channel/_campaign/campaign.md` · `channel.yml` · `CHANNELS.md` | ✅ chuẩn hiện hành |
 | `templates/CAMPAIGN_TEMPLATE.xlsx` | ✅ chỉ còn là **mẫu cột** cho `export_excel.py` |
 | `knowledge/data_model/DATA_MODEL.md` | ✅ nguồn sự thật về trường |
 | `examples/` — trạm mẫu đã điền, 3 bài ở 3 trạng thái | ✅ đọc để hiểu hình dạng |

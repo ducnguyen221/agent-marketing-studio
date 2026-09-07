@@ -9,4 +9,4 @@
      kèm `approved_by` và câu duyệt nguyên văn.
    Agent không bao giờ tự ý vượt cổng, và không có đường nào trong mã tự đặt `approved`.
 3. **Bảo Mật Tuyệt Đối:** không đưa token, secret hoặc dữ liệu khách hàng vào repo. Trạm nội
-   dung nằm ngoài git; `profile.md` và `publish.json` không bao giờ được commit lên repo công khai.
+   dung nằm ngoài git; `brand.md` và `publish.json` không bao giờ được commit lên repo công khai.

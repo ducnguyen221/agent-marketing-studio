@@ -21,7 +21,23 @@ import studio_paths as SP  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 TPL = REPO / "templates"
-MA = re.compile(r"^CMP-\d{4}-[a-z0-9-]+$")
+# Cây mẫu phản chiếu ĐÚNG hình dạng một trạm thật — mở `templates/station/` ra là thấy
+# ngay kênh lồng chiến dịch lồng bài. Trước đây 15 file nằm phẳng một chỗ, đọc tên phải
+# tự đoán cái nào lồng trong cái nào.
+TPL_STATION = TPL / "station"
+TPL_KENH    = TPL_STATION / "_channel"
+TPL_CAM     = TPL_KENH / "_campaign"
+TPL_BAI     = TPL_CAM / "_content"
+# Hai kiểu mã hợp lệ, vì có hai loại chiến dịch khác nhau về bản chất:
+#
+#   CMP-YYMM-slug   chiến dịch marketing — có ngày bắt đầu/kết thúc, nên mã mang tháng.
+#   slug            chiến dịch CHẠY THEO LỊCH (bản tin, series) — sống vô thời hạn, mã
+#                   mang CHỨC NĂNG (`daily-ai-news`, `hot-repo`). Gắn tháng vào là nói dối:
+#                   `CMP-2606-daily-ai-news` gợi ý một chiến dịch của tháng 6/2026, trong
+#                   khi nó vẫn chạy và sẽ còn chạy.
+#
+# Điều kiện DUY NHẤT mà phần còn lại của hệ thống đòi: `id` == tên thư mục (check_tree.py).
+MA = re.compile(r"^(CMP-\d{4}-[a-z0-9-]+|[a-z][a-z0-9_-]*)$")
 
 COT = ["campaign_id", "tên", "pillar", "status", "bắt đầu", "kết thúc", "bài", "đã đăng", "thư mục"]
 
@@ -36,6 +52,13 @@ def main(argv=None) -> int:
     ap.add_argument("--start", default="")
     ap.add_argument("--end", default="")
     ap.add_argument("--station", default=None)
+    # Chiến dịch CHẠY THEO LỊCH (bản tin, series tự động) cần thêm hai file mà chiến dịch
+    # marketing thường không có. Không bật mặc định: đẻ ra `run.ps1` cho một chiến dịch
+    # viết tay là để lại một điểm vào không ai gọi, và sáu tháng sau không ai dám xoá.
+    ap.add_argument("--runner", default="",
+                    help="tên script engine (vd run-toptoday-hot.ps1) — sinh thêm run.ps1")
+    ap.add_argument("--runner-args", default="",
+                    help="tham số truyền cho runner, vd \"-Brand ai -Publish\"")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
 
@@ -72,16 +95,45 @@ def main(argv=None) -> int:
         return 0
 
     dich.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(TPL / "campaign.md", dich / "campaign.md")
+    shutil.copy2(TPL_CAM / "campaign.md", dich / "campaign.md")
     fm, body = md_io.read_fm(dich / "campaign.md")
     fm.update({"id": a.id, "channel": a.channel, "id_prefix": a.prefix, "name": a.name,
                "created": str(date.today()), "status": "proposed"})
+    # `content_pillar` phải nằm trong `channel.yml:pillars`. Không truyền `--pillar` thì lấy
+    # trụ ĐẦU TIÊN của kênh chứ không giữ chữ mẫu `tru-cot`: giữ lại là chiến dịch vừa sinh
+    # ra đã ĐỎ ở check_tree — người dùng gặp lỗi trước khi kịp viết chữ nào. Cùng lý do với
+    # `channels` ngay dưới: bản mẫu không được đoán hộ tên trụ của kênh thật.
     if a.pillar:
         fm["content_pillar"] = a.pillar
+    elif pillars:
+        fm["content_pillar"] = pillars[0]
     if a.start:
         fm["schedule_start"] = a.start
     if a.end:
         fm["schedule_end"] = a.end
+    # Thu hẹp `channels` về đúng nền tảng kênh này có. Bản mẫu khai sẵn cả ba
+    # (web_blog, youtube, facebook) nên kênh nào thiếu một nền tảng là chiến dịch vừa sinh
+    # ra đã ĐỎ ở check_tree — người dùng gặp lỗi trước khi kịp viết chữ nào. Cổng đó đúng,
+    # cái sai là để bản mẫu đoán hộ.
+    plats = [p.get("channel") for p in (cfg.get("platforms") or []) if p.get("channel")]
+    if plats:
+        fm["channels"] = [c for c in (fm.get("channels") or []) if c in plats] or plats
+    if a.runner:
+        # Khối `runtime:` là thứ `campaign_cfg.py` đọc để dựng bản chụp cho engine.
+        # `label` để trống có chủ đích: người điền, vì nó vào tên video và tiêu đề thật.
+        fm["runtime"] = {"label": "", "runner": a.runner, "runner_args": a.runner_args}
+        # run.ps1 GIỐNG HỆT NHAU ở mọi chiến dịch — chép nguyên bản mẫu, không sinh động.
+        # BOM UTF-8 bắt buộc: PowerShell 5.1 đọc .ps1 không BOM sẽ hỏng dấu tiếng Việt và
+        # parse-fail IM LẶNG, tức scheduled task "chạy" mà không làm gì.
+        mau = TPL_CAM / "run.ps1"
+        if mau.is_file():
+            (dich / "run.ps1").write_bytes(mau.read_bytes())
+        # `prompt.txt` cấp CHIẾN DỊCH = prompt bước CHỌN đề tài, chạy mỗi kỳ.
+        # Khác `<bài>/prompt.txt` (bước VIẾT một bài cụ thể). Hai bước, hai prompt —
+        # gộp lại thì lời dặn "chọn gì" và "viết thế nào" trộn vào nhau và cả hai cùng mờ.
+        mau_p = TPL_CAM / "prompt.txt"
+        if mau_p.is_file() and not (dich / "prompt.txt").exists():
+            shutil.copy2(mau_p, dich / "prompt.txt")
     if cfg.get("kpi_default"):
         fm["kpi"] = dict(cfg["kpi_default"])
     if cfg.get("owner"):

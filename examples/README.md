@@ -8,9 +8,9 @@ Nó ở đây để trả lời câu hỏi mà một file mẫu rỗng không tr
 như thế nào?*
 
 > **Trạm thật của bạn KHÔNG nằm trong repo.** Nó nằm ở chỗ bạn chọn (mặc định `~/.marketing`,
-> nhưng có thể là bất cứ đâu — `CHANNELS.md` giữ địa chỉ). `profile.md` chứa thông tin cá
+> nhưng có thể là bất cứ đâu — `CHANNELS.md` giữ địa chỉ). `brand.md` chứa thông tin cá
 > nhân, `publish.json` chứa link thật: không thứ nào nên đi vào một repo công khai.
-> File `profile.md` ở đây là **ví dụ bịa**, và mọi URL đều dùng `example.vn` / `EXAMPLE0001`
+> File `brand.md` ở đây là **ví dụ bịa**, và mọi URL đều dùng `example.vn` / `EXAMPLE0001`
 > — tên miền dành riêng cho ví dụ, không trỏ vào đâu thật.
 
 ## Cây thư mục — và vì sao nó như vậy
@@ -22,7 +22,7 @@ examples/                          ← STATION (trạm)
 ├── index.html                      ← bản đọc TOÀN CẢNH, bấm đúp là mở (build_views.py)
 └── vi-du-studio/                  ← MỘT KÊNH: một giọng, một tập người đọc
     ├── channel.yml                ← nền tảng nào, trụ nội dung nào, KPI mặc định
-    ├── profile.md                 ← giọng, tác phong, chính kiến — file phẳng, không thư mục
+    ├── brand.md                   ← giọng, tác phong, chính kiến — file phẳng, không thư mục
     ├── continuity.json            ← sổ bài đã đăng, để B0 khỏi chọn trùng đề tài
     ├── CAMPAIGNS.md               ← sổ chiến dịch của kênh
     └── CMP-2609-gioi-thieu/       ← MỘT CHIẾN DỊCH

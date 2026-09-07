@@ -8,9 +8,9 @@
 
 | Khâu / Nhiệm Vụ | Điểm Bắt Đầu | Tài Liệu Cần Đọc Tiếp | Tài Liệu Tuyệt Đối KHÔNG Đọc |
 |---|---|---|---|
-| **① Khởi tạo Chiến dịch (new)** | `workflows/01_new_campaign.md` | • `templates/campaign.md`<br>• `knowledge/data_model/DATA_MODEL.md` (Nhóm Strategic Brief) | • `output_styles/*`<br>• `knowledge/playbooks/*`<br>• `knowledge/toolchains/*` |
+| **① Khởi tạo Chiến dịch (new)** | `workflows/01_new_campaign.md` | • `templates/station/_channel/_campaign/campaign.md`<br>• `knowledge/data_model/DATA_MODEL.md` (Nhóm Strategic Brief) | • `output_styles/*`<br>• `knowledge/playbooks/*`<br>• `knowledge/toolchains/*` |
 | **② Lập Kế hoạch Content (plan)** | `workflows/02_plan_content.md` | • `knowledge/playbooks/SEO_PLAYBOOK.md`<br>• `knowledge/playbooks/COPY_FRAMEWORKS.md`<br>• frontmatter `campaign.md` của chiến dịch<br>• `continuity.json` của kênh (tránh trùng đề tài) | • `knowledge/toolchains/*`<br>• `output_styles/*` (chưa cần ở bước ý tưởng) |
-| **③ Viết Bài Đa Kênh (produce)** | `workflows/03_produce_content.md` | **Bắt buộc cả ba:**<br>• `campaign.md` của chiến dịch<br>• `profile.md` ở gốc kênh (fail-closed)<br>• `research.md` của chính bài<br>Rồi: `output_styles/<brand_style>.md` · `.agents/skills/hook-writer/SKILL.md` | • `workflows/06_publish.md`<br>• `knowledge/toolchains/PLATFORM_SETUP.md` |
+| **③ Viết Bài Đa Kênh (produce)** | `workflows/03_produce_content.md` | **Bắt buộc cả ba:**<br>• `campaign.md` của chiến dịch<br>• `brand.md` ở gốc kênh (fail-closed)<br>• `research.md` của chính bài<br>Rồi: `output_styles/<brand_style>.md` · `.agents/skills/hook-writer/SKILL.md` | • `workflows/06_publish.md`<br>• `knowledge/toolchains/PLATFORM_SETUP.md` |
 | **④ Máy Tự Kiểm Tra (selfqa)** | `workflows/04_self_qa.md` | • `.agents/checklists/QA_ASSET.md`<br>• `output_styles/<brand_style>.md` | • `templates/*`<br>• `knowledge/toolchains/*` |
 | **⑤ Dựng Asset Hình/Tiếng (render)**| `workflows/05_render_assets.md` | • `knowledge/toolchains/ASSET_TOOLCHAIN.md` | • `output_styles/*`<br>• `knowledge/playbooks/*` |
 | **⑥ Đăng Bài & Hẹn Giờ (publish)** | `workflows/06_publish.md` | • `knowledge/toolchains/ATLAS_CHANNEL.md` (trình tự 10 bước một bài blog)<br>• `knowledge/toolchains/PLATFORM_SETUP.md`<br>• Hồ sơ `.md` Mục 5 (Giờ vàng đăng bài) | • `templates/*`<br>• `knowledge/psychology/*` |
@@ -25,10 +25,13 @@
 | **Thêm kênh mạng xã hội mới** | `knowledge/toolchains/PLATFORM_SETUP.md` | `knowledge/toolchains/SECRETS.md` (nối token) · `knowledge/data_model/DATA_MODEL.md` (enum `channels`) |
 | **Nối token/mật khẩu cho kênh mới** | `knowledge/toolchains/SECRETS.md` | mục lục bí mật của trạm (`~/.secret/README.md`) |
 | **Thêm giọng văn thương hiệu mới** | `output_styles/README.md` | `output_styles/compa-class-blog.md` (file mẫu) |
-| **Sửa đổi trường dữ liệu** | `knowledge/data_model/DATA_MODEL.md` | `templates/campaign.md` · `scripts/pipeline/export_excel.py` (bộ cột bản xuất) |
+| **Sửa đổi trường dữ liệu** | `knowledge/data_model/DATA_MODEL.md` | `templates/station/_channel/_campaign/campaign.md` · `scripts/pipeline/export_excel.py` (bộ cột bản xuất) |
 | **Dựng trạm nội dung mới** | `install.ps1` | `examples/README.md` (trạm mẫu đã điền) · `README.md` §3 |
 | **Xem một trạm đã điền trông thế nào** | `examples/README.md` | `examples/vi-du-studio/` |
 | **Kiểm cây liên kết / tìm bài mồ côi** | `scripts/pipeline/check_tree.py` | `workflows/00_WORKFLOW_INDEX.md` |
+| **Dựng chiến dịch CHẠY THEO LỊCH** (bản tin, series tự động) | `knowledge/toolchains/NEWS_PIPELINE.md` | `templates/README.md` · `scripts/pipeline/campaign_cfg.py` (bản chụp cấu hình) |
+| **Sửa nguồn cấu hình của một runner** | `knowledge/toolchains/NEWS_PIPELINE.md` §"Trước khi đổi nguồn cấu hình" | `scripts/pipeline/campaign_cfg.py` · `tests/test_campaign_cfg.py` |
+| **Đổi bộ màu / thiết kế của kênh** | `templates/station/_channel/channel.yml` (khối `theme:`) | `brand.md` (ghi nhận định thiết kế) — script chỉ đọc `theme:` khi kênh khai; kênh cũ giữ màu cứng trong code |
 | **Nâng cấp công cụ / Role Agent** | `.agents/README.md` | `.agents/roles/`, `.agents/skills/` |
 ---
 

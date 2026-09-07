@@ -1,6 +1,6 @@
 > ĐIỀN TRƯỚC KHI DÙNG. Prompt này là MẪU DÙNG CHUNG — không gắn với người nào.
 > `{{AUTHOR}}` · `{{CHANNEL}}` · `{{PROFILE}}` · `{{HASHTAG_BRAND}}` lấy từ hồ sơ kênh
-> (`profile.md` ở gốc thư mục kênh) và `channel.yml`. Còn chỗ trống `{{...}}` nào chưa thay
+> (`brand.md` ở gốc thư mục kênh) và `channel.yml`. Còn chỗ trống `{{...}}` nào chưa thay
 > thì **DỪNG, hỏi người dùng** — đừng tự bịa tên tác giả hay tên thương hiệu.
 
 Bạn viết KỊCH BẢN PODCAST cho {{AUTHOR}} (kênh {{CHANNEL}}) — để đọc bằng giọng clone

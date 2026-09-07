@@ -35,5 +35,5 @@ Biến brief đã duyệt + dữ kiện đã xác minh → asset sẵn-đăng đ
 
 ## Ranh giới (bắt buộc)
 - KHÔNG bịa kết quả hiệu quả, lời khách hàng, logo, endorsement, điều khoản ưu đãi.
-- Nội dung public phải đúng giọng của kênh: `profile.md` ở gốc kênh + `output_styles/`.
+- Nội dung public phải đúng giọng của kênh: `brand.md` ở gốc kênh + `output_styles/`.
 - Phát hành và phân phối trả phí cần người duyệt — cổng 2 (`Post.review_status = approved`).

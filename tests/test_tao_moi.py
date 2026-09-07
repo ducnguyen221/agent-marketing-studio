@@ -115,9 +115,12 @@ def test_khong_ghi_de_thu_muc_da_co(station):
 def test_id_sai_dinh_dang_thi_tu_choi(station):
     _chay(ROOT / "scripts/pipeline/new_channel.py", "--id", "k", "--label", "K",
           "--path", "./k", "--station", station)
-    # id chiến dịch không đúng CMP-YYMM-slug
-    _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "linh-tinh",
-          "--name", "X", "--prefix", "THU", "--station", station, mong_doi=2)
+    # `linh-tinh` nay HỢP LỆ: chiến dịch chạy theo lịch đặt mã theo chức năng
+    # (`daily-ai-news`, `hot-repo`), không gắn tháng. Chỉ hai kiểu bị từ chối:
+    _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "Linh-Tinh",
+          "--name", "X", "--prefix", "THU", "--station", station, mong_doi=2)   # có CHỮ HOA
+    _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "2-linh-tinh",
+          "--name", "X", "--prefix", "THU", "--station", station, mong_doi=2)   # bắt đầu bằng SỐ
     # prefix không phải chữ HOA
     _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "CMP-2609-t",
           "--name", "X", "--prefix", "thu", "--station", station, mong_doi=2)
@@ -225,7 +228,7 @@ def test_cong_bat_MOI_truong_van_xuoi_con_nguyen_mau(station):
     _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
     import new_post
 
-    fm, _ = M.read_fm(ROOT / "templates" / "campaign.md")
+    fm, _ = M.read_fm(ROOT / "templates" / "station" / "_channel" / "_campaign" / "campaign.md")
     bat = {x.split()[0].split("=")[0] for x in new_post._campaign_da_du(fm)}
     van_xuoi = [k for k in new_post.BAT_BUOC if k not in new_post.CHON_TU_DANH_SACH]
     assert set(van_xuoi) <= bat, f"lọt trường văn xuôi: {set(van_xuoi) - bat}"
@@ -242,7 +245,7 @@ def test_channels_va_cta_RONG_thi_van_bi_bat(station):
     _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
     import new_post
 
-    fm, _ = M.read_fm(ROOT / "templates" / "campaign.md")
+    fm, _ = M.read_fm(ROOT / "templates" / "station" / "_channel" / "_campaign" / "campaign.md")
     du = dict(fm, **DU_THONG_TIN)
     for k in ("channels", "primary_cta"):
         thieu = new_post._campaign_da_du(dict(du, **{k: [] if k == "channels" else ""}),

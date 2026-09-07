@@ -1,0 +1,104 @@
+# channel.yml — hồ sơ MỘT KÊNH.
+#
+# Kênh = một thương hiệu / tài khoản có giọng riêng, đăng lên nhiều NỀN TẢNG.
+# Thư mục chứa file này là gốc kênh; tên thư mục phải bằng `id` bên dưới.
+#
+# Nội dung thật (bài, ảnh, số liệu) sống ở đây, KHÔNG vào repo engine.
+# Chỉ ghi TÊN biến môi trường của secret, không bao giờ ghi giá trị.
+# Cách nối, và vì sao ba tầng (cấu hình → biến → file): knowledge/toolchains/SECRETS.md
+schema: channel/1
+id: ten-kenh
+label: "Tên kênh đọc được"
+created: 2026-01-01
+purpose: "Kênh này để làm gì, cho ai"
+owner: "Người phụ trách"
+language: vi
+timezone: Asia/Ho_Chi_Minh
+
+# suggest = người duyệt cả hai cổng · auto_safe = agent tự làm phần an toàn · full
+autonomy: suggest
+
+# blog_gates dùng để phân biệt link "về nhà" với nguồn ngoài
+home_domain: example.vn
+
+# Hồ sơ giọng, đường dẫn trong repo engine (không phải trong kênh)
+brand_voice: brand.md          # hồ sơ giọng nằm NGAY TRONG kênh, không ở repo engine
+
+# Giá trị hợp lệ của content_pillar CHO KÊNH NÀY. Mỗi kênh một bộ khác nhau —
+# đây là lý do bộ trụ cột không nên nằm cứng trong DATA_MODEL.
+pillars: [tru-cot-1, tru-cot-2]
+
+# `platforms` chứ không phải `channels`: sau khi "kênh" là thư mục này, dùng lại chữ
+# "channels" cho danh sách nền tảng là đọc sai ngay dòng đầu. Cột Excel `Post.channel`
+# giữ nguyên tên để tương thích biểu mẫu.
+platforms:
+  - channel: web_blog
+    handle: "Tên site · example.vn/blog"
+    base_url: https://example.vn/blog/content
+    post_formats: [blog_article]
+  - channel: youtube
+    handle: "Tên kênh YouTube"
+    post_formats: [youtube_video]
+    secrets_env: { token: YT_TOKEN_PATH, client: YT_CLIENT_SECRET }
+  - channel: facebook
+    handle: "Tên Page"
+    post_formats: [facebook_post]
+    secrets_env: { config: FB_CONFIG }
+
+# KPI mặc định cho chiến dịch mới của kênh. Chiến dịch nào có mục tiêu riêng thì ghi đè
+# trong campaign.md.
+# ⚠️ Số ở đây phải đến từ SỐ LIỆU THẬT của các bài đã đăng, không phải từ cảm giác.
+#    Chưa có bài nào để so thì để trống — ô rỗng nói "chưa biết", số 0 nói "đo được là 0".
+kpi_default:
+  blog:
+  youtube:
+  facebook:
+
+# Thư mục kênh chỉ có FILE PHẲNG + các thư mục chiến dịch. Không lồng thêm cấp:
+# profile/ và memory/ mỗi cái chứa đúng một file, lồng thêm chỉ để phải bấm thêm một lần.
+paths:
+  profile: brand.md            # hồ sơ kênh: nhận diện + giọng + chính kiến. KHÔNG vào repo
+  continuity: continuity.json  # sổ bài đã đăng; B0 đọc CÓ LỌC (so slug), đừng nạp cả file
+
+# ── Khoá MÁY của kênh. Đây là file MÁY DUY NHẤT của một kênh.
+#
+# Ranh giới, một câu: **`.yml` cho máy · `.md` cho người · `.txt` cho prompt.**
+# Thứ gì engine đọc thì để đây; câu chữ người sửa (tagline, welcome, giọng) để `brand.md`;
+# cấu hình riêng của từng chiến dịch để `<chiến-dịch>/campaign.md`.
+#
+# Để trống khoá nào không dùng — đừng xoá dòng, người sau sẽ không biết là có nó.
+# ── BỘ THIẾT KẾ GỐC của kênh. Điền lúc khai sinh kênh; script ăn theo bộ này.
+#
+# Ranh giới quan trọng: chỉ khai ở đây những màu là BẢN SẮC của kênh. Màu nền, màu chữ,
+# màu viền là khung giao diện dùng chung — đo trên hai kênh đang chạy thì 9/15 màu trong
+# `build-index.ps1` GIỐNG HỆT NHAU. Đưa chúng vào cấu hình từng kênh chỉ mời gọi hai kênh
+# trôi khác nhau mà chẳng để làm gì.
+#
+# Kênh nào KHÔNG khai khối này thì script dùng màu mặc định ghi trong code — đó là lý do
+# ba kênh cũ (dựng trước 07/09/2026) giữ nguyên diện mạo sau khi chuẩn hoá. Khai vào đây
+# lúc nào thì script ăn theo lúc đó; đây là cơ chế opt-in, không phải bắt buộc.
+#
+# Chiến dịch có thể ghi đè `video_accents` riêng trong `campaign.md:theme` — `hot-repo`
+# đang làm vậy có chủ đích, vì 9 video đã đăng dùng bộ màu riêng của nó.
+theme:
+  web_accent:                # nhấn chính trên web
+  web_accent2:               # nhấn phụ
+  web_accent3:               # nhấn thứ ba (thường là xanh lá / nhấn tích cực)
+  video_accents:             # "ac1,ac2,ac3,ac4" — bốn màu cho video
+  email_accent:              # nền EMAIL là TRẮNG: màu ở đây phải đủ tương phản để đọc.
+                             # Đo thật: #00f0ff chỉ đạt 1,4:1 — không dùng được cho chữ.
+
+brand:
+  a:                # nửa đầu tên hiển thị, vd "AI"
+  b:                # nửa sau, vd "News"
+  repo:             # thư mục repo web trên máy (nếu kênh có trang web)
+  gh_repo:          # owner/repo trên GitHub
+  site_base:        # URL gốc, KHÔNG có dấu / cuối — site_root và page_weekly_base suy ra từ đây
+  home_url:         # trang chủ của tác giả/tổ chức — hiện ở nav và chân trang
+  author:           # ai tuyển chọn/biên tập, hiện ở chân trang ("Tuyển chọn bởi …")
+  script_url:       # Apps Script nhận đăng ký nhận bản tin (nếu có)
+  audio_keep:       # giữ lại bao nhiêu file audio cũ
+  # Để TRỐNG là KHÔNG nhúng pixel nào. `build-index.ps1` chỉ sinh khối Meta Pixel khi khoá
+  # này có giá trị — nhúng sẵn id của người khác là lặng lẽ gửi dữ liệu người đọc tới một
+  # tài khoản quảng cáo mà chủ trang không hề biết.
+  fb_pixel_id:      # id Meta Pixel (nếu kênh có đo tương tác từ Facebook)

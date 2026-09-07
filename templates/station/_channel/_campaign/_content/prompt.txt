@@ -1,0 +1,64 @@
+PROMPT SINH NỘI DUNG — một content, nhiều kênh
+==============================================
+
+File này là prompt để agent tạo ra `research.md` rồi `content.md` cho ĐÚNG bài này.
+Nó là `.txt` chứ không phải `.md` có chủ ý: prompt được đọc thô rồi bơm thẳng vào model,
+không qua bộ dựng markdown nào. Thêm heading hay bảng vào đây là thêm nhiễu, không thêm nghĩa.
+
+Chỗ nào để trong {{...}} là slot — script thay trước khi gửi. Đừng xoá slot, đừng đổi tên.
+
+--------------------------------------------------------------------------------
+BỐI CẢNH (script bơm vào, đừng sửa tay)
+--------------------------------------------------------------------------------
+Kênh          : {{CHANNEL_LABEL}}
+Chiến dịch    : {{CAMPAIGN_NAME}}
+Content       : {{CONTENT_ID}} — {{CONTENT_NAME}}
+Trụ nội dung  : {{CONTENT_PILLAR}}
+Thư mục bài   : {{POST_DIR}}
+Kênh sẽ đăng  : {{CHANNELS}}
+
+HỒ SƠ KÊNH (từ brand.md — giọng, chính kiến, cái KHÔNG làm):
+{{BRAND}}
+
+ĐỊNH HƯỚNG CHIẾN DỊCH (từ campaign.md — thông điệp, bằng chứng được phép dùng):
+{{EDITORIAL}}
+
+--------------------------------------------------------------------------------
+VIỆC CỦA BẠN — HAI BƯỚC, ĐÚNG THỨ TỰ
+--------------------------------------------------------------------------------
+
+BƯỚC 1 — research.md
+Ghi vào {{POST_DIR}}/research.md. Giữ nguyên frontmatter đã có, chỉ điền giá trị.
+Bắt buộc điền: content_goal · audience_profile · core_brief · key_sources ·
+target_keyword · creative_direction · constraints · content_relationship.
+
+Luật của bước này:
+- MỌI khẳng định có số hoặc có mốc thời gian PHẢI kèm nguồn trong key_sources.
+- Không tìm được nguồn thì BỎ khẳng định đó, không viết mềm đi cho qua.
+- Ghi cả thứ mâu thuẫn với góc nhìn của bài. Nghiên cứu chỉ chọn cái hợp ý là quảng cáo.
+
+BƯỚC 2 — content.md
+Chỉ làm SAU khi research.md đã đầy. Ghi vào {{POST_DIR}}/content.md.
+
+MỘT file cho MỌI kênh, tách bằng heading `## post:<post_format>`. Không tạo file riêng
+cho từng kênh ở bước này — bước sau mới xuất ra `youtube/`, `facebook/`, `atlas/`.
+
+- Phần dùng chung (outline, ẩn dụ, claim cần kiểm) viết TRƯỚC các khối `## post:`.
+- Mỗi khối `## post:` là bản NATIVE của kênh đó, không phải bản cắt ngắn của bài blog.
+  Người đọc Facebook không đọc mở bài kiểu blog; người xem YouTube không đọc tiêu đề SEO.
+- Giữ nguyên tên các khối `## post:` có sẵn trong file. Kênh nào không đăng thì để khối
+  trống, ĐỪNG xoá — xoá đi thì lần sau không ai biết là có kênh đó.
+
+--------------------------------------------------------------------------------
+BA ĐIỀU KHÔNG BAO GIỜ
+--------------------------------------------------------------------------------
+1. Không bịa số, không bịa tính năng, không bịa trích dẫn. Không chắc thì viết "chưa rõ".
+2. Không lộ tên công cụ nội bộ (tên model, tên script, tên pipeline) trong bản công khai.
+3. Không tự đăng. Bước này chỉ tạo file; đăng là việc sau hai cổng duyệt của người.
+
+--------------------------------------------------------------------------------
+XONG THÌ BÁO
+--------------------------------------------------------------------------------
+In ra: đường dẫn hai file đã ghi, số nguồn đã dùng, và DANH SÁCH thứ bạn định viết nhưng
+đã bỏ vì không tìm được nguồn. Mục cuối quan trọng nhất — nó cho người duyệt biết bài này
+đang thiếu gì, thay vì để họ tự đoán.

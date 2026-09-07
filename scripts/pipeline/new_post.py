@@ -9,7 +9,7 @@ người. Ô `g1` để trống cho tới khi người điền ngày.
 ═══ HỢP ĐỒNG ĐỌC — agent viết bài PHẢI đọc đủ ba thứ trước khi viết một chữ ═══
   1. `campaign.md` của chiến dịch  — bài toán kinh doanh, đối tượng, thông điệp, trụ nội
      dung, và MỤC "KHÔNG LÀM". Bài không bám chiến dịch là bài lạc.
-  2. `profile.md` của kênh         — tác giả là ai, giọng gì, chính kiến gì, không bao giờ
+  2. `brand.md` của kênh           — tác giả là ai, giọng gì, chính kiến gì, không bao giờ
      viết gì. Đọc KHÔNG ĐƯỢC thì DỪNG, đừng viết với chính kiến rỗng.
   3. `research.md` của CHÍNH bài đó — mục tiêu nghiên cứu và nguồn của riêng bài này.
 Script chặn ở (1): campaign.md còn chữ mẫu là không đẻ bài. (2) và (3) là kỷ luật của
@@ -36,6 +36,13 @@ import studio_paths as SP  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 TPL = REPO / "templates"
+# Cây mẫu phản chiếu ĐÚNG hình dạng một trạm thật — mở `templates/station/` ra là thấy
+# ngay kênh lồng chiến dịch lồng bài. Trước đây 15 file nằm phẳng một chỗ, đọc tên phải
+# tự đoán cái nào lồng trong cái nào.
+TPL_STATION = TPL / "station"
+TPL_KENH    = TPL_STATION / "_channel"
+TPL_CAM     = TPL_KENH / "_campaign"
+TPL_BAI     = TPL_CAM / "_content"
 
 
 # Trường BẮT BUỘC phải điền xong trong campaign.md trước khi đẻ bài đầu tiên.
@@ -64,7 +71,7 @@ def _gia_tri_mau() -> dict:
     dịch rỗng. Chép tay thì template đổi một chữ là cổng mù, mà không gì báo.
     """
     try:
-        fm, _ = md_io.read_fm(TPL / "campaign.md")
+        fm, _ = md_io.read_fm(TPL_CAM / "campaign.md")
         return {k: (v.strip() if isinstance(v, str) else v) for k, v in fm.items()}
     except Exception:      # noqa: BLE001 — thiếu template thì cổng vẫn phải chạy được
         return {}
@@ -177,7 +184,7 @@ def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
         if rc != 0:
             sys.stderr.write(f"dừng ở {cid} (đã tạo {dong_tsv.index((cid, slug, tieu_de, goc))} bài)\n")
             return rc
-    print(f"  đã tạo {len(dong_tsv)} bài. Agent viết bài: đọc campaign.md + profile.md "
+    print(f"  đã tạo {len(dong_tsv)} bài. Agent viết bài: đọc campaign.md + brand.md "
           f"của kênh + research.md của TỪNG bài trước khi viết.")
     return 0
 
@@ -319,8 +326,20 @@ def main(argv=None) -> int:
     }, (dich / "meta.json").open("w", encoding="utf-8", newline="\n"),
         ensure_ascii=False, indent=2)
 
+    # prompt.txt — prompt sinh ra CHÍNH bài này (research.md rồi content.md).
+    #
+    # Đặt ở cấp CONTENT chứ không phải cấp chiến dịch: mỗi bài có bối cảnh riêng (nguồn,
+    # góc nhìn, ràng buộc), và giữ prompt cạnh sản phẩm thì sáu tháng sau còn truy được
+    # bài này ra đời từ lời dặn nào. Chiến dịch cũng có `prompt.txt` riêng — cái đó cho
+    # bước CHỌN đề tài; cái này cho bước VIẾT.
+    #
+    # `.txt` chứ không `.md`: prompt đọc thô rồi bơm thẳng vào model, không qua bộ dựng
+    # markdown nào.
+    if (TPL_BAI / "prompt.txt").is_file():
+        shutil.copy2(TPL_BAI / "prompt.txt", dich / "prompt.txt")
+
     # research.md — frontmatter mang brief chi tiết
-    shutil.copy2(TPL / "research.md", PP.p(dich, "research"))
+    shutil.copy2(TPL_BAI / "research.md", PP.p(dich, "research"))
     fm_r, body_r = md_io.read_fm(PP.p(dich, "research"))
     fm_r.update({"content_id": a.id, "campaign_id": fm_cam.get("id", ""),
                  "audio": a.audio, "video": a.video, "short": a.short})
@@ -329,7 +348,7 @@ def main(argv=None) -> int:
     md_io.write_fm(PP.p(dich, "research"), fm_r, body_r)
 
     # content.md
-    shutil.copy2(TPL / "content.md", PP.p(dich, "content"))
+    shutil.copy2(TPL_BAI / "content.md", PP.p(dich, "content"))
     fm_c, body_c = md_io.read_fm(PP.p(dich, "content"))
     fm_c.update({"content_id": a.id, "campaign_id": fm_cam.get("id", ""),
                  "content_name": a.title})

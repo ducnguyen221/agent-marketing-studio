@@ -38,6 +38,44 @@ kpi:
   facebook:
 budget:
 actual_spend:
+
+# ── CHỈ cho chiến dịch CHẠY THEO LỊCH (bản tin, series tự động). Chiến dịch viết tay thì
+#    xoá cả bốn khối dưới đây đi.
+#
+#    `campaign_cfg.py` đọc chúng, hợp nhất với `channel.yml` + `brand.md`, rồi in ra một
+#    khối JSON. `run.ps1` ghi khối đó thành bản chụp và truyền vào engine qua `-Config`.
+#    PowerShell 5.1 KHÔNG đọc được YAML — đó là lý do có bước dịch này, không phải thừa.
+
+# runtime — máy đọc. `label` và `runner` là BẮT BUỘC; thiếu thì campaign_cfg.py dừng hẳn
+# (exit 2) thay vì để engine chạy tiếp với giá trị rỗng rồi ra sản phẩm sai mà không báo.
+runtime:
+  label:                    # tên ngắn engine dùng trong tên file log, tiêu đề
+  runner:                   # vd run-toptoday-hot.ps1 — tìm trong thư mục này TRƯỚC, rồi tới engine
+  runner_args: ""           # vd "-Brand ai -Publish"
+  # prompt: prompt.txt
+  # out_dir: daily-out
+  # yt_playlist: ""
+  # fb_text_post: false     # true = đăng thêm bài chữ riêng trên Facebook (mặc định KHÔNG)
+
+# identity — nhận diện trên video. Để TRỐNG nghĩa là dùng mặc định của template renderer;
+# điền vào là ĐỔI hình ảnh đang chạy, nên chỉ điền khi cố ý.
+identity: {}
+  # brand_a: ""
+  # brand_b: ""
+  # kicker: ""
+  # site: ""
+
+# titles — CÂU CHỮ, không phải cấu hình. Chỗ này để người sửa mà không phải mở .json.
+titles: {}
+  # yt_prefix: ""
+  # recap: "... {week} ... {range}"
+  # short: "... {week}"
+
+# theme — GHI CHÉP màu đang dùng, kèm file:dòng nơi nó nằm cứng. Không phải nguồn cấu hình
+# trừ khi engine thật sự đọc khoá đó (vd video_accents -> biến môi trường).
+theme: {}
+
+hashtags: []
 ---
 
 # Hồ sơ chiến dịch — {{Tên chiến dịch}}

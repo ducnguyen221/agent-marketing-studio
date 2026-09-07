@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
 import gen_article as G  # noqa: E402
 
-TEMPLATE = ROOT / "templates" / "content.md"
+TEMPLATE = ROOT / "templates" / "station" / "_channel" / "_campaign" / "_content" / "content.md"
 
 
 @pytest.fixture(scope="module")

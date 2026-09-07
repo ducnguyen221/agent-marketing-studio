@@ -61,7 +61,7 @@ def test_cong_campaign_bao_loi_doc_duoc_tren_may_sach(tmp_path):
     M.write_fm(S / "CHANNELS.md", {"schema": "channels/1", "channels": [
         {"id": "k", "label": "K", "path": "./k", "status": "active"}]}, "# Sổ\n")
     (K / "channel.yml").write_text("schema: channel/1\nid: k\n", encoding="utf-8")
-    shutil.copy2(ROOT / "templates" / "campaign.md", C / "campaign.md")
+    shutil.copy2(ROOT / "templates" / "station" / "_channel" / "_campaign" / "campaign.md", C / "campaign.md")
 
     r = subprocess.run([PY, str(ROOT / "scripts/pipeline/new_post.py"),
                         "--campaign", "CMP-2609-t", "--id", "THU-001", "--slug", "a",

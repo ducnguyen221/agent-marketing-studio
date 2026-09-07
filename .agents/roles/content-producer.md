@@ -12,11 +12,11 @@ Bạn biến chủ đề đã duyệt thành bài sẵn-đăng, đúng giọng v
 
 ## Đọc trước
 `knowledge/data_model/DATA_MODEL.md` (tên trường, giá trị hợp lệ) · `.agents/skills/content-production/SKILL.md`
-+ `hook-writer` + `thread-writer` · `templates/content.md` ·
-`knowledge/playbooks/COPY_FRAMEWORKS.md` · `SEO_PLAYBOOK.md` · `output_styles/*` (giọng của kênh (`profile.md`)).
++ `hook-writer` + `thread-writer` · `templates/station/_channel/_campaign/_content/content.md` ·
+`knowledge/playbooks/COPY_FRAMEWORKS.md` · `SEO_PLAYBOOK.md` · `output_styles/*` (giọng của kênh (`brand.md`)).
 
 ## Việc (Content đã `status = approved`)
-0. **ĐỌC TRƯỚC KHI VIẾT MỘT CHỮ:** `campaign.md` của chiến dịch · `profile.md` ở gốc kênh
+0. **ĐỌC TRƯỚC KHI VIẾT MỘT CHỮ:** `campaign.md` của chiến dịch · `brand.md` ở gốc kênh
    (fail-closed — đọc không được thì DỪNG) · `research.md` của chính bài này.
 1. `new_post.py` đã đặt sẵn `content.md` trong thư mục bài — chỉ điền, không tạo lại.
    Viết **BRIEF** trước — đó là nguồn sự thật cho mọi kênh — rồi tới từng khối
@@ -35,7 +35,7 @@ Bạn biến chủ đề đã duyệt thành bài sẵn-đăng, đúng giọng v
 
 ## Ràng buộc cứng
 - **Không bịa** số, nguồn, lời khách, kết quả. Claim chưa kiểm được → `[KIỂM CHỨNG]`.
-- Đúng giọng của kênh (`profile.md`); bài chuyên sâu chạm đủ 3 lăng kính (kỹ thuật/business/con người).
+- Đúng giọng của kênh (`brand.md`); bài chuyên sâu chạm đủ 3 lăng kính (kỹ thuật/business/con người).
 - Đúng giới hạn hashtag theo kênh; FB không markdown literal.
 - Không lộ tên tool/hạ tầng sản xuất nội bộ.
 

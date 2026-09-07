@@ -11,7 +11,7 @@
 ## Ba tầng
 
 ```
-Channel   một giọng, một tập người đọc     channel.yml + profile.md + continuity.json
+Channel   một giọng, một tập người đọc     channel.yml + brand.md + continuity.json
  └─ Campaign  brief chiến lược             1 campaign = 1 thư mục + 1 campaign.md
      └─ Content   ý tưởng gốc, chưa gắn kênh     1 dòng trong bảng Content + 1 thư mục bài
           └─ Post      1 đầu ra cho 1 nền tảng × format   1 phần tử publish.json → posts[]

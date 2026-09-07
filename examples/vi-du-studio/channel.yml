@@ -56,5 +56,5 @@ kpi_default:
 # Thư mục kênh chỉ có FILE PHẲNG + các thư mục chiến dịch. Không lồng thêm cấp:
 # profile/ và memory/ mỗi cái chứa đúng một file, lồng thêm chỉ để phải bấm thêm một lần.
 paths:
-  profile: profile.md          # giọng, tác phong, chính kiến — dữ liệu cá nhân, KHÔNG vào repo
+  profile: brand.md            # hồ sơ kênh: nhận diện + giọng + chính kiến. KHÔNG vào repo
   continuity: continuity.json  # sổ bài đã đăng; B0 đọc CÓ LỌC (so slug), đừng nạp cả file

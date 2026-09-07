@@ -41,11 +41,28 @@ python scripts/pipeline/new_campaign.py --channel <ten-kenh> --id CMP-YYMM-slug 
     --name "<Tên chiến dịch>" --prefix XXX [--station <trạm>]
 ```
 
-Script copy `templates/campaign.md` vào thư mục chiến dịch và ghi dòng vào `CAMPAIGNS.md` của
+Script copy `templates/station/_channel/_campaign/campaign.md` vào thư mục chiến dịch và ghi dòng vào `CAMPAIGNS.md` của
 kênh. `--prefix` là tiền tố mã bài (viết HOA), ví dụ `AST` → `AST-001`.
 
 **Dùng script, không dựng tay.** Tự tạo thư mục rồi tự chép file là sớm muộn lệch cấu trúc —
 và `check_tree.py` mới là chỗ phát hiện ra, sau khi đã làm được vài bài.
+
+#### Chiến dịch CHẠY THEO LỊCH thì thêm `--runner`
+
+Bản tin ngày/tuần và series tự động là chiến dịch như mọi chiến dịch khác — chỉ khác ở chỗ
+Windows Task Scheduler khởi động chúng, không phải người:
+
+```
+python scripts/pipeline/new_campaign.py --channel <ten-kenh> --id <slug>     --name "<Tên>" --prefix XXX --runner <script>.ps1 --runner-args "-Brand ai -Publish"
+```
+
+`--runner` thêm khối `runtime:` vào `campaign.md` và sinh thêm `run.ps1` + `prompt.txt` cấp
+chiến dịch. Không có cờ đó thì **không sinh** — cố ý: một điểm vào không ai gọi là thứ sáu
+tháng sau không ai dám xoá.
+
+Mã chiến dịch loại này là **slug chức năng** (`daily-ai-news`, `hot-repo`), không phải
+`CMP-YYMM-slug`: nó sống vô thời hạn nên gắn tháng vào là nói dối. Chi tiết vận hành ở
+[`NEWS_PIPELINE.md`](../knowledge/toolchains/NEWS_PIPELINE.md).
 
 ### Bước 3 — Chiến dịch sống ở TRẠM, không ở repo
 

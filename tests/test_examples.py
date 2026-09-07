@@ -133,7 +133,7 @@ def test_khong_con_chu_mau_o_nhung_cho_DA_DIEN():
 
     Chỉ những file đã điền mới bị soi: hồ sơ kênh, chiến dịch, và bài đã đăng.
     """
-    da_dien = ([KENH / "channel.yml", KENH / "profile.md", CAM / "campaign.md",
+    da_dien = ([KENH / "channel.yml", KENH / "brand.md", CAM / "campaign.md",
                 VD / "CHANNELS.md", KENH / "CAMPAIGNS.md", VD / "README.md"]
                + [p for p in BAI.rglob("*.md")])
     cho_phep = {"{{BLOG_URL}}", "{{YOUTUBE_URL}}"}

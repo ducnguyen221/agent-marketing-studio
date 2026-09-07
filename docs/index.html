@@ -324,6 +324,26 @@
   .req b{color:var(--text)}
   @media (max-width:840px){.install-grid{grid-template-columns:1fr;gap:30px}}
 
+  /* ---------- cấu trúc thư mục ---------- */
+  .tree-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:30px;align-items:start}
+  .tree-grid>*{min-width:0}
+  .tree-card{position:sticky;top:88px}
+  .tree-card pre code{font-size:12.5px;line-height:1.75}
+  .code-scroll .dir{color:#7fd6b0}
+  .code-scroll .lv{color:#f0b45e;font-weight:600}
+  .lvls{display:flex;flex-direction:column;gap:14px}
+  .lvl{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px 22px;box-shadow:var(--shadow-sm)}
+  .lvl-top{display:flex;align-items:center;gap:10px}
+  .lvl-tag{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;
+    padding:4px 9px;border-radius:7px;background:var(--accent-weak);color:var(--accent)}
+  .lvl h3{font-size:1.06rem;font-weight:700}
+  .lvl p{margin-top:9px;color:var(--muted);font-size:14.5px;line-height:1.6}
+  .lvl .cmd{display:block;margin-top:13px;font-family:var(--mono);font-size:12px;line-height:1.6;
+    color:var(--muted);background:var(--surface-2);border:1px solid var(--border);
+    border-radius:8px;padding:9px 11px;white-space:pre-wrap;word-break:break-word}
+  @media (max-width:960px){.tree-grid{grid-template-columns:1fr;gap:26px}.tree-card{position:static}}
+
   /* ---------- privacy / compare ---------- */
   .compare{border-collapse:separate;border-spacing:0;width:100%;background:var(--surface);
     border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm)}
@@ -384,6 +404,7 @@
     <nav class="nav-links">
       <a href="#tinh-nang">Tính năng</a>
       <a href="#cach-hoat-dong">Cách hoạt động</a>
+      <a href="#cau-truc">Cấu trúc</a>
       <a href="#cai-dat">Cài đặt</a>
       <a href="#rieng-tu">Riêng tư</a>
     </nav>
@@ -555,6 +576,72 @@
           <span class="pnum">06</span>
           <h3>Đo &amp; báo cáo</h3>
           <p>Số liệu vào <code>publish.json</code>, xuất được ra HTML và Excel. Thu tự động qua API <b>còn đang làm</b> — nay nhập tay.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======= CẤU TRÚC THƯ MỤC ======= -->
+<section id="cau-truc">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow"><span class="dot"></span>Cấu trúc thư mục</span>
+      <h2>Ba tầng lồng nhau, mở ra là đọc được</h2>
+      <p><b>Kênh</b> chứa <b>chiến dịch</b>, chiến dịch chứa <b>bài</b>. Mỗi tầng là một thư mục thật, và mỗi tầng có đúng một file giữ sự thật của tầng đó. Không có cơ sở dữ liệu ở giữa: cái bạn nhìn thấy trong file quản lý chính là cái agent đọc.</p>
+    </div>
+
+    <div class="tree-grid">
+      <div class="code-card tree-card reveal">
+        <div class="code-top">
+          <span class="pv-live" style="gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:#ff5f57;display:inline-block"></span><span style="width:11px;height:11px;border-radius:50%;background:#febc2e;display:inline-block"></span><span style="width:11px;height:11px;border-radius:50%;background:#28c840;display:inline-block"></span></span>
+          <span class="fn">~/.marketing — trạm nội dung</span>
+        </div>
+        <div class="code-scroll">
+<pre><code><span class="dir">CHANNELS.md</span>                  <span class="cm"># sổ kênh: kênh nào nằm ở đâu</span>
+<span class="dir">AUTHOR.md</span>                    <span class="cm"># tác giả là ai — dùng chung mọi kênh</span>
+
+<span class="lv">&lt;kênh&gt;/</span>                      <span class="cm"># [1] MỘT KÊNH = một giọng, một tập người đọc</span>
+  channel.yml                <span class="cm"># MÁY đọc: nền tảng, trụ nội dung, màu, đường dẫn</span>
+  brand.md                   <span class="cm"># NGƯỜI đọc: nhận diện, giọng, chính kiến</span>
+  CAMPAIGNS.md               <span class="cm"># sổ chiến dịch của kênh</span>
+  continuity.json            <span class="cm"># sổ bài đã đăng — để khỏi trùng đề tài</span>
+
+  <span class="lv">&lt;chiến-dịch&gt;/</span>              <span class="cm"># [2] MỘT CHIẾN DỊCH</span>
+    campaign.md              <span class="cm"># brief + bảng Content + khối `runtime:`</span>
+    prompt.txt               <span class="cm"># prompt bước CHỌN đề tài</span>
+    run.ps1                  <span class="cm"># [chạy theo lịch] điểm vào duy nhất</span>
+    out/                     <span class="cm"># sản phẩm RIÊNG của chiến dịch này</span>
+    logs/                    <span class="cm"># nhật ký + bản chụp cấu hình mỗi lượt</span>
+
+    <span class="lv">&lt;mã&gt;_&lt;slug&gt;/</span>             <span class="cm"># [3] MỘT BÀI</span>
+      prompt.txt             <span class="cm"># prompt bước VIẾT bài này</span>
+      research.md            <span class="cm"># nguồn, ràng buộc — đóng băng ở đây</span>
+      content.md             <span class="cm"># nội dung MỌI kênh, tách theo `## post:&lt;format&gt;`</span>
+      publish.json           <span class="cm"># cổng 2, URL thật, số đo</span></code></pre>
+        </div>
+      </div>
+
+      <div class="lvls reveal">
+        <div class="lvl">
+          <div class="lvl-top"><span class="lvl-tag">1 · KÊNH</span><h3>Một giọng, một tập người đọc</h3></div>
+          <p>Hai file chia nhau đúng một ranh giới: <code>channel.yml</code> là thứ <b>máy</b> đọc — nền tảng, trụ nội dung, bộ màu, đường dẫn. <code>brand.md</code> là thứ <b>người</b> viết và sửa — kênh này là gì, viết cho ai, không bao giờ viết gì. Trộn hai vai vào một file thì sửa câu chữ cũng phải sợ làm hỏng máy.</p>
+          <span class="cmd">python scripts/pipeline/new_channel.py --id &lt;kênh&gt; --label "…" --path ./&lt;kênh&gt;</span>
+        </div>
+        <div class="lvl">
+          <div class="lvl-top"><span class="lvl-tag">2 · CHIẾN DỊCH</span><h3>Một bài toán, một mạch bài</h3></div>
+          <p><code>campaign.md</code> giữ cả brief lẫn bảng danh sách bài — mở một file là thấy chiến dịch định làm gì và đã ra được những gì. Chiến dịch <b>chạy theo lịch</b> (bản tin ngày, tuần) nhận thêm <code>run.ps1</code> và khối <code>runtime:</code>; <code>out/</code> và <code>logs/</code> là của riêng nó, không dùng chung với chiến dịch khác.</p>
+          <span class="cmd">python scripts/pipeline/new_campaign.py --channel &lt;kênh&gt; --id &lt;slug&gt; --name "…" --prefix XXX [--runner &lt;script&gt;.ps1]</span>
+        </div>
+        <div class="lvl">
+          <div class="lvl-top"><span class="lvl-tag">3 · BÀI</span><h3>Một ý tưởng, nhiều bản đăng</h3></div>
+          <p>Một bài là <b>một</b> ý tưởng, nhưng ra nhiều bản đăng — blog, YouTube, Facebook — và tất cả nằm chung trong <code>content.md</code>, tách bằng dấu <code>## post:&lt;format&gt;</code>. Cùng một luận điểm thì phải sửa ở một chỗ; tách ra ba file là ba bản sẽ trôi khỏi nhau sau bài thứ hai.</p>
+          <span class="cmd">python scripts/pipeline/new_post.py --campaign &lt;slug&gt; --id XXX-001 --slug … --title "…"</span>
+        </div>
+        <div class="lvl">
+          <div class="lvl-top"><span class="lvl-tag">KHUÔN</span><h3>Cây mẫu có cùng hình dạng</h3></div>
+          <p><code>templates/station/</code> trong repo lồng đúng như trên — <code>_channel/_campaign/_content/</code>. Ba lệnh ở trên chép từ đó ra, nên thứ bạn thấy trong repo chính là thứ sẽ mọc lên trong trạm. Cổng kiểm <code>check_tree.py</code> soi lại cây thật sau mỗi lần thêm và trả về ba trạng thái: xanh · đỏ · <b>thiếu</b>.</p>
+          <span class="cmd">python scripts/pipeline/check_tree.py --station ~/.marketing</span>
         </div>
       </div>
     </div>

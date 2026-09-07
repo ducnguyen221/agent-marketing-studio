@@ -1,4 +1,14 @@
-# Hồ sơ kênh — giọng, tác phong, chính kiến
+---
+schema: brand/1
+channel: vi-du-studio
+label: "Ví dụ · Xưởng nội dung"
+tagline: "Xưởng nội dung chạy bằng agent, kể lại đúng như nó chạy"
+tagline_short: "Xưởng nội dung chạy bằng agent"
+welcome: "Chào — đây là chỗ ghi lại một xưởng nội dung tự động vận hành thật sự ra sao."
+email_accent: "#2563eb"
+---
+
+# Ví dụ · Xưởng nội dung — hồ sơ kênh
 
 > **ĐÂY LÀ VÍ DỤ.** Hồ sơ thật của một kênh chứa thông tin cá nhân và tổ chức, và **không
 > bao giờ vào repo** — nó sống trong thư mục kênh ở STATION của bạn. File này ở đây để bạn
