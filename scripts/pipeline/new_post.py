@@ -64,7 +64,7 @@ CTA_HOP_LE = {"awareness", "engagement", "traffic", "lead_generation",
 
 
 def _gia_tri_mau() -> dict:
-    """Đọc giá trị mẫu THẲNG TỪ `templates/campaign.md`.
+    """Đọc giá trị mẫu THẲNG TỪ `templates/station/_channel/_campaign/campaign.md`.
 
     Bản trước so với một danh sách chuỗi chép tay, nên chỉ bắt được 3 trong 8 trường:
     `campaign_goal: "Kết quả mong muốn, đo được"` lọt qua và bài vẫn đẻ ra từ một chiến
@@ -305,7 +305,7 @@ def main(argv=None) -> int:
         sys.stderr.write(
             f"bảng Content của {cam_dir.name} thiếu cột {thieu_cot} — chưa tạo gì cả.\n"
             f"Thêm cột vào bảng (giữa marker CONTENT) rồi chạy lại; mẫu đủ cột ở "
-            f"templates/campaign.md.\n")
+            f"templates/station/_channel/_campaign/campaign.md.\n")
         return 2
 
     if a.dry_run:

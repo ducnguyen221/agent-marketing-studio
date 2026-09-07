@@ -68,7 +68,7 @@ never:
 
 ## ĐỘ DÀI & PILLAR
 - Blog deep-dive: **2.500–4.000 từ**. Đủ dày để bản podcast (mp3) thành 1 tập DÀI có chất. Ưu tiên sâu hơn ngắn.
-- Mỗi bài fit ≥1 [content pillar](../templates/CAMPAIGN_TEMPLATE.md) (Mục 6 — Content Pillars): Power BI (35%) / Fabric (25%) / AI Agent (25%) / Career-BTS (15%).
+- Mỗi bài fit ≥1 [content pillar](../templates/CAMPAIGN_TEMPLATE.xlsx) (Mục 6 — Content Pillars): Power BI (35%) / Fabric (25%) / AI Agent (25%) / Career-BTS (15%).
 - KHÔNG cover: AI hype không depth, Excel beginner, listicle, crypto/web3, chính trị.
 
 ---

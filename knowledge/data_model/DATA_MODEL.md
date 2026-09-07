@@ -1,6 +1,6 @@
 <!-- CANONICAL. Đây là NGUỒN SỰ THẬT về ĐỊNH NGHĨA trường.
      Dữ liệu thật sống trong campaign.md (frontmatter + bảng Content) và publish.json.
-     Sửa trường / thêm giá trị hợp lệ → sửa file này TRƯỚC, rồi mới đổi templates/campaign.md
+     Sửa trường / thêm giá trị hợp lệ → sửa file này TRƯỚC, rồi mới đổi templates/station/_channel/_campaign/campaign.md
      và bộ cột trong scripts/pipeline/export_excel.py. -->
 
 # DATA_MODEL — mô hình dữ liệu campaign

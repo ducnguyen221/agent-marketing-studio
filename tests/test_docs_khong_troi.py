@@ -30,7 +30,7 @@ CAM = {
 }
 
 # Nơi được phép nhắc tên cũ: chỗ GIẢI THÍCH lịch sử, và chính file này.
-MIEN_TRU = ("tests/test_docs_khong_troi.py", "fixtures/baseline/", "templates/_archive/")
+MIEN_TRU = ("tests/test_docs_khong_troi.py", "fixtures/baseline/")
 
 NHI_PHAN = {".png", ".jpg", ".jpeg", ".mp3", ".mp4", ".xlsx", ".ico", ".woff", ".woff2"}
 
@@ -205,3 +205,37 @@ def test_GIA_TRI_HOP_LE_phu_moi_gia_tri_code_THAT_SU_ghi():
         thieu = viet - PP.GIA_TRI_HOP_LE[truong]
         assert not thieu, (f"register_publish ghi {truong}={thieu} mà GIA_TRI_HOP_LE thiếu — "
                            f"check_tree sẽ báo đỏ oan")
+
+
+def test_moi_duong_dan_templates_trong_ma_va_tai_lieu_deu_ton_tai():
+    """Đường dẫn `templates/...` được nhắc ở đâu thì file đó phải CÓ THẬT.
+
+    Cạm bẫy đã trả giá (07/09/2026): đổi `templates/` từ cây phẳng sang
+    `templates/station/_channel/_campaign/_content/` khiến `install.ps1` đi copy một file
+    `CHANNELS.md` không còn tồn tại ở chỗ cũ. Script đặt `$ErrorActionPreference='Stop'`
+    nên nó **crash ngay bước dựng trạm** — người vừa clone repo về, chạy lệnh cài đặt đầu
+    tiên, là hỏng. Không test nào bắt được vì không test nào chạy `install.ps1`.
+
+    Cổng `test_khong_con_ten_cu` chỉ cấm những cái tên nằm trong danh sách đen — nó không
+    thể biết một đường dẫn MỚI có tồn tại hay không. Cổng này kiểm điều ngược lại: mọi
+    đường dẫn trỏ vào `templates/` đều phải giải quyết ra file hoặc thư mục thật.
+    """
+    import re
+
+    # Bắt cả `templates/a/b.md` lẫn `templates\a\b.md` (PowerShell dùng dấu ngược).
+    mau = re.compile(r"templates[\\/][A-Za-z0-9_\-./\\]+")
+    chet = []
+    for ten, noi_dung in _tracked():
+        for m in mau.finditer(noi_dung):
+            # Cắt dấu câu dính đuôi khi đường dẫn nằm giữa câu văn.
+            duong = m.group().rstrip(".,;:)`\"'").replace("\\", "/").rstrip("/")
+            # `templates/<gì đó>` không có đuôi file và cũng không phải thư mục có thật thì
+            # đó là cách nói chung chung ("thư mục templates/"), không phải con trỏ.
+            if "." not in Path(duong).name and not (ROOT / duong).is_dir():
+                continue
+            if not (ROOT / duong).exists():
+                chet.append(ten + ": " + duong)
+
+    assert not chet, (
+        "đường dẫn templates/ trỏ vào chỗ không tồn tại — sửa đường dẫn hoặc tạo file:\n  "
+        + "\n  ".join(sorted(set(chet))))

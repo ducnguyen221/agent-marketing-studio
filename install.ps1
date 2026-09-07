@@ -9,7 +9,7 @@
     Cấu trúc trạm:
         <trạm>/CHANNELS.md          sổ kênh — kênh nào ở đâu
         <trạm>/<kênh>/channel.yml   hồ sơ kênh: nền tảng, trụ nội dung, mức tự trị
-        <trạm>/<kênh>/profile.md    giọng, tác phong, chính kiến
+        <trạm>/<kênh>/brand.md      nhận diện, giọng, chính kiến (NGƯỜI đọc)
         <trạm>/<kênh>/<chiến dịch>/campaign.md   brief + bảng danh sách bài
         <trạm>/<kênh>/<chiến dịch>/<bài>/        research.md · content.md · publish.json
 
@@ -89,7 +89,7 @@ if (Test-Path (Join-Path $Station "CHANNELS.md")) {
     Say ("Da co tram o {0} - khong ghi de." -f $Station) Yellow
 } else {
     New-Item -ItemType Directory -Force -Path $Station | Out-Null
-    Copy-Item (Join-Path $RepoRoot "templates\CHANNELS.md") (Join-Path $Station "CHANNELS.md")
+    Copy-Item (Join-Path $RepoRoot "templates\station\CHANNELS.md") (Join-Path $Station "CHANNELS.md")
     Say ""
     Say ("Tram    : {0}" -f $Station) Green
 }

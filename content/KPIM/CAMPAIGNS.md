@@ -1,6 +1,6 @@
 # Sổ chiến dịch — KPIM
 
-> Sinh tự động bởi `campaign_registry.py`. Đừng sửa tay — sửa Sheet Campaign của
+> Sinh tự động bởi `scripts/pipeline/new_campaign.py`. Đừng sửa tay — sửa Sheet Campaign của
 > workbook rồi chạy lại.
 
 **1 chiến dịch** · 2 bài · 1 đã đăng

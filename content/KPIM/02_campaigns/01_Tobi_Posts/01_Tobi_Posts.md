@@ -10,9 +10,9 @@ status: active
 
 # Hồ sơ chiến dịch — AI Agent cho người làm Data (nhập môn không buzzword)
 
-> File này được copy từ `agent/templates/CAMPAIGN_TEMPLATE.md`, đổi tên giống folder (`01_Tobi_Posts.md`).
+> File này được copy từ `templates/CAMPAIGN_TEMPLATE.xlsx`, đổi tên giống folder (`01_Tobi_Posts.md`).
 > Đây là HỒ SƠ chiến dịch; dữ liệu thực thi từng bài ở `01_Tobi_Posts.xlsx` (5 sheet).
-> Quy trình: `AGENTS.md` (Bước 1–5) + `agent/workflows/00_WORKFLOW_INDEX.md`.
+> Quy trình: `AGENTS.md` (Bước 1–5) + `workflows/00_WORKFLOW_INDEX.md`.
 
 ---
 
@@ -51,7 +51,7 @@ status: active
 ---
 
 ## 6. Content Pillars, 7. Distribution playbook, 9. Content calendar, 10. Asset registry, 11. Channel performance
-> Giữ chuẩn chung ở `agent/templates/CAMPAIGN_TEMPLATE.md` (các mục này có nội dung mặc định).
+> Giữ chuẩn chung ở `templates/CAMPAIGN_TEMPLATE.xlsx` (các mục này có nội dung mặc định).
 > Chỉ chỉnh ở đây nếu campaign cần khác chuẩn.
 
 ## 8. Lịch / cadence

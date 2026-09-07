@@ -2,7 +2,7 @@
 #
 # Mọi thứ khác biệt giữa các chiến dịch nằm trong `campaign.md`, KHÔNG nằm ở đây. Vì vậy
 # file này GIỐNG HỆT NHAU ở mọi chiến dịch — chép sang chiến dịch mới là chạy được ngay,
-# và nó cũng chính là bản mẫu trong `agent-marketing-studio/templates/campaign-run.ps1`.
+# và nó cũng chính là bản mẫu trong `agent-marketing-studio/templates/station/_channel/_campaign/run.ps1`.
 #
 # Ba bước: đọc campaign.md -> ghi bản chụp JSON -> gọi engine với -Config.
 # Không truyền -Config thì engine chạy y như trước (đọc brand.json); bản chụp đã được

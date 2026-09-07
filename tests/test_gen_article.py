@@ -2,7 +2,7 @@
 """Test cho gen_article.py — tách content.md thành file từng kênh.
 
 Bối cảnh: trước bản vá 04/09, script CHỈ hiểu heading có đánh số ("## 3) Blog"), trong khi
-`templates/content.md` của chính repo này dùng neo "## post:facebook_post".
+`templates/station/_channel/_campaign/_content/content.md` của chính repo này dùng neo "## post:facebook_post".
 Cho nó ăn đúng template của repo thì tách ra **0 khối**. Đây là rủi ro R3 trong plan:
 tách theo SỐ MỤC thì số mục xê dịch theo từng bài, sớm muộn cũng lệch mà không ai biết.
 
