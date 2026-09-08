@@ -146,3 +146,34 @@ def test_cli_exit_khac_0_khi_do(cay):
     r = subprocess.run([PY, str(ROOT / "scripts/pipeline/check_tree.py"), "--station", str(S)],
                        capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == 1 and "ĐỎ" in r.stdout
+
+# ── HAI hình dạng `folder`, cổng phải hiểu cả hai ────────────────────────────
+# `<mã>_<slug>/` là bài viết tay (thư mục con trực tiếp, có meta.json).
+# `out/<ngày>/`  là một SỐ của chiến dịch chạy theo lịch — engine sinh, KHÔNG có meta.json.
+#
+# Trước 08/09/2026 cổng chỉ biết hình dạng đầu. Hệ quả không phải "một cảnh báo thừa": nó
+# làm việc nạp ngược 277 số đã phát hành vào bảng Content thành KHÔNG THỂ mà không phá cổng
+# — hoặc bỏ trống cột `folder` (mất đường nối dòng sổ ↔ sản phẩm), hoặc chịu 277 dòng đỏ.
+
+def test_folder_long_out_ngay_KHONG_bi_bao_do(cay):
+    S, K, C, B = cay
+    (C / "out" / "2026-09-06").mkdir(parents=True)
+    fm, body = M.read_fm(C / "campaign.md")
+    body = M.upsert_row(body, "CONTENT", "content_id",
+                        {"content_id": "AST-002", "status": "published",
+                         "published": "2026-09-06", "folder": "out/2026-09-06"}, None)
+    M.write_fm(C / "campaign.md", fm, body)
+    do = CT.chay(S).do
+    assert not any("out/2026-09-06" in x for x in do), do
+
+
+def test_folder_long_TRO_SAI_van_phai_do(cay):
+    """Nới cổng không được biến nó thành cổng không kiểm gì."""
+    S, K, C, B = cay
+    fm, body = M.read_fm(C / "campaign.md")
+    body = M.upsert_row(body, "CONTENT", "content_id",
+                        {"content_id": "AST-003", "status": "published",
+                         "published": "2026-09-06", "folder": "out/2026-09-99"}, None)
+    M.write_fm(C / "campaign.md", fm, body)
+    do = CT.chay(S).do
+    assert any("out/2026-09-99" in x for x in do), do

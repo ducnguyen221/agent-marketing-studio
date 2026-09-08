@@ -129,13 +129,31 @@ def kiem_campaign(cam: Path, kenh_id: str, pillars: list, nen_tang: set, s: So) 
         s.loi(f"{cam.name}: campaign.md thiếu bảng CONTENT (marker <!-- CONTENT:BEGIN -->)")
         return {"id": cid, "bai": 0, "da_dang": 0}
 
+    # HAI hình dạng bài, đều hợp lệ — cổng phải hiểu cả hai:
+    #
+    #   <mã>_<slug>/          bài viết tay: thư mục con TRỰC TIẾP, có meta.json.
+    #   out/<ngày>/           một SỐ của chiến dịch chạy theo lịch: thư mục LỒNG, do
+    #                         engine sinh, không có meta.json (nó không đi qua new_post.py).
+    #
+    # Trước 08/09/2026 cổng chỉ biết hình dạng đầu, nên mọi dòng trỏ `out/<ngày>` đều ĐỎ —
+    # tức nạp ngược lịch sử vào bảng Content là không thể mà không phá cổng. Sửa cổng chứ
+    # không bỏ cột `folder`: cột đó là thứ duy nhất nối một dòng sổ với sản phẩm của nó.
     tren_dia = {d.name for d in SP.posts(cam)}
     trong_bang = {}
     for d in dong:
         f = (d.get("folder") or "").strip("./ ")
         trong_bang[f] = d
-        if f and f not in tren_dia:
+        if not f:
+            continue
+        if "/" in f:
+            # Đường dẫn lồng: chỉ cần thư mục CÓ THẬT. Không đòi meta.json vì engine
+            # không sinh file đó, và đòi thêm cũng không chứng minh được gì hơn.
+            if not (cam / f).is_dir():
+                s.loi(f"{cam.name}: bảng Content có {f!r} nhưng thư mục không tồn tại")
+        elif f not in tren_dia:
             s.loi(f"{cam.name}: bảng Content có {f!r} nhưng thư mục không tồn tại")
+    # Mồ côi CHỈ xét thư mục bài trực tiếp — `out/` không phải bài, và các thư mục con của
+    # nó chỉ thành "số" khi có dòng trỏ tới; chưa nạp ngược không phải là lỗi.
     for t in tren_dia - set(trong_bang):
         s.loi(f"{cam.name}: thư mục bài {t!r} không có dòng nào trong bảng Content (mồ côi)")
 
