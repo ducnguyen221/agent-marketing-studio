@@ -41,9 +41,52 @@ $runner = Join-Path $cam $cfg.runner
 if (-not (Test-Path $runner)) { $runner = Join-Path $engine $cfg.runner }
 if (-not (Test-Path $runner)) { Write-Host ('run.ps1: khong thay runner ' + $cfg.runner); exit 2 }
 
-$rargs = @()
-if ($cfg.runner_args) { $rargs = @([string]$cfg.runner_args -split '\s+' | Where-Object { $_ }) }
-if ($args) { $rargs += $args }
+# ── Đối số cho runner: BẢNG BĂM, KHÔNG phải mảng ────────────────────────────
+# ĐÃ TRẢ GIÁ 07–08/09/2026. Chỗ này từng là `& $runner @rargs -Config $snap` với `$rargs`
+# là MẢNG. PowerShell splat mảng thì buộc tham số THEO VỊ TRÍ, không theo tên: chuỗi
+# `-Brand ai -Publish` vào runner thành `$Brand = '-Brand'`, `$Profile = 'ai'`, còn
+# `-Publish` BIẾN MẤT KHÔNG MỘT DÒNG BÁO. Hai kiểu hỏng, kiểu thứ hai đắt hơn nhiều:
+#   · runner CÓ tham số -Brand  -> Get-BrandDir ném lỗi ngay, exit 1, thấy được
+#     (Daily Hot Data 07/09, Daily Hot AI 08/09 chết đúng kiểu này);
+#   · runner KHÔNG có -Brand    -> `-Publish` rơi vào $Date, switch $Publish = $false,
+#     pipeline chạy trọn rồi `if (-not $Publish) { exit 0 }` => KHÔNG ĐĂNG GÌ mà
+#     Telegram vẫn báo ✅ (hot-repo nằm đúng nhánh này, chưa kịp tới lịch).
+# Splat BẢNG BĂM thì PowerShell buộc theo TÊN và switch vẫn là switch.
+function ConvertTo-ThamSo {
+  param([string[]]$Tokens, [string]$Nguon)
+  $h = @{}
+  for ($i = 0; $i -lt $Tokens.Count; $i++) {
+    $t = [string]$Tokens[$i]
+    if ($t -notmatch '^-{1,2}[A-Za-z]') {
+      throw ("doi so runner khong doc duoc (tu " + $Nguon + "): '" + $t +
+             "' khong phai ten tham so dang -Ten. Ca chuoi: " + ($Tokens -join ' '))
+    }
+    $ten = $t -replace '^-{1,2}', ''
+    $ke  = $null
+    if ($i + 1 -lt $Tokens.Count) { $ke = [string]$Tokens[$i + 1] }
+    # `-1` là GIÁ TRỊ âm chứ không phải tên tham số -> chỉ coi là tên khi có chữ cái.
+    if ($null -ne $ke -and $ke -notmatch '^-{1,2}[A-Za-z]') { $h[$ten] = $ke; $i++ }
+    else { $h[$ten] = $true }
+  }
+  return $h
+}
 
-& $runner @rargs -Config $snap
+$toks = @()
+if ($cfg.runner_args) { $toks += @([string]$cfg.runner_args -split '\s+' | Where-Object { $_ }) }
+if ($args) { $toks += @($args | ForEach-Object { [string]$_ }) }
+
+try {
+  $tham = ConvertTo-ThamSo -Tokens $toks -Nguon 'campaign.md: runtime.runner_args + dong lenh'
+} catch {
+  Write-Host ('run.ps1: ' + $_.Exception.Message)
+  exit 2
+}
+$tham['Config'] = $snap
+
+# In ĐÚNG thứ sắp truyền xuống. Lượt chạy nền chỉ để lại cái log này; thiếu dòng này thì
+# lần sau tham số rơi mất lại phải dò lại từ đầu.
+Write-Host ('run.ps1: ' + $cfg.runner + ' <- ' +
+  (($tham.Keys | Sort-Object | ForEach-Object { '-' + $_ + ' ' + $tham[$_] }) -join ' '))
+
+& $runner @tham
 exit $LASTEXITCODE
