@@ -225,7 +225,11 @@ def buoc_soan(cam: Path, *, bot, hom_nay: date | None = None, dry_run=False) -> 
             xong.append(d["content_id"])
             continue
         ok = True
-        for lenh in (["gen_article.py", "--content-md", str(bai / "content.md"),
+        # `register_publish init` PHẢI chạy ở đây, trước Cổng 2. Cổng 2 duyệt bằng
+        # `register_publish approve`, mà lệnh đó cần `publish.json` có sẵn — thiếu nó thì
+        # người bấm nút duyệt và KHÔNG có gì được ghi. Đúng kiểu hỏng câm ở chỗ đắt nhất.
+        for lenh in (["register_publish.py", str(bai), "init"],
+                     ["gen_article.py", "--content-md", str(bai / "content.md"),
                       "--meta", str(bai / "meta.json"), "--out-dir", str(bai)],
                      ["blog_gates.py", str(bai)]):
             r = subprocess.run([sys.executable, str(_HERE / lenh[0]), *lenh[1:]],
