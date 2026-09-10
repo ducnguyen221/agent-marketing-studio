@@ -55,6 +55,10 @@
 | Xem toàn cảnh chiến dịch / mọi bài | `scripts/pipeline/build_views.py` (mở `index.html` bằng cách bấm đúp) |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
 | **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
+| **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
+| Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dang`) | `scripts/pipeline/campaign_step.py` |
+| Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
+| Đăng bài lên web (đích khai bằng cấu hình, không khoá cứng) | `scripts/pipeline/web_publish.py` |
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |
 | **Chấm một bài bằng 23 cổng đếm được** | `scripts/pipeline/blog_gates.py <thư mục bài>` |
 | **Số đo thật của bài đã đăng, để đặt ngưỡng** | `fixtures/baseline/blog_baseline.md` |

@@ -16,6 +16,12 @@ language: vi
 timezone: Asia/Ho_Chi_Minh
 
 # suggest = người duyệt cả hai cổng · auto_safe = agent tự làm phần an toàn · full
+#
+# ⚠️ Khoá này là CỔNG MÁY, không phải lời dặn. `campaign_step.py` và `fb_publish.py` đều
+# đọc nó; `full` là agent tự mở cả hai cổng và đăng thẳng ra ngoài.
+# · Giá trị lạ → coi như `suggest` (fail-closed): một khoá gõ sai không được thành quyền đăng.
+# · Chỉ NGƯỜI sửa file này. `campaign.md` KHÔNG đè được — nếu đè được thì một file chiến
+#   dịch tự khai `full` là tự cấp quyền cho chính nó.
 autonomy: suggest
 
 # blog_gates dùng để phân biệt link "về nhà" với nguồn ngoài
@@ -44,6 +50,24 @@ platforms:
     handle: "Tên Page"
     post_formats: [facebook_post]
     secrets_env: { config: FB_CONFIG }
+
+# ĐÍCH ĐĂNG WEB — `web_publish.py` đọc khối này. Đây là chỗ DUY NHẤT biết bài đi đâu:
+# đổi trang web là sửa ở đây, không sửa code. Không khai mà gọi `web_publish.py` thì nó
+# DỪNG — đoán đích đăng nghĩa là bài rơi vào một thư mục không ai tìm ra, và chỉ lộ khi
+# có người đi tìm.
+#
+# Bỏ cả khối này nếu kênh không đăng web (chỉ YouTube/Facebook).
+#
+# web_target:
+#   kind: git_static            # đợt này chỉ có một loại
+#   repo: ~/Code/<repo trang web>
+#   content_dir: content/{category}     # {category} lấy từ meta.json của bài
+#   base_url: https://example.vn/content
+#   branch: main
+#   post_cmd: node scripts/generate-manifest.js    # tuỳ chọn, chạy ở gốc repo
+#   post_cmd_outputs:           # file lệnh trên sinh ra — phải `git add` ĐÍCH DANH
+#     - data/manifest.json      # (script cấm `git add -A`: máy có thể chạy nhiều phiên)
+#   verify: http_200            # kiểm trang đã lên TRƯỚC khi ghi sổ
 
 # KPI mặc định cho chiến dịch mới của kênh. Chiến dịch nào có mục tiêu riêng thì ghi đè
 # trong campaign.md.

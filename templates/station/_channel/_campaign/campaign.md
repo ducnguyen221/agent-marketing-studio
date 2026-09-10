@@ -50,12 +50,25 @@ actual_spend:
 # (exit 2) thay vì để engine chạy tiếp với giá trị rỗng rồi ra sản phẩm sai mà không báo.
 runtime:
   label:                    # tên ngắn engine dùng trong tên file log, tiêu đề
-  runner:                   # vd run-toptoday-hot.ps1 — tìm trong thư mục này TRƯỚC, rồi tới engine
-  runner_args: ""           # vd "-Brand ai -Publish"
+  runner:                   # tìm theo BA chỗ: thư mục này > scripts/runners/ của repo > engine của máy
+  runner_args: ""           # vd "-Brand ai -Publish" · hoặc "-Buoc dung-bai" cho run-blog-campaign.ps1
   # prompt: prompt.txt
   # out_dir: daily-out
   # yt_playlist: ""
   # fb_text_post: false     # true = đăng thêm bài chữ riêng trên Facebook (mặc định KHÔNG)
+  #
+  # ── Chiến dịch blog dài kỳ (run-blog-campaign.ps1) ────────────────────────
+  # Ba bước RỜI, mỗi lượt chạy một bước:
+  #   dung-bai ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
+  # Gộp ba bước là dựng lại thứ đã bị gỡ vì nuốt cổng duyệt của người vào giữa chuỗi.
+  #
+  # approval_mode: batch_gate   # batch_gate = N bài một tin · per_post = mỗi bài một tin
+  # approval_lo: 10             # tối đa bao nhiêu bài gom vào một tin xin duyệt
+  # lookahead_days: 7           # dựng trước bao nhiêu ngày so với cột `schedule`
+  #
+  # Ba khoá trên TUỲ CHỌN — thiếu thì rơi về mặc định ghi ngay đây, không fail.
+  # Nhưng `autonomy` thì KHÔNG khai ở đây: nó thuộc `channel.yml` và cố ý không đè được
+  # từ file này (xem chú thích tại chỗ đó).
 
 # identity — nhận diện trên video. Để TRỐNG nghĩa là dùng mặc định của template renderer;
 # điền vào là ĐỔI hình ảnh đang chạy, nên chỉ điền khi cố ý.
