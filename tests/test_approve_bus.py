@@ -358,3 +358,81 @@ def test_ack_hong_van_DEM_LA_DA_XU_LY_khong_phai_bo_qua(tmp_path):
     assert kq["xu_ly"] == 1, f"lượt đã duyệt xong mà không đếm là xử lý: {kq}"
     assert kq["bo_qua"] == 0, f"đếm nhầm thành bỏ qua: {kq}"
     assert "T-001" in kq["duyet"], kq
+
+
+# ── Chế độ liên tục + nhịp sống ─────────────────────────────────────────────
+#
+# Distill từ OpenClaw 2026.5.12. Ba thay đổi của họ, và ta lấy gì:
+#   ① worker tách riêng          -> ĐÃ CÓ (poller là tiến trình riêng, không nằm trong runner)
+#   ② spool bền trước khi xử lý  -> KHÔNG lấy: ta chỉ tiến `offset` SAU khi xử lý xong, nên
+#                                   chết giữa chừng là replay, và mọi thao tác ghi idempotent.
+#                                   Spool thêm một tầng cho lợi ích cận biên ở quy mô này.
+#   ③ nhịp sống đo bằng chiều VÀO -> LẤY. Đây là cổng chống chết câm, test bên dưới.
+
+def test_nhip_song_CHI_ghi_khi_chieu_VAO_thanh_cong(tmp_path):
+    """Bài học đắt nhất: OpenClaw từng tính lời gọi ĐI RA là 'bot còn sống', nên chiều VÀO
+    chết mà không ai biết. Ở đây `gui_cong` vẫn gửi tin đều trong khi `nhan` đã ngừng nhận."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia())          # ĐI RA thành công nhiều lần
+    AB.gui_cong(cam, "g1", bot=BotGia())
+    assert AB._doc_nhip(cam)["co_nhip"] is False, \
+        "gửi tin được mà đã tính là poller còn sống — đúng cái bẫy phải tránh"
+
+
+class BotVaoHong(BotGia):
+    def lay_cap_nhat(self, offset=None, timeout=0):
+        raise RuntimeError("mạng hỏng")
+
+
+def test_nhip_song_ghi_sau_luot_VAO_thanh_cong(tmp_path):
+    cam = _cam(tmp_path)
+    AB.nhan_lien_tuc(cam, bot=BotGia(), giay=0.01, ngu=lambda s: None)
+    n = AB._doc_nhip(cam)
+    assert n["co_nhip"] and n["song"], n
+
+
+def test_nhip_qua_han_thi_bao_CHET(tmp_path):
+    cam = _cam(tmp_path)
+    (cam / "logs").mkdir(exist_ok=True)
+    cu = (datetime.now().astimezone() - timedelta(seconds=AB.NHIP_QUA_HAN_GIAY + 60))
+    (cam / "logs" / AB.TEN_NHIP).write_text(
+        json.dumps({"luot_vao_cuoi": cu.isoformat(), "chu_ky": 9}), encoding="utf-8")
+    n = AB._doc_nhip(cam)
+    assert n["co_nhip"] and not n["song"], f"nhịp quá hạn mà vẫn báo sống: {n}"
+
+
+def test_chieu_VAO_hong_thi_KHONG_ghi_nhip(tmp_path):
+    cam = _cam(tmp_path)
+    AB.nhan_lien_tuc(cam, bot=BotVaoHong(), giay=0.01, ngu=lambda s: None)
+    assert AB._doc_nhip(cam)["co_nhip"] is False, "chiều vào hỏng mà vẫn ghi là còn sống"
+
+
+def test_hong_LIEN_TIEP_thi_thoat_som_khong_quay_tit(tmp_path):
+    """Hỏng thật thì đừng quay vòng đốt CPU — thoát để lượt sau dựng lại sạch."""
+    cam = _cam(tmp_path)
+    da_ngu = []
+    kq = AB.nhan_lien_tuc(cam, bot=BotVaoHong(), giay=9999,
+                          ngu=da_ngu.append, dong_ho=lambda: 0)
+    assert kq["chu_ky"] <= 5, f"không thoát sớm: {kq}"
+    assert da_ngu == sorted(da_ngu), f"không lùi dần: {da_ngu}"
+    assert max(da_ngu) <= 60, f"lùi quá lâu: {da_ngu}"
+
+
+def test_canh_bao_khi_co_chien_dich_KHAC_cung_giu_trang_thai_poller(tmp_path, capsys):
+    """`getUpdates` một-người-đọc: hai poller ăn trộm update của nhau IM LẶNG, triệu chứng
+    là 'bấm lúc ăn lúc không' — gần như không chẩn đoán được nếu không biết trước."""
+    cam = _cam(tmp_path)
+    khac = cam.parent / "CD-KHAC" / "logs"
+    khac.mkdir(parents=True)
+    (khac / AB.TEN_STATE).write_text('{"offset": null, "cho": {}}', encoding="utf-8")
+
+    ds = AB.canh_bao_hai_poller(cam)
+    assert "CD-KHAC" in ds, ds
+    assert "HAI POLLER" in capsys.readouterr().err
+
+
+def test_mot_minh_thi_KHONG_canh_bao_nham(tmp_path, capsys):
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia())          # tự nó có state, không được tự tố mình
+    assert AB.canh_bao_hai_poller(cam) == []
+    assert "HAI POLLER" not in capsys.readouterr().err

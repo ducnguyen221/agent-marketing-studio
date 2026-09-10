@@ -85,6 +85,51 @@ Trình tự: chép file → `post_cmd` → `git add` **đích danh** → commit 
   file của phiên khác vào commit của mình. Lệnh hậu kỳ sinh thêm file thì khai ở
   `post_cmd_outputs`.
 
+## 5b. Chiều NHẬN chạy thế nào (distill từ OpenClaw 2026.5.12)
+
+**Trần long-poll của Telegram là ~50 giây — ĐO ĐƯỢC, không phải trích tài liệu.** Bot API
+không công bố giá trị lớn nhất cho `timeout`; xin 100s và 60s đều trả về sau **50,7s**.
+Nên phủ liên tục thì phải **nối nhiều lượt**, không phải xin timeout to hơn.
+
+```
+Task Scheduler (mỗi phút, IgnoreNew)
+        │  đang chạy -> bỏ qua lượt gọi mới
+        │  đã chết   -> dựng lại trong 60s
+        ▼
+run-approve-poller.ps1  ── sống ~55 phút rồi TỰ THOÁT
+        ▼
+approve_bus.py nhan --lien-tuc 3300
+        └─ vòng lặp: getUpdates(timeout=50) → xử lý → ghi nhịp → lặp
+```
+
+Phủ gần 100%, tự lành trong 60 giây, **không service nào phải trông**.
+
+**Ba thay đổi của OpenClaw 2026.5.12, và ta lấy gì:**
+
+| Của họ | Ta | Vì sao |
+|---|---|---|
+| Worker polling tách khỏi runtime agent | **Đã có** | Poller là tiến trình riêng, không nằm trong runner chiến dịch |
+| Spool bền: ghi update xuống đĩa TRƯỚC khi xử lý | **Không lấy** | Ta chỉ tiến `offset` SAU khi xử lý xong ⇒ chết giữa chừng là replay, và mọi thao tác ghi đều idempotent. Spool thêm một tầng cho lợi ích cận biên ở quy mô này |
+| **Nhịp sống đo bằng chiều VÀO, không phải chiều RA** | **LẤY** | Đây là bài học đắt nhất |
+
+Về cái thứ ba: trước bản đó OpenClaw tính lời gọi API **đi ra** (gửi tin) là dấu hiệu "bot
+còn sống" — nên chiều **vào** chết mà không ai biết. Đúng hình dạng đó ở đây: `gui_cong`
+vẫn gửi tin xin duyệt đều đặn trong khi `nhan` đã ngừng nhận, mọi thứ nhìn vẫn bình thường
+cho tới lúc có người thắc mắc sao bấm không ăn. Nên nhịp CHỈ ghi sau một lượt `getUpdates`
+thành công; gửi được tin **không tính**. Xem `logs/tg-poll-alive.json`, đọc bằng
+`approve_bus.py trang-thai`.
+
+**Poller KHÔNG đi qua `notify-run.ps1`** (Đức chốt 10/09): nó chạy gần như liên tục, báo
+mỗi lượt là hàng nghìn tin một ngày — và tin báo nhiều tới mức đó thì không ai đọc nữa,
+tức là mất luôn tác dụng cảnh báo cho MỌI task khác. Bù lại nó tự chứng minh còn sống bằng
+nhịp ở trên.
+
+⚠️ **Nợ kiến trúc đã biết:** trạng thái poller gắn theo CHIẾN DỊCH, mà `getUpdates` chỉ cho
+một người đọc trên mỗi bot token. Hai chiến dịch cùng duyệt qua Telegram là hai poller ăn
+trộm update của nhau, **im lặng**, triệu chứng là "bấm lúc ăn lúc không".
+`canh_bao_hai_poller()` hiện chỉ CẢNH BÁO. Cách sửa đúng khi tới lúc: **một poller cho cả
+trạm**, định tuyến update theo token — chứ không phải mỗi chiến dịch một poller.
+
 ## 6. Ba cái bẫy đã trả giá ở tầng này
 
 | Bẫy | Hình dạng | Cách chặn |

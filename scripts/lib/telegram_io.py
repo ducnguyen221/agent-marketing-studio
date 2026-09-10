@@ -41,6 +41,14 @@ from pathlib import Path
 
 API = "https://api.telegram.org/bot{token}/{method}"
 
+# Trần long-poll của Telegram, ĐO ĐƯỢC ngày 10/09/2026 trên chính bot này chứ không phải
+# trích tài liệu: tài liệu Bot API **không công bố** giá trị lớn nhất cho `timeout`. Xin
+# 100s và 60s đều trả về sau **50,7s**. Nên 50 là trần thật; xin hơn chỉ tốn chữ.
+#
+# Hệ quả thiết kế: một lượt gọi phủ tối đa ~50s. Muốn phủ liên tục thì lặp NHIỀU lượt
+# trong một tiến trình (xem `approve_bus.py nhan --lien-tuc`), không phải xin timeout to hơn.
+LONG_POLL_MAX = 50
+
 # Telegram cắt cụt `callback_data` dài hơn 64 byte — và cắt IM LẶNG. Nút bấm vào không ăn,
 # không có lỗi nào ở đâu cả. Chặn ở đây, lúc gửi, là chỗ duy nhất còn sửa được.
 CAP_CALLBACK = 64

@@ -48,6 +48,7 @@ import re
 import secrets
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -358,7 +359,10 @@ def nhan(cam: Path, *, bot, bay_gio: datetime | None = None) -> dict:
     st = _doc_state(cam)
     _don_token_qua_han(st, bay_gio)
 
-    ds = bot.lay_cap_nhat(offset=st.get("offset"))
+    # Long-poll: chặn tới ~50s chờ update thay vì hỏi-rồi-về-liền. Đây là thứ biến
+    # "poll mỗi 5 phút" thành "gần như tức thì" mà không cần service thường trú.
+    ds = bot.lay_cap_nhat(offset=st.get("offset"),
+                          timeout=telegram_io.LONG_POLL_MAX)
     kq = {"xu_ly": 0, "duyet": [], "tu_choi": [], "bo_qua": 0}
     lon_nhat = None
 
@@ -383,12 +387,116 @@ def nhan(cam: Path, *, bot, bay_gio: datetime | None = None) -> dict:
     return kq
 
 
+TEN_NHIP = "tg-poll-alive.json"
+# Bao lâu không có lượt `getUpdates` THÀNH CÔNG thì coi là poller đã chết câm.
+# 3 chu kỳ 50s + dư — ngắn hơn thì báo động giả mỗi lần mạng chớp.
+NHIP_QUA_HAN_GIAY = 180
+
+
+def _ghi_nhip(cam: Path, chu_ky: int) -> None:
+    """Nhịp sống đo bằng chiều VÀO, không phải chiều RA.
+
+    Bài học đắt nhất rút từ OpenClaw 2026.5.12: trước bản đó họ tính lời gọi API **đi ra**
+    (gửi tin) là dấu hiệu "bot còn sống" — nên chiều VÀO chết mà không ai biết. Đúng hình
+    dạng đó ở đây: `gui_cong` vẫn gửi tin xin duyệt đều đặn trong khi `nhan` đã ngừng nhận,
+    và mọi thứ nhìn vẫn bình thường cho tới lúc có người thắc mắc sao bấm không ăn.
+
+    Nên chỉ ghi nhịp sau một lượt `getUpdates` THÀNH CÔNG. Gửi được tin KHÔNG tính.
+    """
+    md_io.ghi_nguyen_tu(cam / "logs" / TEN_NHIP, json.dumps({
+        "luot_vao_cuoi": datetime.now().astimezone().isoformat(),
+        "chu_ky": chu_ky,
+    }, ensure_ascii=False, indent=2) + "\n")
+
+
+def _doc_nhip(cam: Path) -> dict:
+    p = cam / "logs" / TEN_NHIP
+    if not p.is_file():
+        return {"co_nhip": False, "tuoi_giay": None, "song": False}
+    try:
+        d = json.loads(p.read_text(encoding="utf-8"))
+        tuoi = (datetime.now().astimezone()
+                - datetime.fromisoformat(d["luot_vao_cuoi"])).total_seconds()
+    except (ValueError, KeyError):
+        return {"co_nhip": False, "tuoi_giay": None, "song": False}
+    return {"co_nhip": True, "tuoi_giay": round(tuoi),
+            "song": tuoi <= NHIP_QUA_HAN_GIAY, "chu_ky": d.get("chu_ky")}
+
+
+def canh_bao_hai_poller(cam: Path) -> list[str]:
+    """Cảnh báo TO nếu có chiến dịch khác trong trạm cũng đang giữ trạng thái poller.
+
+    `getUpdates` chỉ cho MỘT người đọc trên mỗi bot token. Hai poller cùng bot là chúng ăn
+    trộm update của nhau — **im lặng**, không bên nào báo lỗi, và triệu chứng là "bấm nút
+    lúc ăn lúc không". Gần như không thể chẩn đoán nếu không biết trước.
+
+    Đây mới là CẢNH BÁO chứ chưa phải cổng chặn: trạng thái đang gắn theo chiến dịch, nên
+    hai chiến dịch cùng muốn duyệt qua Telegram là một hạn chế THẬT của thiết kế hiện tại.
+    Cách sửa đúng khi tới lúc: một poller cho CẢ TRẠM, định tuyến update theo token — chứ
+    không phải mỗi chiến dịch một poller. Ghi ở đây để lúc đó không phải đi dò lại.
+    """
+    khac = []
+    try:
+        tram = cam.parent.parent            # <trạm>/<kênh>/<chiến dịch>
+        for p in tram.glob("*/*/logs/" + TEN_STATE):
+            if p.parent.parent.resolve() != cam.resolve():
+                khac.append(p.parent.parent.name)
+    except OSError:
+        return []
+    if khac:
+        loi("⚠️ CÓ THỂ ĐANG CHẠY HAI POLLER. Chiến dịch khác cũng có trạng thái duyệt: "
+            + ", ".join(khac) + ".\n"
+            "  `getUpdates` chỉ cho MỘT người đọc trên mỗi bot token — hai poller sẽ ăn "
+            "trộm update của nhau, IM LẶNG.\n"
+            "  Tắt bớt một cái, hoặc tách bot riêng cho chiến dịch kia.")
+    return khac
+
+
+def nhan_lien_tuc(cam: Path, *, bot, giay: int,
+                  ngu=time.sleep, dong_ho=time.monotonic) -> dict:
+    """Long-poll LẶP trong `giay` giây rồi thoát.
+
+    Vì sao lặp thay vì xin timeout to hơn: Telegram chặn cứng ở ~50s (đo 10/09/2026), nên
+    một lượt gọi chỉ phủ được ngần ấy. Muốn phủ liên tục thì phải nối nhiều lượt.
+
+    Vì sao THOÁT chứ không chạy mãi: tiến trình sống mãi là thứ phải trông, và chết câm thì
+    kẹt cổng duyệt. Thoát rồi để Task Scheduler dựng lại là tự lành — cùng lý do
+    `notify-run.ps1` bọc từng lượt chạy chứ không dựng service.
+    """
+    canh_bao_hai_poller(cam)
+    het = dong_ho() + giay
+    tong = {"chu_ky": 0, "xu_ly": 0, "duyet": [], "tu_choi": [], "bo_qua": 0, "loi_lien_tiep": 0}
+    lien_tiep = 0
+    while dong_ho() < het:
+        tong["chu_ky"] += 1
+        try:
+            kq = nhan(cam, bot=bot)
+            lien_tiep = 0
+            _ghi_nhip(cam, tong["chu_ky"])       # CHỈ ghi sau lượt VÀO thành công
+        except Exception as e:                    # noqa: BLE001
+            lien_tiep += 1
+            tong["loi_lien_tiep"] = max(tong["loi_lien_tiep"], lien_tiep)
+            loi(f"chu kỳ {tong['chu_ky']} hỏng ({lien_tiep} lần liên tiếp) — {e}")
+            # Lùi dần: mạng chớp thì thử lại nhanh, hỏng thật thì đừng quay tít.
+            ngu(min(2 ** lien_tiep, 60))
+            if lien_tiep >= 5:
+                loi("5 chu kỳ hỏng liên tiếp — thoát để lượt sau dựng lại sạch.")
+                break
+            continue
+        for k in ("xu_ly", "bo_qua"):
+            tong[k] += kq[k]
+        for k in ("duyet", "tu_choi"):
+            tong[k] += kq[k]
+    return tong
+
+
 def trang_thai(cam: Path) -> dict:
     cam = Path(cam)
     st = _doc_state(cam)
     return {"cho_g1": [d["content_id"] for d in cho_cong(cam, "g1")],
             "cho_g2": [d["content_id"] for d in cho_cong(cam, "g2")],
-            "token_dang_cho": len(st["cho"]), "offset": st.get("offset")}
+            "token_dang_cho": len(st["cho"]), "offset": st.get("offset"),
+            "nhip_vao": _doc_nhip(cam)}
 
 
 def main() -> int:
@@ -398,6 +506,8 @@ def main() -> int:
     ap.add_argument("--cong", choices=["g1", "g2"])
     ap.add_argument("--lo", type=int, default=None)
     ap.add_argument("--che-do", choices=["per_post", "batch_gate"], default=None)
+    ap.add_argument("--lien-tuc", type=int, default=0, metavar="GIAY",
+                    help="long-poll LẶP trong N giây rồi thoát (Telegram chặn 50s/lượt)")
     a = ap.parse_args()
 
     cam = Path(a.campaign).resolve()
@@ -417,7 +527,9 @@ def main() -> int:
         print(json.dumps(gui_cong(cam, a.cong, bot=bot, lo=a.lo, che_do=a.che_do),
                          ensure_ascii=False))
     else:
-        print(json.dumps(nhan(cam, bot=bot), ensure_ascii=False))
+        kq = (nhan_lien_tuc(cam, bot=bot, giay=a.lien_tuc) if a.lien_tuc
+              else nhan(cam, bot=bot))
+        print(json.dumps(kq, ensure_ascii=False))
     return 0
 
 
