@@ -1,0 +1,194 @@
+# -*- coding: utf-8 -*-
+"""Transport Telegram — CHỖ DUY NHẤT gọi Bot API từ Python trong repo này.
+
+## Vì sao có file này trong khi máy đã có `notify-run.ps1`
+
+`~/.news/engine/notify-run.ps1` là hạ tầng **CỦA MỘT CÁI MÁY** — nó bọc mọi scheduled task
+trên máy tác giả và nằm NGOÀI repo. Repo này là public: người clone về phải chạy được mà
+không có file đó.
+
+Nên hai bản là **CÓ CHỦ ĐÍCH**, không phải trùng lặp bỏ quên. Ai đọc tới đây và định "dọn
+trùng lặp" bằng cách xoá một bên: đừng. Xoá bản Python là repo hết độc lập; sửa
+`notify-run.ps1` để gọi sang đây là đụng vào file mà hàng chục scheduled task đang phụ thuộc.
+Hai bản dùng CHUNG một hợp đồng secret (`~/.secret/<tài khoản>/config.json`) — đó mới là chỗ
+không được để lệch.
+
+## Vì sao tên là `telegram_io` chứ không phải `telegram`
+
+`telegram` là tên gói trên PyPI (`python-telegram-bot`). Thư mục này được chèn vào đầu
+`sys.path`, nên một file tên `telegram.py` sẽ **che mất gói thật** ở bất kỳ tiến trình nào
+nạp lib này — và che một cách im lặng. Đuôi `_io` cũng khớp `md_io.py` cùng thư mục.
+
+## Hợp đồng secret
+
+Token CHỈ đến từ file. Không tham số, không biến môi trường giữ token — biến môi trường chỉ
+giữ ĐƯỜNG DẪN (`TG_CONFIG`). Lý do đã trả giá: token trần trong biến user-scope thì mọi tiến
+trình con của mọi phiên đọc được, `Get-ChildItem Env:` in nó ra, và nó lọt vào transcript.
+Một token đã phải thu hồi vì đúng chuyện đó (08/09/2026).
+
+```json
+{ "bot_token": "…", "chats": { "mac_dinh": { "chat_id": 123 } } }
+```
+"""
+from __future__ import annotations
+
+import json
+import os
+import urllib.error
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+API = "https://api.telegram.org/bot{token}/{method}"
+
+# Telegram cắt cụt `callback_data` dài hơn 64 byte — và cắt IM LẶNG. Nút bấm vào không ăn,
+# không có lỗi nào ở đâu cả. Chặn ở đây, lúc gửi, là chỗ duy nhất còn sửa được.
+CAP_CALLBACK = 64
+
+
+def duong_dan_cau_hinh() -> Path:
+    """`TG_CONFIG` (chỉ ĐƯỜNG DẪN) → `~/.secret/telegram/config.json`."""
+    return Path(os.environ.get("TG_CONFIG")
+                or Path.home() / ".secret" / "telegram" / "config.json")
+
+
+def _goi_that(token: str, method: str, payload: dict) -> dict:
+    """Lớp mạng thật. Tách riêng để test thay được mà không cần internet."""
+    du_lieu = urllib.parse.urlencode(payload).encode("utf-8")
+    req = urllib.request.Request(API.format(token=token, method=method), data=du_lieu)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        # Thân lỗi của Telegram có `description` nói rõ sai gì — đắt hơn mã HTTP nhiều.
+        try:
+            return json.loads(e.read().decode("utf-8"))
+        except Exception:
+            return {"ok": False, "description": f"HTTP {e.code}"}
+
+
+class Bot:
+    """Một bot Telegram. `goi` cho phép test thay lớp mạng."""
+
+    def __init__(self, cau_hinh: Path | str | None = None, *, goi=None):
+        p = Path(cau_hinh) if cau_hinh else duong_dan_cau_hinh()
+        if not p.is_file():
+            raise FileNotFoundError(
+                f"không thấy cấu hình Telegram: {p}\n"
+                f"Đặt env TG_CONFIG nếu để chỗ khác. Xem knowledge/toolchains/SECRETS.md.")
+        d = json.loads(p.read_text(encoding="utf-8"))
+
+        self._token = d.get("bot_token") or ""
+        if not self._token:
+            raise ValueError(f"{p}: thiếu `bot_token`.")
+
+        self._chats = d.get("chats") or {}
+        if not self._chats:
+            raise ValueError(f"{p}: thiếu `chats` — không biết gửi cho ai.")
+
+        self._goi = goi or _goi_that
+        self.duong_dan = p
+
+    # ── Danh tính & quyền ───────────────────────────────────────────────────
+
+    def __repr__(self) -> str:
+        # KHÔNG in token. Một đối tượng bot sẽ bị in ra log sớm muộn.
+        return f"<Bot cấu_hình={self.duong_dan.name} chats={list(self._chats)}>"
+
+    __str__ = __repr__
+
+    def _chat(self, ten: str | None = None):
+        ten = ten or os.environ.get("TG_CHAT") or "mac_dinh"
+        c = self._chats.get(ten)
+        if not c:
+            raise KeyError(f"không có chat {ten!r} trong {self.duong_dan}")
+        return c["chat_id"]
+
+    @property
+    def chat_mac_dinh(self):
+        return self._chat()
+
+    def duoc_phep(self, chat_id) -> bool:
+        """Allowlist: chỉ chat đã khai trong file secret mới mở được cổng duyệt.
+
+        So sánh theo CHUỖI hai đầu có chủ đích: Telegram trả `chat_id` kiểu số, còn file
+        cấu hình do người gõ tay có thể là chuỗi. So lệch kiểu thì hàm này luôn trả False
+        và KHÔNG AI duyệt được gì — hỏng câm, đúng loại phải chặn từ đầu.
+        """
+        cho_phep = {str(c.get("chat_id")) for c in self._chats.values()}
+        return str(chat_id) in cho_phep
+
+    # ── Gọi API ─────────────────────────────────────────────────────────────
+
+    def _api(self, method: str, payload: dict) -> dict:
+        kq = self._goi(self._token, method, payload)
+        if not kq.get("ok"):
+            # Ném thay vì trả im lặng: `ok:false` mà đi tiếp nghĩa là lỗi lộ ra ở chỗ xa
+            # hơn nhiều, lúc không còn biết vì sao.
+            raise RuntimeError(f"Telegram {method} lỗi — {kq.get('description', kq)}")
+        return kq
+
+    # ── Gửi ─────────────────────────────────────────────────────────────────
+
+    def gui(self, text: str, chat: str | None = None, *, html: bool = False) -> int:
+        p = {"chat_id": self._chat(chat), "text": text, "disable_web_page_preview": "true"}
+        if html:
+            p["parse_mode"] = "HTML"
+        return self._api("sendMessage", p)["result"]["message_id"]
+
+    @staticmethod
+    def _ban_phim(nut) -> str:
+        hang = []
+        for h in nut:
+            o = []
+            for nhan, data in h:
+                n = len(str(data).encode("utf-8"))
+                if n > CAP_CALLBACK:
+                    raise ValueError(
+                        f"callback_data {n} byte, quá giới hạn {CAP_CALLBACK} của Telegram: "
+                        f"{data!r}. Telegram sẽ cắt cụt IM LẶNG và nút bấm vào không ăn.")
+                o.append({"text": nhan, "callback_data": data})
+            hang.append(o)
+        return json.dumps({"inline_keyboard": hang}, ensure_ascii=False)
+
+    def gui_kem_nut(self, text: str, nut, chat: str | None = None,
+                    *, html: bool = False) -> int:
+        """`nut` = [[(nhãn, callback_data), …], …] — mỗi list con là một hàng."""
+        p = {"chat_id": self._chat(chat), "text": text,
+             "disable_web_page_preview": "true", "reply_markup": self._ban_phim(nut)}
+        if html:
+            p["parse_mode"] = "HTML"
+        return self._api("sendMessage", p)["result"]["message_id"]
+
+    def sua_tin(self, message_id: int, text: str, nut=None, chat: str | None = None,
+                *, html: bool = False) -> None:
+        """Sửa tin đã gửi — dùng để GỠ NÚT sau khi bấm, cho nút cũ không bấm lại được."""
+        p = {"chat_id": self._chat(chat), "message_id": message_id, "text": text,
+             "disable_web_page_preview": "true"}
+        if html:
+            p["parse_mode"] = "HTML"
+        if nut is not None:
+            p["reply_markup"] = self._ban_phim(nut)
+        self._api("editMessageText", p)
+
+    def tra_loi_nut(self, callback_query_id: str, text: str = "") -> None:
+        """Telegram bắt buộc trả lời callback, nếu không nút quay vòng mãi trên máy người bấm."""
+        self._api("answerCallbackQuery",
+                  {"callback_query_id": callback_query_id, "text": text})
+
+    # ── Nhận ────────────────────────────────────────────────────────────────
+
+    def lay_cap_nhat(self, offset: int | None = None, timeout: int = 0) -> list:
+        """`getUpdates`.
+
+        ⚠️ **MỘT NGƯỜI ĐỌC DUY NHẤT trên mỗi bot token.** Telegram giao mỗi update cho tiến
+        trình gọi TRƯỚC; tiến trình thứ hai thấy hàng đợi rỗng và không có lỗi nào. Cần thêm
+        một bên tiêu thụ thì phải tách bot riêng, đừng chia nhau một token.
+
+        `offset` bắt buộc truyền khi đã xử lý xong: thiếu nó thì update cũ quay lại mãi và
+        cùng một nút được xử lý nhiều lần.
+        """
+        p = {"timeout": timeout}
+        if offset is not None:
+            p["offset"] = offset
+        return self._api("getUpdates", p).get("result", [])
