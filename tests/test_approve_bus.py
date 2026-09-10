@@ -652,3 +652,65 @@ def test_ghi_cong_XONG_thi_token_BI_TIEU(tmp_path):
     AB.nhan(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}", update_id=96)]))
     assert tok not in _token_dang_cho(cam)
     assert _bang(cam)["T-001"]["g1"] != ""
+
+
+# ── Phản hồi bằng VĂN BẢN, gắn với bài qua reply ────────────────────────────
+#
+# Thay cho nút "Sửa lại" (Đức chốt 10/09): Đức TRẢ LỜI thẳng vào tin của bài, gõ nhận xét
+# tự do. Không phải nhớ mã bài — Telegram cho biết tin nào đang được trả lời, ta tra ngược
+# `message_id -> content_id` từ lúc gửi.
+#
+# ⚠️ Văn bản đó sẽ được đưa vào prompt viết lại. Nó là DỮ LIỆU của người, không phải mệnh
+# lệnh cho hệ thống: lưu vào file, chèn vào prompt trong khối có rào rõ ràng, không nối
+# chuỗi thành chỉ thị.
+
+def _tra_loi_tin(text, msg_id, chat_id=CHAT_OK, update_id=1):
+    return {"update_id": update_id,
+            "message": {"message_id": 500, "chat": {"id": chat_id}, "text": text,
+                        "reply_to_message": {"message_id": msg_id}}}
+
+
+def test_tra_loi_vao_tin_cua_bai_thi_ghi_PHAN_HOI(tmp_path):
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"], che_do="per_post")
+    mid = AB._tra_tin_bai(cam, "T-001")
+    assert mid, "gửi per_post mà không ghi lại message_id -> không tra ngược được"
+
+    AB.nhan(cam, bot=BotGia(hang_doi=[
+        _tra_loi_tin("Mở bài dài quá, cắt còn 2 câu. Thiếu ví dụ doanh nghiệp Việt.", mid)]))
+    ph = AB.doc_phan_hoi(cam, "T-001")
+    assert ph and "cắt còn 2 câu" in ph[-1]["noi_dung"]
+
+
+def test_phan_hoi_KHONG_duoc_coi_la_duyet(tmp_path):
+    """Gõ nhận xét không phải là gật đầu. Nhầm chiều là đăng bài đang bị chê."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"], che_do="per_post")
+    mid = AB._tra_tin_bai(cam, "T-001")
+    AB.nhan(cam, bot=BotGia(hang_doi=[_tra_loi_tin("viết lại đoạn hai", mid)]))
+    assert _bang(cam)["T-001"]["g1"] == "", "phản hồi mà lại mở cổng — sai chiều nguy hiểm"
+
+
+def test_phan_hoi_giu_DU_nhieu_lan(tmp_path):
+    """Vòng viết lại có thể lặp. Ghi đè lần trước là mất dấu vết vì sao bài thành ra thế."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"], che_do="per_post")
+    mid = AB._tra_tin_bai(cam, "T-001")
+    AB.nhan(cam, bot=BotGia(hang_doi=[_tra_loi_tin("lần một", mid, update_id=1)]))
+    AB.nhan(cam, bot=BotGia(hang_doi=[_tra_loi_tin("lần hai", mid, update_id=2)]))
+    ph = AB.doc_phan_hoi(cam, "T-001")
+    assert len(ph) == 2 and ph[0]["noi_dung"] == "lần một"
+
+
+def test_tra_loi_tin_LA_thi_bo_qua(tmp_path):
+    cam = _cam(tmp_path)
+    AB.nhan(cam, bot=BotGia(hang_doi=[_tra_loi_tin("gì đó", 99999)]))
+    assert AB.doc_phan_hoi(cam, "T-001") == []
+
+
+def test_chat_LA_gui_phan_hoi_thi_bo_qua(tmp_path):
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"], che_do="per_post")
+    mid = AB._tra_tin_bai(cam, "T-001")
+    AB.nhan(cam, bot=BotGia(hang_doi=[_tra_loi_tin("phá hoại", mid, chat_id=CHAT_LA)]))
+    assert AB.doc_phan_hoi(cam, "T-001") == []

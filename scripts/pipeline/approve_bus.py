@@ -116,6 +116,51 @@ def _ghi_state(cam: Path, d: dict) -> None:
     md_io.ghi_nguyen_tu(_p_state(cam), json.dumps(d, ensure_ascii=False, indent=2) + "\n")
 
 
+TEN_PHAN_HOI = "tg-phan-hoi.json"
+
+
+def _tra_tin_bai(cam: Path, cid: str) -> int | None:
+    """`message_id` của tin đã gửi cho bài này — để tra ngược khi người TRẢ LỜI vào nó."""
+    return (_doc_state(cam).get("tin_bai") or {}).get(cid)
+
+
+def _bai_cua_tin(cam: Path, message_id: int) -> str | None:
+    for cid, mid in (_doc_state(cam).get("tin_bai") or {}).items():
+        if mid == message_id:
+            return cid
+    return None
+
+
+def doc_phan_hoi(cam: Path, cid: str) -> list[dict]:
+    """Mọi phản hồi của người cho một bài, theo thứ tự thời gian.
+
+    GIỮ ĐỦ, không ghi đè: vòng viết lại có thể lặp, và ghi đè lần trước là mất dấu vết vì
+    sao bài thành ra như thế. Sáu tháng sau đọc lại còn hiểu được.
+    """
+    p = cam / "logs" / TEN_PHAN_HOI
+    if not p.is_file():
+        return []
+    try:
+        return (json.loads(p.read_text(encoding="utf-8")) or {}).get(cid, [])
+    except json.JSONDecodeError:
+        loi(f"{p} hỏng — coi như chưa có phản hồi nào.")
+        return []
+
+
+def _ghi_phan_hoi(cam: Path, cid: str, noi_dung: str) -> None:
+    p = cam / "logs" / TEN_PHAN_HOI
+    d = {}
+    if p.is_file():
+        try:
+            d = json.loads(p.read_text(encoding="utf-8")) or {}
+        except json.JSONDecodeError:
+            pass
+    d.setdefault(cid, []).append(
+        {"luc": datetime.now().astimezone().isoformat(), "noi_dung": noi_dung})
+    p.parent.mkdir(parents=True, exist_ok=True)
+    md_io.ghi_nguyen_tu(p, json.dumps(d, ensure_ascii=False, indent=2) + "\n")
+
+
 def _hoa_giai_state(cam: Path, da_tieu: set[str], offset_moi: int | None) -> None:
     """Ghi state bằng cách HOÀ GIẢI với đĩa, không ghi đè bằng bản trong bộ nhớ.
 
@@ -131,7 +176,7 @@ def _hoa_giai_state(cam: Path, da_tieu: set[str], offset_moi: int | None) -> Non
     Nên chỉ ghi ĐÚNG HAI THAY ĐỔI của lượt này lên bản MỚI NHẤT trên đĩa: xoá token đã
     tiêu, và tiến `offset`. Mọi thứ khác giữ nguyên như đĩa đang có.
     """
-    tren_dia = _doc_state(cam)
+    tren_dia = _doc_state(cam)          # `tin_bai` do `gui` ghi — giữ nguyên, không đụng
     for t in da_tieu:
         tren_dia["cho"].pop(t, None)
     if offset_moi is not None:
@@ -252,10 +297,14 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
     if che_do == "per_post":
         for d in ds:
             tok = _dat_token([d["content_id"]])
-            bot.gui_kem_nut(
+            mid = bot.gui_kem_nut(
                 f"{_nhan_cong(cong)} · {ten_cd}\n\n{d['content_id']} — {d['content_name']}\n"
-                f"lịch: {d.get('schedule', '')}",
+                f"lịch: {d.get('schedule', '')}\n\n"
+                f"Trả lời thẳng vào tin này để gửi nhận xét.",
                 [[("✅ Duyệt", f"ok:{tok}"), ("❌ Từ chối", f"no:{tok}")]])
+            # Nhớ tin nào thuộc bài nào — để khi người TRẢ LỜI vào nó, ta biết nhận xét đó
+            # dành cho bài gì mà không bắt họ gõ lại mã bài.
+            st.setdefault("tin_bai", {})[d["content_id"]] = mid
             gui += 1
     else:
         cids = [d["content_id"] for d in ds]
@@ -366,6 +415,24 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
         loi(f"chat lạ {chat} nhắn tin — bỏ qua.")
         kq["bo_qua"] += 1
         return
+    # TRẢ LỜI vào tin của một bài = PHẢN HỒI, không phải lệnh duyệt.
+    #
+    # Nhánh này đặt TRƯỚC nhánh lệnh có chủ đích: nhận xét tự do gần như chắc chắn không
+    # khớp mẫu `duyet <ID>`, mà rơi xuống dưới thì nó thành "bỏ qua" và LỜI CỦA NGƯỜI biến
+    # mất không dấu vết.
+    rep = (msg.get("reply_to_message") or {}).get("message_id")
+    if rep:
+        cid = _bai_cua_tin(cam, rep)
+        if cid:
+            _ghi_phan_hoi(cam, cid, text)
+            kq.setdefault("phan_hoi", []).append(cid)
+            kq["xu_ly"] += 1
+            _bao_nhan(bot.gui, f"📝 {cid}: đã ghi nhận xét. Bài sẽ được viết lại.")
+            return
+        loi(f"trả lời vào tin {rep} nhưng không rõ của bài nào — bỏ qua.")
+        kq["bo_qua"] += 1
+        return
+
     m = RE_TRA_LOI.match(text)
     if not m:
         kq["bo_qua"] += 1
