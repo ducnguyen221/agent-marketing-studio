@@ -138,3 +138,61 @@ def test_runner_args_khong_phai_doi_so_thi_dung_han(tmp_path):
     assert r.returncode == 2, f"phai dung han, ma exit={r.returncode}: {r.stdout}"
     assert "khong phai ten tham so" in r.stdout, r.stdout
     assert "PROBE" not in r.stdout, "van goi runner voi doi so rac: " + r.stdout
+
+
+# ── Tìm runner ở `scripts/runners/` của REPO ────────────────────────────────
+
+def _tram_runner_repo(tmp_path: Path, runner_ten: str) -> tuple[Path, Path]:
+    """Trạm + một BẢN SAO cây `scripts/` để probe nằm đúng chỗ repo sẽ tìm.
+
+    Chép cả cây thay vì trỏ vào repo thật: đặt file probe vào repo thật là để lại rác,
+    và test sẽ phụ thuộc vào thứ nó tự bày ra ở nơi khác.
+    """
+    import shutil
+    ban_sao = tmp_path / "repo" / "scripts"
+    shutil.copytree(GOC / "scripts", ban_sao,
+                    ignore=shutil.ignore_patterns("__pycache__"))
+    (ban_sao / "runners").mkdir(exist_ok=True)
+    (ban_sao / "runners" / runner_ten).write_text(PROBE, encoding="utf-8-sig")
+
+    cam = tmp_path / "kenh-thu" / "cd-thu"
+    cam.mkdir(parents=True)
+    (cam.parent / "channel.yml").write_text(
+        'schema: channel/1\nid: kenh-thu\nlabel: "Kênh thử"\n'
+        "platforms:\n  - channel: youtube\n    post_formats: [youtube_video]\n",
+        encoding="utf-8")
+    (cam / "campaign.md").write_text(
+        "---\nschema: campaign/1\nid: cd-thu\nchannel: kenh-thu\n"
+        f'runtime:\n  label: "Nhãn thử"\n  runner: {runner_ten}\n'
+        '  runner_args: "-Brand ai -Publish"\n---\n\nThân bài.\n', encoding="utf-8")
+
+    goc = MAU.read_text(encoding="utf-8-sig")
+    dau, _, duoi = goc.partition("$cfgpy  = ")
+    goc = (dau + "$cfgpy  = '"
+           + (ban_sao / "pipeline" / "campaign_cfg.py").as_posix() + "'\n"
+           + duoi.split("\n", 1)[1])
+    (cam / "run.ps1").write_text(goc, encoding="utf-8-sig")
+    return cam, ban_sao
+
+
+def test_runner_dung_chung_tim_thay_o_scripts_runners_cua_repo(tmp_path):
+    """Runner đi kèm repo phải chạy được ngay sau khi clone, không cần chép vào từng
+    chiến dịch — nếu không thì mỗi chiến dịch giữ một bản sao và chúng trôi khỏi nhau."""
+    cam, _ = _tram_runner_repo(tmp_path, "probe-chung.ps1")
+    r = _chay(cam)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "PROBE" in r.stdout, r.stdout
+    assert "Brand=[ai]" in r.stdout and "Publish=[True]" in r.stdout, r.stdout
+
+
+def test_runner_trong_thu_muc_chien_dich_VAN_thang_ban_cua_repo(tmp_path):
+    """Thứ tự ưu tiên: chiến dịch > repo > engine. Một chiến dịch phải ghi đè được."""
+    cam, ban_sao = _tram_runner_repo(tmp_path, "probe-chung.ps1")
+    (ban_sao / "runners" / "probe-chung.ps1").write_text(
+        'param([string]$Config="")\n"PROBE SAI — ban cua REPO da chay"\n',
+        encoding="utf-8-sig")
+    (cam / "probe-chung.ps1").write_text(PROBE, encoding="utf-8-sig")
+    r = _chay(cam)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "PROBE SAI" not in r.stdout, "bản của repo thắng bản của chiến dịch — sai thứ tự"
+    assert "Brand=[ai]" in r.stdout, r.stdout

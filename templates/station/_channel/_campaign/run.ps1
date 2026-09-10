@@ -36,8 +36,15 @@ if ($LASTEXITCODE -ne 0) {
 $cfg = Get-Content $snap -Raw -Encoding UTF8 | ConvertFrom-Json
 if (-not $cfg.runner) { Write-Host 'run.ps1: campaign.md thieu runtime.runner -> DUNG.'; exit 2 }
 
-# Runner có thể nằm NGAY TRONG thư mục chiến dịch (truyện) hoặc ở engine dùng chung (tin).
+# Runner tìm theo BA chỗ, ưu tiên từ gần tới xa:
+#   1. ngay trong thư mục chiến dịch  (runner riêng của một chiến dịch, vd truyện)
+#   2. `scripts/runners/` của REPO    (runner dùng chung, đi kèm repo — bản clone có ngay)
+#   3. engine dùng chung của máy      (runner cũ ở ~/.news/engine)
+# Chỗ 2 suy từ vị trí `campaign_cfg.py` chứ không trỏ cứng lần nữa: một đường dẫn cứng đã
+# đủ, hai cái thì sớm muộn lệch nhau.
+$repoScripts = Split-Path (Split-Path $cfgpy -Parent) -Parent
 $runner = Join-Path $cam $cfg.runner
+if (-not (Test-Path $runner)) { $runner = Join-Path $repoScripts (Join-Path 'runners' $cfg.runner) }
 if (-not (Test-Path $runner)) { $runner = Join-Path $engine $cfg.runner }
 if (-not (Test-Path $runner)) { Write-Host ('run.ps1: khong thay runner ' + $cfg.runner); exit 2 }
 
