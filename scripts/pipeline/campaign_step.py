@@ -194,15 +194,45 @@ def buoc_dung_bai(cam: Path, *, bot, truoc: int | None = None,
 
 # ── Bước 2: soạn ────────────────────────────────────────────────────────────
 
+TOI_THIEU_BLOG = 800        # ký tự thân bài blog, sau khi bỏ neo và chỉ dẫn
+
+
 def _da_viet(bai: Path) -> bool:
-    """`content.md` đã có chữ THẬT chưa, hay còn là khung rỗng?"""
+    """`content.md` đã có chữ THẬT chưa, hay còn là khung mẫu?
+
+    ĐÃ TRẢ GIÁ 10/09/2026 — cổng này từng FAIL-OPEN. Bản đầu đếm ký tự (ngưỡng 400) và coi
+    KHUÔN MẪU là "đã viết": khuôn tự nó dài **3.701 ký tự** sau khi lọc, gấp 9 lần ngưỡng.
+    Bước `soan` báo 3 bài SẴN SÀNG ĐĂNG trong khi chưa có một chữ nào, và còn gửi tin xin
+    duyệt đăng chúng.
+
+    **Đếm ký tự là đo SAI ĐẠI LƯỢNG** — nó đo "có nhiều chữ không", trong khi câu hỏi là
+    "đã ai viết chưa". Khuôn mẫu có rất nhiều chữ, toàn chữ của khuôn.
+
+    Dấu hiệu đúng, cả ba phải thoả:
+      1. có neo `## post:blog_article` — thiếu là chưa dựng đúng khuôn
+      2. thân dưới neo đó không còn `{{...}}` — khuôn đầy chỗ trống, bài xong thì hết
+      3. thân đủ dài (`TOI_THIEU_BLOG`) — chặn trường hợp xoá sạch chỗ trống rồi bỏ đó
+    """
     p = bai / "content.md"
     if not p.is_file():
         return False
-    than = re.sub(r"<!--.*?-->", "", p.read_text(encoding="utf-8"), flags=re.S)
-    than = re.sub(r"(?m)^\s*#.*$", "", than)
-    than = re.sub(r"\{\{[^}]*\}\}", "", than)
-    return len(than.strip()) > 400
+    raw = p.read_text(encoding="utf-8")
+
+    m = re.search(r"(?m)^##\s+post:blog_article\s*$", raw)
+    if not m:
+        return False
+    than = raw[m.end():]
+    # cắt ở neo kênh kế tiếp
+    ke = re.search(r"(?m)^##\s+post:", than)
+    if ke:
+        than = than[:ke.start()]
+
+    if "{{" in than:
+        return False                       # còn chỗ trống của khuôn
+    than = re.sub(r"<!--.*?-->", "", than, flags=re.S)
+    than = re.sub(r"(?m)^\s*>.*$", "", than)      # khối chỉ dẫn của khuôn
+    than = re.sub(r"(?m)^\s*#{1,6}\s.*$", "", than)
+    return len(than.strip()) >= TOI_THIEU_BLOG
 
 
 def buoc_soan(cam: Path, *, bot, hom_nay: date | None = None, dry_run=False) -> dict:
@@ -243,7 +273,12 @@ def buoc_soan(cam: Path, *, bot, hom_nay: date | None = None, dry_run=False) -> 
         if ok:
             xong.append(d["content_id"])
 
-    cong = mo_cong(cam, "g2", xong, bot=bot, hom_nay=hom_nay) if xong else None
+    # `--dry-run` KHÔNG được có tác dụng phụ.
+    #
+    # ĐÃ TRẢ GIÁ 10/09/2026: `soan --dry-run` gửi tin THẬT xin duyệt đăng 3 bài rỗng. Một
+    # lệnh mang chữ "dry-run" mà gây tác dụng ra ngoài thì người ta sẽ không bao giờ dám
+    # dùng nó để thử — tức là mất luôn công cụ an toàn duy nhất của cả quy trình.
+    cong = mo_cong(cam, "g2", xong, bot=bot, hom_nay=hom_nay) if (xong and not dry_run) else None
     return {"buoc": "soan", "xu_ly": len(xong), "san_sang": xong,
             "cho_nguoi_viet": cho_viet, "hong": hong, "cong": cong}
 

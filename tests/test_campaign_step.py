@@ -207,3 +207,78 @@ def test_cho_nguoi_viet_KHONG_phai_loi():
     """Bài chưa ai viết là trạng thái BÌNH THƯỜNG của quy trình có cổng người."""
     assert CS.ma_thoat({"buoc": "soan", "xu_ly": 0,
                         "cho_nguoi_viet": ["T-001", "T-002"], "hong": []}) == 0
+
+
+# ── `_da_viet` phải FAIL-CLOSED ─────────────────────────────────────────────
+#
+# ĐÃ TRẢ GIÁ 10/09/2026: bản đầu đếm ký tự (ngưỡng 400) và coi KHUÔN MẪU là "đã viết" —
+# khuôn tự nó dài 3.701 ký tự sau khi lọc, gấp 9 lần ngưỡng. Cổng lẽ ra chặn "chưa ai viết"
+# lại mở toang, và bước `soan` báo 3 bài SẴN SÀNG ĐĂNG trong khi chưa có một chữ nào.
+#
+# Đếm ký tự là phép đo SAI ĐẠI LƯỢNG. Dấu hiệu đúng: khuôn đầy `{{...}}`; bài viết xong thì
+# không còn chỗ trống nào.
+
+KHUON = (ROOT / "templates" / "station" / "_channel" / "_campaign" / "_content" / "content.md")
+
+
+def test_KHUON_MAU_khong_duoc_tinh_la_da_viet(tmp_path):
+    """Cổng quan trọng nhất của bước `soan`. Sai chiều là đăng bài rỗng."""
+    bai = tmp_path / "bai"
+    bai.mkdir()
+    (bai / "content.md").write_text(KHUON.read_text(encoding="utf-8"), encoding="utf-8")
+    assert CS._da_viet(bai) is False, "khuôn mẫu bị tính là đã viết — cổng fail-open"
+
+
+def test_con_cho_trong_thi_CHUA_XONG(tmp_path):
+    bai = tmp_path / "bai"
+    bai.mkdir()
+    (bai / "content.md").write_text(
+        "## post:blog_article\n\n" + "Câu văn thật. " * 60 + "\n\n{{còn chỗ này}}\n",
+        encoding="utf-8")
+    assert CS._da_viet(bai) is False, "còn `{{}}` mà đã tính là viết xong"
+
+
+def test_bai_VIET_THAT_thi_tinh_la_xong(tmp_path):
+    bai = tmp_path / "bai"
+    bai.mkdir()
+    (bai / "content.md").write_text(
+        "---\nschema: content/1\n---\n\n## post:blog_article\n\n"
+        + "Người thợ khoá cầm bản vẽ sai thì làm ra cái chìa không mở được cửa nào. " * 12,
+        encoding="utf-8")
+    assert CS._da_viet(bai) is True
+
+
+def test_thieu_neo_blog_article_thi_CHUA_XONG(tmp_path):
+    bai = tmp_path / "bai"
+    bai.mkdir()
+    (bai / "content.md").write_text("Chữ nghĩa đầy đủ nhưng không có neo. " * 40,
+                                    encoding="utf-8")
+    assert CS._da_viet(bai) is False
+
+
+def test_khong_co_content_md_thi_CHUA_XONG(tmp_path):
+    bai = tmp_path / "bai"
+    bai.mkdir()
+    assert CS._da_viet(bai) is False
+
+
+# ── `--dry-run` KHÔNG được có tác dụng phụ ──────────────────────────────────
+
+def test_dry_run_KHONG_duoc_gui_telegram(tmp_path):
+    """ĐÃ TRẢ GIÁ: `soan --dry-run` vừa gửi tin THẬT xin duyệt đăng 3 bài rỗng.
+
+    Một lệnh có chữ "dry-run" mà gây tác dụng ra ngoài thì người ta sẽ không bao giờ dám
+    dùng nó để thử — tức là mất luôn công cụ an toàn duy nhất."""
+    cam = _cam(tmp_path, [_row("T-001", "Bài một", "2026-09-15",
+                               g1="2026-09-14", folder="./T-001_bai")])
+    (cam / "T-001_bai").mkdir()
+    (cam / "T-001_bai" / "content.md").write_text(
+        "## post:blog_article\n\n" + "Chữ thật đủ dài để qua ngưỡng. " * 60,
+        encoding="utf-8")
+    b = BotGia()
+    # Khẳng định bài THẬT SỰ được coi là đã viết. Không có dòng này thì `xong` rỗng và test
+    # không bao giờ chạm tới chỗ cần kiểm — bản đầu dài 799 ký tự, hụt ngưỡng 800 đúng MỘT
+    # ký tự, nên nó xanh cả khi dry-run vẫn gửi tin. Đột biến không giết được nó.
+    assert CS._da_viet(cam / "T-001_bai"), "fixture chưa đủ dài — test sẽ vô nghĩa"
+    CS.buoc_soan(cam, bot=b, hom_nay=HOM_NAY, dry_run=True)
+    assert b.da_gui == [], f"dry-run mà vẫn gửi Telegram: {b.da_gui}"
