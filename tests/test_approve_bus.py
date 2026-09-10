@@ -621,3 +621,34 @@ def test_chu_ky_HONG_thi_ghi_log_NGAY(tmp_path):
     logs = list((cam / "logs").glob("tg-poller-*.log"))
     assert logs and "HỎNG" in logs[0].read_text(encoding="utf-8"), \
         "lỗi không được ghi ra log — sẽ vô hình tới lúc tiến trình thoát"
+
+
+# ── T2 · Token chỉ TIÊU khi việc đã XONG ────────────────────────────────────
+#
+# Thay cho "hàng đợi bền" của OpenClaw. Rủi ro thật hẹp hơn kiến trúc của họ nhiều: token
+# bị đánh dấu đã tiêu TRƯỚC khi `_ap_dung` chạy, nên ghi cổng hỏng là cú bấm rơi vĩnh viễn
+# — người bấm lại thì nút báo "đã dùng rồi". Sửa đúng chỗ đó rẻ hơn nhập cả hàng đợi.
+
+def test_ghi_cong_HONG_thi_token_KHONG_bi_tieu(tmp_path, monkeypatch):
+    """Cú bấm chỉ được tính là đã dùng khi cổng ĐÃ ghi. Hỏng thì phải bấm lại được."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"])
+    tok = list(_token_dang_cho(cam))[0]
+
+    def hong(*a, **k):
+        raise RuntimeError("đĩa đầy")
+    monkeypatch.setattr(AB, "_ap_dung", hong)
+
+    AB.nhan(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}", update_id=95)]))
+    assert tok in _token_dang_cho(cam), \
+        "ghi cổng hỏng mà token vẫn bị tiêu — cú bấm rơi vĩnh viễn, bấm lại báo 'đã dùng'"
+
+
+def test_ghi_cong_XONG_thi_token_BI_TIEU(tmp_path):
+    """Mặt kia của cùng một luật: xong việc rồi thì token phải chết, chống replay."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"])
+    tok = list(_token_dang_cho(cam))[0]
+    AB.nhan(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}", update_id=96)]))
+    assert tok not in _token_dang_cho(cam)
+    assert _bang(cam)["T-001"]["g1"] != ""

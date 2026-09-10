@@ -325,22 +325,30 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
             kq["bo_qua"] += 1
             return
         hanh_dong, tok = m.group(1), m.group(2)
-        y = st["cho"].pop(tok, None)      # POP: token là MỘT LẦN
-        if y is not None:
-            kq.setdefault("_da_tieu", set()).add(tok)   # để bước lưu hoà giải với đĩa
+        y = st["cho"].pop(tok, None)      # POP khỏi bản trong bộ nhớ
         if y is None:
             _bao_nhan(bot.tra_loi_nut, cq["id"], "Nút này đã dùng rồi hoặc đã quá hạn.")
             kq["bo_qua"] += 1
             return
         cids = y["content_ids"]
         if hanh_dong == "ok":
+            # TIÊU token chỉ khi việc ĐÃ XONG.
+            #
+            # Đánh dấu tiêu TRƯỚC rồi mới ghi cổng là: ghi hỏng -> `except` nuốt lỗi ->
+            # token vẫn mất -> CÚ BẤM RƠI VĨNH VIỄN, và người bấm lại chỉ nhận "đã dùng
+            # rồi". Người dùng không có đường nào để tự cứu.
+            #
+            # Đây là chỗ ta thay cho "hàng đợi bền" của OpenClaw: rủi ro thật hẹp hơn kiến
+            # trúc của họ nhiều, nên vá đúng chỗ hẹp đó thay vì nhập cả một tầng hàng đợi.
             xong = _ap_dung(cam, y["cong"], cids, boi="Đức (Telegram)",
                             ghi_chu="duyệt qua Telegram", bay_gio=bay_gio)
+            kq.setdefault("_da_tieu", set()).add(tok)
             kq["duyet"] += xong
             _bao_nhan(bot.tra_loi_nut, cq["id"], f"Đã duyệt {len(xong)} bài.")
             _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
                         f"✅ Đã duyệt {len(xong)} bài: {', '.join(xong) or '(không có)'}")
         else:
+            kq.setdefault("_da_tieu", set()).add(tok)   # từ chối cũng là đã xử lý xong
             kq["tu_choi"] += cids
             _bao_nhan(bot.tra_loi_nut, cq["id"], "Đã từ chối.")
             _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
