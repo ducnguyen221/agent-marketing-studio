@@ -436,3 +436,52 @@ def test_mot_minh_thi_KHONG_canh_bao_nham(tmp_path, capsys):
     AB.gui_cong(cam, "g1", bot=BotGia())          # tự nó có state, không được tự tố mình
     assert AB.canh_bao_hai_poller(cam) == []
     assert "HAI POLLER" not in capsys.readouterr().err
+
+
+# ── Tranh chấp trạng thái giữa `gui` và `nhan` ──────────────────────────────
+#
+# ĐÃ TRẢ GIÁ 10/09/2026 — lỗi làm MẤT CÚ BẤM CỦA NGƯỜI, kiểu tệ nhất:
+#   1. `nhan` nạp state vào bộ nhớ rồi long-poll **50 giây**
+#   2. giữa lúc đó `gui` thêm token mới và ghi file
+#   3. `nhan` kết thúc chu kỳ, `_ghi_state` ghi đè bằng bản trong bộ nhớ -> token mới BIẾN MẤT
+#   4. người bấm nút -> không tìm thấy token -> "đã dùng rồi hoặc quá hạn", KHÔNG ghi gì
+#
+# Cửa sổ tranh chấp đúng bằng thời gian long-poll, nên nó xảy ra MỌI LẦN gửi cổng trong lúc
+# poller chạy — tức là luôn luôn. Chạy tay từng lệnh thì không bao giờ thấy.
+
+class BotChenGiua(BotGia):
+    """Giả lập `gui` chen vào giữa lúc `nhan` đang long-poll."""
+
+    def __init__(self, cam, **kw):
+        super().__init__(**kw)
+        self._cam = cam
+
+    def lay_cap_nhat(self, offset=None, timeout=0):
+        # Trong lúc "long-poll", một tiến trình khác thêm token vào file.
+        st = AB._doc_state(self._cam)
+        st["cho"]["cheninnnn123456ab"] = {
+            "cong": "g1", "content_ids": ["T-002"], "campaign": "CD-THU",
+            "het_han": (datetime.now().astimezone() + timedelta(hours=1)).isoformat(),
+            "tao_luc": datetime.now().astimezone().isoformat()}
+        AB._ghi_state(self._cam, st)
+        return super().lay_cap_nhat(offset=offset, timeout=timeout)
+
+
+def test_nhan_KHONG_duoc_xoa_token_do_tien_trinh_khac_vua_them(tmp_path):
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"])
+    AB.nhan(cam, bot=BotChenGiua(cam, hang_doi=[]))
+    assert "cheninnnn123456ab" in _token_dang_cho(cam), \
+        "token do `gui` thêm giữa chừng bị `nhan` ghi đè mất — CÚ BẤM CỦA NGƯỜI SẼ RƠI"
+
+
+def test_nhan_van_TIEU_dung_token_no_da_dung(tmp_path):
+    """Hoà giải chứ không phải bỏ ghi: token mình vừa dùng vẫn phải biến mất."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"])
+    tok = [t for t in _token_dang_cho(cam)][0]
+    AB.nhan(cam, bot=BotChenGiua(cam, hang_doi=[_bam_nut(f"ok:{tok}", update_id=80)]))
+    con = _token_dang_cho(cam)
+    assert tok not in con, "token đã dùng vẫn còn — chống replay thủng"
+    assert "cheninnnn123456ab" in con, "vẫn xoá mất token của tiến trình khác"
+    assert _bang(cam)["T-001"]["g1"] != ""

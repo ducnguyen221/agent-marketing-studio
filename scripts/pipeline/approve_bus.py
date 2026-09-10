@@ -115,6 +115,31 @@ def _ghi_state(cam: Path, d: dict) -> None:
     md_io.ghi_nguyen_tu(_p_state(cam), json.dumps(d, ensure_ascii=False, indent=2) + "\n")
 
 
+def _hoa_giai_state(cam: Path, da_tieu: set[str], offset_moi: int | None) -> None:
+    """Ghi state bằng cách HOÀ GIẢI với đĩa, không ghi đè bằng bản trong bộ nhớ.
+
+    ĐÃ TRẢ GIÁ 10/09/2026 — lỗi làm MẤT CÚ BẤM CỦA NGƯỜI:
+      1. `nhan` nạp state vào bộ nhớ rồi long-poll **50 giây**
+      2. giữa lúc đó `gui` (tiến trình khác) thêm token mới và ghi file
+      3. `nhan` xong chu kỳ, ghi đè bằng bản cũ trong bộ nhớ -> token mới BIẾN MẤT
+      4. người bấm nút -> không thấy token -> "đã dùng rồi", KHÔNG ghi gì
+
+    Cửa sổ tranh chấp đúng bằng thời gian long-poll, nên nó xảy ra MỌI LẦN gửi cổng trong
+    lúc poller chạy — tức là luôn luôn. Chạy tay từng lệnh thì không đời nào thấy.
+
+    Nên chỉ ghi ĐÚNG HAI THAY ĐỔI của lượt này lên bản MỚI NHẤT trên đĩa: xoá token đã
+    tiêu, và tiến `offset`. Mọi thứ khác giữ nguyên như đĩa đang có.
+    """
+    tren_dia = _doc_state(cam)
+    for t in da_tieu:
+        tren_dia["cho"].pop(t, None)
+    if offset_moi is not None:
+        cu = tren_dia.get("offset")
+        # `max`: tiến trình khác có thể đã đọc xa hơn ta. Lùi offset là xử lý lại update cũ.
+        tren_dia["offset"] = max(cu, offset_moi) if isinstance(cu, int) else offset_moi
+    _ghi_state(cam, tren_dia)
+
+
 # ── Bảng Content ────────────────────────────────────────────────────────────
 
 def _doc_bang(cam: Path):
@@ -300,6 +325,8 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
             return
         hanh_dong, tok = m.group(1), m.group(2)
         y = st["cho"].pop(tok, None)      # POP: token là MỘT LẦN
+        if y is not None:
+            kq.setdefault("_da_tieu", set()).add(tok)   # để bước lưu hoà giải với đĩa
         if y is None:
             _bao_nhan(bot.tra_loi_nut, cq["id"], "Nút này đã dùng rồi hoặc đã quá hạn.")
             kq["bo_qua"] += 1
@@ -387,9 +414,11 @@ def nhan(cam: Path, *, bot, bay_gio: datetime | None = None) -> dict:
                 loi(f"update {u.get('update_id')} hỏng, bỏ qua — {e}")
                 kq["bo_qua"] += 1
     finally:
-        if lon_nhat is not None:
-            st["offset"] = lon_nhat + 1
-        _ghi_state(cam, st)
+        # HOÀ GIẢI với đĩa thay vì ghi đè: giữa lúc ta long-poll 50 giây, `gui` ở tiến
+        # trình khác có thể đã thêm token. Ghi đè bằng bản trong bộ nhớ là xoá mất nó,
+        # và cú bấm tương ứng của người sẽ rơi.
+        _hoa_giai_state(cam, kq.pop("_da_tieu", set()),
+                        lon_nhat + 1 if lon_nhat is not None else None)
     return kq
 
 
