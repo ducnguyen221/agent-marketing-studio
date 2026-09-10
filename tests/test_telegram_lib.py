@@ -146,3 +146,30 @@ def test_duoc_phep_so_sanh_theo_SO_khong_theo_CHUOI(tmp_path):
     So sánh lệch kiểu thì allowlist luôn trả False và KHÔNG ai duyệt được gì."""
     b = tg.Bot(cau_hinh=_cfg(tmp_path, {"mac_dinh": {"chat_id": "12345"}}), goi=GoiGia())
     assert b.duoc_phep(12345), "chat_id chuỗi trong file mà số từ API -> phải khớp"
+
+
+# ── Thời gian chờ socket phải LỚN HƠN thời gian long-poll ───────────────────
+#
+# ĐÃ TRẢ GIÁ 10/09/2026: socket để cứng 30s trong khi long-poll chặn 50s ⇒ MỌI chu kỳ chết
+# ở giây 30. Hậu quả nối nhau và trông như ba bệnh khác nhau: poller tự thoát sau 5 lỗi ·
+# Task Scheduler dựng lại mỗi phút · kết nối cũ treo phía Telegram làm lượt mới ăn
+# `Conflict`, khiến ta đi tìm một "poller thứ hai" không hề tồn tại.
+#
+# Hai con số đặt cạnh nhau mà không ràng buộc thì sớm muộn trôi khỏi nhau. Cổng này giữ
+# ràng buộc đó.
+
+def test_cho_socket_LON_HON_thoi_gian_long_poll():
+    for t in (1, 10, 30, tg.LONG_POLL_MAX, 100):
+        assert tg.cho_socket({"timeout": t}) > t, \
+            f"socket chờ {tg.cho_socket({'timeout': t})}s mà long-poll chặn {t}s — chết chắc"
+
+
+def test_cho_socket_du_du_cho_TRAN_that_cua_telegram():
+    """Trần đo được là ~50s. Socket phải dư đủ cho lúc Telegram trả lời chậm."""
+    assert tg.cho_socket({"timeout": tg.LONG_POLL_MAX}) >= tg.LONG_POLL_MAX + 10
+
+
+def test_khong_long_poll_thi_van_co_han_hop_ly():
+    """Gọi thường (sendMessage…) không được chờ vô hạn."""
+    n = tg.cho_socket({})
+    assert 10 <= n <= 60, n

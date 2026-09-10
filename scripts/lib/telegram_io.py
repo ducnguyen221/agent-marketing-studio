@@ -60,12 +60,30 @@ def duong_dan_cau_hinh() -> Path:
                 or Path.home() / ".secret" / "telegram" / "config.json")
 
 
+def cho_socket(payload: dict) -> int:
+    """Thời gian chờ SOCKET, suy TỪ thời gian long-poll — không phải hằng số rời.
+
+    ĐÃ TRẢ GIÁ 10/09/2026. Socket để cứng 30s trong khi `getUpdates` long-poll chặn 50s ⇒
+    **mọi chu kỳ chết ở giây 30**, trước khi Telegram kịp trả lời. Rồi hậu quả nối nhau và
+    trông như ba bệnh khác nhau:
+      · 5 lỗi liên tiếp -> poller tự thoát
+      · Task Scheduler dựng lại sau một phút
+      · kết nối cũ vẫn treo phía Telegram -> lượt mới ăn `Conflict: terminated by other
+        getUpdates request`, khiến ta đi tìm "poller thứ hai" không hề tồn tại
+    Một hằng số lệch, ba triệu chứng, không cái nào trỏ vào gốc.
+
+    Nên nó phải được SUY RA, đừng để hai con số cạnh nhau tự trôi khỏi nhau. Cộng 15s dư
+    cho lúc Telegram trả lời chậm và cho độ trễ mạng.
+    """
+    return int(payload.get("timeout") or 0) + 15 if payload.get("timeout") else 30
+
+
 def _goi_that(token: str, method: str, payload: dict) -> dict:
     """Lớp mạng thật. Tách riêng để test thay được mà không cần internet."""
     du_lieu = urllib.parse.urlencode(payload).encode("utf-8")
     req = urllib.request.Request(API.format(token=token, method=method), data=du_lieu)
     try:
-        with urllib.request.urlopen(req, timeout=30) as r:
+        with urllib.request.urlopen(req, timeout=cho_socket(payload)) as r:
             return json.loads(r.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         # Thân lỗi của Telegram có `description` nói rõ sai gì — đắt hơn mã HTTP nhiều.
