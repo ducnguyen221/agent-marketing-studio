@@ -391,3 +391,17 @@ def test_writer_ma_KHAC_0_thi_HONG_du_bai_co_chu(tmp_path):
     kq = CS.buoc_soan(cam, bot=BotGia(), hom_nay=HOM_NAY, chay=viet_roi_bao_loi)
     assert kq["xu_ly"] == 0, f"writer báo lỗi mà vẫn tính là xong: {kq}"
     assert kq["hong"] and kq["hong"][0]["vi_sao"] == "writer_cmd", kq
+
+
+def test_tach_lenh_KHONG_nuot_dau_gach_cheo_windows():
+    r"""`shlex.split` mặc định POSIX coi `\` là ký tự thoát ⇒ đường dẫn Windows bị ăn sạch:
+    `D:\tram\kenh\x.ps1` -> `D:tramkenhx.ps1`. Lệnh không bao giờ chạy, và lỗi báo ra là
+    "không tìm thấy file" — chẳng trỏ vào đâu."""
+    cmd = CS.tach_lenh(r'powershell -File D:\tram\kenh\viet-bai.ps1 -Bai {bai}')
+    assert r"D:\tram\kenh\viet-bai.ps1" in cmd, cmd
+    assert cmd[-1] == "{bai}"
+
+
+def test_tach_lenh_giu_duong_dan_co_khoang_trang():
+    cmd = CS.tach_lenh(r'python "D:\Chuong Trinh\x\y.py" {bai}')
+    assert cmd[1] == r"D:\Chuong Trinh\x\y.py", cmd

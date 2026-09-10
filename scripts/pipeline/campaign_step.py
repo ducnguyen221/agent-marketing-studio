@@ -235,6 +235,23 @@ def _da_viet(bai: Path) -> bool:
     return len(than.strip()) >= TOI_THIEU_BLOG
 
 
+def tach_lenh(lenh: str) -> list[str]:
+    r"""Tách chuỗi lệnh thành argv. KHÔNG shell, và KHÔNG nuốt dấu `\` của Windows.
+
+    ĐÃ SUÝT TRẢ GIÁ 10/09/2026: `shlex.split` mặc định chạy chế độ POSIX, trong đó `\` là
+    ký tự thoát. Đường dẫn Windows đi qua nó thành:
+
+        D:\tram\kenh\viet-bai.ps1   ->   D:tramkenhviet-bai.ps1
+
+    Lệnh sẽ không bao giờ chạy, và thông báo lỗi là "không tìm thấy file" — chẳng trỏ vào
+    đâu cả. `posix=False` giữ nguyên dấu gạch chéo.
+
+    Vẫn KHÔNG dùng shell: dấu `;` trong cấu hình không được thành lệnh thứ hai.
+    """
+    import shlex
+    return [x.strip('"') for x in shlex.split(lenh, posix=False) if x.strip()]
+
+
 def _ghi_phan_hoi_ra_file(cam: Path, bai: Path, cid: str) -> int:
     """Đưa nhận xét của người tới bộ viết qua FILE, không qua dòng lệnh.
 
@@ -303,10 +320,8 @@ def buoc_soan(cam: Path, *, bot, hom_nay: date | None = None, dry_run=False,
             if dry_run:
                 cho_viet.append(d["content_id"])
                 continue
-            import shlex
-            # `shlex.split` + KHÔNG shell: dấu `;` trong cấu hình không thành lệnh thứ hai.
             cmd = [x.format(bai=str(bai), cid=d["content_id"], cam=str(cam))
-                   for x in shlex.split(writer)]
+                   for x in tach_lenh(writer)]
             r = chay(cmd)
             if r.returncode != 0:
                 hong.append({"id": d["content_id"], "vi_sao": "writer_cmd",

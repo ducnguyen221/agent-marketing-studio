@@ -54,9 +54,11 @@
 | Dựng HTML tự chứa để xem trước bài | `scripts/pipeline/build_blog_html.py` |
 | Xem toàn cảnh chiến dịch / mọi bài | `scripts/pipeline/build_views.py` (mở `index.html` bằng cách bấm đúp) |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
+| **Thứ tự các bước và CỔNG DUYỆT nằm ở đâu** (4 lệnh, 3 cổng — đọc TRƯỚC hai dòng dưới) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` |
 | **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
 | Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dang`) | `scripts/pipeline/campaign_step.py` |
+| **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` §6 |
 | Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
 | Đăng bài lên web (đích khai bằng cấu hình, không khoá cứng) | `scripts/pipeline/web_publish.py` |
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |
