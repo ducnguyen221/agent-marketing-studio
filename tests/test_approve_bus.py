@@ -275,3 +275,23 @@ def test_offset_duoc_luu_va_truyen_lai(tmp_path):
     b2 = BotGia()
     AB.nhan(cam, bot=b2)
     assert b2.offset_da_dung == [78], f"offset sai: {b2.offset_da_dung}"
+
+
+def test_gui_cong_hoi_DUNG_danh_sach_duoc_dua(tmp_path):
+    """UAT 10/09: bước `dung-bai` dựng 3 bài nhưng tin xin duyệt hỏi về 10 — vì hàm này
+    tự truy vấn thay vì hỏi đúng những bài vừa xử lý. Trong khi `autonomy: full` lại chỉ
+    duyệt 3. Hai chế độ hành xử khác nhau trên cùng một bước."""
+    cam = _cam(tmp_path)
+    b = BotGia()
+    AB.gui_cong(cam, "g1", bot=b, cids=["T-001"])
+    t = b.da_gui[0]["text"]
+    assert "T-001" in t and "T-002" not in t, f"hỏi thừa bài không được đưa: {t}"
+
+
+def test_gui_cong_KHONG_hoi_bai_da_qua_cong(tmp_path):
+    """Đưa cả bài đã có g1 thì vẫn phải loại — mời bấm lại việc đã xong là làm phiền."""
+    cam = _cam(tmp_path)
+    b = BotGia()
+    AB.gui_cong(cam, "g1", bot=b, cids=["T-001", "T-003"])   # T-003 đã có g1
+    t = b.da_gui[0]["text"]
+    assert "T-001" in t and "T-003" not in t, f"hỏi lại bài đã duyệt: {t}"

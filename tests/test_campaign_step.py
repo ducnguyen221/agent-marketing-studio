@@ -181,3 +181,29 @@ def test_da_dang_roi_thi_khong_dang_lai(tmp_path):
                                g2="2026-09-15", folder="./T-001_bai-mot",
                                published="2026-09-15")])
     assert CS.bai_san_sang_dang(cam) == []
+
+
+# ── Mã thoát: bước hỏng thì PHẢI khác 0 ─────────────────────────────────────
+#
+# ĐÃ TRẢ GIÁ 10/09/2026 trong chính đợt UAT này: `main()` trả 0 vô điều kiện, nên một lượt
+# `dung-bai` thất bại hoàn toàn vẫn cho `exit=0`. Chạy theo lịch thì `notify-run.ps1` đọc
+# mã thoát đó và báo ✅ cho một lượt KHÔNG LÀM ĐƯỢC GÌ. Đây là cổng canh chỗ đó.
+
+def test_buoc_hong_thi_ma_thoat_KHAC_0():
+    assert CS.ma_thoat({"buoc": "dung-bai", "loi": "new_post that bai", "exit": 2}) != 0
+    assert CS.ma_thoat({"buoc": "soan", "hong": [{"id": "T-001", "vi_sao": "gen_article"}]}) != 0
+    assert CS.ma_thoat({"buoc": "dang", "chi_tiet": [{"id": "T-001", "exit": 4}]}) != 0
+
+
+def test_KHONG_CO_VIEC_thi_van_la_0():
+    """Không có bài nào tới hạn ≠ thất bại. Báo đỏ mỗi ngày rồi thì không ai đọc báo nữa."""
+    assert CS.ma_thoat({"buoc": "dung-bai", "tao": 0, "ly_do": "không có bài nào tới hạn"}) == 0
+    assert CS.ma_thoat({"buoc": "soan", "xu_ly": 0, "hong": [], "cho_nguoi_viet": []}) == 0
+    assert CS.ma_thoat({"buoc": "dang", "dang": 1,
+                        "chi_tiet": [{"id": "T-001", "exit": 0}]}) == 0
+
+
+def test_cho_nguoi_viet_KHONG_phai_loi():
+    """Bài chưa ai viết là trạng thái BÌNH THƯỜNG của quy trình có cổng người."""
+    assert CS.ma_thoat({"buoc": "soan", "xu_ly": 0,
+                        "cho_nguoi_viet": ["T-001", "T-002"], "hong": []}) == 0

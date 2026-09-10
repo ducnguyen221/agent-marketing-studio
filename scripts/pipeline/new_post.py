@@ -163,7 +163,13 @@ def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
             loi.append(f"slug {slug!r} phải a-z0-9-")
         if (cam_dir / f"{cid}_{slug}").exists():
             loi.append(f"{cid}_{slug} đã có — không ghi đè")
-        if cid in da_co:
+        # Cổng trùng ĐẢO CHIỀU ở chế độ ĐIỀN: ở đó dòng có sẵn là điều kiện CẦN, còn
+        # dòng thiếu mới là lỗi. Không đảo thì `--bulk --dien-vao-dong` chết ngay bài đầu.
+        if a.dien_vao_dong:
+            if cid not in da_co:
+                loi.append(f"{cid} chưa có trong bảng Content — `--dien-vao-dong` chỉ để "
+                           f"dựng thư mục cho dòng ĐÃ lên lịch")
+        elif cid in da_co:
             loi.append(f"{cid} đã có trong bảng Content — không ghi đè dòng cũ")
     if len({c for c, *_ in dong_tsv}) != len(dong_tsv):
         loi.append("có content_id trùng nhau trong file")
@@ -194,6 +200,10 @@ def _lai_argv(n) -> list[str]:
     v = ["--campaign", n.campaign, "--id", n.id, "--slug", n.slug, "--title", n.title,
          "--funnel", n.funnel, "--priority", n.priority, "--audio", n.audio,
          "--video", n.video, "--short", n.short, "--bo-qua-cong"]
+    # Chế độ ĐIỀN phải đi theo xuống từng bài, nếu không `--bulk` sẽ đâm vào cổng trùng
+    # ở bài đầu tiên và không tạo được gì — đúng lỗi UAT 10/09 bắt được.
+    if getattr(n, "dien_vao_dong", False):
+        v.append("--dien-vao-dong")
     for c, x in (("--pillar", n.pillar), ("--angle", n.angle), ("--schedule", n.schedule),
                  ("--station", n.station)):
         if x:
@@ -217,6 +227,10 @@ def main(argv=None) -> int:
     ap.add_argument("--video", default="yes", choices=["yes", "no"])
     ap.add_argument("--short", default="no", choices=["yes", "no"])
     ap.add_argument("--station", default=None)
+    ap.add_argument("--dien-vao-dong", action="store_true",
+                    help="dòng đã CÓ trong bảng Content — chỉ dựng thư mục và "
+                         "điền cột `folder`, KHÔNG đụng status/g1/g2. Cho chiến "
+                         "dịch lập lịch trước rồi dựng thư mục sau.")
     ap.add_argument("--bo-qua-cong", action="store_true",
                     help="bỏ chặn campaign.md chưa đủ thông tin (biết mình làm gì)")
     ap.add_argument("--dry-run", action="store_true")
@@ -287,7 +301,20 @@ def main(argv=None) -> int:
     # THƯ MỤC, nên `--id THU-001 --slug b` khi THU-001 đang `approved` sẽ ghi đè dòng đó về
     # `proposed` với ô g1 rỗng: MÁY XOÁ quyết định của NGƯỜI ở Cổng 1, và không báo gì.
     _, dong_co = md_io.read_table(body_cam, "CONTENT")
-    if any(d.get("content_id") == a.id for d in dong_co):
+    dong_cu = next((d for d in dong_co if d.get("content_id") == a.id), None)
+    if a.dien_vao_dong:
+        # Chế độ ĐIỀN: dòng phải CÓ SẴN. Không có nghĩa là gọi nhầm chế độ — dựng thư
+        # mục cho một bài không nằm trong lịch là đẻ ra bài mồ côi mà sổ không biết.
+        if dong_cu is None:
+            sys.stderr.write(
+                f"{a.id} chưa có trong bảng Content của {cam_dir.name} — dừng.\n"
+                f"`--dien-vao-dong` chỉ để dựng thư mục cho dòng ĐÃ lên lịch; bỏ cờ đó "
+                f"nếu muốn tạo bài mới.\n")
+            return 2
+        if (dong_cu.get("folder") or "").strip():
+            sys.stderr.write(f"{a.id} đã có thư mục {dong_cu['folder']} — dừng.\n")
+            return 2
+    elif dong_cu is not None:
         sys.stderr.write(f"{a.id} đã có trong bảng Content của {cam_dir.name} — dừng.\n"
                          f"Đổi --id, hoặc sửa thẳng dòng đó trong campaign.md.\n")
         return 2
@@ -355,11 +382,17 @@ def main(argv=None) -> int:
     md_io.write_fm(PP.p(dich, "content"), fm_c, body_c)
 
     # dòng trong bảng Content — status=proposed, g1 TRỐNG (Cổng 1 là của người)
-    body_cam = md_io.upsert_row(body_cam, "CONTENT", "content_id", {
-        "content_id": a.id, "content_name": a.title, "pillar": pillar,
-        "angle": a.angle, "funnel": a.funnel, "priority": a.priority,
-        "status": "proposed", "g1": "", "g2": "",
-        "schedule": a.schedule, "published": "", "folder": f"./{dich.name}/"}, COT)
+    # Chế độ ĐIỀN chỉ ghi ĐÚNG cột `folder`. Ghi thêm bất cứ gì ở đây là ghi đè lên thứ
+    # người đã điền — mà `status`/`g1`/`g2` chính là dấu vết hai cổng duyệt. Đó là toàn bộ
+    # lý do cổng trùng tồn tại; chế độ mới không được mở lại lỗ đó.
+    if a.dien_vao_dong:
+        moi = {"content_id": a.id, "folder": f"./{dich.name}/"}
+    else:
+        moi = {"content_id": a.id, "content_name": a.title, "pillar": pillar,
+               "angle": a.angle, "funnel": a.funnel, "priority": a.priority,
+               "status": "proposed", "g1": "", "g2": "",
+               "schedule": a.schedule, "published": "", "folder": f"./{dich.name}/"}
+    body_cam = md_io.upsert_row(body_cam, "CONTENT", "content_id", moi, COT)
     md_io.write_fm(cam_dir / "campaign.md", fm_cam, body_cam)
 
     print(f"  bài  : {dich}")

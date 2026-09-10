@@ -148,7 +148,9 @@ def mo_cong(cam: Path, cong: str, cids: list[str], *, bot, hom_nay: date | None 
         xong = AB._ap_dung(cam, cong, cids, boi="tự động (autonomy=full)",
                            ghi_chu="autonomy=full — không có cổng người", bay_gio=bay_gio)
         return {"cong": cong, "muc": muc, "tu_duyet": xong}
-    kq = AB.gui_cong(cam, cong, bot=bot, lo=lo)
+    # Hỏi ĐÚNG những bài bước này vừa xử lý. Để `gui_cong` tự truy vấn thì nó hỏi cả nhóm
+    # đang chờ, trong khi nhánh `full` ngay trên chỉ duyệt `cids` — hai chế độ lệch nhau.
+    kq = AB.gui_cong(cam, cong, bot=bot, lo=lo, cids=cids)
     return {"cong": cong, "muc": muc, **kq}
 
 
@@ -173,9 +175,12 @@ def buoc_dung_bai(cam: Path, *, bot, truoc: int | None = None,
         return {"buoc": "dung-bai", "dry_run": True,
                 "se_tao": [d["content_id"] for d in ds]}
 
+    # `--dien-vao-dong`: bảng Content của chiến dịch dài kỳ được lập lịch TRƯỚC, thư mục
+    # dựng SAU. Không có cờ này thì `new_post.py` đâm vào cổng trùng content_id và không
+    # tạo được bài nào — UAT 10/09 bắt được đúng chỗ này.
     r = subprocess.run(
         [sys.executable, str(_HERE / "new_post.py"), "--campaign", str(cam),
-         "--bulk", str(tsv)],
+         "--bulk", str(tsv), "--dien-vao-dong"],
         capture_output=True, text=True, encoding="utf-8", errors="replace")
     tsv.unlink(missing_ok=True)            # file trung gian, xoá ngay trong cùng bước
     if r.returncode != 0:
@@ -264,6 +269,24 @@ def buoc_dang(cam: Path, *, bot, uat=False, dry_run=False) -> dict:
 BUOC = {"dung-bai": buoc_dung_bai, "soan": buoc_soan, "dang": buoc_dang}
 
 
+def ma_thoat(kq: dict) -> int:
+    """Mã thoát suy TỪ KẾT QUẢ, không phải từ "hàm đã chạy xong".
+
+    ĐÃ TRẢ GIÁ 10/09/2026: `main()` trả 0 vô điều kiện, nên một lượt `dung-bai` thất bại
+    hoàn toàn (`new_post` từ chối cả 3 bài) vẫn cho `exit=0`. Chạy theo lịch thì
+    `notify-run.ps1` đọc mã thoát đó và báo ✅ cho một lượt KHÔNG LÀM ĐƯỢC GÌ.
+
+    Không có bài nào để làm ≠ thất bại: đó là 0. Có việc mà làm hỏng mới là khác 0.
+    """
+    if kq.get("loi"):
+        return 3
+    if kq.get("hong"):
+        return 3
+    if any(x.get("exit") not in (0, None) for x in (kq.get("chi_tiet") or [])):
+        return 3
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Chạy một bước của chiến dịch blog.")
     ap.add_argument("campaign")
@@ -294,8 +317,9 @@ def main() -> int:
         kw["uat"] = a.uat
         kw.pop("dry_run", None)
         kw["dry_run"] = a.dry_run
-    print(json.dumps(BUOC[a.buoc](cam, **kw), ensure_ascii=False, indent=2))
-    return 0
+    kq = BUOC[a.buoc](cam, **kw)
+    print(json.dumps(kq, ensure_ascii=False, indent=2))
+    return ma_thoat(kq)
 
 
 if __name__ == "__main__":

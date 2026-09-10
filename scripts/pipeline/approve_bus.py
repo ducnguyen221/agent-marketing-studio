@@ -179,7 +179,14 @@ def _nhan_cong(cong: str) -> str:
 
 
 def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
-             che_do: str | None = None, bay_gio: datetime | None = None) -> dict:
+             che_do: str | None = None, bay_gio: datetime | None = None,
+             cids: list[str] | None = None) -> dict:
+    """`cids` = hỏi ĐÚNG những bài này. Không truyền = tự lấy các bài đang chờ cổng.
+
+    Vì sao cần tham số đó: `campaign_step` vừa dựng đúng 3 bài thì phải hỏi đúng 3 bài ấy.
+    Để hàm tự truy vấn thì nó hỏi cả 10 bài đang chờ, trong khi `autonomy: full` lại chỉ
+    tự duyệt 3 — HAI CHẾ ĐỘ HÀNH XỬ KHÁC NHAU trên cùng một bước. UAT 10/09 bắt được.
+    """
     cam = Path(cam)
     bay_gio = bay_gio or datetime.now().astimezone()
     fm, _, _, _ = _doc_bang(cam)
@@ -187,7 +194,14 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
     che_do = che_do or rt.get("approval_mode") or "batch_gate"
     lo = lo if lo is not None else int(rt.get("approval_lo") or LO_MAC_DINH)
 
-    ds = cho_cong(cam, cong)[:lo] if lo else []
+    dang_cho = cho_cong(cam, cong)
+    if cids is not None:
+        # Lọc theo danh sách người gọi đưa, NHƯNG vẫn phải nằm trong nhóm đang chờ cổng:
+        # hỏi duyệt một bài đã qua cổng rồi là mời người bấm lại vào việc đã xong.
+        chon = set(cids)
+        ds = [d for d in dang_cho if d["content_id"] in chon]
+    else:
+        ds = dang_cho[:lo] if lo else []
     if not ds:
         return {"gui": 0, "ly_do": "không có bài nào chờ cổng này"}
 

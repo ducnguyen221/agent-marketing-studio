@@ -311,3 +311,58 @@ def test_channels_phai_la_TAP_CON_cua_platforms_kenh(station):
     r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
               "THU-001", "--slug", "a", "--title", "X", "--station", station, mong_doi=2)
     assert "youtube" in r.stderr and "platforms của kênh" in r.stderr
+
+
+# ── --dien-vao-dong: lịch lập TRƯỚC, thư mục dựng SAU ───────────────────────
+#
+# Chiến dịch dài kỳ lập cả trăm dòng lịch trước rồi mới dựng thư mục từng đợt. Đường mặc
+# định của `new_post.py` giả định NGƯỢC LẠI: nó là người TẠO dòng, nên gặp dòng có sẵn là
+# dừng. Cổng đó ĐÚNG và phải giữ nguyên (xem test ngay trên). Nên đây là một CHẾ ĐỘ KHÁC,
+# không phải nới cổng cũ.
+
+NP = ROOT / "scripts/pipeline/new_post.py"
+
+
+def _dat_lich(cam, cid="THU-001", ten="Bài đã lên lịch", g1="", status="proposed"):
+    """Thêm một dòng lịch CHƯA có thư mục — đúng hình dạng chiến dịch lập lịch trước."""
+    fm, body = M.read_fm(cam / "campaign.md")
+    cot, _ = M.read_table(body, "CONTENT")
+    body = M.upsert_row(body, "CONTENT", "content_id", {
+        "content_id": cid, "content_name": ten, "pillar": "tru-cot-1",
+        "angle": "explainer", "funnel": "awareness", "priority": "high",
+        "status": status, "g1": g1, "g2": "", "schedule": "2026-09-20",
+        "published": "", "folder": ""}, cot)
+    M.write_fm(cam / "campaign.md", fm, body)
+
+
+def _dong(cam, cid="THU-001"):
+    _, body = M.read_fm(cam / "campaign.md")
+    return {d["content_id"]: d for d in M.read_table(body, "CONTENT")[1]}[cid]
+
+
+def test_dien_vao_dong_dung_thu_muc_cho_dong_CO_SAN(station):
+    cam = _cd_san_sang(station)
+    _dat_lich(cam)
+    _chay(NP, "--campaign", "CMP-2609-t", "--id", "THU-001", "--slug", "bai-len-lich",
+          "--title", "Bài đã lên lịch", "--station", station, "--dien-vao-dong")
+    assert (cam / "THU-001_bai-len-lich" / "meta.json").is_file()
+    assert _dong(cam)["folder"].strip("./ ") == "THU-001_bai-len-lich"
+
+
+def test_dien_vao_dong_KHONG_XOA_quyet_dinh_Cong_1(station):
+    """Đây là toàn bộ lý do cổng trùng tồn tại. Chế độ mới không được mở lại lỗ đó."""
+    cam = _cd_san_sang(station)
+    _dat_lich(cam, g1="2026-09-01", status="approved")
+    _chay(NP, "--campaign", "CMP-2609-t", "--id", "THU-001", "--slug", "bai-len-lich",
+          "--title", "Bài đã lên lịch", "--station", station, "--dien-vao-dong")
+    d = _dong(cam)
+    assert d["g1"] == "2026-09-01", "XOÁ MẤT ngày duyệt Cổng 1 của người"
+    assert d["status"] == "approved", "hạ status đã duyệt về proposed"
+
+
+def test_dien_vao_dong_ma_dong_CHUA_CO_thi_dung_han(station):
+    """Chế độ này chỉ để ĐIỀN. Không có dòng nghĩa là gọi nhầm chế độ."""
+    _cd_san_sang(station)
+    r = _chay(NP, "--campaign", "CMP-2609-t", "--id", "THU-404", "--slug", "khong-co",
+              "--title", "Không có", "--station", station, "--dien-vao-dong", mong_doi=2)
+    assert "THU-404" in (r.stdout + r.stderr)
