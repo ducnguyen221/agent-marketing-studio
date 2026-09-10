@@ -37,8 +37,14 @@ approve_bus.py trang-thai --campaign <đường dẫn>
 ```
 
 ⚠️ **`getUpdates` chỉ cho MỘT người đọc trên mỗi bot token.** Script này phải là tiến trình
-duy nhất poll con bot đó. Thêm một bên tiêu thụ nữa là cả hai ăn trộm update của nhau —
-im lặng, không bên nào báo lỗi. Cần thêm thì tách bot riêng.
+duy nhất poll con bot đó.
+
+Telegram báo xung đột này **to và rõ** — đo được 10/09/2026:
+`Conflict: terminated by other getUpdates request; make sure that only one bot instance is
+running`. Yêu cầu MỚI giết yêu cầu CŨ, nên hai poller đạp nhau liên tục và **cả hai cùng
+hỏng ồn ào**. (Bản đầu của tài liệu này viết là "im lặng" — đó là suy đoán chưa đo, và
+phép đo bác bỏ. Giữ ghi chú vì nó đổi cách phòng: chỉ cần ĐỌC LỖI, không cần dựng cổng
+phát hiện ngầm.)
 """
 from __future__ import annotations
 
@@ -426,9 +432,10 @@ def _doc_nhip(cam: Path) -> dict:
 def canh_bao_hai_poller(cam: Path) -> list[str]:
     """Cảnh báo TO nếu có chiến dịch khác trong trạm cũng đang giữ trạng thái poller.
 
-    `getUpdates` chỉ cho MỘT người đọc trên mỗi bot token. Hai poller cùng bot là chúng ăn
-    trộm update của nhau — **im lặng**, không bên nào báo lỗi, và triệu chứng là "bấm nút
-    lúc ăn lúc không". Gần như không thể chẩn đoán nếu không biết trước.
+    `getUpdates` chỉ cho MỘT người đọc trên mỗi bot token. Yêu cầu MỚI giết yêu cầu CŨ, nên
+    hai poller sẽ đạp nhau liên tục và cả hai cùng hỏng — nhưng hỏng ỒN ÀO, không im lặng:
+    Telegram trả thẳng `Conflict: terminated by other getUpdates request` (đo 10/09/2026).
+    Hàm này cảnh báo TRƯỚC để khỏi phải đi dò từ thông điệp lỗi đó.
 
     Đây mới là CẢNH BÁO chứ chưa phải cổng chặn: trạng thái đang gắn theo chiến dịch, nên
     hai chiến dịch cùng muốn duyệt qua Telegram là một hạn chế THẬT của thiết kế hiện tại.

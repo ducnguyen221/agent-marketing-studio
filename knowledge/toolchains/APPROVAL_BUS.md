@@ -66,8 +66,16 @@ Bấm nút, hoặc nhắn `duyet NEN-003` / `tu choi NEN-003 <lý do>`.
    chuỗi sẽ báo đỏ vì chính đoạn tài liệu này).
 
 ⚠️ **`getUpdates` chỉ cho MỘT người đọc trên mỗi bot token.** `approve_bus.py` phải là tiến
-trình duy nhất poll con bot đó. Thêm một bên tiêu thụ nữa là cả hai ăn trộm update của
-nhau — **im lặng**, không bên nào báo lỗi. Cần thêm thì tách bot riêng.
+trình duy nhất poll con bot đó.
+
+**Telegram báo xung đột này TO VÀ RÕ — ĐO ĐƯỢC 10/09/2026:**
+`Conflict: terminated by other getUpdates request; make sure that only one bot instance
+is running`. Yêu cầu MỚI giết yêu cầu CŨ, nên hai poller sẽ đạp nhau liên tục và **cả hai
+cùng hỏng ồn ào**, chứ KHÔNG phải lặng lẽ ăn trộm update của nhau.
+
+> Bản đầu của tài liệu này viết là "im lặng". Đó là **suy đoán chưa đo**, và phép đo bác
+> bỏ nó. Giữ lại ghi chú này vì nó đổi cách phòng: không cần dựng cổng phát hiện ngầm,
+> chỉ cần ĐỌC LỖI — `loi_lien_tiep` trong kết quả `nhan --lien-tuc` là đủ để nhận ra.
 
 ## 5. Đăng web
 
@@ -125,10 +133,10 @@ tức là mất luôn tác dụng cảnh báo cho MỌI task khác. Bù lại n�
 nhịp ở trên.
 
 ⚠️ **Nợ kiến trúc đã biết:** trạng thái poller gắn theo CHIẾN DỊCH, mà `getUpdates` chỉ cho
-một người đọc trên mỗi bot token. Hai chiến dịch cùng duyệt qua Telegram là hai poller ăn
-trộm update của nhau, **im lặng**, triệu chứng là "bấm lúc ăn lúc không".
-`canh_bao_hai_poller()` hiện chỉ CẢNH BÁO. Cách sửa đúng khi tới lúc: **một poller cho cả
-trạm**, định tuyến update theo token — chứ không phải mỗi chiến dịch một poller.
+một người đọc trên mỗi bot token. Hai chiến dịch cùng duyệt qua Telegram là hai poller đạp
+nhau — **ồn ào**, cả hai cùng nhận `Conflict` và không bên nào chạy êm.
+`canh_bao_hai_poller()` cảnh báo TRƯỚC khi tới nước đó. Cách sửa đúng khi thật sự cần hai
+chiến dịch: **một poller cho cả trạm**, định tuyến update theo token.
 
 ## 6. Ba cái bẫy đã trả giá ở tầng này
 

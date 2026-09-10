@@ -37,6 +37,27 @@ if (-not (Test-Path (Join-Path $Campaign 'campaign.md'))) {
 }
 
 $py = Join-Path $PSScriptRoot (Join-Path '..' (Join-Path 'pipeline' 'approve_bus.py'))
-Write-Host ("=== poller cong duyet · " + (Split-Path $Campaign -Leaf) + " · song " + $SongGiay + "s ===")
-& python $py nhan --campaign $Campaign --lien-tuc $SongGiay
-exit $LASTEXITCODE
+
+# GHI LOG RA FILE, bắt buộc. Task Scheduler gọi với `-WindowStyle Hidden` nên mọi thứ
+# Write-Host/stderr in ra là BIẾN MẤT: task báo "Running" mà không ai biết nó đang làm gì
+# hay đang lỗi vòng quanh. Đã mù đúng 10 phút vì chuyện này ngày 10/09/2026 — poller báo
+# Running trong khi mọi chu kỳ đều trả `Conflict`, và không có một dòng nào để đọc.
+#
+# Poller này KHÔNG đi qua `notify-run.ps1` (chạy liên tục, báo mỗi lượt là spam), nên file
+# log này là ĐƯỜNG DUY NHẤT để biết nó sống thế nào. Không có nó thì "không qua notify-run"
+# biến thành "không quan sát được".
+$logDir = Join-Path $Campaign 'logs'
+New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+$log = Join-Path $logDir ('tg-poller-' + (Get-Date -Format 'yyyy-MM-dd') + '.log')
+
+function Ghi($m) {
+  $d = (Get-Date -Format 'HH:mm:ss') + '  ' + $m
+  [IO.File]::AppendAllText($log, $d + "`r`n", (New-Object System.Text.UTF8Encoding $false))
+  Write-Host $m
+}
+
+Ghi ("=== poller cong duyet · " + (Split-Path $Campaign -Leaf) + " · song " + $SongGiay + "s ===")
+& python $py nhan --campaign $Campaign --lien-tuc $SongGiay 2>&1 | ForEach-Object { Ghi ("  " + $_) }
+$ma = $LASTEXITCODE
+Ghi ("=== thoat, ma " + $ma + " ===")
+exit $ma
