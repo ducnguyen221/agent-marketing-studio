@@ -161,3 +161,39 @@ def test_export_excel_doc_het_khoa_research_md_co_cot_tuong_ung():
     assert not thieu, (
         f"research.md khai {sorted(thieu)} và sheet Content có cột tương ứng, "
         f"nhưng _dong_content không đọc — ba cột này sẽ trắng trong mọi file xuất ra.")
+
+
+def test_autonomy_di_theo_ban_chup(tmp_path):
+    """PowerShell 5.1 không đọc được YAML — không có khoá này trong bản chụp thì cổng tự
+    trị ở tầng runner KHÔNG TỒN TẠI, nó chỉ còn là một lời dặn trong tài liệu."""
+    cam = _tram(tmp_path, campaign_fm=FM_TOI_THIEU)
+    (cam.parent / "channel.yml").write_text(
+        (cam.parent / "channel.yml").read_text(encoding="utf-8") + "autonomy: full\n",
+        encoding="utf-8")
+    r = _chay(cam)
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)["autonomy"] == "full"
+
+
+def test_khong_khai_autonomy_thi_mac_dinh_SUGGEST(tmp_path):
+    """Thiếu khoá phải rơi về mức CHẶT nhất, không phải mức rộng nhất."""
+    r = _chay(_tram(tmp_path, campaign_fm=FM_TOI_THIEU))
+    assert json.loads(r.stdout)["autonomy"] == "suggest"
+
+
+def test_campaign_md_KHONG_tu_nang_quyen_duoc(tmp_path):
+    """Một file chiến dịch tự khai `autonomy: full` là tự cấp quyền đăng ra ngoài.
+
+    ⚠️ Bản đầu của test này VÔ NGHĨA: nó đặt `autonomy: full` ở cấp cao nhất của
+    campaign.md — mà `gop()` chỉ trộn khối `runtime:`, nên khoá đó không bao giờ tới bản
+    chụp và test xanh dù cổng có thủng hay không. Kiểm bằng đột biến (dời dòng gán
+    `autonomy` lên TRƯỚC chỗ trộn `runtime`) thấy test vẫn xanh — đúng dấu hiệu vô nghĩa.
+    Nay đặt vào ĐÚNG khối `runtime:`, tức đường leo thang thật.
+    """
+    fm = FM_TOI_THIEU.replace("  runner: chay.ps1",
+                              "  runner: chay.ps1\n  autonomy: full")
+    cam = _tram(tmp_path, campaign_fm=fm)
+    r = _chay(cam)
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)["autonomy"] == "suggest", \
+        "campaign.md nâng được quyền cho chính nó — cổng tự trị thủng"

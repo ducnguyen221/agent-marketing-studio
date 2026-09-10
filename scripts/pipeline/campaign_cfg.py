@@ -164,6 +164,17 @@ def gop(cam_dir: Path) -> dict:
         if v is not None:
             ra[cu] = v
 
+    # ── Mức tự trị: SAU CÙNG, cố ý ──────────────────────────────────────────
+    #
+    # `autonomy` chỉ được đến từ `channel.yml` và KHÔNG khối nào phía trên đè lên nó được.
+    # Nếu để `campaign.md` ghi đè thì một file chiến dịch tự nâng quyền cho chính nó lên
+    # `full` là đăng thẳng ra ngoài — đúng kiểu leo thang mà cổng tự trị sinh ra để chặn.
+    #
+    # Vì sao phải nằm trong bản chụp: PowerShell 5.1 không đọc được YAML, nên runner KHÔNG
+    # có cách nào tự biết mức tự trị. Không có dòng này thì cổng tự trị ở tầng runner không
+    # tồn tại được — nó sẽ chỉ là một lời dặn trong tài liệu.
+    ra["autonomy"] = (kenh_yml.get("autonomy") or "suggest").strip()
+
     # Suy ra khoá bỏ đi được, để engine cũ vẫn đọc thấy trong lúc chuyển tiếp.
     # KHÔNG ghi đè nếu đã có giá trị thật — suy luận là đường lùi, không phải nguồn.
     base = ra.get("site_base")
