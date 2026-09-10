@@ -99,6 +99,21 @@ Trình tự: chép file → `post_cmd` → `git add` **đích danh** → commit 
 không công bố giá trị lớn nhất cho `timeout`; xin 100s và 60s đều trả về sau **50,7s**.
 Nên phủ liên tục thì phải **nối nhiều lượt**, không phải xin timeout to hơn.
 
+### KHÔNG có "cửa sổ 50 giây" làm rơi cú bấm
+
+Đọc kỹ chỗ này trước khi định thêm "cơ chế quét sau 50s" — **không có kẽ hở để quét.**
+
+Telegram **giữ update 24 giờ** (Bot API: *"Incoming updates are stored on the server until
+the bot receives them... not longer than 24 hours"*). Bấm ở giây thứ 51, giây thứ 3.000, hay
+lúc máy đang tắt — update vẫn nằm đó và lượt `getUpdates` **kế tiếp** sẽ nhặt.
+
+`timeout=50` **không phải cửa sổ nhận**. Nó là "chặn kết nối tối đa 50 giây rồi trả về dù có
+gì hay không". Nối liên tiếp các lượt là phủ 100% thời gian.
+
+⚠️ Thêm một bộ quét nữa = **hai `getUpdates` song song** = đúng cái bệnh mục dưới đang chữa.
+
+### Kiến trúc
+
 ```
 Task Scheduler (mỗi phút, IgnoreNew)
         │  đang chạy -> bỏ qua lượt gọi mới
@@ -107,17 +122,35 @@ Task Scheduler (mỗi phút, IgnoreNew)
 run-approve-poller.ps1  ── sống ~55 phút rồi TỰ THOÁT
         ▼
 approve_bus.py nhan --lien-tuc 3300
-        └─ vòng lặp: getUpdates(timeout=50) → xử lý → ghi nhịp → lặp
+        ├─ ① GIÀNH LOCK -> có người giữ thì THOÁT ÊM mã 0 (đường chạy bình thường mỗi phút)
+        ├─ ② vòng lặp: getUpdates(timeout=50) -> xử lý -> ghi nhịp -> gia hạn lock -> log
+        └─ ③ nhả lock trong `finally`
 ```
 
 Phủ gần 100%, tự lành trong 60 giây, **không service nào phải trông**.
+
+### Lock một-tiến-trình — vì sao KHÔNG phó thác Task Scheduler
+
+`MultipleInstances = IgnoreNew` chỉ chặn khi Windows còn **thấy** instance cũ. Instance chết
+sớm là lượt sau vào ngay. Ngày 10/09/2026 điều đó thành **nhiều poller chồng nhau ghi đè
+trạng thái của nhau**: `g1` ghi được nhưng `offset` và token bị tiến trình khác xoá mất, nên
+cú bấm của người **trông như rơi** dù việc đã làm xong một nửa.
+
+**Phép thử "còn sống" dùng NHỊP, không dùng PID.** Windows tái dùng PID, nên một PID sống
+không chứng minh được đó là poller của ta; kiểm cả thời điểm khởi động thì phải gọi
+`GetProcessTimes` qua ctypes. Nhịp thì **không giả được** — chỉ chính poller đang chạy mới
+gia hạn. PID trong file chỉ để người đọc log biết mà tìm.
+
+Lock chết (không gia hạn quá 180s) → người sau chiếm được. File lock hỏng → coi như không
+có. Cả hai đều fail-**open** có chủ đích: lock kẹt là kẹt cổng duyệt, tệ hơn nhiều so với
+rủi ro trùng một nhịp.
 
 **Ba thay đổi của OpenClaw 2026.5.12, và ta lấy gì:**
 
 | Của họ | Ta | Vì sao |
 |---|---|---|
 | Worker polling tách khỏi runtime agent | **Đã có** | Poller là tiến trình riêng, không nằm trong runner chiến dịch |
-| Spool bền: ghi update xuống đĩa TRƯỚC khi xử lý | **Không lấy** | Ta chỉ tiến `offset` SAU khi xử lý xong ⇒ chết giữa chừng là replay, và mọi thao tác ghi đều idempotent. Spool thêm một tầng cho lợi ích cận biên ở quy mô này |
+| Spool bền: ghi update xuống đĩa TRƯỚC khi xử lý | **Lấy phần LÕI, bỏ phần vỏ** | Rủi ro thật hẹp hơn kiến trúc của họ nhiều: chỗ duy nhất mất dữ liệu là **token bị tiêu trước khi ghi cổng xong** — ghi hỏng thì cú bấm rơi vĩnh viễn và người bấm lại chỉ nhận "đã dùng rồi". Vá đúng chỗ hẹp đó (chỉ tiêu token SAU khi `_ap_dung` trả về) rẻ hơn nhập cả một tầng hàng đợi |
 | **Nhịp sống đo bằng chiều VÀO, không phải chiều RA** | **LẤY** | Đây là bài học đắt nhất |
 
 Về cái thứ ba: trước bản đó OpenClaw tính lời gọi API **đi ra** (gửi tin) là dấu hiệu "bot
