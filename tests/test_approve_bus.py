@@ -485,3 +485,139 @@ def test_nhan_van_TIEU_dung_token_no_da_dung(tmp_path):
     assert tok not in con, "token đã dùng vẫn còn — chống replay thủng"
     assert "cheninnnn123456ab" in con, "vẫn xoá mất token của tiến trình khác"
     assert _bang(cam)["T-001"]["g1"] != ""
+
+
+# ── T1 · Lock một-tiến-trình ────────────────────────────────────────────────
+#
+# GỐC của bệnh 10/09: Task Scheduler bắn mỗi phút, `MultipleInstances=IgnoreNew` chỉ chặn
+# khi Windows còn THẤY instance cũ. Instance chết sớm là lượt sau vào ngay ⇒ nhiều poller
+# chồng nhau ghi đè trạng thái của nhau.
+#
+# Phép thử "còn sống" dùng NHỊP trong lock, KHÔNG dùng PID:
+# Windows tái dùng PID, nên một PID sống không chứng minh được đó là poller của ta. Còn
+# nhịp thì chỉ chính poller đang chạy mới gia hạn được — không ai giả được nó.
+
+def test_gianh_duoc_lock_khi_chua_ai_giu(tmp_path):
+    cam = _cam(tmp_path)
+    assert AB.gianh_lock(cam) is not None
+
+
+def test_NGUOI_THU_HAI_khong_gianh_duoc(tmp_path):
+    cam = _cam(tmp_path)
+    assert AB.gianh_lock(cam) is not None
+    assert AB.gianh_lock(cam) is None, "hai poller cùng giành được — đúng bệnh phải chặn"
+
+
+def test_lock_CHET_thi_nguoi_sau_chiem_duoc(tmp_path):
+    """Poller bị kill giữa chừng không được làm kẹt cổng duyệt vĩnh viễn."""
+    cam = _cam(tmp_path)
+    AB.gianh_lock(cam)
+    sau = datetime.now().astimezone() + timedelta(seconds=AB.LOCK_QUA_HAN + 30)
+    assert AB.gianh_lock(cam, bay_gio=sau) is not None, "lock chết vẫn chặn — kẹt vĩnh viễn"
+
+
+def test_gia_han_giu_lock_song(tmp_path):
+    cam = _cam(tmp_path)
+    AB.gianh_lock(cam)
+    sau = datetime.now().astimezone() + timedelta(seconds=AB.LOCK_QUA_HAN + 30)
+    AB.gia_han_lock(cam, chu_ky=7, bay_gio=sau)
+    xa = sau + timedelta(seconds=10)
+    assert AB.gianh_lock(cam, bay_gio=xa) is None, "gia hạn rồi mà vẫn bị chiếm"
+
+
+def test_nha_lock_thi_nguoi_sau_vao_ngay(tmp_path):
+    cam = _cam(tmp_path)
+    AB.gianh_lock(cam)
+    AB.nha_lock(cam)
+    assert AB.gianh_lock(cam) is not None
+
+
+def test_lock_hong_file_thi_KHONG_lam_ket(tmp_path):
+    """File lock hỏng không được biến thành cổng chặn vĩnh viễn."""
+    cam = _cam(tmp_path)
+    (cam / "logs").mkdir(exist_ok=True)
+    (cam / "logs" / AB.LOCK_TEN).write_text("{ hỏng", encoding="utf-8")
+    assert AB.gianh_lock(cam) is not None
+
+
+def test_nhan_lien_tuc_THOAT_NGAY_khi_da_co_poller(tmp_path):
+    """Đường chạy BÌNH THƯỜNG mỗi phút: có poller rồi thì thoát êm, không log ồn."""
+    cam = _cam(tmp_path)
+    AB.gianh_lock(cam)
+    # Đồng hồ giả TIẾN thật: bỏ cổng lock thì test phải ĐỎ NHANH, không được TREO.
+    # Bản đầu dùng đồng hồ thật + giay=9999 nên khi đột biến gỡ lock, nó chạy 9999 giây —
+    # "treo" cũng là một dạng đỏ, nhưng nó làm cả bộ test đứng và không ai chờ nổi.
+    t = iter(range(0, 100))
+    kq = AB.nhan_lien_tuc(cam, bot=BotGia(), giay=3, ngu=lambda s: None,
+                          dong_ho=lambda: next(t))
+    assert kq.get("bo_qua_vi_lock") is True, kq
+    assert kq["chu_ky"] == 0, f"đã có poller mà vẫn poll: {kq}"
+
+
+def test_vong_lap_PHAI_gia_han_lock_moi_chu_ky(tmp_path):
+    """Kiểm hàm `gia_han_lock` chạy đúng là CHƯA đủ — phải kiểm vòng lặp có GỌI nó.
+
+    Không gia hạn thì lock của một poller sống lâu sẽ hết hạn sau LOCK_QUA_HAN và tiến
+    trình khác chiếm mất, quay lại đúng bệnh nhiều-poller.
+    """
+    cam = _cam(tmp_path)
+    t = iter(range(0, 100))
+    AB.nhan_lien_tuc(cam, bot=BotGia(), giay=4, ngu=lambda s: None,
+                     dong_ho=lambda: next(t))
+    # Lock đã nhả lúc thoát, nên soi qua nhịp mà vòng lặp ghi lại
+    assert AB._doc_nhip(cam)["chu_ky"] >= 1
+    # Giành lại rồi chạy tiếp, lần này chặn nhả để soi lock
+    goc = AB.nha_lock
+    AB.nha_lock = lambda c: None
+    try:
+        t2 = iter(range(0, 100))
+        AB.nhan_lien_tuc(cam, bot=BotGia(), giay=4, ngu=lambda s: None,
+                         dong_ho=lambda: next(t2))
+        d = AB._doc_lock(cam)
+        assert d is not None and d.get("chu_ky", 0) >= 1, \
+            f"vòng lặp không gia hạn lock: {d}"
+    finally:
+        AB.nha_lock = goc
+
+
+def test_thoat_thi_PHAI_nha_lock(tmp_path):
+    """Không nhả thì lượt sau phải chờ hết LOCK_QUA_HAN mới vào được — kẹt cổng 3 phút."""
+    cam = _cam(tmp_path)
+    t = iter(range(0, 100))
+    AB.nhan_lien_tuc(cam, bot=BotGia(), giay=3, ngu=lambda s: None,
+                     dong_ho=lambda: next(t))
+    assert AB._doc_lock(cam) is None, "thoát rồi mà lock còn nằm lại"
+    assert AB.gianh_lock(cam) is not None, "lượt sau không vào được ngay"
+
+
+# ── T4 · Log theo CHU KỲ, không chỉ lúc thoát ───────────────────────────────
+
+def test_chu_ky_CO_VIEC_thi_ghi_log_NGAY(tmp_path):
+    """`--lien-tuc` chạy 55 phút mà chỉ in kết quả ở cuối ⇒ lỗi vô hình tới 55 phút."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"])
+    tok = list(_token_dang_cho(cam))[0]
+    t = iter(range(0, 100))
+    AB.nhan_lien_tuc(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}", update_id=90)]),
+                     giay=3, ngu=lambda s: None, dong_ho=lambda: next(t))
+    logs = list((cam / "logs").glob("tg-poller-*.log"))
+    assert logs, "không ghi log nào dù đã xử lý một cú bấm"
+    assert "T-001" in logs[0].read_text(encoding="utf-8")
+
+
+def test_chu_ky_RONG_thi_KHONG_ghi_log_rac(tmp_path):
+    """Mỗi 50 giây một dòng 'không có gì' = 1.700 dòng/ngày, log thành rác không ai đọc."""
+    cam = _cam(tmp_path)
+    t = iter(range(0, 100))
+    AB.nhan_lien_tuc(cam, bot=BotGia(), giay=5, ngu=lambda s: None, dong_ho=lambda: next(t))
+    logs = list((cam / "logs").glob("tg-poller-*.log"))
+    assert not logs or not logs[0].read_text(encoding="utf-8").strip(), \
+        "chu kỳ rỗng mà vẫn ghi log"
+
+
+def test_chu_ky_HONG_thi_ghi_log_NGAY(tmp_path):
+    cam = _cam(tmp_path)
+    AB.nhan_lien_tuc(cam, bot=BotVaoHong(), giay=99, ngu=lambda s: None, dong_ho=lambda: 0)
+    logs = list((cam / "logs").glob("tg-poller-*.log"))
+    assert logs and "HỎNG" in logs[0].read_text(encoding="utf-8"), \
+        "lỗi không được ghi ra log — sẽ vô hình tới lúc tiến trình thoát"

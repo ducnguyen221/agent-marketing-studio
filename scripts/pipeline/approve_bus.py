@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import secrets
 import subprocess
@@ -428,6 +429,23 @@ TEN_NHIP = "tg-poll-alive.json"
 NHIP_QUA_HAN_GIAY = 180
 
 
+def _ghi_dong_log(cam: Path, m: str) -> None:
+    """Một dòng vào `tg-poller-<ngày>.log`, ghi NGAY chứ không đợi tiến trình thoát.
+
+    Vì sao cần: poller cố ý không đi qua `notify-run.ps1` (chạy liên tục, báo mỗi lượt là
+    spam), nên file log là ĐƯỜNG DUY NHẤT để biết nó sống thế nào. Mà `--lien-tuc` chỉ in
+    kết quả sau 55 phút, và stderr của Python bị block-buffer khi qua pipe của PowerShell
+    — nên trong 55 phút đó không có gì để đọc. Đã mù hai lần vì đúng chỗ này 10/09/2026.
+    """
+    try:
+        p = cam / "logs" / f"tg-poller-{datetime.now().strftime('%Y-%m-%d')}.log"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a", encoding="utf-8", newline="\n") as f:
+            f.write(f"{datetime.now().strftime('%H:%M:%S')}  {m}\n")
+    except OSError as e:                   # ghi log hỏng không được giết poller
+        loi(f"không ghi được log ({e})")
+
+
 def _ghi_nhip(cam: Path, chu_ky: int) -> None:
     """Nhịp sống đo bằng chiều VÀO, không phải chiều RA.
 
@@ -456,6 +474,85 @@ def _doc_nhip(cam: Path) -> dict:
         return {"co_nhip": False, "tuoi_giay": None, "song": False}
     return {"co_nhip": True, "tuoi_giay": round(tuoi),
             "song": tuoi <= NHIP_QUA_HAN_GIAY, "chu_ky": d.get("chu_ky")}
+
+
+LOCK_TEN = "tg-poller.lock"
+# Lock coi như CHẾT nếu chủ nó không gia hạn trong ngần này. 3 chu kỳ long-poll 50s + dư.
+# Ngắn hơn thì một chu kỳ chậm bị cướp lock; dài hơn thì poller chết làm kẹt cổng lâu.
+LOCK_QUA_HAN = 180
+
+
+def _p_lock(cam: Path) -> Path:
+    return cam / "logs" / LOCK_TEN
+
+
+def _doc_lock(cam: Path) -> dict | None:
+    p = _p_lock(cam)
+    if not p.is_file():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        # File lock hỏng KHÔNG được biến thành cổng chặn vĩnh viễn. Coi như không có.
+        loi(f"{p} hỏng — coi như chưa ai giữ lock.")
+        return None
+
+
+def gianh_lock(cam: Path, *, bay_gio: datetime | None = None) -> dict | None:
+    """Giành quyền làm poller DUY NHẤT. Trả về thông tin lock, hoặc None nếu có người giữ.
+
+    ## Vì sao phải TỰ cưỡng chế, không phó thác Task Scheduler
+
+    `MultipleInstances = IgnoreNew` chỉ chặn khi Windows còn THẤY instance cũ. Instance chết
+    sớm là lượt sau vào ngay — và ngày 10/09/2026 đã thành nhiều poller chồng nhau ghi đè
+    trạng thái của nhau: `g1` ghi được nhưng `offset` và token bị tiến trình khác xoá mất.
+    Task Scheduler không biết gì về `getUpdates`, cũng không thấy instance đang treo.
+
+    ## Vì sao phép thử "còn sống" dùng NHỊP chứ không dùng PID
+
+    Windows **tái dùng PID**. Một PID còn sống không chứng minh được đó là poller của ta —
+    có thể là tiến trình khác vừa nhận đúng số đó. Kiểm cả thời điểm khởi động thì phải gọi
+    `GetProcessTimes` qua ctypes, thêm một tầng phụ thuộc hệ điều hành cho một việc nhỏ.
+
+    Nhịp thì không giả được: **chỉ chính poller đang chạy mới gia hạn được**. PID trong file
+    chỉ để người đọc log biết mà tìm, không dùng làm phép thử.
+    """
+    bay_gio = bay_gio or datetime.now().astimezone()
+    cu = _doc_lock(cam)
+    if cu:
+        try:
+            tuoi = (bay_gio - datetime.fromisoformat(cu["nhip"])).total_seconds()
+        except (ValueError, KeyError):
+            tuoi = LOCK_QUA_HAN + 1        # lock méo mó -> coi như chết
+        if tuoi <= LOCK_QUA_HAN:
+            return None                    # có người giữ và còn sống
+
+    # Ghi rồi ĐỌC LẠI để xác nhận mình thắng. Hai tiến trình khởi động cùng lúc thì kẻ ghi
+    # sau thắng, và kẻ ghi trước đọc lại thấy không phải mình -> tự rút. Không hoàn hảo như
+    # lock của HĐH, nhưng đủ cho cửa sổ vài mili-giây và không thêm phụ thuộc nào.
+    ta = {"id": secrets.token_hex(8), "pid": os.getpid(),
+          "bat_dau": bay_gio.isoformat(), "nhip": bay_gio.isoformat()}
+    _p_lock(cam).parent.mkdir(parents=True, exist_ok=True)
+    md_io.ghi_nguyen_tu(_p_lock(cam), json.dumps(ta, ensure_ascii=False, indent=2) + "\n")
+    lai = _doc_lock(cam)
+    return ta if lai and lai.get("id") == ta["id"] else None
+
+
+def gia_han_lock(cam: Path, chu_ky: int, *, bay_gio: datetime | None = None) -> None:
+    d = _doc_lock(cam)
+    if not d:
+        return
+    d["nhip"] = (bay_gio or datetime.now().astimezone()).isoformat()
+    d["chu_ky"] = chu_ky
+    md_io.ghi_nguyen_tu(_p_lock(cam), json.dumps(d, ensure_ascii=False, indent=2) + "\n")
+
+
+def nha_lock(cam: Path) -> None:
+    """Nhả trong `finally`. Không nhả được thì lock tự hết hạn sau LOCK_QUA_HAN."""
+    try:
+        _p_lock(cam).unlink(missing_ok=True)
+    except OSError as e:
+        loi(f"không nhả được lock ({e}) — sẽ tự hết hạn sau {LOCK_QUA_HAN}s.")
 
 
 def canh_bao_hai_poller(cam: Path) -> list[str]:
@@ -499,30 +596,48 @@ def nhan_lien_tuc(cam: Path, *, bot, giay: int,
     kẹt cổng duyệt. Thoát rồi để Task Scheduler dựng lại là tự lành — cùng lý do
     `notify-run.ps1` bọc từng lượt chạy chứ không dựng service.
     """
+    # LOCK TRƯỚC MỌI THỨ. Task Scheduler bắn mỗi phút; nếu đã có poller sống thì lượt này
+    # THOÁT ÊM — đó là đường chạy BÌNH THƯỜNG, không phải lỗi, nên không log ồn.
+    if gianh_lock(cam) is None:
+        return {"chu_ky": 0, "xu_ly": 0, "duyet": [], "tu_choi": [], "bo_qua": 0,
+                "loi_lien_tiep": 0, "bo_qua_vi_lock": True}
     canh_bao_hai_poller(cam)
     het = dong_ho() + giay
     tong = {"chu_ky": 0, "xu_ly": 0, "duyet": [], "tu_choi": [], "bo_qua": 0, "loi_lien_tiep": 0}
     lien_tiep = 0
-    while dong_ho() < het:
-        tong["chu_ky"] += 1
-        try:
-            kq = nhan(cam, bot=bot)
-            lien_tiep = 0
-            _ghi_nhip(cam, tong["chu_ky"])       # CHỈ ghi sau lượt VÀO thành công
-        except Exception as e:                    # noqa: BLE001
-            lien_tiep += 1
-            tong["loi_lien_tiep"] = max(tong["loi_lien_tiep"], lien_tiep)
-            loi(f"chu kỳ {tong['chu_ky']} hỏng ({lien_tiep} lần liên tiếp) — {e}")
-            # Lùi dần: mạng chớp thì thử lại nhanh, hỏng thật thì đừng quay tít.
-            ngu(min(2 ** lien_tiep, 60))
-            if lien_tiep >= 5:
-                loi("5 chu kỳ hỏng liên tiếp — thoát để lượt sau dựng lại sạch.")
-                break
-            continue
-        for k in ("xu_ly", "bo_qua"):
-            tong[k] += kq[k]
-        for k in ("duyet", "tu_choi"):
-            tong[k] += kq[k]
+    try:
+        while dong_ho() < het:
+          tong["chu_ky"] += 1
+          try:
+              kq = nhan(cam, bot=bot)
+              lien_tiep = 0
+              _ghi_nhip(cam, tong["chu_ky"])       # CHỈ ghi sau lượt VÀO thành công
+              gia_han_lock(cam, tong["chu_ky"])    # giữ lock sống; đây là phép thử còn-sống
+              # Ghi log THEO CHU KỲ, không chỉ lúc thoát. Chỉ ghi khi CÓ VIỆC — mỗi 50 giây
+              # một dòng "không có gì" là 1.700 dòng/ngày, log thành rác không ai đọc.
+              if kq["xu_ly"] or kq["bo_qua"]:
+                  _ghi_dong_log(cam, f"chu kỳ {tong['chu_ky']}: xử lý={kq['xu_ly']} "
+                                     f"duyệt={','.join(kq['duyet']) or '-'} "
+                                     f"bỏ qua={kq['bo_qua']}")
+          except Exception as e:                    # noqa: BLE001
+              lien_tiep += 1
+              tong["loi_lien_tiep"] = max(tong["loi_lien_tiep"], lien_tiep)
+              loi(f"chu kỳ {tong['chu_ky']} hỏng ({lien_tiep} lần liên tiếp) — {e}")
+              _ghi_dong_log(cam, f"chu kỳ {tong['chu_ky']} HỎNG ({lien_tiep} liên tiếp): {e}")
+              # Lùi dần: mạng chớp thì thử lại nhanh, hỏng thật thì đừng quay tít.
+              ngu(min(2 ** lien_tiep, 60))
+              if lien_tiep >= 5:
+                  loi("5 chu kỳ hỏng liên tiếp — thoát để lượt sau dựng lại sạch.")
+                  break
+              continue
+          for k in ("xu_ly", "bo_qua"):
+              tong[k] += kq[k]
+          for k in ("duyet", "tu_choi"):
+              tong[k] += kq[k]
+    finally:
+        # LUÔN nhả lock, kể cả khi lỗi. Không nhả được thì nó tự hết hạn sau LOCK_QUA_HAN
+        # — nhưng để lock chết nằm lại là kẹt cổng duyệt tới lúc đó.
+        nha_lock(cam)
     return tong
 
 
