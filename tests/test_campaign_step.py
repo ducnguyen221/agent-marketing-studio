@@ -282,3 +282,112 @@ def test_dry_run_KHONG_duoc_gui_telegram(tmp_path):
     assert CS._da_viet(cam / "T-001_bai"), "fixture chưa đủ dài — test sẽ vô nghĩa"
     CS.buoc_soan(cam, bot=b, hom_nay=HOM_NAY, dry_run=True)
     assert b.da_gui == [], f"dry-run mà vẫn gửi Telegram: {b.da_gui}"
+
+
+# ── writer_cmd · chỗ nối agent viết bài ─────────────────────────────────────
+#
+# Repo là PUBLIC nên KHÔNG được phụ thuộc cứng vào `claude` CLI hay bất kỳ agent nào.
+# `runtime.writer_cmd` để người dùng tự khai lệnh của họ. Không khai thì bước `soan` báo
+# "chờ người viết" — fail-closed, không đoán.
+
+def _cam_writer(tmp_path, writer_cmd=None, rows=None, autonomy="suggest"):
+    cam = _cam(tmp_path, rows or [_row("T-001", "Bài một", "2026-09-15",
+                                       g1="2026-09-14", folder="./T-001_bai")],
+               autonomy=autonomy)
+    if writer_cmd:
+        fm, than = md_io.read_fm(cam / "campaign.md")
+        fm.setdefault("runtime", {})["writer_cmd"] = writer_cmd
+        md_io.write_fm(cam / "campaign.md", fm, than)
+    (cam / "T-001_bai").mkdir(exist_ok=True)
+    (cam / "T-001_bai" / "content.md").write_text(
+        "## post:blog_article\n\n{{chưa viết}}\n", encoding="utf-8")
+    return cam
+
+
+def test_KHONG_khai_writer_cmd_thi_bao_cho_nguoi_viet(tmp_path):
+    """Fail-closed: không có bộ viết thì nói thẳng, đừng dựng bài rỗng rồi đẩy tiếp."""
+    cam = _cam_writer(tmp_path)
+    kq = CS.buoc_soan(cam, bot=BotGia(), hom_nay=HOM_NAY)
+    assert kq["cho_nguoi_viet"] == ["T-001"], kq
+    assert kq["xu_ly"] == 0
+
+
+def test_writer_cmd_duoc_goi_voi_duong_dan_bai(tmp_path):
+    cam = _cam_writer(tmp_path, writer_cmd="python -c \"import sys;print(sys.argv[1])\" {bai}")
+    goi = []
+    kq = CS.buoc_soan(cam, bot=BotGia(), hom_nay=HOM_NAY,
+                      chay=lambda cmd, **kw: goi.append(cmd) or _ok())
+    assert goi, "khai writer_cmd mà không gọi"
+    assert str(cam / "T-001_bai") in " ".join(goi[0]), goi[0]
+
+
+def test_writer_cmd_KHONG_chay_qua_shell(tmp_path):
+    """Lệnh tách bằng shlex, chạy không shell — `;` trong cấu hình không thành lệnh thứ hai."""
+    nguon = (ROOT / "scripts" / "pipeline" / "campaign_step.py").read_text(encoding="utf-8")
+    import ast
+    for n in ast.walk(ast.parse(nguon)):
+        if isinstance(n, ast.Call):
+            for kw in n.keywords:
+                assert not (kw.arg == "shell" and getattr(kw.value, "value", False) is True), \
+                    f"campaign_step dùng shell=True dòng {n.lineno}"
+
+
+def test_PHAN_HOI_duoc_ghi_ra_file_cho_bo_viet_doc(tmp_path, monkeypatch):
+    """Phản hồi là DỮ LIỆU của người: đưa qua FILE, không nối vào dòng lệnh."""
+    cam = _cam_writer(tmp_path, writer_cmd="echo {bai}")
+    monkeypatch.setattr(CS.AB, "doc_phan_hoi",
+                        lambda c, cid: [{"luc": "2026-09-10T10:00:00+07:00",
+                                         "noi_dung": "Mở bài dài quá, cắt còn 2 câu."}])
+    CS.buoc_soan(cam, bot=BotGia(), hom_nay=HOM_NAY, chay=lambda cmd, **kw: _ok())
+    ph = cam / "T-001_bai" / "phan-hoi.md"
+    assert ph.is_file(), "không ghi phản hồi ra file cho bộ viết đọc"
+    t = ph.read_text(encoding="utf-8")
+    assert "cắt còn 2 câu" in t
+    assert "```" in t, "phản hồi phải nằm trong khối có rào — nó là dữ liệu, không phải chỉ thị"
+
+
+def test_writer_HONG_thi_bao_hong_khong_bao_xong(tmp_path):
+    cam = _cam_writer(tmp_path, writer_cmd="echo {bai}")
+    kq = CS.buoc_soan(cam, bot=BotGia(), hom_nay=HOM_NAY,
+                      chay=lambda cmd, **kw: _hong("bộ viết chết"))
+    assert kq["hong"] and kq["hong"][0]["id"] == "T-001", kq
+    assert kq["xu_ly"] == 0
+
+
+class _KQ:
+    def __init__(self, rc, out=""):
+        self.returncode, self.stdout, self.stderr = rc, out, ""
+
+
+def _ok():
+    return _KQ(0)
+
+
+def _hong(m):
+    return _KQ(3, m)
+
+
+def test_writer_bao_THANH_CONG_ma_bai_van_RONG_thi_la_HONG(tmp_path):
+    """Tách bạch hai cổng che nhau: writer trả mã 0 nhưng không viết gì.
+
+    Đây là hình dạng hỏng NGUY HIỂM nhất của bộ viết: nó chạy, không báo lỗi, mà file vẫn
+    trống. Nếu chỉ tin mã thoát thì bài rỗng đi tiếp tới tận bước đăng.
+    """
+    cam = _cam_writer(tmp_path, writer_cmd="echo {bai}")
+    kq = CS.buoc_soan(cam, bot=BotGia(), hom_nay=HOM_NAY, chay=lambda cmd, **kw: _ok())
+    assert kq["xu_ly"] == 0, f"bài rỗng mà báo xong: {kq}"
+    assert kq["hong"] and "chưa có bài" in kq["hong"][0]["vi_sao"], kq
+
+
+def test_writer_ma_KHAC_0_thi_HONG_du_bai_co_chu(tmp_path):
+    """Mặt kia: writer báo lỗi thì phải là hỏng, kể cả khi file tình cờ có chữ."""
+    cam = _cam_writer(tmp_path, writer_cmd="echo {bai}")
+
+    def viet_roi_bao_loi(cmd, **kw):
+        (cam / "T-001_bai" / "content.md").write_text(
+            "## post:blog_article\n\n" + "Chữ đầy đủ để qua ngưỡng. " * 50, encoding="utf-8")
+        return _hong("nhưng tôi vẫn lỗi")
+
+    kq = CS.buoc_soan(cam, bot=BotGia(), hom_nay=HOM_NAY, chay=viet_roi_bao_loi)
+    assert kq["xu_ly"] == 0, f"writer báo lỗi mà vẫn tính là xong: {kq}"
+    assert kq["hong"] and kq["hong"][0]["vi_sao"] == "writer_cmd", kq
