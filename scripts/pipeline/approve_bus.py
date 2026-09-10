@@ -240,6 +240,23 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
 
 # ── Nhận ────────────────────────────────────────────────────────────────────
 
+def _bao_nhan(ham, *doi_so) -> None:
+    """Gọi một bước PHỤ (ack / sửa tin) và NUỐT lỗi của nó.
+
+    `answerCallbackQuery` chỉ để Telegram tắt vòng xoay trên nút — nó là mỹ quan, không
+    phải việc. Telegram huỷ query đó sau ít phút, nên poll thưa là nó CHẮC CHẮN hỏng.
+
+    ĐÃ TRẢ GIÁ 10/09/2026, đúng lượt đầu tiên có người bấm thật: lỗi ack ném ra ngoài làm
+    chết cả lượt `nhan` SAU KHI đã ghi duyệt, và kéo theo `_ghi_state` không chạy — nên
+    `offset` với token đã tiêu vẫn nguyên trên đĩa và lượt sau xử lý LẠI đúng update đó.
+    Một bước phụ không bao giờ được giết lượt đã làm xong việc chính.
+    """
+    try:
+        ham(*doi_so)
+    except Exception as e:                 # noqa: BLE001 — nuốt CÓ CHỦ ĐÍCH, có ghi log
+        loi(f"báo nhận Telegram hỏng (bỏ qua, việc chính đã xong) — {e}")
+
+
 def _don_token_qua_han(st: dict, bay_gio: datetime) -> None:
     for tok, y in list(st["cho"].items()):
         try:
@@ -256,6 +273,85 @@ def _ap_dung(cam: Path, cong: str, cids: list[str], *, boi: str, ghi_chu: str,
     return _ghi_g2(cam, cids, boi, ghi_chu)
 
 
+
+
+def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
+               bay_gio: datetime) -> None:
+    """Xử lý ĐÚNG MỘT update. Ném lỗi ở đây chỉ làm rơi update này, không rơi lô."""
+
+    # ── Bấm nút ─────────────────────────────────────────────────────────
+    if "callback_query" in u:
+        cq = u["callback_query"]
+        chat = (cq.get("message") or {}).get("chat", {}).get("id")
+        m = RE_CALLBACK.match(str(cq.get("data") or ""))
+        if not bot.duoc_phep(chat):
+            loi(f"chat lạ {chat} bấm nút — bỏ qua.")
+            kq["bo_qua"] += 1
+            return
+        if not m:
+            kq["bo_qua"] += 1
+            return
+        hanh_dong, tok = m.group(1), m.group(2)
+        y = st["cho"].pop(tok, None)      # POP: token là MỘT LẦN
+        if y is None:
+            _bao_nhan(bot.tra_loi_nut, cq["id"], "Nút này đã dùng rồi hoặc đã quá hạn.")
+            kq["bo_qua"] += 1
+            return
+        cids = y["content_ids"]
+        if hanh_dong == "ok":
+            xong = _ap_dung(cam, y["cong"], cids, boi="Đức (Telegram)",
+                            ghi_chu="duyệt qua Telegram", bay_gio=bay_gio)
+            kq["duyet"] += xong
+            _bao_nhan(bot.tra_loi_nut, cq["id"], f"Đã duyệt {len(xong)} bài.")
+            _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
+                        f"✅ Đã duyệt {len(xong)} bài: {', '.join(xong) or '(không có)'}")
+        else:
+            kq["tu_choi"] += cids
+            _bao_nhan(bot.tra_loi_nut, cq["id"], "Đã từ chối.")
+            _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
+                        f"❌ Đã từ chối: {', '.join(cids)}")
+        kq["xu_ly"] += 1
+        return
+
+    # ── Trả lời bằng chữ ────────────────────────────────────────────────
+    msg = u.get("message") or {}
+    text = (msg.get("text") or "").strip()
+    chat = (msg.get("chat") or {}).get("id")
+    if not text:
+        return
+    if not bot.duoc_phep(chat):
+        loi(f"chat lạ {chat} nhắn tin — bỏ qua.")
+        kq["bo_qua"] += 1
+        return
+    m = RE_TRA_LOI.match(text)
+    if not m:
+        kq["bo_qua"] += 1
+        return
+    # Chữ người gõ CHỈ đi tiếp sau khi khớp mẫu chặt và chuẩn hoá — không bao giờ
+    # được đem đi chạy. `cid` phải qua RE_CID lần nữa sau khi viết hoa.
+    lenh = m.group(1).lower()
+    cid = m.group(2).upper()
+    ly_do = m.group(3).strip()
+    if not RE_CID.match(cid):
+        kq["bo_qua"] += 1
+        return
+    if not RE_LY_DO.match(ly_do):
+        loi(f"lý do có ký tự lạ — bỏ qua cả tin nhắn: {text!r}")
+        _bao_nhan(bot.gui, f"⚠️ Không hiểu tin nhắn. Gõ đúng dạng: `duyet {cid}` "
+                f"hoặc `tu choi {cid} <lý do>` (chỉ chữ và dấu câu thường).")
+        kq["bo_qua"] += 1
+        return
+    cong = "g2" if (cid in {d["content_id"] for d in cho_cong(cam, "g2")}) else "g1"
+    if lenh.startswith("duy"):
+        xong = _ap_dung(cam, cong, [cid], boi="Đức (Telegram)",
+                        ghi_chu=ly_do or "duyệt qua Telegram", bay_gio=bay_gio)
+        kq["duyet"] += xong
+        _bao_nhan(bot.gui, f"✅ {cid}: đã duyệt." if xong else f"⚠️ {cid}: không ghi được (xem log).")
+    else:
+        kq["tu_choi"].append(cid)
+        _bao_nhan(bot.gui, f"❌ {cid}: đã ghi từ chối. {ly_do}")
+    kq["xu_ly"] += 1
+
 def nhan(cam: Path, *, bot, bay_gio: datetime | None = None) -> dict:
     cam = Path(cam)
     bay_gio = bay_gio or datetime.now().astimezone()
@@ -266,85 +362,24 @@ def nhan(cam: Path, *, bot, bay_gio: datetime | None = None) -> dict:
     kq = {"xu_ly": 0, "duyet": [], "tu_choi": [], "bo_qua": 0}
     lon_nhat = None
 
-    for u in ds:
-        lon_nhat = max(lon_nhat or 0, int(u.get("update_id", 0)))
-
-        # ── Bấm nút ─────────────────────────────────────────────────────────
-        if "callback_query" in u:
-            cq = u["callback_query"]
-            chat = (cq.get("message") or {}).get("chat", {}).get("id")
-            m = RE_CALLBACK.match(str(cq.get("data") or ""))
-            if not bot.duoc_phep(chat):
-                loi(f"chat lạ {chat} bấm nút — bỏ qua.")
+    # Mỗi update một try RIÊNG: một cú bấm rác không được làm rơi những cú bấm hợp lệ
+    # phía sau nó trong cùng lô.
+    #
+    # Và `_ghi_state` nằm trong `finally`: không lưu thì lượt sau xử lý LẠI update cũ và
+    # token đã tiêu vẫn còn hiệu lực trên đĩa. Đã trả giá 10/09/2026 — một lỗi ack cosmetic
+    # ném ra ngoài đúng SAU KHI đã ghi duyệt, kéo theo cả trạng thái poller không được lưu.
+    try:
+        for u in ds:
+            lon_nhat = max(lon_nhat or 0, int(u.get("update_id", 0)))
+            try:
+                _xu_ly_mot(u, cam=cam, st=st, kq=kq, bot=bot, bay_gio=bay_gio)
+            except Exception as e:  # noqa: BLE001
+                loi(f"update {u.get('update_id')} hỏng, bỏ qua — {e}")
                 kq["bo_qua"] += 1
-                continue
-            if not m:
-                kq["bo_qua"] += 1
-                continue
-            hanh_dong, tok = m.group(1), m.group(2)
-            y = st["cho"].pop(tok, None)      # POP: token là MỘT LẦN
-            if y is None:
-                bot.tra_loi_nut(cq["id"], "Nút này đã dùng rồi hoặc đã quá hạn.")
-                kq["bo_qua"] += 1
-                continue
-            cids = y["content_ids"]
-            if hanh_dong == "ok":
-                xong = _ap_dung(cam, y["cong"], cids, boi="Đức (Telegram)",
-                                ghi_chu="duyệt qua Telegram", bay_gio=bay_gio)
-                kq["duyet"] += xong
-                bot.tra_loi_nut(cq["id"], f"Đã duyệt {len(xong)} bài.")
-                bot.sua_tin(cq["message"]["message_id"],
-                            f"✅ Đã duyệt {len(xong)} bài: {', '.join(xong) or '(không có)'}")
-            else:
-                kq["tu_choi"] += cids
-                bot.tra_loi_nut(cq["id"], "Đã từ chối.")
-                bot.sua_tin(cq["message"]["message_id"],
-                            f"❌ Đã từ chối: {', '.join(cids)}")
-            kq["xu_ly"] += 1
-            continue
-
-        # ── Trả lời bằng chữ ────────────────────────────────────────────────
-        msg = u.get("message") or {}
-        text = (msg.get("text") or "").strip()
-        chat = (msg.get("chat") or {}).get("id")
-        if not text:
-            continue
-        if not bot.duoc_phep(chat):
-            loi(f"chat lạ {chat} nhắn tin — bỏ qua.")
-            kq["bo_qua"] += 1
-            continue
-        m = RE_TRA_LOI.match(text)
-        if not m:
-            kq["bo_qua"] += 1
-            continue
-        # Chữ người gõ CHỈ đi tiếp sau khi khớp mẫu chặt và chuẩn hoá — không bao giờ
-        # được đem đi chạy. `cid` phải qua RE_CID lần nữa sau khi viết hoa.
-        lenh = m.group(1).lower()
-        cid = m.group(2).upper()
-        ly_do = m.group(3).strip()
-        if not RE_CID.match(cid):
-            kq["bo_qua"] += 1
-            continue
-        if not RE_LY_DO.match(ly_do):
-            loi(f"lý do có ký tự lạ — bỏ qua cả tin nhắn: {text!r}")
-            bot.gui(f"⚠️ Không hiểu tin nhắn. Gõ đúng dạng: `duyet {cid}` "
-                    f"hoặc `tu choi {cid} <lý do>` (chỉ chữ và dấu câu thường).")
-            kq["bo_qua"] += 1
-            continue
-        cong = "g2" if (cid in {d["content_id"] for d in cho_cong(cam, "g2")}) else "g1"
-        if lenh.startswith("duy"):
-            xong = _ap_dung(cam, cong, [cid], boi="Đức (Telegram)",
-                            ghi_chu=ly_do or "duyệt qua Telegram", bay_gio=bay_gio)
-            kq["duyet"] += xong
-            bot.gui(f"✅ {cid}: đã duyệt." if xong else f"⚠️ {cid}: không ghi được (xem log).")
-        else:
-            kq["tu_choi"].append(cid)
-            bot.gui(f"❌ {cid}: đã ghi từ chối. {ly_do}")
-        kq["xu_ly"] += 1
-
-    if lon_nhat is not None:
-        st["offset"] = lon_nhat + 1        # thiếu dòng này thì update cũ quay lại mãi
-    _ghi_state(cam, st)
+    finally:
+        if lon_nhat is not None:
+            st["offset"] = lon_nhat + 1
+        _ghi_state(cam, st)
     return kq
 
 

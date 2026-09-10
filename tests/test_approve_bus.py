@@ -295,3 +295,66 @@ def test_gui_cong_KHONG_hoi_bai_da_qua_cong(tmp_path):
     AB.gui_cong(cam, "g1", bot=b, cids=["T-001", "T-003"])   # T-003 đã có g1
     t = b.da_gui[0]["text"]
     assert "T-001" in t and "T-003" not in t, f"hỏi lại bài đã duyệt: {t}"
+
+
+# ── Bước PHỤ hỏng không được giết lượt đã làm xong việc CHÍNH ───────────────
+#
+# ĐÃ TRẢ GIÁ 10/09/2026, ngay lượt UAT đầu tiên có người bấm thật:
+# `answerCallbackQuery` là cái ACK cosmetic để Telegram tắt vòng xoay trên nút. Telegram
+# huỷ query đó sau ít phút, nên poll thưa là nó chắc chắn hỏng. Bản đầu để lỗi đó ném ra
+# ngoài => (a) cả lượt `nhan` chết SAU KHI đã ghi duyệt, (b) `_ghi_state` không chạy nên
+# `offset` và token đã tiêu vẫn như cũ trên đĩa, lượt sau xử lý LẠI đúng update đó.
+
+class BotAckHong(BotGia):
+    """Bot mà `answerCallbackQuery` luôn hỏng — đúng hình dạng query quá hạn."""
+
+    def tra_loi_nut(self, cq_id, text=""):
+        raise RuntimeError("Bad Request: query is too old and response timeout expired")
+
+
+def test_ack_hong_KHONG_giet_luot_va_van_ghi_duyet(tmp_path):
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia())
+    tok = list(_token_dang_cho(cam))[0]
+    AB.nhan(cam, bot=BotAckHong(hang_doi=[_bam_nut(f"ok:{tok}", update_id=41)]))
+    assert _bang(cam)["T-001"]["g1"] != "", "ack hỏng làm mất luôn việc duyệt"
+
+
+def test_ack_hong_van_phai_LUU_offset_va_TIEU_token(tmp_path):
+    """Không lưu = lượt sau xử lý lại update cũ, và token đã dùng vẫn còn hiệu lực."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia())
+    tok = list(_token_dang_cho(cam))[0]
+    AB.nhan(cam, bot=BotAckHong(hang_doi=[_bam_nut(f"ok:{tok}", update_id=41)]))
+
+    import json as _j
+    st = _j.loads((cam / "logs" / "tg-approve.json").read_text(encoding="utf-8"))
+    assert st["offset"] == 42, f"offset không được lưu: {st['offset']}"
+    assert tok not in st["cho"], "token đã dùng vẫn còn trên đĩa"
+
+
+def test_mot_update_HONG_khong_chan_cac_update_sau(tmp_path):
+    """Xử lý theo lô: một cú bấm rác không được làm rơi những cú bấm hợp lệ phía sau."""
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"])
+    tok = list(_token_dang_cho(cam))[0]
+    b = BotAckHong(hang_doi=[_bam_nut("ok:khong-hop-le", update_id=50),
+                             _bam_nut(f"ok:{tok}", update_id=51)])
+    AB.nhan(cam, bot=b)
+    assert _bang(cam)["T-001"]["g1"] != "", "update hỏng ở đầu lô chặn mất update sau"
+
+
+def test_ack_hong_van_DEM_LA_DA_XU_LY_khong_phai_bo_qua(tmp_path):
+    """Khác biệt THẬT giữa hai lớp đỡ, và là lý do lớp bọc `_bao_nhan` tồn tại.
+
+    `try/except` bao quanh mỗi update cũng giữ cho lô không chết — nhưng nó đếm lượt ĐÃ
+    LÀM XONG VIỆC là `bo_qua` và ghi log "update hỏng". Người đọc báo cáo sẽ tưởng cú bấm
+    của mình rơi mất, trong khi bài đã được duyệt. Báo sai cũng là một kiểu hỏng.
+    """
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia(), cids=["T-001"])
+    tok = list(_token_dang_cho(cam))[0]
+    kq = AB.nhan(cam, bot=BotAckHong(hang_doi=[_bam_nut(f"ok:{tok}", update_id=60)]))
+    assert kq["xu_ly"] == 1, f"lượt đã duyệt xong mà không đếm là xử lý: {kq}"
+    assert kq["bo_qua"] == 0, f"đếm nhầm thành bỏ qua: {kq}"
+    assert "T-001" in kq["duyet"], kq
