@@ -714,3 +714,54 @@ def test_chat_LA_gui_phan_hoi_thi_bo_qua(tmp_path):
     mid = AB._tra_tin_bai(cam, "T-001")
     AB.nhan(cam, bot=BotGia(hang_doi=[_tra_loi_tin("phá hoại", mid, chat_id=CHAT_LA)]))
     assert AB.doc_phan_hoi(cam, "T-001") == []
+
+
+# --------------------------------------------------------------------------------------
+# CỔNG 2 KHÔNG ĐƯỢC MỜI DUYỆT BÀI CHƯA VIẾT
+# --------------------------------------------------------------------------------------
+
+def _dung_bai(cam, folder, *, viet_that):
+    """Dựng thư mục bài. `viet_that=False` để nguyên KHUÔN (còn `{{...}}`)."""
+    d = cam / folder
+    d.mkdir(parents=True, exist_ok=True)
+    if viet_that:
+        than = "Mở bài bằng một câu chuyện đời thường. " * 60
+        (d / "content.md").write_text(f"## post:blog_article\n\n# Tiêu đề\n\n{than}\n",
+                                      encoding="utf-8")
+    else:
+        (d / "content.md").write_text(
+            "## post:blog_article\n\n> Hướng dẫn của khuôn.\n\n# {{tieu_de}}\n\n{{noi_dung}}\n",
+            encoding="utf-8")
+    return d
+
+
+def test_g2_KHONG_duoc_moi_duyet_bai_chua_viet(tmp_path):
+    """Cổng 2 nghĩa là "đọc bài rồi quyết". Bài chưa có chữ thì không có gì để đọc.
+
+    ĐÃ XẢY RA THẬT 11/09/2026: gọi `approve_bus gui --cong g2 --lo 5` gửi đi một tin mời
+    duyệt 5 bài, trong đó 3 bài `content.md` vẫn còn nguyên khuôn. Người bấm "Duyệt cả lô"
+    là mở cổng cho ba bài rỗng đi tiếp tới bước đăng.
+
+    Cùng họ với lỗi `_da_viet` fail-open hôm 10/09 — lần đó vá ở `soan`, nhưng cổng G2 gọi
+    thẳng `cho_cong()` (truy vấn BẢNG thuần) nên đi vòng qua chỗ đã vá.
+    """
+    cam = _cam(tmp_path)
+    # T-003 đã qua g1, đang chờ g2 — nhưng để nguyên khuôn, chưa ai viết.
+    _dung_bai(cam, "T-003_bai-ba", viet_that=False)
+
+    b = BotGia()
+    kq = AB.gui_cong(cam, "g2", bot=b)
+
+    assert kq["gui"] == 0, f"đã gửi tin mời duyệt bài chưa viết: {kq}"
+    assert not b.da_gui, f"không được nhắn gì cả, nhưng đã gửi: {b.da_gui}"
+
+
+def test_g2_VAN_moi_duyet_bai_da_viet_that(tmp_path):
+    """Mặt kia của cổng: vá xong không được chặn nhầm bài đã viết tử tế."""
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+
+    b = BotGia()
+    kq = AB.gui_cong(cam, "g2", bot=b)
+
+    assert kq["gui"] == 1, f"bài đã viết mà không được mời duyệt: {kq}"

@@ -49,6 +49,7 @@ sys.stderr.reconfigure(encoding="utf-8")
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "lib"))
 sys.path.insert(0, str(_HERE))
+import bai_noi_dung  # noqa: E402
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import approve_bus as AB  # noqa: E402
@@ -194,45 +195,16 @@ def buoc_dung_bai(cam: Path, *, bot, truoc: int | None = None,
 
 # ── Bước 2: soạn ────────────────────────────────────────────────────────────
 
-TOI_THIEU_BLOG = 800        # ký tự thân bài blog, sau khi bỏ neo và chỉ dẫn
+TOI_THIEU_BLOG = bai_noi_dung.TOI_THIEU_BLOG   # giữ tên cũ, nguồn ở lib
 
 
 def _da_viet(bai: Path) -> bool:
-    """`content.md` đã có chữ THẬT chưa, hay còn là khung mẫu?
+    """Uỷ quyền cho `lib/bai_noi_dung.da_viet` — luật DÙNG CHUNG với cổng duyệt G2.
 
-    ĐÃ TRẢ GIÁ 10/09/2026 — cổng này từng FAIL-OPEN. Bản đầu đếm ký tự (ngưỡng 400) và coi
-    KHUÔN MẪU là "đã viết": khuôn tự nó dài **3.701 ký tự** sau khi lọc, gấp 9 lần ngưỡng.
-    Bước `soan` báo 3 bài SẴN SÀNG ĐĂNG trong khi chưa có một chữ nào, và còn gửi tin xin
-    duyệt đăng chúng.
-
-    **Đếm ký tự là đo SAI ĐẠI LƯỢNG** — nó đo "có nhiều chữ không", trong khi câu hỏi là
-    "đã ai viết chưa". Khuôn mẫu có rất nhiều chữ, toàn chữ của khuôn.
-
-    Dấu hiệu đúng, cả ba phải thoả:
-      1. có neo `## post:blog_article` — thiếu là chưa dựng đúng khuôn
-      2. thân dưới neo đó không còn `{{...}}` — khuôn đầy chỗ trống, bài xong thì hết
-      3. thân đủ dài (`TOI_THIEU_BLOG`) — chặn trường hợp xoá sạch chỗ trống rồi bỏ đó
+    Giữ lại tên riêng ở đây vì đã có nhiều chỗ gọi; thân bài thì không còn ở đây nữa. Hai
+    bản chép tay sẽ trôi khỏi nhau, và cổng duyệt phải hỏi đúng câu mà bước soạn đang hỏi.
     """
-    p = bai / "content.md"
-    if not p.is_file():
-        return False
-    raw = p.read_text(encoding="utf-8")
-
-    m = re.search(r"(?m)^##\s+post:blog_article\s*$", raw)
-    if not m:
-        return False
-    than = raw[m.end():]
-    # cắt ở neo kênh kế tiếp
-    ke = re.search(r"(?m)^##\s+post:", than)
-    if ke:
-        than = than[:ke.start()]
-
-    if "{{" in than:
-        return False                       # còn chỗ trống của khuôn
-    than = re.sub(r"<!--.*?-->", "", than, flags=re.S)
-    than = re.sub(r"(?m)^\s*>.*$", "", than)      # khối chỉ dẫn của khuôn
-    than = re.sub(r"(?m)^\s*#{1,6}\s.*$", "", than)
-    return len(than.strip()) >= TOI_THIEU_BLOG
+    return bai_noi_dung.da_viet(bai)
 
 
 def tach_lenh(lenh: str) -> list[str]:

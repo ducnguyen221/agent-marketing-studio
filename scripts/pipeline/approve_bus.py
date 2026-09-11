@@ -64,6 +64,7 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 sys.path.insert(0, str(_LIB))
+import bai_noi_dung  # noqa: E402
 import md_io  # noqa: E402
 import telegram_io  # noqa: E402
 
@@ -194,6 +195,14 @@ def _doc_bang(cam: Path):
     return fm, than, cot, dong
 
 
+def _da_viet_bai(cam: Path, dong: dict) -> bool:
+    """Bài của DÒNG này đã có chữ thật chưa. Không khai `folder` = chưa viết (fail-closed)."""
+    f = (dong.get("folder") or "").strip()
+    if not f:
+        return False
+    return bai_noi_dung.da_viet(Path(cam) / f.lstrip("./"))
+
+
 def cho_cong(cam: Path, cong: str) -> list[dict]:
     """Bài đang chờ đúng cổng đó. g1: chưa có g1. g2: có g1, chưa có g2."""
     _, _, _, dong = _doc_bang(cam)
@@ -280,6 +289,19 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
         ds = [d for d in dang_cho if d["content_id"] in chon]
     else:
         ds = dang_cho[:lo] if lo else []
+    # CỔNG 2 nghĩa là "đọc bài rồi quyết" — bài chưa có chữ thì không có gì để đọc.
+    #
+    # Vì sao lọc Ở ĐÂY chứ không trong `cho_cong`: `cho_cong` là truy vấn BẢNG thuần, và
+    # còn hai chỗ khác dựa vào nó (định tuyến trả lời per-post ở `_cong_cua_bai`, và báo
+    # trạng thái). Đổi nghĩa của nó là đổi cả ba. Chỗ gây hại chỉ có một: gửi tin mời người
+    # bấm duyệt. 11/09/2026 đã gửi thật một tin mời duyệt 5 bài, 3 bài còn nguyên khuôn.
+    if cong == "g2":
+        chua = [d for d in ds if not _da_viet_bai(cam, d)]
+        if chua:
+            loi(f"cổng 2: bỏ qua {len(chua)} bài CHƯA VIẾT — "
+                f"{', '.join(d['content_id'] for d in chua)}")
+        ds = [d for d in ds if _da_viet_bai(cam, d)]
+
     if not ds:
         return {"gui": 0, "ly_do": "không có bài nào chờ cổng này"}
 
