@@ -266,9 +266,17 @@ class Bot:
     def lay_cap_nhat(self, offset: int | None = None, timeout: int = 0) -> list:
         """`getUpdates`.
 
-        ⚠️ **MỘT NGƯỜI ĐỌC DUY NHẤT trên mỗi bot token.** Telegram giao mỗi update cho tiến
-        trình gọi TRƯỚC; tiến trình thứ hai thấy hàng đợi rỗng và không có lỗi nào. Cần thêm
-        một bên tiêu thụ thì phải tách bot riêng, đừng chia nhau một token.
+        ⚠️ **MỘT NGƯỜI ĐỌC DUY NHẤT trên mỗi bot token.** Cần thêm một bên tiêu thụ thì
+        phải tách bot riêng, đừng chia nhau một token.
+
+        Telegram báo xung đột này **TO VÀ RÕ**, không im lặng — đo 10/09/2026:
+        `Conflict: terminated by other getUpdates request`. Yêu cầu MỚI giết yêu cầu CŨ,
+        nên hai poller đạp nhau và cả hai cùng hỏng ồn ào. (Bản đầu của docstring này viết
+        "tiến trình thứ hai thấy hàng đợi rỗng và không có lỗi nào" — SAI, và sai theo hướng
+        nguy hiểm: nó bảo người đọc đi dựng cổng phát hiện ngầm cho một thứ vốn tự kêu.)
+
+        **Trả về NGAY khi có update**, không đợi hết `timeout`. `timeout` chỉ là thời gian
+        chờ TỐI ĐA lúc không có gì. Nên độ trễ nhận tin ≈ một vòng mạng, không phải 50 giây.
 
         `offset` bắt buộc truyền khi đã xử lý xong: thiếu nó thì update cũ quay lại mãi và
         cùng một nút được xử lý nhiều lần.

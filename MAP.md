@@ -55,6 +55,7 @@
 | Xem toàn cảnh chiến dịch / mọi bài | `scripts/pipeline/build_views.py` (mở `index.html` bằng cách bấm đúp) |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
 | **Thứ tự các bước và CỔNG DUYỆT nằm ở đâu** (4 lệnh, 3 cổng — đọc TRƯỚC hai dòng dưới) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` |
+| **Telegram làm TRUNG GIAN người ↔ agent** (vòng đời tiến trình · chuyện "50 giây" · vỡ vòng thì nối lại) | `knowledge/toolchains/TELEGRAM_LAM_TRUNG_GIAN.md` |
 | **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
 | Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dang`) | `scripts/pipeline/campaign_step.py` |
