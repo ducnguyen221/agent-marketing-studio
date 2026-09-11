@@ -50,6 +50,7 @@ _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "lib"))
 sys.path.insert(0, str(_HERE))
 import bai_noi_dung  # noqa: E402
+import tinh_trang as TT  # noqa: E402
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import approve_bus as AB  # noqa: E402
@@ -383,7 +384,9 @@ def ma_thoat(kq: dict) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Chạy một bước của chiến dịch blog.")
     ap.add_argument("campaign")
-    ap.add_argument("buoc", choices=sorted(BUOC))
+    ap.add_argument("buoc", choices=sorted(list(BUOC) + ["tinh-trang"]))
+    ap.add_argument("--chi-tiet", action="store_true",
+                    help="tinh-trang: in từng bài, không chỉ bản đếm")
     ap.add_argument("--truoc", type=int, default=None, help="dựng trước bao nhiêu ngày")
     ap.add_argument("--uat", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
@@ -393,6 +396,13 @@ def main() -> int:
     if not (cam / "campaign.md").is_file():
         loi(f"không thấy {cam / 'campaign.md'}")
         return 2
+
+    # `tinh-trang` CHỈ ĐỌC: không cần bot, không cần cổng, không ghi gì. Đặt trước chỗ
+    # dựng bot để nó chạy được cả khi máy chưa khai secret Telegram — đây là lệnh người ta
+    # gõ lúc đang hoảng, không phải lúc mọi thứ đã sẵn sàng.
+    if a.buoc == "tinh-trang":
+        print(TT.dang_chu(cam, chi_tiet=a.chi_tiet))
+        return 0
 
     import telegram_io
     try:
