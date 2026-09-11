@@ -97,7 +97,7 @@ def _chay_buoc(cam: Path, buoc: str, cid: str) -> tuple[bool, str]:
         # chiến dịch. Thiếu cờ này thì một việc cho NEN-002 viết lại luôn NEN-001 và
         # NEN-003: kế toán số lần viết lại thành vô nghĩa, và lượt chạy kéo hàng giờ.
         # Đo thật 12/09/2026 — một việc chạy 27 phút vì ôm ba bài.
-        if buoc in ("soan", "sua-loi-cong", "dung-trang") and cid:
+        if buoc in ("soan", "sua-loi-cong", "dung-trang", "phat-hanh") and cid:
             lenh += ["--bai", cid]
 
     r = subprocess.run(lenh, capture_output=True, text=True,

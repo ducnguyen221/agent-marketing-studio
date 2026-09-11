@@ -3,10 +3,13 @@
 """Chạy MỘT bước của chiến dịch blog. Không phải cả chuỗi — có chủ đích.
 
 ```
-dung-bai ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
+dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]─ phat-hanh
 ```
 
-## Vì sao ba bước rời
+`dang` là TÊN CŨ của `dung-trang`, giữ lại để lệnh cũ không gãy. Cổng 3 chỉ bật khi bảng
+Content có khai cột `g3`.
+
+## Vì sao các bước rời nhau
 
 Script điều phối gộp đã bị gỡ 04/09/2026 vì nó *"gộp dựng và đăng vào một lệnh, nên một
 bước hỏng là phải chạy lại từ đầu, và cổng duyệt của người bị nuốt vào giữa chuỗi"*. Gộp
@@ -349,24 +352,19 @@ def buoc_soan(cam: Path, *, bot, hom_nay: date | None = None, dry_run=False,
 
 # ── Bước 3: đăng ────────────────────────────────────────────────────────────
 
-def buoc_dang(cam: Path, *, bot, uat=False, dry_run=False) -> dict:
-    ds = bai_san_sang_dang(cam)
-    if not ds:
-        return {"buoc": "dang", "dang": 0, "ly_do": "không có bài nào qua Cổng 2 mà chưa đăng"}
+def buoc_dang(cam: Path, *, bot, uat=False, dry_run=False, chay=None,
+              chi_bai: str | None = None) -> dict:
+    """⚠️ TÊN CŨ — nay uỷ quyền cho `dung-trang`. Giữ lại để lệnh cũ không gãy.
 
-    ra = []
-    for d in ds:
-        bai = cam / (d.get("folder") or "").strip().lstrip("./")
-        cmd = [sys.executable, str(_HERE / "web_publish.py"), "--bai", str(bai)]
-        if uat:
-            cmd.append("--uat")
-        if dry_run:
-            cmd.append("--dry-run")
-        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
-                           errors="replace")
-        ra.append({"id": d["content_id"], "exit": r.returncode,
-                   "ra": r.stdout.strip()[-300:] or r.stderr.strip()[-300:]})
-    return {"buoc": "dang", "dang": len([x for x in ra if x["exit"] == 0]), "chi_tiet": ra}
+    Bản cũ chỉ bọc `web_publish.py` và **không ghi URL ngược vào bảng Content**. Thiếu đúng
+    chỗ đó nên `tinh_trang` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần
+    nữa. `dung-trang` làm đủ: dựng tiếng (nếu khai), dựng trang, đăng, rồi GHI URL.
+
+    Hai bước làm gần giống nhau là chỗ sinh nhầm lẫn, nên gộp về một. Ai đang gọi
+    `-Buoc dang` vẫn chạy được, và được luôn phần ghi URL.
+    """
+    loi("`dang` là tên cũ — đang chạy `dung-trang`. Đổi lệnh khi tiện.")
+    return buoc_dung_trang(cam, bot=bot, dry_run=dry_run, chay=chay, chi_bai=chi_bai)
 
 
 def bai_cho_dung_trang(cam: Path) -> list[dict]:
@@ -470,8 +468,106 @@ def buoc_dung_trang(cam: Path, *, bot, dry_run=False, chay=None,
     return {"buoc": "dung-trang", "xu_ly": len(xong), "bai": xong, "hong": hong}
 
 
+def bai_cho_phat_hanh(cam: Path) -> list[dict]:
+    """Đã lên web, đã qua Cổng 3 (nếu bảng có khai), chưa phát hành."""
+    _, _, dong = _doc(cam)
+    ra = []
+    for d in dong:
+        if not (d.get("web") or "").strip():
+            continue
+        if (d.get("published") or "").strip():
+            continue
+        # Cổng 3 bật bằng cách KHAI CỘT. Bảng cũ không khai thì không có cổng này —
+        # cùng luật với `tinh_trang.buoc_ke`, và hai chỗ phải nói giống nhau.
+        if "g3" in d and not (d.get("g3") or "").strip():
+            continue
+        if not (d.get("folder") or "").strip():
+            continue
+        ra.append(d)
+    return ra
+
+
+def buoc_phat_hanh(cam: Path, *, bot, dry_run=False, chay=None,
+                   chi_bai: str | None = None) -> dict:
+    """B7 YouTube · B9 Facebook · B10 ghi sổ. Bước CUỐI, đẩy bài ra nền tảng ngoài.
+
+    ## Kênh ngoài đều là HOOK, không cái nào khoá cứng
+
+    `runtime.youtube_cmd` và `runtime.facebook_cmd` — cùng luật với `writer_cmd` và
+    `audio_cmd`. Hai kênh này cần token của MÁY BẠN, nên repo công khai không thể gọi thẳng.
+    Repo có sẵn `fb_publish.py` làm bản tham chiếu; trạm trỏ hook vào đó là xong.
+
+    Lệnh phải in ra **một dòng JSON có khoá `url`**. Không có URL = không biết bài nằm đâu.
+
+    ## Chiến dịch CHỈ CÓ WEB vẫn phát hành được
+
+    Không khai kênh nào thì bước này chỉ ghi `published`. Bài đã lên trang RỒI — đó chính là
+    phát hành. Bắt khai YouTube mới cho đánh dấu xong là ép mọi chiến dịch phải có video.
+
+    ## Kênh hỏng thì KHÔNG đánh dấu đã đăng
+
+    Báo đã phát hành trong khi chưa là cách hỏng tệ nhất: không ai đi kiểm lại, và bài nằm
+    im mãi ở trạng thái "xong" mà thật ra chưa lên kênh nào.
+    """
+    chay = chay or (lambda cmd, **kw: subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        stdin=subprocess.DEVNULL, **kw))
+    fm_cam, _, _ = _doc(cam)
+    rt = fm_cam.get("runtime") or {}
+    kenh = [(c, (rt.get(f"{c}_cmd") or "").strip())
+            for c in ("youtube", "facebook")]
+    kenh = [(c, l) for c, l in kenh if l]
+
+    ds = bai_cho_phat_hanh(cam)
+    if chi_bai:
+        ds = [d for d in ds if d.get("content_id") == chi_bai]
+    if not ds:
+        return {"buoc": "phat-hanh", "xu_ly": 0, "hong": [],
+                "ly_do": "không có bài nào đã lên web mà chưa phát hành"}
+
+    xong, hong = [], []
+    for d in ds:
+        cid = d["content_id"]
+        bai = cam / (d.get("folder") or "").lstrip("./")
+        if dry_run:
+            xong.append(cid)
+            continue
+
+        link, loi_kenh = {}, []
+        for ten, lenh_tho in kenh:
+            lenh = [x.replace("{bai}", str(bai)).replace("{cid}", cid)
+                    .replace("{web}", (d.get("web") or "").strip())
+                    for x in tach_lenh(lenh_tho)]
+            r = chay(lenh)
+            url = ""
+            for dong_ra in reversed((getattr(r, "stdout", "") or "").splitlines()):
+                try:
+                    url = (json.loads(dong_ra) or {}).get("url") or ""
+                except json.JSONDecodeError:
+                    continue
+                if url:
+                    break
+            if getattr(r, "returncode", 1) != 0 or not url:
+                loi_kenh.append(f"{ten}: {(getattr(r, 'stderr', '') or 'không trả URL')[:120]}")
+                continue
+            link[ten] = url
+
+        if loi_kenh:
+            hong.append({"bai": cid, "ly_do": "; ".join(loi_kenh)})
+            continue
+
+        fm, than, _ = _doc(cam)
+        o = {"content_id": cid, "published": date.today().isoformat()}
+        o.update(link)
+        than = md_io.upsert_row(than, "CONTENT", "content_id", o, chi_cap_nhat=True)
+        md_io.write_fm(cam / "campaign.md", fm, than)
+        xong.append(cid)
+
+    return {"buoc": "phat-hanh", "xu_ly": len(xong), "bai": xong, "hong": hong}
+
+
 BUOC = {"dung-bai": buoc_dung_bai, "soan": buoc_soan, "dang": buoc_dang,
-        "dung-trang": buoc_dung_trang}
+        "dung-trang": buoc_dung_trang, "phat-hanh": buoc_phat_hanh}
 
 
 def ma_thoat(kq: dict) -> int:
@@ -527,7 +623,7 @@ def main() -> int:
         bot = None
 
     kw = {"bot": bot, "dry_run": a.dry_run}
-    if a.bai and a.buoc in ("soan", "dung-trang"):
+    if a.bai and a.buoc in ("soan", "dung-trang", "phat-hanh"):
         kw["chi_bai"] = a.bai
     if a.buoc == "dung-bai":
         kw["truoc"] = a.truoc
