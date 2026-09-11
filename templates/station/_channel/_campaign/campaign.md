@@ -58,9 +58,33 @@ runtime:
   # fb_text_post: false     # true = đăng thêm bài chữ riêng trên Facebook (mặc định KHÔNG)
   #
   # ── Chiến dịch blog dài kỳ (run-blog-campaign.ps1) ────────────────────────
-  # Ba bước RỜI, mỗi lượt chạy một bước:
-  #   dung-bai ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
-  # Gộp ba bước là dựng lại thứ đã bị gỡ vì nuốt cổng duyệt của người vào giữa chuỗi.
+  # SÁU bước RỜI, mỗi lượt chạy một bước:
+  #   dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]─ phat-hanh
+  # Gộp các bước là dựng lại thứ đã bị gỡ vì nuốt cổng duyệt của người vào giữa chuỗi.
+  # `dang` là TÊN CŨ của `dung-trang`, giữ để lệnh cũ không gãy.
+  #
+  # Cổng 3 bật bằng cách KHAI CỘT `g3` trong bảng Content (mẫu này đã khai sẵn).
+  # Bỏ cột đó đi = tắt Cổng 3, đi thẳng từ dựng trang tới phát hành.
+  #
+  # ── BỐN HOOK — repo KHÔNG khoá CLI hay agent nào ──────────────────────────
+  # Mỗi hook là một lệnh CỦA BẠN. Chỗ thay được: {bai} thư mục bài · {cid} mã bài ·
+  # {cam} thư mục chiến dịch · {web} URL bài (chỉ ở hai hook cuối).
+  #
+  # writer_cmd:   '<lệnh của bạn> --bai "{bai}"'
+  #     Vào : thư mục bài (meta.json · research.md · content.md khung · prompt.txt ·
+  #           phan-hoi.md nếu bị trả lại).  Ra: điền đầy content.md theo neo `## post:`.
+  #     KHÔNG khai = bước `soan` báo *chờ người viết* và dừng. Fail-closed, không đoán.
+  #     ⚠️ Mã thoát 0 KHÔNG đủ để tính là xong — hệ còn kiểm content.md có chữ thật không.
+  #
+  # audio_cmd:    '<lệnh của bạn> --bai "{bai}"'      # → atlas/audio.mp3, TUỲ CHỌN
+  # youtube_cmd:  '<lệnh của bạn> --bai "{bai}"'      # in JSON có khoá `url`, TUỲ CHỌN
+  # facebook_cmd: '<lệnh của bạn> --bai "{bai}" --web "{web}"'   # in JSON `url`, TUỲ CHỌN
+  #
+  # Ba hook cuối KHÔNG khai thì BỎ QUA, không phải lỗi — chiến dịch chỉ có web + ảnh +
+  # post vẫn chạy trót lọt. Repo có sẵn `scripts/pipeline/fb_publish.py` làm bản tham
+  # chiếu để trỏ `facebook_cmd` vào.
+  #
+  # Xem `templates/hooks/` để lấy script mẫu chép về sửa.
   #
   # approval_mode: batch_gate   # batch_gate = N bài một tin · per_post = mỗi bài một tin
   # approval_lo: 10             # tối đa bao nhiêu bài gom vào một tin xin duyệt
@@ -180,8 +204,8 @@ Giá trị hợp lệ của `content_pillar` khai ở `channel.yml:pillars` — 
 > render thành nút bấm được.
 
 <!-- CONTENT:BEGIN -->
-| content_id | content_name | pillar | angle | funnel | priority | status | g1 | g2 | schedule | published | folder | web | youtube | facebook |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| content_id | content_name | pillar | angle | funnel | priority | status | g1 | g2 | g3 | schedule | published | folder | web | youtube | facebook |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 <!-- CONTENT:END -->
 
 Giá trị hợp lệ —

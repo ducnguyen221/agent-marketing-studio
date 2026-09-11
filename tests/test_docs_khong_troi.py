@@ -239,3 +239,40 @@ def test_moi_duong_dan_templates_trong_ma_va_tai_lieu_deu_ton_tai():
     assert not chet, (
         "đường dẫn templates/ trỏ vào chỗ không tồn tại — sửa đường dẫn hoặc tạo file:\n  "
         + "\n  ".join(sorted(set(chet))))
+
+
+def test_script_MAU_khong_lo_duong_dan_may_that():
+    """Script mau trong repo PUBLIC khong duoc mang duong dan may cua ai.
+
+    Da suyt dinh 10/09/2026: mot docstring lot duong dan nha rieng. Repo la ban
+    chung; duong dan that thuoc ve tram.
+
+    Docstring nay co Y GIU TIENG VIET KHONG DAU va khong vi du duong dan: chinh no
+    tung lam ca file khong import noi (dau gach cheo + chu U thanh escape unicode),
+    va lai la dung cai bay test nay dang canh.
+    """
+    import re
+    mau = re.compile(r"[Cc]:[\\/]Users[\\/](?!<)(\w+)")
+    xau = []
+    for f in (ROOT / "templates").rglob("*"):
+        if f.suffix.lower() not in (".ps1", ".py", ".md", ".yml", ".json"):
+            continue
+        for m in mau.finditer(f.read_text(encoding="utf-8", errors="replace")):
+            if m.group(1).lower() not in ("username", "user", "ten", "you"):
+                xau.append(f"{f.relative_to(ROOT)}: {m.group(0)}")
+    assert not xau, "duong dan may that lot vao template: " + ", ".join(xau)
+
+
+def test_moi_hook_khai_trong_template_deu_CO_THAT_trong_code():
+    """Template hứa bốn hook thì code phải đọc đủ bốn.
+
+    Tài liệu đi trước code là cách hỏng đã có tên trong sổ này: người dùng khai một khoá,
+    engine lặng lẽ bỏ qua, và không gì báo.
+    """
+    mau = (ROOT / "templates" / "station" / "_channel" / "_campaign" / "campaign.md"
+           ).read_text(encoding="utf-8")
+    src = (ROOT / "scripts" / "pipeline" / "campaign_step.py").read_text(encoding="utf-8")
+    for khoa in ("writer_cmd", "audio_cmd", "youtube_cmd", "facebook_cmd"):
+        assert khoa in mau, f"template chưa nhắc `{khoa}`"
+        assert khoa in src or khoa.replace("_cmd", "") in src, \
+            f"template hứa `{khoa}` nhưng code không đọc"
