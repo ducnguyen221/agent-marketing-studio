@@ -153,6 +153,22 @@ def lam_mot_viec(cam: Path, *, bot=None, chay=_chay_buoc) -> dict:
     SO.ghi(cam, "viec_bat_dau", bai=cid, buoc=buoc, ma_viec=ma)
     xong, tin = chay(cam, cac_lenh[0], cid)
 
+    # MÃ THOÁT KHÁC 0 KHÔNG ĐỦ ĐỂ TÍNH LÀ HỎNG — hỏi KẾT QUẢ THẬT.
+    #
+    # `blog_gates.py` trả mã 1 khi kết luận ĐỎ. Đó là một KẾT QUẢ, không phải sự cố: nó đã
+    # chấm xong 23 cổng và ghi `gates.json` tử tế. Đọc mã thoát rồi kết luận "hỏng" thì mọi
+    # bài ra đỏ sẽ bị chấm lại 3 lần rồi vứt vào `hong/`, và KHÔNG BAO GIỜ đi tiếp tới
+    # `sua-loi-cong` — tức đúng những bài cần sửa thì không ai sửa. (Bắt được 12/09/2026 khi
+    # chạy thử thật trên NEN-002.)
+    #
+    # Repo đã có luật "mã thoát 0 không đủ để tính là xong". Đây là vế ngược của cùng một
+    # nguyên tắc, và cách chữa giống hệt: kiểm ARTEFACT mà bước đó phải sinh ra.
+    if not xong and buoc == "cham-cong":
+        d_lai = _dong_cua_bai(cam, cid) or d
+        f = (d_lai.get("folder") or "").strip()
+        if f and (Path(cam) / f.lstrip("./") / "gates.json").is_file():
+            xong = True
+
     if xong:
         HC.xong(cam, ma, buoc=buoc)
         SO.ghi(cam, "viec_xong", bai=cid, buoc=buoc)

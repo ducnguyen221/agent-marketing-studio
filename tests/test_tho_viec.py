@@ -212,3 +212,31 @@ def test_moi_viec_deu_VAO_SO_su_kien(tmp_path):
     TV.lam_mot_viec(cam, chay=_chay_gia())
     viec = [x["viec"] for x in SO.doc(cam, bai="T-001")]
     assert "viec_bat_dau" in viec and "viec_xong" in viec, viec
+
+
+def test_cham_cong_ra_DO_la_DA_CHAM_XONG_chu_khong_phai_hong(tmp_path):
+    """`blog_gates.py` trả mã 1 khi kết luận ĐỎ. Đó là KẾT QUẢ, không phải sự cố.
+
+    ĐÃ XẢY RA THẬT 12/09/2026 khi chạy thử trên NEN-002: `gates.json` được tạo đầy đủ
+    (5.180 byte, chấm xong 23 cổng) nhưng thợ đọc mã thoát 1 rồi báo "bước hỏng". Hệ quả
+    nếu không vá: mọi bài chấm ra đỏ đều bị chấm lại 3 lần rồi vứt vào `hong/`, và **không
+    bao giờ đi tiếp tới `sua-loi-cong`** — tức đúng những bài cần sửa thì không ai sửa.
+
+    Repo đã có luật *"mã thoát 0 không đủ để tính là xong"*. Đây là vế ngược của cùng một
+    nguyên tắc: **mã thoát khác 0 không đủ để tính là hỏng.** Hỏi kết quả thật — có
+    `gates.json` không — chứ đừng hỏi mã thoát.
+    """
+    cam = _cam(tmp_path)
+    b = _bai(cam)                                  # đã viết, chưa có gates ⇒ `cham-cong`
+    HC.them(cam, "tiep", bai="T-001")
+
+    def chay_ra_do(cam_, buoc, cid):
+        # y như blog_gates: GHI gates.json rồi trả mã khác 0 vì kết luận đỏ
+        (b / "gates.json").write_text(
+            json.dumps({"tong": 23, "ket_luan": "do", "do_chan": 7, "cong": []}),
+            encoding="utf-8", newline="\n")
+        return False, "7 cổng đỏ [chặn]"
+
+    kq = TV.lam_mot_viec(cam, chay=chay_ra_do)
+    assert not kq.get("hong"), f"chấm xong mà bị tính là hỏng: {kq}"
+    assert HC.dem(cam)["hong"] == 0 and HC.dem(cam)["cho"] == 0
