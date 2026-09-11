@@ -79,6 +79,10 @@ RE_CID = re.compile(r"^[A-Z]{1,6}-\d{3}$")
 RE_TRA_LOI = re.compile(r"^\s*(duyet|duyệt|tu choi|từ chối)\s+([A-Za-z]{1,6}-\d{3})\s*(.*)$",
                         re.IGNORECASE)
 RE_CALLBACK = re.compile(r"^(ok|no):([0-9a-f]{16})$")
+# Lệnh TRẦN, không kèm mã bài. CHỈ dùng khi người TRẢ LỜI vào tin của một bài — lúc đó
+# ngữ cảnh đã nói rõ bài nào, bắt gõ lại mã là thừa. Ngoài ngữ cảnh đó thì vô nghĩa và
+# nguy hiểm: "duyet" trống không biết duyệt cái gì.
+RE_LENH_TRAN = re.compile(r"^\s*(duyet|duyệt|tu choi|từ chối)\s*(.*)$", re.IGNORECASE)
 # Phần "lý do" đi kèm lệnh duyệt: CHỈ chữ, số, khoảng trắng và dấu câu hiền. Không có
 # lệnh nào bị chạy từ chuỗi này (nó chỉ đi vào argv của register_publish, không qua shell)
 # — nhưng vẫn chặn CHẶT, vì hai lẽ: (1) tin nhắn mang ký tự shell gần như chắc chắn không
@@ -216,6 +220,41 @@ def _trich(bai: Path, so_chu: int = 600) -> str:
     return than[:so_chu] + ("…" if len(than) > so_chu else "")
 
 
+def _vi_sao_chua_duoc_hoi(cam: Path, dong: dict) -> str:
+    """Lý do bài này CHƯA được phép đem ra hỏi ở Cổng 2. Chuỗi rỗng = được hỏi.
+
+    FAIL-CLOSED ba nhánh (Đức chốt 11/09/2026):
+      · chưa viết          — không có gì để đọc
+      · chưa chấm cổng nào — KHÔNG ĐO ĐƯỢC nghĩa là *chưa biết*, không phải *đã qua*
+      · máy chấm ĐỎ        — máy đã nói không thì đừng đem hỏi người
+
+    Vì sao nhánh giữa quan trọng ngang nhánh cuối: `content.md` đầy đủ **không** chứng minh
+    bài đã qua kiểm. Ca thật NEN-002 — gọi thẳng bộ viết, nhảy cóc bước chấm B4, file bài
+    trông hoàn hảo mà chưa một cổng nào chạy.
+
+    Trả LÝ DO chứ không trả bool: bỏ qua im lặng thì người vận hành không biết vì sao bài
+    của mình không bao giờ tới cổng.
+    """
+    if not _da_viet_bai(cam, dong):
+        return "CHƯA VIẾT"
+
+    f = (dong.get("folder") or "").strip()
+    p = Path(cam) / f.lstrip("./") / "gates.json"
+    if not p.is_file():
+        return "CHƯA CHẤM cổng nào (thiếu gates.json) — chạy blog_gates.py trước"
+    try:
+        g = json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return "gates.json HỎNG — coi như chưa chấm"
+
+    if (g.get("ket_luan") or "").lower() == "do":
+        do = [c.get("ma", "?") for c in (g.get("cong") or [])
+              if c.get("trang_thai") == "do" and c.get("muc") != "canh_bao"]
+        return (f"máy chấm ĐỎ ({g.get('do_chan', '?')} cổng chặn"
+                + (f": {', '.join(do[:8])}" if do else "") + ")")
+    return ""
+
+
 def _da_viet_bai(cam: Path, dong: dict) -> bool:
     """Bài của DÒNG này đã có chữ thật chưa. Không khai `folder` = chưa viết (fail-closed)."""
     f = (dong.get("folder") or "").strip()
@@ -317,11 +356,14 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
     # trạng thái). Đổi nghĩa của nó là đổi cả ba. Chỗ gây hại chỉ có một: gửi tin mời người
     # bấm duyệt. 11/09/2026 đã gửi thật một tin mời duyệt 5 bài, 3 bài còn nguyên khuôn.
     if cong == "g2":
-        chua = [d for d in ds if not _da_viet_bai(cam, d)]
-        if chua:
-            loi(f"cổng 2: bỏ qua {len(chua)} bài CHƯA VIẾT — "
-                f"{', '.join(d['content_id'] for d in chua)}")
-        ds = [d for d in ds if _da_viet_bai(cam, d)]
+        giu = []
+        for d in ds:
+            vi_sao = _vi_sao_chua_duoc_hoi(cam, d)
+            if vi_sao:
+                loi(f"cổng 2: bỏ qua {d['content_id']} — {vi_sao}")
+            else:
+                giu.append(d)
+        ds = giu
 
     if not ds:
         return {"gui": 0, "ly_do": "không có bài nào chờ cổng này"}
@@ -339,8 +381,18 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
         for d in ds:
             bai = Path(cam) / (d.get("folder") or "").lstrip("./")
             try:
-                _bao_nhan(bot.gui_tai_lieu, bai / "content.md",
-                          f"{d['content_id']} — {d['content_name']}\n\n{_trich(bai)}")
+                mid = bot.gui_tai_lieu(
+                    bai / "content.md",
+                    f"{d['content_id']} — {d['content_name']}\n\n"
+                    f"↩️ Trả lời thẳng vào tin này để gửi nhận xét cho bài.\n\n"
+                    f"{_trich(bai)}")
+                # NEO NHẬN XÉT VÀO FILE BÀI. Trước 11/09/2026 `tin_bai` chỉ được ghi ở
+                # nhánh `per_post`, nên ở chế độ LÔ người trả lời vào tin thì
+                # `_bai_cua_tin` trả None và nhận xét RƠI VÀO HƯ KHÔNG, không một lời báo.
+                #
+                # Tin gộp không neo được: nó liệt kê 5 bài, trả lời vào đó thì biết bài nào?
+                # File bài mới là chỗ neo đúng — mỗi bài đúng một file.
+                st.setdefault("tin_bai", {})[d["content_id"]] = mid
             except Exception as e:                       # noqa: BLE001
                 # Gửi file hỏng KHÔNG được giết cả lượt gửi cổng: người vẫn cần thấy tin
                 # duyệt. Nhưng phải nói to, vì họ sắp duyệt mà chưa đọc được bài.
@@ -486,6 +538,15 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
     if rep:
         cid = _bai_cua_tin(cam, rep)
         if cid:
+            # Trả lời vào bài rồi gõ "duyet"/"từ chối" là Ý QUYẾT, không phải lời góp ý —
+            # và không bắt gõ lại mã bài, vì đang trả lời vào đúng bài đó rồi.
+            #
+            # Không có nhánh này thì mọi câu trả lời đều thành nhận xét: người gõ "duyet",
+            # tưởng đã duyệt, cổng vẫn đóng, bài nằm im. Hỏng CÂM.
+            ml = RE_LENH_TRAN.match(text)
+            if ml:
+                return _thi_hanh_lenh(cam, cid, ml.group(1), (ml.group(2) or "").strip(),
+                                      bot=bot, kq=kq)
             _ghi_phan_hoi(cam, cid, text)
             kq.setdefault("phan_hoi", []).append(cid)
             kq["xu_ly"] += 1
@@ -513,8 +574,24 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
                 f"hoặc `tu choi {cid} <lý do>` (chỉ chữ và dấu câu thường).")
         kq["bo_qua"] += 1
         return
+    _thi_hanh_lenh(cam, cid, lenh, ly_do, bot=bot, kq=kq, bay_gio=bay_gio)
+
+
+def _thi_hanh_lenh(cam: Path, cid: str, lenh: str, ly_do: str, *, bot, kq,
+                   bay_gio: datetime | None = None) -> None:
+    """Thi hành DUYỆT / TỪ CHỐI cho một bài. Dùng chung cho hai lối vào.
+
+    Hai lối: gõ `duyet <mã>` như một tin thường, hoặc TRẢ LỜI vào tin của bài rồi gõ
+    `duyet`. Tách ra đây để hai lối không trôi khỏi nhau — nếu chép logic duyệt lần thứ
+    hai thì sớm muộn một lối ghi sổ còn lối kia không.
+    """
+    if not RE_LY_DO.match(ly_do or ""):
+        loi(f"lý do có ký tự lạ — bỏ qua: {ly_do!r}")
+        _bao_nhan(bot.gui, f"⚠️ {cid}: lý do có ký tự lạ, chưa ghi. Chỉ dùng chữ và dấu câu thường.")
+        kq["bo_qua"] += 1
+        return
     cong = "g2" if (cid in {d["content_id"] for d in cho_cong(cam, "g2")}) else "g1"
-    if lenh.startswith("duy"):
+    if lenh.lower().startswith(("duy", "duyệt")):
         xong = _ap_dung(cam, cong, [cid], boi="Đức (Telegram)",
                         ghi_chu=ly_do or "duyệt qua Telegram", bay_gio=bay_gio)
         kq["duyet"] += xong

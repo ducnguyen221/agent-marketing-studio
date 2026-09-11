@@ -767,6 +767,7 @@ def test_g2_VAN_moi_duyet_bai_da_viet_that(tmp_path):
     """Mặt kia của cổng: vá xong không được chặn nhầm bài đã viết tử tế."""
     cam = _cam(tmp_path)
     _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "xanh")   # G2 nay fail-closed: chua cham = khong duoc hoi
 
     b = BotGia()
     kq = AB.gui_cong(cam, "g2", bot=b)
@@ -788,6 +789,7 @@ def test_cong2_PHAI_gui_KEM_BAI_chu_khong_chi_tieu_de(tmp_path):
     """
     cam = _cam(tmp_path)
     _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "xanh")   # G2 nay fail-closed: chua cham = khong duoc hoi
 
     b = BotGia()
     AB.gui_cong(cam, "g2", bot=b)
@@ -802,3 +804,152 @@ def test_cong1_KHONG_gui_file(tmp_path):
     b = BotGia()
     AB.gui_cong(cam, "g1", bot=b)
     assert not b.da_file, f"cổng 1 không nên gửi file: {b.da_file}"
+
+
+# --------------------------------------------------------------------------------------
+# CỔNG 2 FAIL-CLOSED THEO 23 CỔNG MÁY  ·  TRẢ LỜI VÀO FILE BÀI
+# --------------------------------------------------------------------------------------
+
+def _cham_diem(cam, folder, ket_luan, do_chan=0):
+    import json as _j
+    (cam / folder / "gates.json").write_text(_j.dumps({
+        "tong": 23, "xanh": 23 - do_chan, "do_chan": do_chan,
+        "do_canh_bao": 0, "thieu": 0, "ket_luan": ket_luan,
+        "cong": [{"ma": "G01", "cong": "Độ dài blog (từ)", "do_duoc": 2079,
+                  "luat": "2500-4000", "trang_thai": "do", "muc": "chan"}] * do_chan,
+    }, ensure_ascii=False), encoding="utf-8")
+
+
+def test_g2_CHAN_bai_truot_cong_may(tmp_path):
+    """Máy đã chấm ĐỎ thì đừng hỏi người. Đức chốt 11/09/2026: chặn hẳn.
+
+    ĐÃ XẢY RA THẬT: NEN-001 trượt 7 cổng chặn (thiếu 400 từ, 0 nguồn, còn 2 placeholder)
+    mà vẫn được gửi lên Telegram xin duyệt, không một lời cảnh báo. Người duyệt không có
+    cách nào biết — họ đâu có chạy lại 23 cổng trong đầu.
+    """
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "do", do_chan=7)
+
+    b = BotGia()
+    kq = AB.gui_cong(cam, "g2", bot=b)
+
+    assert kq["gui"] == 0, f"đã mời duyệt bài máy chấm ĐỎ: {kq}"
+    assert not b.da_file, "không được gửi cả file của bài đỏ"
+
+
+def test_g2_CHAN_bai_chua_cham_bao_gio(tmp_path):
+    """Không có `gates.json` = CHƯA ĐO, không phải ĐÃ QUA. Fail-closed.
+
+    Ca thật: NEN-002 được viết bằng cách gọi thẳng bộ viết, nhảy cóc qua bước chấm B4 —
+    có `content.md` đầy đủ nhưng chưa một cổng nào chạy.
+    """
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)      # cố tình KHÔNG có gates.json
+
+    b = BotGia()
+    kq = AB.gui_cong(cam, "g2", bot=b)
+    assert kq["gui"] == 0, f"đã mời duyệt bài chưa chấm cổng nào: {kq}"
+
+
+def test_g2_CHO_QUA_bai_xanh(tmp_path):
+    """Mặt kia: chặt tay rồi thì đừng chặn nhầm bài đã xanh."""
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "xanh")
+
+    b = BotGia()
+    assert AB.gui_cong(cam, "g2", bot=b)["gui"] == 1
+
+
+def test_tra_loi_vao_FILE_BAI_ghi_duoc_nhan_xet_o_che_do_LO(tmp_path):
+    """Trả lời vào file bài = nhận xét cho ĐÚNG bài đó, kể cả khi duyệt theo LÔ.
+
+    ĐÃ HỎNG TỚI 11/09/2026: `tin_bai` chỉ được ghi ở nhánh `per_post`. Chiến dịch chạy
+    `batch_gate` nên bảng tra rỗng, người trả lời vào tin thì `_bai_cua_tin` trả None và
+    nhận xét **rơi vào hư không, không một lời báo**.
+
+    Tin gộp cũng không phải chỗ neo được: nó liệt kê 5 bài, trả lời vào đó thì biết là bài
+    nào? File bài mới là chỗ neo đúng — mỗi bài một file.
+    """
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "xanh")
+
+    b = BotGia()
+    AB.gui_cong(cam, "g2", bot=b, che_do="batch_gate")
+
+    mid = AB._tra_tin_bai(cam, "T-003")
+    assert mid is not None, "không nhớ tin nào thuộc bài nào ⇒ trả lời sẽ rơi vào hư không"
+
+    b2 = BotGia([{"update_id": 7, "message": {
+        "message_id": 99, "chat": {"id": CHAT_OK},
+        "reply_to_message": {"message_id": mid},
+        "text": "Mở bài dài quá, cắt bớt đoạn thứ hai."}}])
+    AB.nhan(cam, bot=b2)
+
+    ghi = AB.doc_phan_hoi(cam, "T-003")
+    assert ghi and "cắt bớt" in ghi[-1]["noi_dung"], f"không ghi được nhận xét: {ghi}"
+
+
+def _tra_loi(mid, text, update_id=8):
+    return {"update_id": update_id, "message": {
+        "message_id": 500 + update_id, "chat": {"id": CHAT_OK},
+        "reply_to_message": {"message_id": mid}, "text": text}}
+
+
+def test_tra_loi_vao_bai_bang_chu_DUYET_thi_phai_DUYET_chu_khong_phai_ghi_nhan_xet(tmp_path, monkeypatch):
+    """Trả lời vào bài rồi gõ "duyet" là Ý DUYỆT, không phải lời góp ý.
+
+    Bẫy có thật: nhánh ghi nhận xét đứng TRƯỚC nhánh lệnh và `return` sớm, nên mọi câu trả
+    lời — kể cả "duyet" — đều bị ghi thành nhận xét. Người dùng gõ "duyet" rồi tưởng đã
+    duyệt, trong khi cổng vẫn đóng và bài nằm im. Hỏng CÂM, đúng loại tệ nhất.
+
+    Không cần gõ lại mã bài: đang trả lời vào đúng bài đó rồi.
+    """
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "xanh")
+
+    b = BotGia()
+    AB.gui_cong(cam, "g2", bot=b, che_do="batch_gate")
+    mid = AB._tra_tin_bai(cam, "T-003")
+
+    # Assert vào CƠ CHẾ (tin này được định tuyến thành LỆNH hay thành NHẬN XÉT), không vào
+    # hệ quả ghi `publish.json` — hệ quả đó còn phụ thuộc `register_publish init` đã chạy
+    # chưa, nên nó có thể xanh/đỏ vì lý do chẳng liên quan gì tới thứ đang kiểm.
+    goi = []
+    that = AB._thi_hanh_lenh
+
+    def ghi_lai(cam_, cid_, lenh_, ly_do_, **kw):
+        goi.append((cid_, lenh_))
+        return that(cam_, cid_, lenh_, ly_do_, **kw)
+
+    # `monkeypatch` tự hoàn nguyên cuối test. Gán thẳng `AB._thi_hanh_lenh = ...` thì bản
+    # vá SỐNG SANG các test sau trong cùng phiên — rò rỉ kiểu đó gây đỏ ở chỗ chẳng liên quan.
+    monkeypatch.setattr(AB, "_thi_hanh_lenh", ghi_lai)
+
+    b2 = BotGia([_tra_loi(mid, "duyet")])
+    AB.nhan(cam, bot=b2)
+
+    assert goi, "gõ 'duyet' mà KHÔNG đi vào nhánh lệnh — nó bị nuốt thành nhận xét"
+    assert goi[0][0] == "T-003", f"duyệt nhầm bài: {goi}"
+    assert goi[0][1].lower().startswith("duy"), f"hiểu sai lệnh: {goi}"
+    assert not AB.doc_phan_hoi(cam, "T-003"), "không được ghi 'duyet' thành nhận xét"
+
+
+def test_tra_loi_vao_bai_bang_chu_thuong_van_la_nhan_xet(tmp_path):
+    """Mặt kia: câu chữ bình thường vẫn phải vào sổ nhận xét, không được nhầm thành lệnh."""
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "xanh")
+
+    b = BotGia()
+    AB.gui_cong(cam, "g2", bot=b, che_do="batch_gate")
+    mid = AB._tra_tin_bai(cam, "T-003")
+
+    b2 = BotGia([_tra_loi(mid, "Đoạn mở bài dài quá, cắt bớt giúp mình")])
+    kq = AB.nhan(cam, bot=b2)
+
+    assert not kq["duyet"], f"câu góp ý bị hiểu thành lệnh duyệt: {kq}"
+    assert AB.doc_phan_hoi(cam, "T-003"), "nhận xét không được ghi"
