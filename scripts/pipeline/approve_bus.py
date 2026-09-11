@@ -195,6 +195,27 @@ def _doc_bang(cam: Path):
     return fm, than, cot, dong
 
 
+def _trich(bai: Path, so_chu: int = 600) -> str:
+    """Mấy dòng đầu của phần blog — để người duyệt liếc trên điện thoại là nắm được bài.
+
+    File đính kèm mới là bản đầy đủ; đoạn trích này chỉ để khỏi phải tải file mới biết bài
+    nói gì. Cắt ở `so_chu` vì Telegram giới hạn caption 1.024 ký tự.
+    """
+    p = Path(bai) / "content.md"
+    if not p.is_file():
+        return ""
+    raw = p.read_text(encoding="utf-8")
+    m = re.search(r"(?m)^##\s+post:blog_article\s*$", raw)
+    than = raw[m.end():] if m else raw
+    ke = re.search(r"(?m)^##\s+post:", than)
+    if ke:
+        than = than[:ke.start()]
+    than = re.sub(r"(?m)^\s*>.*$", "", than)          # khối chỉ dẫn của khuôn
+    than = re.sub(r"<!--.*?-->", "", than, flags=re.S)
+    than = "\n".join(x for x in (d.strip() for d in than.splitlines()) if x)
+    return than[:so_chu] + ("…" if len(than) > so_chu else "")
+
+
 def _da_viet_bai(cam: Path, dong: dict) -> bool:
     """Bài của DÒNG này đã có chữ thật chưa. Không khai `folder` = chưa viết (fail-closed)."""
     f = (dong.get("folder") or "").strip()
@@ -308,6 +329,25 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
     st = _doc_state(cam)
     han = (bay_gio + timedelta(hours=HAN_GIO)).isoformat()
     ten_cd = fm.get("id") or cam.name
+
+    # CỔNG 2 phải GỬI KÈM BÀI. Cổng bắt người duyệt NỘI DUNG mà chỉ chở mã bài + tiêu đề
+    # thì là mời họ gật đầu về thứ không nhìn thấy — con dấu cao su, không phải cổng.
+    # (Đức hỏi đúng chỗ này 11/09/2026.)
+    #
+    # Cổng 1 thì KHÔNG gửi: duyệt đề tài là liếc một dòng, đính file vào chỉ làm phiền.
+    if cong == "g2":
+        for d in ds:
+            bai = Path(cam) / (d.get("folder") or "").lstrip("./")
+            try:
+                _bao_nhan(bot.gui_tai_lieu, bai / "content.md",
+                          f"{d['content_id']} — {d['content_name']}\n\n{_trich(bai)}")
+            except Exception as e:                       # noqa: BLE001
+                # Gửi file hỏng KHÔNG được giết cả lượt gửi cổng: người vẫn cần thấy tin
+                # duyệt. Nhưng phải nói to, vì họ sắp duyệt mà chưa đọc được bài.
+                loi(f"{d['content_id']}: không gửi được bài ({e})")
+                _bao_nhan(bot.gui,
+                          f"⚠️ {d['content_id']}: không gửi được file bài. "
+                          f"Mở tay: {bai / 'content.md'}")
 
     def _dat_token(cids):
         tok = secrets.token_hex(8)         # 16 ký tự hex -> "ok:<16>" = 19 byte, dưới cap 64

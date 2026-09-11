@@ -60,6 +60,7 @@ class BotGia:
 
     def __init__(self, hang_doi=None, cho_phep=(CHAT_OK,)):
         self.da_gui = []
+        self.da_file = []
         self.da_sua = []
         self.da_tra_loi = []
         self._hang = list(hang_doi or [])
@@ -79,6 +80,12 @@ class BotGia:
                 assert len(str(data).encode("utf-8")) <= 64, f"callback_data quá dài: {data}"
         self.da_gui.append({"text": text, "nut": nut})
         return len(self.da_gui)
+
+    def gui_tai_lieu(self, duong_dan, chu_thich="", chat=None, **kw):
+        from pathlib import Path as _P
+        self.da_file.append({"ten": _P(duong_dan).name,
+                             "duong_dan": str(duong_dan), "chu_thich": chu_thich})
+        return len(self.da_gui) + len(self.da_file)
 
     def sua_tin(self, message_id, text, nut=None, chat=None, **kw):
         self.da_sua.append({"message_id": message_id, "text": text})
@@ -765,3 +772,33 @@ def test_g2_VAN_moi_duyet_bai_da_viet_that(tmp_path):
     kq = AB.gui_cong(cam, "g2", bot=b)
 
     assert kq["gui"] == 1, f"bài đã viết mà không được mời duyệt: {kq}"
+
+
+def test_cong2_PHAI_gui_KEM_BAI_chu_khong_chi_tieu_de(tmp_path):
+    """Cổng 2 bắt người DUYỆT NỘI DUNG — nội dung phải tới được tay họ.
+
+    ĐÃ XẢY RA THẬT 11/09/2026: Đức nhận tin cổng 2 rồi hỏi lại *"nếu đã có nội dung tại sao
+    tôi không thấy file gửi lên telegram"*. Tin chỉ chở mã bài + tiêu đề; `telegram_io` lúc
+    đó **không có hàm gửi file nào cả**.
+
+    Một cổng mời người gật đầu về thứ họ không nhìn thấy thì không phải cổng — nó là con
+    dấu cao su. Cùng họ với `_da_viet` fail-open: hình thức có cổng, thực chất không chặn gì.
+
+    Cổng 1 thì KHÔNG cần, và test dưới khẳng định điều đó: duyệt đề tài chỉ cần tiêu đề.
+    """
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+
+    b = BotGia()
+    AB.gui_cong(cam, "g2", bot=b)
+
+    assert b.da_file, "cổng 2 không gửi file nào — người duyệt không có gì để đọc"
+    assert any("T-003" in f["duong_dan"] for f in b.da_file),         f"không thấy bài T-003 trong các file đã gửi: {b.da_file}"
+
+
+def test_cong1_KHONG_gui_file(tmp_path):
+    """Mặt kia: cổng 1 duyệt ĐỀ TÀI, liếc một dòng là quyết. Gửi file là làm phiền."""
+    cam = _cam(tmp_path)
+    b = BotGia()
+    AB.gui_cong(cam, "g1", bot=b)
+    assert not b.da_file, f"cổng 1 không nên gửi file: {b.da_file}"

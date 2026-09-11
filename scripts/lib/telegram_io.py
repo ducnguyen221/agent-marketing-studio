@@ -33,6 +33,7 @@ Một token đã phải thu hồi vì đúng chuyện đó (08/09/2026).
 from __future__ import annotations
 
 import json
+import secrets
 import os
 import urllib.error
 import urllib.parse
@@ -93,10 +94,43 @@ def _goi_that(token: str, method: str, payload: dict) -> dict:
             return {"ok": False, "description": f"HTTP {e.code}"}
 
 
+def _goi_file_that(token: str, method: str, truong: dict, ten_file: str,
+                   noi_dung: bytes) -> dict:
+    """Gửi FILE — `multipart/form-data`, không dùng chung đường với `_goi_that`.
+
+    Vì sao phải có đường riêng: `_goi_that` mã hoá bằng `urlencode`, chỉ chở được chuỗi.
+    Cổng 2 bắt người DUYỆT NỘI DUNG, nên bài phải tới được tay họ; nhét 40 KB markdown vào
+    một tin nhắn thì Telegram cắt ở 4.096 ký tự và người duyệt đọc một bài cụt.
+    """
+    ranh = "----------boundary" + secrets.token_hex(12)
+    dem = []
+    for k, v in truong.items():
+        dem.append(f"--{ranh}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n"
+                   .encode("utf-8"))
+    dem.append(
+        f"--{ranh}\r\nContent-Disposition: form-data; name=\"document\"; "
+        f"filename=\"{ten_file}\"\r\nContent-Type: text/markdown\r\n\r\n".encode("utf-8"))
+    dem.append(noi_dung)
+    dem.append(f"\r\n--{ranh}--\r\n".encode("utf-8"))
+    than = b"".join(dem)
+
+    req = urllib.request.Request(
+        API.format(token=token, method=method), data=than,
+        headers={"Content-Type": f"multipart/form-data; boundary={ranh}"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        try:
+            return json.loads(e.read().decode("utf-8"))
+        except Exception:
+            return {"ok": False, "description": f"HTTP {e.code}"}
+
+
 class Bot:
     """Một bot Telegram. `goi` cho phép test thay lớp mạng."""
 
-    def __init__(self, cau_hinh: Path | str | None = None, *, goi=None):
+    def __init__(self, cau_hinh: Path | str | None = None, *, goi=None, goi_file=None):
         p = Path(cau_hinh) if cau_hinh else duong_dan_cau_hinh()
         if not p.is_file():
             raise FileNotFoundError(
@@ -113,6 +147,7 @@ class Bot:
             raise ValueError(f"{p}: thiếu `chats` — không biết gửi cho ai.")
 
         self._goi = goi or _goi_that
+        self._goi_file = goi_file or _goi_file_that
         self.duong_dan = p
 
     # ── Danh tính & quyền ───────────────────────────────────────────────────
@@ -161,6 +196,30 @@ class Bot:
         if html:
             p["parse_mode"] = "HTML"
         return self._api("sendMessage", p)["result"]["message_id"]
+
+    CAP_CHU_THICH = 1024          # Telegram cắt caption ở 1.024 ký tự
+
+    def gui_tai_lieu(self, duong_dan, chu_thich: str = "", chat: str | None = None) -> int:
+        """Gửi một FILE kèm chú thích. Trả `message_id`.
+
+        Dùng cho Cổng 2: người duyệt phải ĐỌC ĐƯỢC bài thì cổng mới có nghĩa. Trước 11/09
+        cổng chỉ gửi mã bài + tiêu đề, tức mời người gật đầu về thứ họ không nhìn thấy.
+
+        Chú thích bị CẮT CHỦ ĐỘNG ở `CAP_CHU_THICH`: để Telegram tự cắt thì nó cắt giữa
+        chừng và không báo gì.
+        """
+        d = Path(duong_dan)
+        noi_dung = d.read_bytes()
+        ct = chu_thich or ""
+        if len(ct) > self.CAP_CHU_THICH:
+            ct = ct[: self.CAP_CHU_THICH - 1] + "…"
+        truong = {"chat_id": str(self._chat(chat))}
+        if ct:
+            truong["caption"] = ct
+        kq = self._goi_file(self._token, "sendDocument", truong, d.name, noi_dung)
+        if not kq.get("ok"):
+            raise RuntimeError(f"Telegram sendDocument lỗi — {kq.get('description', kq)}")
+        return kq["result"]["message_id"]
 
     @staticmethod
     def _ban_phim(nut) -> str:
