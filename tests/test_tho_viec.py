@@ -240,3 +240,69 @@ def test_cham_cong_ra_DO_la_DA_CHAM_XONG_chu_khong_phai_hong(tmp_path):
     kq = TV.lam_mot_viec(cam, chay=chay_ra_do)
     assert not kq.get("hong"), f"chấm xong mà bị tính là hỏng: {kq}"
     assert HC.dem(cam)["hong"] == 0 and HC.dem(cam)["cho"] == 0
+
+
+def test_tho_GIOI_HAN_dung_MOT_bai_khi_goi_buoc_soan(tmp_path, monkeypatch):
+    """Việc theo từng bài, nhưng `soan` vốn quét cả chiến dịch — phải truyền `--bai`.
+
+    ĐO THẬT 12/09/2026: một việc xếp cho NEN-002 chạy **27 phút** vì nó viết lại luôn
+    NEN-001 và NEN-003. Hệ quả nặng hơn thời gian: số lần viết lại của từng bài bị đếm sai,
+    nên trần chống-quay-tít không còn nghĩa gì; và với 90 bài thì một lượt có thể vượt trần
+    2 giờ của Task Scheduler rồi bị giết giữa chừng.
+
+    Đây là loại sai khớp mà unit test dùng `chay` giả KHÔNG bao giờ lộ — phải chạy thật.
+    """
+    cam = _cam(tmp_path)
+    _bai(cam, viet_that=False)
+    HC.them(cam, "tiep", bai="T-001")
+
+    ghi = {}
+
+    def gia_subprocess(lenh, **kw):
+        ghi["lenh"] = lenh
+
+        class R:
+            returncode, stdout, stderr = 0, "", ""
+        return R()
+
+    monkeypatch.setattr(TV.subprocess, "run", gia_subprocess)
+    TV.lam_mot_viec(cam)          # dùng `_chay_buoc` THẬT, chỉ chặn ở tầng subprocess
+
+    assert "--bai" in ghi["lenh"], f"gọi soan mà không giới hạn bài: {ghi['lenh']}"
+    assert ghi["lenh"][ghi["lenh"].index("--bai") + 1] == "T-001", ghi["lenh"]
+
+
+def test_soan_viet_XONG_nhung_cong_DO_van_la_da_lam_duoc_viec(tmp_path):
+    """`soan` trả mã khác 0 khi bài chưa qua cổng — nhưng bài ĐÃ ĐƯỢC VIẾT.
+
+    ĐO THẬT 12/09/2026: một lượt chạy **27 phút**, viết xong ba bài, rồi bị tính là thất
+    bại chỉ vì cổng chấm đỏ. Việc quay lại hàng chờ và sẽ đốt thêm 27 phút nữa cho đúng
+    công việc vừa làm xong.
+
+    Phép thử đúng là hỏi ARTEFACT: `content.md` đã có chữ thật chưa.
+    """
+    cam = _cam(tmp_path)
+    b = _bai(cam, viet_that=False)                 # còn khuôn ⇒ bước kế là `soan`
+    HC.them(cam, "tiep", bai="T-001")
+
+    def viet_roi_bao_do(cam_, buoc, cid):
+        (b / "content.md").write_text(
+            "## post:blog_article\n\n# Tiêu đề\n\n" + "Câu chuyện đời thường. " * 60,
+            encoding="utf-8", newline="\n")
+        return False, "G01 độ dài 2079 luật 2500-4000 [chan]"
+
+    kq = TV.lam_mot_viec(cam, chay=viet_roi_bao_do)
+    assert not kq.get("hong"), f"viết xong mà bị tính là hỏng: {kq}"
+    assert HC.dem(cam)["cho"] == 0, "việc quay lại hàng chờ ⇒ sẽ viết lại lần nữa vô ích"
+
+
+def test_buoc_hong_THAT_su_thi_van_phai_bao_hong(tmp_path):
+    """Mặt kia: nới phép thử artefact không được nuốt mất cái hỏng thật.
+
+    Bộ viết chạy êm mà `content.md` vẫn trống thì vẫn là HỎNG — luật cũ của repo, giữ nguyên.
+    """
+    cam = _cam(tmp_path)
+    _bai(cam, viet_that=False)
+    HC.them(cam, "tiep", bai="T-001")
+    kq = TV.lam_mot_viec(cam, chay=_chay_gia(ket=False, tin="bộ viết trả rỗng"))
+    assert kq["hong"] is True, "hỏng thật mà lại tính là xong"

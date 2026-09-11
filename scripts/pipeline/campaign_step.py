@@ -266,12 +266,21 @@ def _danh_dau_da_viet(bai: Path, so_phan_hoi: int) -> None:
 
 
 def buoc_soan(cam: Path, *, bot, hom_nay: date | None = None, dry_run=False,
-              chay=None) -> dict:
+              chay=None, chi_bai: str | None = None) -> dict:
+    """`chi_bai` giới hạn đúng MỘT bài.
+
+    Vì sao cần: hàng chờ xếp việc THEO TỪNG BÀI, còn bước này vốn quét cả chiến dịch. Không
+    có tham số này thì một việc cho NEN-002 sẽ viết lại luôn NEN-001 và NEN-003 — kế toán
+    số lần viết lại của từng bài thành vô nghĩa, và một lượt chạy có thể kéo hàng giờ.
+    Đo thật 12/09/2026: một việc chạy 27 phút vì nó ôm ba bài.
+    """
     chay = chay or (lambda cmd, **kw: subprocess.run(
         cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", **kw))
     fm_cam, _, _ = _doc(cam)
     writer = ((fm_cam.get("runtime") or {}).get("writer_cmd") or "").strip()
     ds = bai_cho_soan(cam)
+    if chi_bai:
+        ds = [d for d in ds if d.get("content_id") == chi_bai]
     if not ds:
         return {"buoc": "soan", "xu_ly": 0, "ly_do": "không có bài nào qua Cổng 1 mà chưa qua Cổng 2"}
 
@@ -385,6 +394,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Chạy một bước của chiến dịch blog.")
     ap.add_argument("campaign")
     ap.add_argument("buoc", choices=sorted(list(BUOC) + ["tinh-trang"]))
+    ap.add_argument("--bai", default=None,
+                    help="giới hạn đúng một bài (mã content_id) — hàng chờ dùng cờ này")
     ap.add_argument("--chi-tiet", action="store_true",
                     help="tinh-trang: in từng bài, không chỉ bản đếm")
     ap.add_argument("--truoc", type=int, default=None, help="dựng trước bao nhiêu ngày")
@@ -414,6 +425,8 @@ def main() -> int:
         bot = None
 
     kw = {"bot": bot, "dry_run": a.dry_run}
+    if a.bai and a.buoc == "soan":
+        kw["chi_bai"] = a.bai
     if a.buoc == "dung-bai":
         kw["truoc"] = a.truoc
     if a.buoc == "dang":

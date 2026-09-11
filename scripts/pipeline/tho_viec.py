@@ -39,6 +39,7 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 sys.path.insert(0, str(_LIB))
+import bai_noi_dung            # noqa: E402
 import hang_cho as HC          # noqa: E402
 import md_io                   # noqa: E402
 import so_su_kien as SO        # noqa: E402
@@ -92,11 +93,42 @@ def _chay_buoc(cam: Path, buoc: str, cid: str) -> tuple[bool, str]:
     else:
         script = Path(__file__).resolve().parent / "campaign_step.py"
         lenh = [sys.executable, str(script), str(cam), buoc]
+        # GIỚI HẠN ĐÚNG MỘT BÀI. Việc trong hàng chờ là theo từng bài, còn bước vốn quét cả
+        # chiến dịch. Thiếu cờ này thì một việc cho NEN-002 viết lại luôn NEN-001 và
+        # NEN-003: kế toán số lần viết lại thành vô nghĩa, và lượt chạy kéo hàng giờ.
+        # Đo thật 12/09/2026 — một việc chạy 27 phút vì ôm ba bài.
+        if buoc in ("soan", "sua-loi-cong") and cid:
+            lenh += ["--bai", cid]
 
     r = subprocess.run(lenh, capture_output=True, text=True,
                        encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     ra = ((r.stdout or "") + (r.stderr or "")).strip()
     return r.returncode == 0, ra[-600:]
+
+
+def _da_ra_artefact(buoc: str, bai: Path) -> bool:
+    """Bước này lẽ ra phải sinh ra cái gì — cái đó có chưa?
+
+    MÃ THOÁT KHÁC 0 KHÔNG ĐỦ ĐỂ TÍNH LÀ HỎNG. Hai bước trong đường ống trả mã khác 0 cho
+    một KẾT QUẢ hợp lệ, không phải cho sự cố:
+
+      · `blog_gates.py` trả 1 khi kết luận ĐỎ — nhưng nó đã chấm xong 23 cổng và ghi
+        `gates.json` tử tế.
+      · `soan` trả khác 0 khi bài viết ra chưa qua cổng — nhưng bài ĐÃ ĐƯỢC VIẾT.
+
+    Đọc mã thoát rồi kết luận "hỏng" thì đúng những bài cần đi tiếp lại bị chấm/viết lại ba
+    lần rồi vứt vào `hong/`. Đo thật 12/09/2026: một lượt như thế đốt 27 phút agent rồi bị
+    tính là thất bại.
+
+    Repo đã có luật ngược lại — *"mã thoát 0 không đủ để tính là xong"* (bộ viết chạy êm mà
+    file vẫn trống thì vẫn là hỏng). Cùng một nguyên tắc, hai chiều: **hỏi artefact, đừng
+    hỏi mã thoát.**
+    """
+    if buoc == "cham-cong":
+        return (bai / "gates.json").is_file()
+    if buoc in ("soan", "sua-loi-cong"):
+        return bai_noi_dung.da_viet(bai)
+    return False
 
 
 def lam_mot_viec(cam: Path, *, bot=None, chay=_chay_buoc) -> dict:
@@ -163,10 +195,11 @@ def lam_mot_viec(cam: Path, *, bot=None, chay=_chay_buoc) -> dict:
     #
     # Repo đã có luật "mã thoát 0 không đủ để tính là xong". Đây là vế ngược của cùng một
     # nguyên tắc, và cách chữa giống hệt: kiểm ARTEFACT mà bước đó phải sinh ra.
-    if not xong and buoc == "cham-cong":
+    if not xong:
         d_lai = _dong_cua_bai(cam, cid) or d
         f = (d_lai.get("folder") or "").strip()
-        if f and (Path(cam) / f.lstrip("./") / "gates.json").is_file():
+        bai_p = Path(cam) / f.lstrip("./") if f else None
+        if bai_p and _da_ra_artefact(buoc, bai_p):
             xong = True
 
     if xong:
