@@ -369,7 +369,109 @@ def buoc_dang(cam: Path, *, bot, uat=False, dry_run=False) -> dict:
     return {"buoc": "dang", "dang": len([x for x in ra if x["exit"] == 0]), "chi_tiet": ra}
 
 
-BUOC = {"dung-bai": buoc_dung_bai, "soan": buoc_soan, "dang": buoc_dang}
+def bai_cho_dung_trang(cam: Path) -> list[dict]:
+    """Qua Cổng 2, chưa lên web, đã có thư mục."""
+    _, _, dong = _doc(cam)
+    return [d for d in dong
+            if (d.get("g2") or "").strip()
+            and not (d.get("web") or "").strip()
+            and (d.get("folder") or "").strip()]
+
+
+def buoc_dung_trang(cam: Path, *, bot, dry_run=False, chay=None,
+                    chi_bai: str | None = None) -> dict:
+    """B5 tiếng/hình · B6 dựng trang · B8 đăng web. Bước ĐẦU TIÊN đẩy chữ ra Internet.
+
+    ## Tiếng và hình là TUỲ CHỌN
+
+    Quy trình không giả định chiến dịch nào cũng có audio. Khai `runtime.audio_cmd` thì
+    chạy rồi nhúng vào trang; không khai thì bỏ qua, **không phải lỗi**. Chiến dịch chỉ có
+    web + ảnh + post vẫn chạy trót lọt mà không cần khai gì thêm.
+
+    Cùng luật với `writer_cmd`: repo **không khoá** một CLI nào. Giọng clone của bạn, máy
+    của bạn, lệnh của bạn.
+
+    ## Fail-closed hai chỗ
+
+    · dựng xong mà **không ra `atlas.html`** ⇒ hỏng, và KHÔNG đem đi đăng. Mã thoát 0 không
+      đủ để tính là xong — đăng một trang chưa dựng được là đẩy trang rỗng lên Internet.
+    · đăng xong mà **không trả URL** ⇒ hỏng, và không ghi cột `web`. Không biết bài nằm đâu
+      mà vẫn ghi bừa là nói dối chính cái bảng mình dựa vào.
+    """
+    chay = chay or (lambda cmd, **kw: subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+        stdin=subprocess.DEVNULL, **kw))
+    fm_cam, _, _ = _doc(cam)
+    rt = fm_cam.get("runtime") or {}
+    audio_cmd = (rt.get("audio_cmd") or "").strip()
+
+    ds = bai_cho_dung_trang(cam)
+    if chi_bai:
+        ds = [d for d in ds if d.get("content_id") == chi_bai]
+    if not ds:
+        return {"buoc": "dung-trang", "xu_ly": 0, "hong": [],
+                "ly_do": "không có bài nào qua Cổng 2 mà chưa lên web"}
+
+    goc = Path(__file__).resolve().parent
+    xong, hong = [], []
+    for d in ds:
+        cid = d["content_id"]
+        bai = cam / (d.get("folder") or "").lstrip("./")
+        blog = bai / "atlas" / "blog.md"
+        html = bai / "atlas" / "atlas.html"
+        if not blog.is_file():
+            hong.append({"bai": cid, "ly_do": "thiếu atlas/blog.md — chưa tách kênh"})
+            continue
+        if dry_run:
+            xong.append(cid)
+            continue
+
+        # B5 — tiếng (tuỳ chọn)
+        co_audio = False
+        if audio_cmd:
+            lenh = [x.replace("{bai}", str(bai)).replace("{cid}", cid)
+                    for x in tach_lenh(audio_cmd)]
+            r = chay(lenh)
+            co_audio = (bai / "atlas" / "audio.mp3").is_file()
+            if getattr(r, "returncode", 1) != 0 and not co_audio:
+                loi(f"{cid}: dựng tiếng hỏng — vẫn dựng trang không có tiếng.")
+
+        # B6 — dựng trang
+        lenh = [sys.executable, str(goc / "build_blog_html.py"),
+                "--blog-md", str(blog), "--meta", str(bai / "meta.json"),
+                "--out", str(html)]
+        if co_audio:
+            lenh += ["--audio-src", "audio.mp3"]
+        r = chay(lenh)
+        if not html.is_file():
+            hong.append({"bai": cid, "ly_do": "dựng xong mà không ra atlas.html"})
+            continue
+
+        # B8 — đăng web
+        r = chay([sys.executable, str(goc / "web_publish.py"), "--bai", str(bai)])
+        url = ""
+        for dong_ra in reversed((getattr(r, "stdout", "") or "").splitlines()):
+            try:
+                url = (json.loads(dong_ra) or {}).get("blog_url") or ""
+            except json.JSONDecodeError:
+                continue
+            if url:
+                break
+        if not url:
+            hong.append({"bai": cid, "ly_do": "đăng web không trả về URL"})
+            continue
+
+        fm, than, _ = _doc(cam)
+        than = md_io.upsert_row(than, "CONTENT", "content_id",
+                                {"content_id": cid, "web": url}, chi_cap_nhat=True)
+        md_io.write_fm(cam / "campaign.md", fm, than)
+        xong.append(cid)
+
+    return {"buoc": "dung-trang", "xu_ly": len(xong), "bai": xong, "hong": hong}
+
+
+BUOC = {"dung-bai": buoc_dung_bai, "soan": buoc_soan, "dang": buoc_dang,
+        "dung-trang": buoc_dung_trang}
 
 
 def ma_thoat(kq: dict) -> int:
@@ -425,7 +527,7 @@ def main() -> int:
         bot = None
 
     kw = {"bot": bot, "dry_run": a.dry_run}
-    if a.bai and a.buoc == "soan":
+    if a.bai and a.buoc in ("soan", "dung-trang"):
         kw["chi_bai"] = a.bai
     if a.buoc == "dung-bai":
         kw["truoc"] = a.truoc
