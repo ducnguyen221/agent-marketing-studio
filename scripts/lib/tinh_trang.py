@@ -33,10 +33,10 @@ import md_io
 
 # Thứ tự đường ống. Dùng để sắp xếp báo cáo, và để thợ biết bước nào đi trước bước nào.
 THU_TU = ["cho-G1", "dung-bai", "soan", "cham-cong", "sua-loi-cong",
-          "cho-G2", "dung-trang", "phat-hanh", "xong"]
+          "cho-G2", "dung-trang", "cho-G3", "phat-hanh", "xong"]
 
 # Bước nào CẦN NGƯỜI, bước nào máy tự làm được. Thợ chỉ được nhặt việc máy làm được.
-CAN_NGUOI = {"cho-G1", "cho-G2"}
+CAN_NGUOI = {"cho-G1", "cho-G2", "cho-G3"}
 
 
 def buoc_ke(cam: Path, d: dict) -> str:
@@ -70,6 +70,18 @@ def buoc_ke(cam: Path, d: dict) -> str:
         return "cho-G2"
     if not (d.get("web") or "").strip():
         return "dung-trang"
+
+    # CỔNG 3 — duyệt BẢN THẬT trên web. Bật bằng cách KHAI CỘT `g3` trong bảng Content.
+    #
+    # Vì sao "khai cột = bật cổng" chứ không bật mặc định: thêm một cổng mà làm đứng hết
+    # các chiến dịch đang chạy là cái giá không đáng trả. Bảng cũ không có cột `g3` thì
+    # `d` không có khoá đó, và ta đi thẳng tới phát hành y như trước.
+    #
+    # Phân biệt bằng `in d`, KHÔNG bằng giá trị rỗng: cột có mà để trống nghĩa là *chưa
+    # duyệt* (phải dừng), còn không có cột nghĩa là *không dùng cổng này* (đi tiếp).
+    if "g3" in d and not (d.get("g3") or "").strip():
+        return "cho-G3"
+
     if not (d.get("published") or "").strip():
         return "phat-hanh"
     return "xong"

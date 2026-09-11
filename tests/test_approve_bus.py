@@ -1005,3 +1005,65 @@ def test_moi_quyet_dinh_deu_VAO_SO_SU_KIEN(tmp_path):
 
     ds = so_su_kien.doc(cam)
     assert any(x["viec"] == "g1_duyet" for x in ds), [x["viec"] for x in ds]
+
+
+# --------------------------------------------------------------------------------------
+# CỔNG 3 — duyệt BẢN THẬT trên web
+# --------------------------------------------------------------------------------------
+
+FM_G3 = FM.replace(
+    "| status | g1 | g2 | schedule | published | folder |",
+    "| status | g1 | g2 | g3 | schedule | published | folder | web |"
+).replace(
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+).replace(
+    "| approved | 2026-09-01 |  | 2026-09-17 |  | ./T-003_bai-ba |",
+    "| approved | 2026-09-01 | 2026-09-02 |  | 2026-09-17 |  | ./T-003_bai-ba | https://x.vn/bai-ba |"
+).replace(
+    "| proposed |  |  | 2026-09-15 |  | ./T-001_bai-mot |",
+    "| proposed |  |  |  | 2026-09-15 |  | ./T-001_bai-mot |  |"
+).replace(
+    "| proposed |  |  | 2026-09-16 |  | ./T-002_bai-hai |",
+    "| proposed |  |  |  | 2026-09-16 |  | ./T-002_bai-hai |  |")
+
+
+def _cam_g3(tmp_path):
+    cam = _cam(tmp_path)
+    (cam / "campaign.md").write_text(FM_G3, encoding="utf-8", newline="\n")
+    return cam
+
+
+def test_cong3_PHAI_cho_LINK_ban_that(tmp_path):
+    """Cổng 3 nghĩa là "mở link, xem bằng mắt". Gửi mã bài thôi thì không có gì để mở.
+
+    Đây đúng là lỗi con-dấu-cao-su mà Cổng 2 đã dính hôm 11/09: mời người gật đầu về thứ
+    họ không nhìn thấy.
+    """
+    cam = _cam_g3(tmp_path)
+    b = BotGia()
+    kq = AB.gui_cong(cam, "g3", bot=b)
+    assert kq["gui"] == 1, kq
+    assert "https://x.vn/bai-ba" in b.da_gui[0]["text"], b.da_gui[0]["text"]
+
+
+def test_cong3_chi_hoi_bai_DA_len_web(tmp_path):
+    """Chưa có trang thật thì chưa có bản thật để duyệt."""
+    cam = _cam_g3(tmp_path)
+    ds = AB.cho_cong(cam, "g3")
+    assert [d["content_id"] for d in ds] == ["T-003"], [d["content_id"] for d in ds]
+
+
+def test_duyet_cong3_ghi_vao_cot_g3(tmp_path):
+    cam = _cam_g3(tmp_path)
+    AB.gui_cong(cam, "g3", bot=BotGia())
+    tok = list(_token_dang_cho(cam))[0]
+    AB.nhan(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}")]))
+    assert _bang(cam)["T-003"]["g3"] != "", "duyệt Cổng 3 mà cột g3 vẫn trống"
+
+
+def test_bang_KHONG_khai_cot_g3_thi_khong_co_cong_3(tmp_path):
+    """Tương thích ngược: chiến dịch cũ không bị mọc thêm một cổng."""
+    cam = _cam(tmp_path)          # bảng gốc, không có cột g3
+    assert AB.cho_cong(cam, "g3") == []
+    assert AB.gui_cong(cam, "g3", bot=BotGia())["gui"] == 0

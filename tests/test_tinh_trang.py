@@ -155,7 +155,7 @@ def test_buoc_can_nguoi_duoc_danh_dau(tmp_path):
     cam = _cam(tmp_path)
     x = TT.tinh(cam)[0]
     assert x["buoc"] == "cho-G1" and x["can_nguoi"] is True
-    assert TT.CAN_NGUOI == {"cho-G1", "cho-G2"}
+    assert TT.CAN_NGUOI == {"cho-G1", "cho-G2", "cho-G3"}
 
 
 def test_ban_suy_ra_RE_HON_HAN_doc_ca_campaign(tmp_path):
@@ -173,3 +173,64 @@ def test_tom_tat_sap_theo_THU_TU_duong_ong(tmp_path):
     cam = _cam(tmp_path)
     assert list(TT.tom_tat(cam)) == ["cho-G1"]
     assert TT.THU_TU.index("soan") < TT.THU_TU.index("cho-G2") < TT.THU_TU.index("xong")
+
+
+# ── CỔNG 3: chỗ ở, và tương thích ngược ─────────────────────────────────────
+
+FM_CO_G3 = FM.replace(
+    "| priority | status | g1 | g2 | schedule | published | folder | web |",
+    "| priority | status | g1 | g2 | g3 | schedule | published | folder | web |"
+).replace(
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+).replace(
+    "| high | proposed |  |  | 2026-09-15 |  |  |  |",
+    "| high | proposed |  |  |  | 2026-09-15 |  |  |  |")
+
+
+def _cam_g3(tmp_path):
+    (tmp_path / "logs").mkdir(parents=True)
+    (tmp_path / "campaign.md").write_text(FM_CO_G3, encoding="utf-8", newline="\n")
+    return tmp_path
+
+
+def test_BANG_CU_khong_co_cot_g3_thi_bo_qua_Cong_3(tmp_path):
+    """Tương thích ngược: chiến dịch cũ không có cột `g3` phải chạy y như trước.
+
+    Thêm một cổng mà làm đứng hết các chiến dịch đang chạy là cái giá không đáng trả. Không
+    khai cột = không bật Cổng 3, đi thẳng tới phát hành.
+    """
+    cam = _cam(tmp_path)
+    _gates(_bai(cam), "xanh")
+    d = _dong(g1="2026-09-01", g2="2026-09-02", folder="./T-001_bai", web="https://x/y")
+    assert TT.buoc_ke(cam, d) == "phat-hanh"
+
+
+def test_CO_cot_g3_nhung_TRONG_thi_dung_o_cho_G3(tmp_path):
+    """Khai cột = bật cổng. Trang đã sống nhưng chưa ai mở link xem bằng mắt."""
+    cam = _cam_g3(tmp_path)
+    _gates(_bai(cam), "xanh")
+    d = _dong(g1="2026-09-01", g2="2026-09-02", g3="", folder="./T-001_bai",
+              web="https://x/y")
+    assert TT.buoc_ke(cam, d) == "cho-G3"
+
+
+def test_g3_da_duyet_thi_di_tiep_phat_hanh(tmp_path):
+    cam = _cam_g3(tmp_path)
+    _gates(_bai(cam), "xanh")
+    d = _dong(g1="2026-09-01", g2="2026-09-02", g3="2026-09-03",
+              folder="./T-001_bai", web="https://x/y")
+    assert TT.buoc_ke(cam, d) == "phat-hanh"
+
+
+def test_cho_G3_la_buoc_CAN_NGUOI(tmp_path):
+    """Thợ không được tự mở Cổng 3. Nó là chỗ người mở link xem bằng mắt."""
+    assert "cho-G3" in TT.CAN_NGUOI
+
+
+def test_chua_len_web_thi_KHONG_hoi_Cong_3(tmp_path):
+    """Cổng 3 duyệt BẢN THẬT. Chưa có trang thật thì chưa có gì để xem."""
+    cam = _cam_g3(tmp_path)
+    _gates(_bai(cam), "xanh")
+    d = _dong(g1="2026-09-01", g2="2026-09-02", g3="", folder="./T-001_bai", web="")
+    assert TT.buoc_ke(cam, d) == "dung-trang"

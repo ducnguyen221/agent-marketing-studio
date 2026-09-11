@@ -270,6 +270,12 @@ def cho_cong(cam: Path, cong: str) -> list[dict]:
     _, _, _, dong = _doc_bang(cam)
     if cong == "g1":
         return [d for d in dong if not (d.get("g1") or "").strip()]
+    if cong == "g3":
+        # Cổng 3 duyệt BẢN THẬT: phải đã lên web mới có gì để xem. Và chỉ hỏi khi bảng
+        # CÓ KHAI cột `g3` — bảng cũ không khai thì không có cổng này.
+        return [d for d in dong
+                if "g3" in d and (d.get("web") or "").strip()
+                and not (d.get("g3") or "").strip()]
     return [d for d in dong
             if (d.get("g1") or "").strip() and not (d.get("g2") or "").strip()]
 
@@ -324,7 +330,9 @@ def _ghi_g2(cam: Path, cids: list[str], boi: str, ghi_chu: str) -> list[str]:
 # ── Gửi ─────────────────────────────────────────────────────────────────────
 
 def _nhan_cong(cong: str) -> str:
-    return "Cổng 1 — duyệt đề tài" if cong == "g1" else "Cổng 2 — duyệt trước khi đăng"
+    return {"g1": "Cổng 1 — duyệt đề tài",
+            "g2": "Cổng 2 — duyệt trước khi đăng",
+            "g3": "Cổng 3 — duyệt BẢN THẬT trên web"}.get(cong, cong)
 
 
 def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
@@ -425,7 +433,15 @@ def gui_cong(cam: Path, cong: str, *, bot, lo: int | None = None,
     else:
         cids = [d["content_id"] for d in ds]
         tok = _dat_token(cids)
-        than = "\n".join(f"· {d['content_id']} — {d['content_name']}" for d in ds)
+        # CỔNG 3 phải chở LINK BẢN THẬT. Cổng này nghĩa là "mở link, xem bằng mắt" — gửi
+        # mỗi mã bài thì người duyệt không có gì để mở, và nó lại thành con dấu cao su y
+        # như Cổng 2 từng bị ngày 11/09/2026.
+        if cong == "g3":
+            than = "\n".join(
+                f"· {d['content_id']} — {d['content_name']}\n  {(d.get('web') or '').strip()}"
+                for d in ds)
+        else:
+            than = "\n".join(f"· {d['content_id']} — {d['content_name']}" for d in ds)
         bot.gui_kem_nut(
             f"{_nhan_cong(cong)} · {ten_cd}\n{len(ds)} bài đang chờ:\n\n{than}\n\n"
             f"Trả lời `duyet {ds[0]['content_id']}` để duyệt lẻ từng bài.",
@@ -468,7 +484,29 @@ def _ap_dung(cam: Path, cong: str, cids: list[str], *, boi: str, ghi_chu: str,
              bay_gio: datetime) -> list[str]:
     if cong == "g1":
         return _ghi_g1(cam, cids, bay_gio.date().isoformat())
+    if cong == "g3":
+        return _ghi_cot(cam, cids, "g3", bay_gio.date().isoformat())
     return _ghi_g2(cam, cids, boi, ghi_chu)
+
+
+def _ghi_cot(cam: Path, cids: list[str], cot: str, gia_tri: str) -> list[str]:
+    """Ghi một cột ngày duyệt. IDEMPOTENT: đã có thì bỏ qua, không ghi đè."""
+    fm, than, _, dong = _doc_bang(cam)
+    hien = {d["content_id"]: d for d in dong}
+    xong = []
+    for cid in cids:
+        d = hien.get(cid)
+        if d is None:
+            loi(f"{cid}: không có trong bảng Content — bỏ qua.")
+            continue
+        if (d.get(cot) or "").strip():
+            continue
+        than = md_io.upsert_row(than, "CONTENT", "content_id",
+                                {"content_id": cid, cot: gia_tri}, chi_cap_nhat=True)
+        xong.append(cid)
+    if xong:
+        md_io.write_fm(cam / "campaign.md", fm, than)
+    return xong
 
 
 
@@ -891,7 +929,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Cổng duyệt hai chiều qua Telegram.")
     ap.add_argument("lenh", choices=["gui", "nhan", "trang-thai"])
     ap.add_argument("--campaign", required=True)
-    ap.add_argument("--cong", choices=["g1", "g2"])
+    ap.add_argument("--cong", choices=["g1", "g2", "g3"])
     ap.add_argument("--lo", type=int, default=None)
     ap.add_argument("--che-do", choices=["per_post", "batch_gate"], default=None)
     ap.add_argument("--lien-tuc", type=int, default=0, metavar="GIAY",
