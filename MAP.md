@@ -58,7 +58,8 @@
 | **Telegram làm TRUNG GIAN người ↔ agent** (vòng đời tiến trình · chuyện "50 giây" · vỡ vòng thì nối lại) | `knowledge/toolchains/TELEGRAM_LAM_TRUNG_GIAN.md` |
 | **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
-| Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dang`) | `scripts/pipeline/campaign_step.py` |
+| Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dung-trang`/`phat-hanh`) | `scripts/pipeline/campaign_step.py` |
+| **Nối kênh ngoài của BẠN** (`audio_cmd`/`youtube_cmd`/`facebook_cmd` — không khoá CLI nào) | `knowledge/toolchains/TELEGRAM_LAM_TRUNG_GIAN.md` §6b |
 | **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` §6 |
 | Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
 | **Bài nào đang ở bước nào** (suy ra, ~350 token thay vì nạp cả campaign.md) | `campaign_step.py <cam> tinh-trang [--chi-tiet]` |

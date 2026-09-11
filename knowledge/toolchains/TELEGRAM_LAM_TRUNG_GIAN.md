@@ -260,8 +260,21 @@ rồi, phải < 180) · `cho_g1`/`cho_g2` (bài nào đang chờ cổng nào).
    thì một việc cho NEN-002 viết lại luôn NEN-001 và NEN-003 — đo thật **27 phút** cho một
    việc, và kế toán số lần viết lại thành vô nghĩa.
 
-**Còn thiếu:** `dung-trang` và `phat-hanh` chưa dựng, nên vòng hiện khép tới Cổng 2. Duyệt
-G2 xong thợ báo *"chưa dựng bước dung-trang"* thay vì im lặng.
+**Đường ống nay ĐỦ 6 bước, 3 cổng** (12/09/2026):
+
+```
+dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]─ phat-hanh
+```
+
+Cổng 3 **chỉ bật khi bảng Content có khai cột `g3`** — chiến dịch cũ chạy y như trước.
+
+Ba hook cho phần phụ thuộc máy, cùng luật với `writer_cmd`: `audio_cmd` (giọng clone),
+`youtube_cmd`, `facebook_cmd`. Không khai thì bỏ qua, **không phải lỗi** — chiến dịch chỉ
+có web vẫn chạy trót lọt.
+
+⚠️ `dang` là **tên cũ** của `dung-trang`. Bản cũ không ghi URL ngược vào bảng nên
+`tinh_trang` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần nữa. Nay nó uỷ
+quyền cho `dung-trang`; lệnh cũ vẫn chạy và được luôn phần ghi URL.
 
 ## 7. Bảng tra nhanh khi có sự cố
 
