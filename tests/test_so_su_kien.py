@@ -67,10 +67,20 @@ def test_chi_doc_DUOI_file_du_so_rat_to(tmp_path, monkeypatch):
     for i in range(400):
         SO.ghi(cam, "nhip", bai="T-001", so=i)
 
-    ds = SO.doc(cam, bai="T-001", n=5)
-    assert len(ds) == 5
-    assert [x["so"] for x in ds] == [395, 396, 397, 398, 399], ds
-    assert SO.duong_dan(cam).stat().st_size > 2048 * 4, "fixture chưa đủ to để kiểm"
+    co = SO.duong_dan(cam).stat().st_size
+    assert co > 2048 * 4, "fixture chưa đủ to để kiểm"
+
+    # XIN NHIỀU HƠN HẲN sức chứa của cửa sổ đuôi. Đây mới là phép thử CƠ CHẾ:
+    #   · đọc đuôi     -> chỉ có thể trả về số dòng nằm lọt trong 2 KB
+    #   · đọc cả file  -> trả về đủ cả 400
+    # Bản đầu của test này xin n=5 rồi khẳng định 5 sự kiện cuối — mà 5 cái cuối thì GIỐNG
+    # NHAU ở cả hai cách, nên đột biến `seek(tail)` -> `seek(0)` SỐNG SÓT qua toàn bộ 8
+    # test. Hệ quả bị che, đúng ca ① trong sổ cạm bẫy: assert vào cơ chế, đừng assert vào
+    # hệ quả.
+    tat_ca = SO.doc(cam, bai="T-001", n=10_000)
+    assert len(tat_ca) < 60, (
+        f"đọc được {len(tat_ca)}/400 sự kiện từ cửa sổ đuôi 2 KB ⇒ đang nạp CẢ FILE")
+    assert [x["so"] for x in tat_ca[-5:]] == [395, 396, 397, 398, 399], tat_ca[-5:]
 
 
 def test_ghi_HONG_khong_lam_do_viec_chinh(tmp_path, monkeypatch, capsys):
