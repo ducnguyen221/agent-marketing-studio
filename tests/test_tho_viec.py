@@ -306,3 +306,34 @@ def test_buoc_hong_THAT_su_thi_van_phai_bao_hong(tmp_path):
     HC.them(cam, "tiep", bai="T-001")
     kq = TV.lam_mot_viec(cam, chay=_chay_gia(ket=False, tin="bộ viết trả rỗng"))
     assert kq["hong"] is True, "hỏng thật mà lại tính là xong"
+
+
+def test_tho_chay_duoc_buoc_dung_trang_sau_khi_qua_cong_2(tmp_path, monkeypatch):
+    """Vòng phải khép QUA Cổng 2, không dừng lại ở đó.
+
+    Trước giai đoạn 5, duyệt G2 xong thợ báo "chưa dựng bước dung-trang" rồi thôi.
+    """
+    cam = _cam(tmp_path)
+    _bai(cam, gates="xanh")
+    # đánh dấu đã qua Cổng 2 ⇒ bước kế phải là `dung-trang`
+    s = (cam / "campaign.md").read_text(encoding="utf-8")
+    (cam / "campaign.md").write_text(
+        s.replace("| 2026-09-01 |  |", "| 2026-09-01 | 2026-09-02 |"),
+        encoding="utf-8", newline="\n")
+    HC.them(cam, "tiep", bai="T-001")
+
+    ghi = {}
+
+    def gia(lenh, **kw):
+        ghi["lenh"] = lenh
+
+        class R:
+            returncode, stdout, stderr = 0, "", ""
+        return R()
+
+    monkeypatch.setattr(TV.subprocess, "run", gia)
+    kq = TV.lam_mot_viec(cam)
+
+    assert kq["buoc"] == "dung-trang", kq
+    assert "dung-trang" in ghi["lenh"], ghi["lenh"]
+    assert "--bai" in ghi["lenh"], f"không giới hạn một bài: {ghi['lenh']}"

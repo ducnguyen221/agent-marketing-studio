@@ -97,7 +97,7 @@ def _chay_buoc(cam: Path, buoc: str, cid: str) -> tuple[bool, str]:
         # chiến dịch. Thiếu cờ này thì một việc cho NEN-002 viết lại luôn NEN-001 và
         # NEN-003: kế toán số lần viết lại thành vô nghĩa, và lượt chạy kéo hàng giờ.
         # Đo thật 12/09/2026 — một việc chạy 27 phút vì ôm ba bài.
-        if buoc in ("soan", "sua-loi-cong") and cid:
+        if buoc in ("soan", "sua-loi-cong", "dung-trang") and cid:
             lenh += ["--bai", cid]
 
     r = subprocess.run(lenh, capture_output=True, text=True,
@@ -128,6 +128,10 @@ def _da_ra_artefact(buoc: str, bai: Path) -> bool:
         return (bai / "gates.json").is_file()
     if buoc in ("soan", "sua-loi-cong"):
         return bai_noi_dung.da_viet(bai)
+    if buoc == "dung-trang":
+        # Trang đã dựng ra file thì bước đã làm được việc. URL có ghi được vào bảng hay
+        # không là chuyện của `web_publish`, và nó tự fail-closed ở đó.
+        return (bai / "atlas" / "atlas.html").is_file()
     return False
 
 
