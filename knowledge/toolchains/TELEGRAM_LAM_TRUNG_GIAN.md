@@ -238,6 +238,31 @@ rồi, phải < 180) · `cho_g1`/`cho_g2` (bài nào đang chờ cổng nào).
 
 ---
 
+## 6b. Đã dựng xong những gì (12/09/2026)
+
+| Mảnh | File | Vì sao có nó |
+|---|---|---|
+| Sổ sự kiện | `lib/so_su_kien.py` → `logs/su-kien.jsonl` | Trả lời *vì sao* bài tới trạng thái đó. Chỉ nối thêm nên không có cuộc đua |
+| Trạng thái suy ra | `lib/tinh_trang.py` → `tinh-trang` | Agent nối lại việc tốn **~350 token** thay vì 9.555 |
+| Hàng chờ | `lib/hang_cho.py` → `logs/viec/` | Poller ghi việc rồi đi tiếp; không bao giờ tự chạy bước nặng |
+| Thợ | `pipeline/tho_viec.py` | Nhặt MỘT việc, gọi agent, rồi thoát |
+
+**Ba luật đã trả giá để có, đừng gỡ:**
+
+1. **Thợ không bao giờ đụng vào `cho-G1`/`cho-G2`.** Agent tự duyệt bài của chính nó là mất
+   sạch ý nghĩa cổng. Chắn này có **hai lớp**, gỡ một lớp thì test vẫn xanh — phải gỡ cả hai
+   mới thấy đỏ.
+2. **Hỏi ARTEFACT, đừng hỏi mã thoát.** `blog_gates` trả mã 1 khi cổng đỏ, `soan` trả khác 0
+   khi bài chưa đạt — cả hai **đã làm xong việc**. Tin mã thoát thì đúng những bài cần đi
+   tiếp lại bị vứt vào `hong/`. (Đây là vế ngược của luật *"mã thoát 0 không đủ để tính là
+   xong"* — cùng một nguyên tắc.)
+3. **Bước phải giới hạn ĐÚNG MỘT BÀI** (`--bai`). Bước vốn quét cả chiến dịch; thiếu cờ này
+   thì một việc cho NEN-002 viết lại luôn NEN-001 và NEN-003 — đo thật **27 phút** cho một
+   việc, và kế toán số lần viết lại thành vô nghĩa.
+
+**Còn thiếu:** `dung-trang` và `phat-hanh` chưa dựng, nên vòng hiện khép tới Cổng 2. Duyệt
+G2 xong thợ báo *"chưa dựng bước dung-trang"* thay vì im lặng.
+
 ## 7. Bảng tra nhanh khi có sự cố
 
 | Thấy gì | Làm gì TRƯỚC TIÊN |

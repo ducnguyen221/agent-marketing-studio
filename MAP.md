@@ -61,6 +61,10 @@
 | Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dang`) | `scripts/pipeline/campaign_step.py` |
 | **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` §6 |
 | Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
+| **Bài nào đang ở bước nào** (suy ra, ~350 token thay vì nạp cả campaign.md) | `campaign_step.py <cam> tinh-trang [--chi-tiet]` |
+| **Vì sao bài tới trạng thái đó** (sổ sự kiện chỉ-nối-thêm) | `logs/su-kien.jsonl` · `scripts/lib/so_su_kien.py` |
+| **Hàng chờ việc** (thư mục là trạng thái, `rename` là phép giành lượt) | `logs/viec/{cho,dang-lam,xong,hong}/` · `scripts/lib/hang_cho.py` |
+| **Thợ tự gọi agent sau khi duyệt** (một việc mỗi lượt, một agent một lúc) | `scripts/pipeline/tho_viec.py` · `scripts/runners/run-tho-viec.ps1` |
 | Đăng bài lên web (đích khai bằng cấu hình, không khoá cứng) | `scripts/pipeline/web_publish.py` |
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |
 | **Chấm một bài bằng 23 cổng đếm được** | `scripts/pipeline/blog_gates.py <thư mục bài>` |
