@@ -118,7 +118,18 @@ def test_buoc_duoc_SUY_LAI_luc_chay_chu_khong_tin_luc_xep_hang(tmp_path):
 # ── thợ không được vượt quyền ───────────────────────────────────────────────
 
 def test_THO_KHONG_DUOC_dung_vao_buoc_can_nguoi(tmp_path):
-    """Agent tự duyệt bài của chính nó là mất sạch ý nghĩa của cổng."""
+    """Agent tự duyệt bài của chính nó là mất sạch ý nghĩa của cổng.
+
+    ⚠️ **Chắn này có HAI LỚP, nên đột biến một lớp SỐNG SÓT — đó là đúng, không phải lỗi
+    của test.** Đã kiểm 12/09/2026:
+
+      · gỡ `if buoc in TT.CAN_NGUOI` → vẫn xanh, vì `LENH` không có mục cho `cho-G2`
+        nên rơi vào nhánh *"chưa dựng bước này"* và cũng không gọi agent.
+      · gỡ **CẢ HAI** (thêm `"cho-G2"` vào `LENH`) → **test này ĐỎ**.
+
+    Đây là ca ③ *phòng thủ nhiều tầng* trong sổ cạm bẫy: đột biến sống hợp lệ, và cách kiểm
+    đúng là gỡ hết các lớp rồi mới kết luận. Đừng thấy đột biến sống mà vội nói test vô nghĩa.
+    """
     cam = _cam(tmp_path)
     _bai(cam, gates="xanh")                    # đã viết, cổng xanh ⇒ bước kế là `cho-G2`
     HC.them(cam, "tiep", bai="T-001")

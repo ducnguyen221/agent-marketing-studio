@@ -953,3 +953,55 @@ def test_tra_loi_vao_bai_bang_chu_thuong_van_la_nhan_xet(tmp_path):
 
     assert not kq["duyet"], f"câu góp ý bị hiểu thành lệnh duyệt: {kq}"
     assert AB.doc_phan_hoi(cam, "T-003"), "nhận xét không được ghi"
+
+
+# --------------------------------------------------------------------------------------
+# VÒNG KHÉP: duyệt / góp ý trên Telegram PHẢI sinh ra việc trong hàng chờ
+# --------------------------------------------------------------------------------------
+
+def _hc():
+    import hang_cho
+    return hang_cho
+
+
+def test_DUYET_sinh_ra_VIEC_trong_hang_cho(tmp_path):
+    """Duyệt xong mà không gì chạy tiếp thì cổng chỉ là cái nút trang trí.
+
+    Trước 12/09/2026 poller ghi cột `g1` rồi DỪNG — không task nào chạy bước kế, nên bài
+    duyệt xong nằm im vô thời hạn.
+    """
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia())
+    tok = list(_token_dang_cho(cam))[0]
+    AB.nhan(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}")]))
+
+    assert _hc().dem(cam)["cho"] >= 1, "duyệt rồi mà hàng chờ vẫn rỗng ⇒ vòng chưa khép"
+
+
+def test_PHAN_HOI_sinh_ra_VIEC_viet_lai(tmp_path):
+    """Bot nói "bài sẽ được viết lại" thì phải có thứ thật sự làm việc đó.
+
+    Câu đó từng là LỜI HỨA SUÔNG: nhận xét được ghi, nhưng không gì chạy bước viết lại.
+    """
+    cam = _cam(tmp_path)
+    _dung_bai(cam, "T-003_bai-ba", viet_that=True)
+    _cham_diem(cam, "T-003_bai-ba", "xanh")
+    b = BotGia()
+    AB.gui_cong(cam, "g2", bot=b, che_do="batch_gate")
+    mid = AB._tra_tin_bai(cam, "T-003")
+
+    truoc = _hc().dem(cam)["cho"]
+    AB.nhan(cam, bot=BotGia([_tra_loi(mid, "Mở bài dài quá, cắt bớt giúp mình")]))
+    assert _hc().dem(cam)["cho"] == truoc + 1, "góp ý xong không có việc nào được xếp"
+
+
+def test_moi_quyet_dinh_deu_VAO_SO_SU_KIEN(tmp_path):
+    """Sổ sự kiện là thứ duy nhất trả lời được *vì sao* bài tới trạng thái hiện tại."""
+    import so_su_kien
+    cam = _cam(tmp_path)
+    AB.gui_cong(cam, "g1", bot=BotGia())
+    tok = list(_token_dang_cho(cam))[0]
+    AB.nhan(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}")]))
+
+    ds = so_su_kien.doc(cam)
+    assert any(x["viec"] == "g1_duyet" for x in ds), [x["viec"] for x in ds]

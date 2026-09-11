@@ -65,6 +65,8 @@ sys.stderr.reconfigure(encoding="utf-8")
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 sys.path.insert(0, str(_LIB))
 import bai_noi_dung  # noqa: E402
+import hang_cho as HC  # noqa: E402
+import so_su_kien as SO  # noqa: E402
 import md_io  # noqa: E402
 import telegram_io  # noqa: E402
 
@@ -507,12 +509,19 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
                             ghi_chu="duyệt qua Telegram", bay_gio=bay_gio)
             kq.setdefault("_da_tieu", set()).add(tok)
             kq["duyet"] += xong
+            for c in xong:
+                # Nút bấm và lệnh chữ phải dẫn tới CÙNG một chỗ. Vá một đường mà quên
+                # đường kia là đúng kiểu lỗi "chạy thử thì được, người dùng thật thì không".
+                SO.ghi(cam, f"{y['cong']}_duyet", bai=c, boi="Đức (Telegram)", qua="nút")
+                HC.them(cam, "tiep", bai=c, nguon=f"{y['cong']}_duyet")
             _bao_nhan(bot.tra_loi_nut, cq["id"], f"Đã duyệt {len(xong)} bài.")
             _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
                         f"✅ Đã duyệt {len(xong)} bài: {', '.join(xong) or '(không có)'}")
         else:
             kq.setdefault("_da_tieu", set()).add(tok)   # từ chối cũng là đã xử lý xong
             kq["tu_choi"] += cids
+            for c in cids:
+                SO.ghi(cam, f"{y['cong']}_tu_choi", bai=c, boi="Đức (Telegram)", qua="nút")
             _bao_nhan(bot.tra_loi_nut, cq["id"], "Đã từ chối.")
             _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
                         f"❌ Đã từ chối: {', '.join(cids)}")
@@ -548,9 +557,13 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
                 return _thi_hanh_lenh(cam, cid, ml.group(1), (ml.group(2) or "").strip(),
                                       bot=bot, kq=kq)
             _ghi_phan_hoi(cam, cid, text)
+            SO.ghi(cam, "phan_hoi", bai=cid, boi="Đức (Telegram)", noi_dung=text[:300])
+            HC.them(cam, "tiep", bai=cid, nguon="phan_hoi")
             kq.setdefault("phan_hoi", []).append(cid)
             kq["xu_ly"] += 1
-            _bao_nhan(bot.gui, f"📝 {cid}: đã ghi nhận xét. Bài sẽ được viết lại.")
+            # Trước 12/09 câu này HỨA SUÔNG: nhận xét được ghi nhưng không gì chạy bước
+            # viết lại. Nay đã có việc trong hàng chờ thật, nên câu này mới đúng.
+            _bao_nhan(bot.gui, f"📝 {cid}: đã ghi nhận xét, bài vào hàng chờ viết lại.")
             return
         loi(f"trả lời vào tin {rep} nhưng không rõ của bài nào — bỏ qua.")
         kq["bo_qua"] += 1
@@ -595,9 +608,19 @@ def _thi_hanh_lenh(cam: Path, cid: str, lenh: str, ly_do: str, *, bot, kq,
         xong = _ap_dung(cam, cong, [cid], boi="Đức (Telegram)",
                         ghi_chu=ly_do or "duyệt qua Telegram", bay_gio=bay_gio)
         kq["duyet"] += xong
+        for c in xong:
+            # Xếp việc rồi ĐI TIẾP NGAY. Poller không được chạy bước nặng: nó đang giữ
+            # khoá đọc Telegram, dừng lại 10 phút là cổng duyệt điếc 10 phút.
+            SO.ghi(cam, f"{cong}_duyet", bai=c, boi="Đức (Telegram)", ghi_chu=ly_do)
+            HC.them(cam, "tiep", bai=c, nguon=f"{cong}_duyet")
         _bao_nhan(bot.gui, f"✅ {cid}: đã duyệt." if xong else f"⚠️ {cid}: không ghi được (xem log).")
     else:
         kq["tu_choi"].append(cid)
+        SO.ghi(cam, f"{cong}_tu_choi", bai=cid, boi="Đức (Telegram)", ly_do=ly_do)
+        if ly_do:
+            # Có lý do thì đó là chỉ dẫn sửa -> đưa vào vòng viết lại.
+            _ghi_phan_hoi(cam, cid, ly_do)
+            HC.them(cam, "tiep", bai=cid, nguon=f"{cong}_tu_choi")
         _bao_nhan(bot.gui, f"❌ {cid}: đã ghi từ chối. {ly_do}")
     kq["xu_ly"] += 1
 
