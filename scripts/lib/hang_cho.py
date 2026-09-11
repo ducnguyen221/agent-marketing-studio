@@ -69,11 +69,15 @@ def them(cam: Path, viec: str, *, bai: str | None = None, **chi_tiet) -> str:
     Tên file bắt đầu bằng thời gian nên **thứ tự chữ cái chính là thứ tự thời gian** —
     không cần đọc nội dung file để biết việc nào tới trước.
     """
-    ma = f"{datetime.now().astimezone():%Y%m%dT%H%M%S}-{secrets.token_hex(4)}"
+    # Mốc tới MICRO GIÂY, không phải giây. Duyệt cả lô 5 bài thì 5 việc sinh ra trong
+    # cùng một giây; mốc chỉ tới giây thì thứ tự rơi về chuỗi hex ngẫu nhiên và MẤT FIFO.
+    # Test `vao_truoc_ra_truoc` bắt được đúng lỗi này 12/09/2026.
+    ma = f"{datetime.now().astimezone():%Y%m%dT%H%M%S%f}-{secrets.token_hex(4)}"
     d = {"ma": ma, "viec": viec, "bai": bai, "so_lan": 0,
          "tao_luc": datetime.now().astimezone().isoformat(), **chi_tiet}
     (_o(cam, "cho") / f"{ma}.json").write_text(
-        json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        json.dumps(d, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8", newline="\n")
     return ma
 
 
@@ -134,7 +138,8 @@ def hong(cam: Path, ma: str, ly_do: str) -> str:
     d["ly_do_hong"] = ly_do
     d["hong_luc"] = datetime.now().astimezone().isoformat()
     dich = "cho" if d["so_lan"] < TRAN_LAN else "hong"
-    p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n",
+                 encoding="utf-8", newline="\n")
     os.replace(p, _o(cam, dich) / p.name)
     return dich
 
@@ -149,7 +154,8 @@ def _chuyen(cam: Path, ma: str, o_dich: str, them_truong: dict) -> None:
         d = {"ma": ma}
     d.update(them_truong)
     d["xong_luc"] = datetime.now().astimezone().isoformat()
-    p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n",
+                 encoding="utf-8", newline="\n")
     os.replace(p, _o(cam, o_dich) / p.name)
 
 
