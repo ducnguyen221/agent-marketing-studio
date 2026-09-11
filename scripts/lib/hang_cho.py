@@ -121,8 +121,12 @@ def xong(cam: Path, ma: str, **ket_qua) -> None:
     _chuyen(cam, ma, "xong", ket_qua)
 
 
-def hong(cam: Path, ma: str, ly_do: str) -> str:
+def hong(cam: Path, ma: str, ly_do: str, *, vinh_vien: bool = False) -> str:
     """Thợ làm hỏng. Còn lượt thì trả về hàng chờ; hết lượt thì sang `hong/`.
+
+    `vinh_vien=True` bỏ qua hẳn phần đếm lượt: có những cái hỏng mà thử lại là vô nghĩa —
+    bài không có trong bảng Content, chưa dựng bước đó. Thử lại một lỗi vĩnh viễn ba lần
+    chỉ tổ làm nhiễu sổ và trì hoãn lúc người biết mà sửa.
 
     Trả về ô đích để chỗ gọi biết mà báo người: `"cho"` là sẽ thử lại, `"hong"` là bỏ cuộc.
     """
@@ -137,7 +141,7 @@ def hong(cam: Path, ma: str, ly_do: str) -> str:
     d["so_lan"] = int(d.get("so_lan") or 0) + 1
     d["ly_do_hong"] = ly_do
     d["hong_luc"] = datetime.now().astimezone().isoformat()
-    dich = "cho" if d["so_lan"] < TRAN_LAN else "hong"
+    dich = "cho" if (not vinh_vien and d["so_lan"] < TRAN_LAN) else "hong"
     p.write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n",
                  encoding="utf-8", newline="\n")
     os.replace(p, _o(cam, dich) / p.name)
