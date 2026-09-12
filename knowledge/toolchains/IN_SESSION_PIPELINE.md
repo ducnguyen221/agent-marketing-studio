@@ -43,8 +43,8 @@ vì nạp cả `campaign.md` — 90 dòng brief không giúp gì cho câu hỏi 
 
 | Chế độ | Khi nào | Người bị hỏi mấy lần |
 |---|---|---|
-| `tung-bai` | bài quan trọng, hoặc đang dò xem quy trình chạy đúng chưa | mỗi bài một lần ở mỗi cổng |
-| `theo-giai-doan` | chạy đều nhiều bài | **một lần cho cả lô** ở mỗi cổng |
+| `per-post` | bài quan trọng, hoặc đang dò xem quy trình chạy đúng chưa | mỗi bài một lần ở mỗi cổng |
+| `by-stage` | chạy đều nhiều bài | **một lần cho cả lô** ở mỗi cổng |
 
 Và hỏi luôn **bao nhiêu bài**: một bài cụ thể (`--post NEN-004`), N bài (`--count 5`), hay
 làm hết (`--count 0`). Mặc định 5 nếu người không nói gì.
@@ -53,7 +53,7 @@ làm hết (`--count 0`). Mặc định 5 nếu người không nói gì.
 
 ```
 python scripts/pipeline/run_pipeline.py <chiến dịch> run \
-       --mode theo-giai-doan --count 5
+       --mode by-stage --count 5
 ```
 
 Lệnh này chạy **nhiều bước liên tiếp** rồi dừng khi đụng cổng. Nó **không bao giờ tự mở

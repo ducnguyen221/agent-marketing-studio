@@ -31,16 +31,16 @@ cổng. Chạy đường nào cũng để lại cùng một dấu vết.
 
 ## Hai chế độ
 
-- `tung-bai` — một bài đi trọn đường ống, dừng ở mỗi cổng. Dùng khi bài quan trọng, hoặc
+- `per-post` — một bài đi trọn đường ống, dừng ở mỗi cổng. Dùng khi bài quan trọng, hoặc
   đang dò xem quy trình chạy đúng chưa.
-- `theo-giai-doan` — chạy cùng một bước cho N bài rồi gom lại hỏi người MỘT LẦN ở cổng.
+- `by-stage` — chạy cùng một bước cho N bài rồi gom lại hỏi người MỘT LẦN ở cổng.
   Dùng khi chạy đều nhiều bài và không muốn bị ngắt liên tục.
 
 ## Lệnh
 
 ```
 run_pipeline.py <chiến dịch> status [--json]
-run_pipeline.py <chiến dịch> run [--mode tung-bai|theo-giai-doan]
+run_pipeline.py <chiến dịch> run [--mode per-post|by-stage]
                                     [--post A,B | --count N] [--until <bước>]
                                     [--json] [--dry-run]
 ```
@@ -64,7 +64,7 @@ import approval_gate as AG  # noqa: E402
 import worker as WK  # noqa: E402
 import pipeline_state as PS  # noqa: E402
 
-MODES = ("tung-bai", "theo-giai-doan")
+MODES = ("per-post", "by-stage")
 DEFAULT_POSTS = 5
 
 # Trần an toàn cho MỘT lượt gọi. Không phải giới hạn nghiệp vụ — nó chặn ca vòng lặp: một
@@ -165,7 +165,7 @@ def _run_one_step(campaign: Path, cid: str, step: str, *, run) -> dict:
             "message": "\n".join(message)[-800:]}
 
 
-def run(campaign: Path, *, mode: str = "tung-bai", post: list[str] | None = None,
+def run(campaign: Path, *, mode: str = "per-post", post: list[str] | None = None,
          count: int | None = None, until: str | None = None,
          dry_run: bool = False, run_step=None) -> dict:
     """Đẩy các bài đã chọn đi tới khi đụng cổng. KHÔNG BAO GIỜ tự mở cổng.
@@ -188,7 +188,7 @@ def run(campaign: Path, *, mode: str = "tung-bai", post: list[str] | None = None
                           for c in ds]
         return result
 
-    if mode == "tung-bai":
+    if mode == "per-post":
         for cid in ds:
             _advance_post(campaign, cid, result, until=until, run_step=run_step)
     else:
@@ -308,7 +308,7 @@ def main(argv=None) -> int:
     pt.add_argument("--json", action="store_true")
 
     pc = sub.add_parser("run", help="đẩy các bài tới cổng gần nhất")
-    pc.add_argument("--mode", choices=list(MODES), default="tung-bai")
+    pc.add_argument("--mode", choices=list(MODES), default="per-post")
     pc.add_argument("--post", default=None, help="mã bài, phân tách bằng dấu phẩy")
     pc.add_argument("--count", type=int, default=None,
                     help=f"lấy N bài đang chạy được (mặc định {DEFAULT_POSTS}; 0 = hết)")

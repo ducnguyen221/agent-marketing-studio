@@ -83,7 +83,7 @@ def _chay_gia(campaign, cmd, cid):
 def test_KHONG_BAO_GIO_tu_mo_cong(tmp_path):
     """Chạy hết đường ống cũng không được ghi một cổng nào. Cổng là của người."""
     campaign = _cam(tmp_path)
-    RP.run(campaign, mode="tung-bai", post=["T-001"], run_step=_chay_gia)
+    RP.run(campaign, mode="per-post", post=["T-001"], run_step=_chay_gia)
     d = {x["content_id"]: x for x in AG.read_content_table(campaign)[3]}
     assert not (d["T-001"].get("g2") or "").strip(), "điều phối tự mở Cổng 2"
     assert not (d["T-003"].get("g1") or "").strip(), "điều phối tự mở Cổng 1"
@@ -91,7 +91,7 @@ def test_KHONG_BAO_GIO_tu_mo_cong(tmp_path):
 
 def test_dung_dung_o_cong_va_KE_FILE_de_nguoi_mo(tmp_path):
     campaign = _cam(tmp_path)
-    result = RP.run(campaign, mode="tung-bai", post=["T-001"], run_step=_chay_gia)
+    result = RP.run(campaign, mode="per-post", post=["T-001"], run_step=_chay_gia)
     assert "g2" in result["waiting"], result["waiting"]
     h = result["waiting"]["g2"][0]
     assert h["content_id"] == "T-001"
@@ -104,7 +104,7 @@ def test_dung_dung_o_cong_va_KE_FILE_de_nguoi_mo(tmp_path):
 def test_di_qua_NHIEU_buoc_trong_mot_luot(tmp_path):
     """Đi một bước rồi trả về là bắt agent gọi lại năm lần cho một bài."""
     campaign = _cam(tmp_path)
-    result = RP.run(campaign, mode="tung-bai", post=["T-001"], run_step=_chay_gia)
+    result = RP.run(campaign, mode="per-post", post=["T-001"], run_step=_chay_gia)
     assert [r["step"] for r in result["ran"]] == ["write", "check-gates"]
 
 
@@ -122,7 +122,7 @@ def test_ma_thoat_KHAC_0_ma_CO_artefact_van_la_XONG(tmp_path):
         _chay_gia(cam_, cmd, cid)
         return False, "mã 1 — cổng đỏ"
 
-    result = RP.run(campaign, mode="tung-bai", post=["T-001"], run_step=ban)
+    result = RP.run(campaign, mode="per-post", post=["T-001"], run_step=ban)
     assert result["failed"] == [], result["failed"]
     assert all(r["done"] for r in result["ran"])
 
@@ -130,7 +130,7 @@ def test_ma_thoat_KHAC_0_ma_CO_artefact_van_la_XONG(tmp_path):
 def test_ma_thoat_0_ma_KHONG_ra_artefact_la_HONG(tmp_path):
     """Chiều kia của cùng một luật: bộ viết chạy êm mà file vẫn trống thì vẫn là hỏng."""
     campaign = _cam(tmp_path)
-    result = RP.run(campaign, mode="tung-bai", post=["T-001"],
+    result = RP.run(campaign, mode="per-post", post=["T-001"],
                 run_step=lambda c, l, i: (True, "im lặng"))
     assert result["failed"], "mã 0 mà không sinh artefact vẫn được tính là xong"
     assert result["failed"][0]["step"] == "write"
@@ -138,17 +138,17 @@ def test_ma_thoat_0_ma_KHONG_ra_artefact_la_HONG(tmp_path):
 
 def test_buoc_hong_thi_DUNG_khong_day_tiep(tmp_path):
     campaign = _cam(tmp_path)
-    result = RP.run(campaign, mode="tung-bai", post=["T-001"],
+    result = RP.run(campaign, mode="per-post", post=["T-001"],
                 run_step=lambda c, l, i: (True, ""))
     assert len(result["ran"]) == 1, "bước hỏng rồi vẫn chạy bước sau"
 
 
 # ── Chế độ theo giai đoạn ───────────────────────────────────────────────────
 
-def test_theo_giai_doan_GOM_ca_lo_qua_tung_buoc(tmp_path):
+def test_by_stage_GOM_ca_lo_qua_tung_buoc(tmp_path):
     """Cả lô phải đi hết bước 1 rồi mới sang bước 2 — nếu không thì người bị hỏi N lần."""
     campaign = _cam(tmp_path)
-    result = RP.run(campaign, mode="theo-giai-doan", post=["T-001", "T-002"], run_step=_chay_gia)
+    result = RP.run(campaign, mode="by-stage", post=["T-001", "T-002"], run_step=_chay_gia)
     thu_tu = [(r["post"], r["step"]) for r in result["ran"]]
     assert thu_tu == [("T-001", "write"), ("T-002", "write"),
                       ("T-001", "check-gates"), ("T-002", "check-gates")], thu_tu
@@ -157,7 +157,7 @@ def test_theo_giai_doan_GOM_ca_lo_qua_tung_buoc(tmp_path):
 
 def test_mot_bai_chi_vao_nhom_cho_cong_MOT_lan(tmp_path):
     campaign = _cam(tmp_path)
-    result = RP.run(campaign, mode="theo-giai-doan", post=["T-001"], run_step=_chay_gia)
+    result = RP.run(campaign, mode="by-stage", post=["T-001"], run_step=_chay_gia)
     assert len(result["waiting"]["g2"]) == 1
 
 
@@ -195,7 +195,7 @@ def test_dry_run_KHONG_chay_gi(tmp_path):
     def no(*a, **k):
         raise AssertionError("dry-run mà vẫn gọi bước")
 
-    result = RP.run(campaign, mode="tung-bai", post=["T-001"], dry_run=True, run_step=no)
+    result = RP.run(campaign, mode="per-post", post=["T-001"], dry_run=True, run_step=no)
     assert result["plan"] == [{"post": "T-001", "next_step": "write"}]
     assert not (_thu_muc(campaign, "T-001") / "content.md").exists()
 

@@ -127,7 +127,7 @@ def why_not_ready(campaign: Path, row: dict) -> str:
         return "gates.json HỎNG — coi như chưa chấm"
 
     if (g.get("verdict") or "").lower() == "fail":
-        do = [c.get("job_id", "?") for c in (g.get("gate") or [])
+        do = [c.get("id", "?") for c in (g.get("gates") or [])
               if c.get("status") == "fail" and c.get("level") != "warn"]
         return (f"máy chấm ĐỎ ({g.get('fail_block', '?')} cổng chặn"
                 + (f": {', '.join(do[:8])}" if do else "") + ")")

@@ -233,3 +233,31 @@ def test_CLI_cho_TACH_bai_san_sang_khoi_bai_chua_the_hoi(tmp_path, capsys):
     # Bài chưa viết KHÔNG được kê file — kê đường dẫn không có thật là mời người mở hụt.
     dau_t002 = ra.index("T-002")
     assert "content.md" not in ra[dau_t002:], ra[dau_t002:]
+
+
+def test_ly_do_chan_phai_NEU_TEN_cong_do(tmp_path):
+    """Nói "máy chấm ĐỎ" mà không nói ĐỎ Ở ĐÂU thì người phải tự đi mở gates.json.
+
+    Đây là chỗ đã hỏng câm một lần: sau đợt đổi khoá `gates.json`, hàm này vẫn đọc khoá
+    cũ nên phần liệt kê rỗng — thông báo vẫn ra, chỉ là mất hết thông tin có ích. Không
+    test nào đỏ vì không test nào khẳng định phần liệt kê.
+    """
+    campaign = _cam(tmp_path)
+    post = campaign / "T-001_bai-mot"
+    post.mkdir()
+    (post / "content.md").write_text(
+        "## post:blog_article" + "\n\n" + ("Câu chuyện đời thường mở bài. " * 60),
+        encoding="utf-8", newline="\n")
+    (post / "gates.json").write_text(json.dumps({
+        "verdict": "fail", "fail_block": 2,
+        "gates": [{"id": "G01", "status": "fail", "level": "block"},
+                  {"id": "G04", "status": "fail", "level": "warn"},
+                  {"id": "G05", "status": "fail", "level": "block"},
+                  {"id": "G02", "status": "pass", "level": ""}]}),
+        encoding="utf-8", newline="\n")
+    row = {d["content_id"]: d for d in AG.read_content_table(campaign)[3]}["T-001"]
+
+    why = AG.why_not_ready(campaign, row)
+    assert "G01" in why and "G05" in why, why
+    assert "G04" not in why, "cổng chỉ CẢNH BÁO không được kể là cổng chặn"
+    assert "G02" not in why, "cổng xanh bị kể là chặn"
