@@ -141,13 +141,46 @@ def test_bai_thieu_lich_thi_bo_qua_khong_no(tmp_path):
 
 # ── Cổng tự trị ─────────────────────────────────────────────────────────────
 
-def test_suggest_thi_GUI_cong_va_KHONG_self_approved(tmp_path):
+def _dat_approval_via(campaign, gia_tri):
+    fm, than = md_io.read_fm(campaign / "campaign.md")
+    fm.setdefault("runtime", {})["approval_via"] = gia_tri
+    md_io.write_fm(campaign / "campaign.md", fm, than)
+
+
+def test_MAC_DINH_hoi_trong_PHIEN_va_KHONG_gui_Telegram(tmp_path):
+    """Đổi 12/09/2026: trước đó `suggest` LUÔN nhắn Telegram, không có đường nào khác.
+
+    Nghĩa là Telegram không phải tuỳ chọn mà là điều kiện cần — không có điện thoại thì cả
+    chiến dịch đứng, trong khi cách làm việc mặc định là người ngồi cùng agent một phiên.
+    """
     campaign = _cam(tmp_path, [_row("T-001", "Bài một", "2026-09-15",
                                folder="./T-001_bai-mot")], autonomy="suggest")
     b = BotGia()
-    CS.open_gate(campaign, "g1", ["T-001"], bot=b, hom_nay=HOM_NAY)
-    assert b.sent, "suggest mà không gửi tin xin duyệt"
-    assert _bang(campaign)["T-001"]["g1"] == "", "suggest mà agent TỰ duyệt — cổng thủng"
+    result = CS.open_gate(campaign, "g1", ["T-001"], bot=b, hom_nay=HOM_NAY)
+    assert not b.sent, "mặc định mà vẫn nhắn Telegram"
+    assert result["via"] == "session" and result["waiting"] == ["T-001"], result
+    assert _bang(campaign)["T-001"]["g1"] == "", "chờ người mà agent TỰ duyệt — cổng thủng"
+
+
+def test_KHAI_telegram_thi_van_gui_tin(tmp_path):
+    """Bỏ khỏi đường mặc định không có nghĩa là gỡ bỏ. Khai một chữ là dùng lại được."""
+    campaign = _cam(tmp_path, [_row("T-001", "Bài một", "2026-09-15",
+                               folder="./T-001_bai-mot")], autonomy="suggest")
+    _dat_approval_via(campaign, "telegram")
+    b = BotGia()
+    result = CS.open_gate(campaign, "g1", ["T-001"], bot=b, hom_nay=HOM_NAY)
+    assert b.sent, "khai telegram mà không gửi tin"
+    assert result["via"] == "telegram"
+
+
+def test_gia_tri_LA_thi_ve_session_khong_ve_telegram(tmp_path):
+    """Fail-closed đúng hướng: khoá gõ sai không được lặng lẽ bật kênh gửi tin ra ngoài."""
+    campaign = _cam(tmp_path, [_row("T-001", "Bài một", "2026-09-15",
+                               folder="./T-001_bai-mot")], autonomy="suggest")
+    _dat_approval_via(campaign, "telegramm")
+    b = BotGia()
+    assert CS.open_gate(campaign, "g1", ["T-001"], bot=b, hom_nay=HOM_NAY)["via"] == "session"
+    assert not b.sent
 
 
 def test_full_thi_TU_DUYET_va_khong_gui_tin(tmp_path):
@@ -344,7 +377,7 @@ def test_PHAN_HOI_duoc_ghi_ra_file_cho_bo_viet_doc(tmp_path, monkeypatch):
                         lambda c, cid: [{"at": "2026-09-10T10:00:00+07:00",
                                          "text": "Mở bài dài quá, cắt còn 2 câu."}])
     CS.step_write(campaign, bot=BotGia(), hom_nay=HOM_NAY, run_cmd=lambda cmd, **kw: _ok())
-    ph = campaign / "T-001_bai" / "phan-hoi.md"
+    ph = campaign / "T-001_bai" / "review-01.md"
     assert ph.is_file(), "không ghi phản hồi ra file cho bộ viết đọc"
     t = ph.read_text(encoding="utf-8")
     assert "cắt còn 2 câu" in t
@@ -489,8 +522,8 @@ def test_cong_do_ghi_ra_FILE_cho_bo_viet_doc(tmp_path):
     _gates_do(post, chan=("G05", "G06"))
 
     CS.step_write(campaign, bot=BotGia())
-    t = (post / "cong-do.md").read_text(encoding="utf-8")
-    assert "G05" in t and "G06" in t and "luật" in t
+    t = (post / "review-01.md").read_text(encoding="utf-8")
+    assert "G05" in t and "G06" in t and "luật" in t and "Máy chấm" in t
 
 
 def test_cham_TRAN_thi_DUNG_viet_lai_va_noi_ro(tmp_path):
@@ -500,12 +533,12 @@ def test_cham_TRAN_thi_DUNG_viet_lai_va_noi_ro(tmp_path):
     _bai_da_viet(post)
     for i in range(CS.MAX_REWRITES):
         _gates_do(post, chan=(f"G0{i+1}",))       # mỗi vòng một chữ ký khác
-        can, vi_sao = CS._needs_rewrite(post, 0, CS._dump_gate_report(post))
+        can, vi_sao = CS._needs_rewrite(post, 0, CS._cong_chan(post)[2])
         assert can, f"vòng {i+1} phải được viết lại: {vi_sao}"
-        CS._mark_written(post, 0, CS._dump_gate_report(post), vi_cong=True)
+        CS._mark_written(post, 0, CS._cong_chan(post)[2], vi_cong=True)
 
     _gates_do(post, chan=("G09",))
-    can, vi_sao = CS._needs_rewrite(post, 0, CS._dump_gate_report(post))
+    can, vi_sao = CS._needs_rewrite(post, 0, CS._cong_chan(post)[2])
     assert not can and "dung" in vi_sao, vi_sao
 
 
@@ -515,7 +548,32 @@ def test_cham_LAI_ra_KET_QUA_CU_thi_KHONG_viet_lai(tmp_path):
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     _gates_do(post)
-    chu_ky = CS._dump_gate_report(post)
+    chu_ky = CS._cong_chan(post)[2]
     CS._mark_written(post, 0, chu_ky, vi_cong=True)
-    can, _ = CS._needs_rewrite(post, 0, CS._dump_gate_report(post))
+    can, _ = CS._needs_rewrite(post, 0, CS._cong_chan(post)[2])
     assert not can, "cùng một kết quả chấm mà vẫn viết lại — quay tít"
+
+
+def test_moi_VONG_mot_file_KHONG_ghi_de_vong_truoc(tmp_path):
+    """`review-02.md` không được xoá `review-01.md`.
+
+    Ghi đè thì sáu tháng sau không ai trả lời được "bài này lần đầu đỏ ở đâu, sửa xong còn
+    đỏ gì" — mà đó đúng là câu cần khi quyết định có nên viết lại lần ba hay dừng hỏi
+    người. Cùng nguyên tắc với sổ sự kiện chỉ-nối-thêm.
+    """
+    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    post = campaign / "T-001_bai"
+    _bai_da_viet(post)
+
+    _gates_do(post, chan=("G01",))
+    CS.step_write(campaign, bot=BotGia())
+    assert (post / "review-01.md").is_file()
+    vong1 = (post / "review-01.md").read_text(encoding="utf-8")
+    assert "G01" in vong1
+
+    _gates_do(post, chan=("G05",))          # vòng sau đỏ ở chỗ KHÁC
+    CS.step_write(campaign, bot=BotGia())
+    assert (post / "review-02.md").is_file(), "vòng 2 ghi đè lên vòng 1 — mất dấu vết"
+    assert "G05" in (post / "review-02.md").read_text(encoding="utf-8")
+    assert (post / "review-01.md").read_text(encoding="utf-8") == vong1, \
+        "vòng 1 bị sửa sau khi đã xong"

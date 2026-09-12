@@ -146,5 +146,7 @@ state_lives_in:
   publish_json: <thư mục bài>/publish.json — dấu vết duyệt Cổng 2 và link từng kênh
   event_log: logs/events.jsonl — chỉ nối thêm, trả lời "vì sao bài tới trạng thái này"
   work_queue: logs/jobs/{cho,running,xong,hong}/ — thư mục LÀ trạng thái
-  feedback: logs/feedback.json — nhận xét của người, vòng viết lại đọc chỗ này
+  feedback: logs/feedback.json — nhận xét của người (nguồn)
+  review_round: "<thư mục bài>/review-NN.md — hồ sơ MỘT VÒNG đánh giá: số đo của máy
+    cộng nhận xét của người. Một vòng một file, không ghi đè."
   not_a_source: chiến dịch cũ còn file .xlsx — đó là BẢN XUẤT, không phải nguồn

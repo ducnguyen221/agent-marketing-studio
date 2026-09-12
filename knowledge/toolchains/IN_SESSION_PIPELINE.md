@@ -106,7 +106,7 @@ Bảng tra nhanh. Bình thường agent chỉ gọi `run_pipeline.py` và nó t�
 | `create-post` | `scripts/pipeline/new_post.py` | `campaign_step.py <cd> create-post` | thư mục bài + `meta.json` + `publish.json` + khung `content.md` |
 | `write` | hook `runtime.writer_cmd` | `campaign_step.py <cd> write --post <mã>` | `research.md` · `content.md` · `atlas/` `facebook/` `youtube/` |
 | `check-gates` | `scripts/pipeline/blog_gates.py` | `blog_gates.py <thư mục bài>` | `gates.json` |
-| `fix-gates` | hook `runtime.writer_cmd` (đọc thêm `phan-hoi.md`) | `campaign_step.py <cd> write --post <mã>` | `content.md` viết lại |
+| `fix-gates` | hook `runtime.writer_cmd` (đọc thêm `review-NN.md`) | `campaign_step.py <cd> write --post <mã>` | `content.md` viết lại |
 | `build-page` | `build_blog_html.py` + `web_publish.py` (+ hook `audio_cmd`) | `campaign_step.py <cd> build-page --post <mã>` | `atlas/atlas.html` + URL vào cột `web` |
 | `release` | hook `youtube_cmd` + `facebook_cmd` | `campaign_step.py <cd> release --post <mã>` | URL vào cột `youtube` / `facebook` |
 
@@ -148,10 +148,14 @@ thế nào là việc của script trạm; repo không ép ai dùng harness nào
 
 ```yaml
 runtime:
+  approval_via: session             # MẶC ĐỊNH — hỏi thẳng trong phiên, không nhắn Telegram
   writer_cmd: powershell -File "…\write-post.ps1" -Post "{post}" -Skills "{skills}"
   writer_skills:
     - kpim-skills:blog-writing      # giọng tác giả + chân dung độc giả
 ```
+
+`approval_via: telegram` bật lại đường Telegram khi anh không ngồi trước máy. Giá trị lạ
+rơi về `session`: một khoá gõ sai không được lặng lẽ bật kênh gửi tin ra ngoài.
 
 Không khai `writer_skills` thì `{skills}` thành chuỗi rỗng và bộ viết chạy như cũ.
 
