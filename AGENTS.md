@@ -9,7 +9,12 @@ canonical: true
 > **agent-marketing-studio** là hệ thống điều phối và thực thi chiến dịch marketing toàn diện kết hợp giữa con người và đa tác nhân AI Agent.
 > **Quy ước nền tảng:** Mỗi chiến dịch = 1 thư mục + 1 file `campaign.md`; mỗi bài = 1 thư mục con.
 > **Markdown quản lý trạng thái** (bảng Content giữa marker, và `publish.json` của từng bài);
-> `.xlsx` chỉ là bản xuất một chiều. Con người kiểm soát 2 cổng duyệt.
+> `.xlsx` chỉ là bản xuất một chiều. Con người kiểm soát 3 cổng duyệt.
+>
+> **Chiến dịch dài kỳ chạy TRONG PHIÊN là mặc định** — agent đi trọn đường ống, dừng ở
+> mỗi cổng hỏi người ngay tại chỗ và kê đường dẫn file để người mở kiểm. Telegram là mặt
+> tiền thứ hai của cùng kho cổng, dùng khi người không ngồi trước máy. Hợp đồng đầy đủ:
+> [`knowledge/toolchains/QUY_TRINH_TRONG_PHIEN.md`](knowledge/toolchains/QUY_TRINH_TRONG_PHIEN.md).
 
 ---
 
@@ -25,7 +30,8 @@ canonical: true
   - Chuyển sang khâu ⑤ Render và ⑥ Publish (Cần Cổng 2: `Post.review_status = approved`).
   - Thay đổi cấu trúc bảng tính hoặc thêm trường dữ liệu mới vào Data Model.
 - **Never (Tuyệt đối cấm):**
-  - Tự ý đánh dấu đã duyệt ở Cổng 1 hoặc Cổng 2.
+  - Tự ý đánh dấu đã duyệt ở bất kỳ cổng nào (1, 2 hoặc 3).
+  - Ghi cổng mà không chép được NGUYÊN VĂN câu duyệt của người — `cong_duyet.py` từ chối chạy.
   - Tự ý xuất bản (Publish) ra môi trường live khi chưa có lệnh tường minh.
   - Đọc, lưu trữ hoặc in ra các API token, private keys, thông tin cá nhân khách hàng (PII).
   - Điền `0` thay cho các ô chưa có dữ liệu (ô rỗng là một giá trị hợp lệ).

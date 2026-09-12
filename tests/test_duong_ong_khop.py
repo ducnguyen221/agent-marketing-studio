@@ -11,6 +11,7 @@ trong im lặng** — đúng lớp lỗi mà `test_docs_khong_troi` canh cho vă
 Tài liệu đi TRƯỚC code là cách hỏng đã có tên trong sổ này: khai một khoá mà engine lặng
 lẽ bỏ qua, và không gì báo.
 """
+import re
 import sys
 from pathlib import Path
 
@@ -78,3 +79,55 @@ def test_hai_che_do_chay_deu_duoc_mo_ta_du():
     for ten, cd in SPEC["che_do_chay"].items():
         for khoa in ("ten", "dung_khi", "cach", "nguoi_thay_gi"):
             assert cd.get(khoa), f"{ten} thiếu {khoa}"
+
+
+# ── Tài liệu hứa lệnh nào thì lệnh đó phải có thật ──────────────────────────
+
+DOC = ROOT / "knowledge" / "toolchains" / "QUY_TRINH_TRONG_PHIEN.md"
+
+
+RE_KHOI = re.compile(r"```\n(.*?)```", re.S)
+RE_NOI_DONG = re.compile(r"\\\s*\n\s+")     # nối dấu gạch chéo xuống dòng của shell
+# Chỗ điền của người: `<chiến dịch>`, `"<câu người nói>"`. Bỏ TRƯỚC khi tách token, vì
+# chúng có khoảng trắng bên trong nên `split()` xé chúng thành nhiều token rác.
+RE_CHO_DIEN = re.compile(r'"?<[^>]*>"?')
+
+
+def _lenh_trong_doc():
+    """Mọi lệnh `python scripts/…` trong khối mã của tài liệu → list token."""
+    ra = []
+    for khoi in RE_KHOI.findall(DOC.read_text(encoding="utf-8")):
+        for dong in RE_NOI_DONG.sub(" ", khoi).splitlines():
+            dong = RE_CHO_DIEN.sub("", dong).strip()
+            if dong.startswith("python scripts/"):
+                ra.append(dong.split())
+    return ra
+
+
+def test_doc_co_it_nhat_vai_lenh():
+    """Không có lệnh nào thì hai test dưới luôn xanh mà không đo gì."""
+    assert len(_lenh_trong_doc()) >= 3
+
+
+@pytest.mark.parametrize("lenh", _lenh_trong_doc(), ids=lambda l: l[1])
+def test_script_trong_doc_CO_THAT(lenh):
+    assert (ROOT / lenh[1]).is_file(), lenh[1]
+
+
+@pytest.mark.parametrize("lenh", _lenh_trong_doc(), ids=lambda l: " ".join(l[1:3]))
+def test_lenh_con_va_co_trong_doc_deu_duoc_CLI_hieu(lenh):
+    """Tài liệu đi TRƯỚC code là cách hỏng đã có tên: người gõ theo, CLI báo lỗi lạ.
+
+    So bằng chuỗi thẳng trong mã nguồn script. Không chạy thật vì mấy lệnh này ghi file —
+    một cổng kiểm không được có tác dụng phụ lên chiến dịch thật.
+    """
+    nguon = (ROOT / lenh[1]).read_text(encoding="utf-8")
+    # Lệnh con = token ĐẦU TIÊN sau đường dẫn script mà không phải chỗ điền của người
+    # (`<chiến dịch>`). Giá trị của cờ thì bỏ qua: `--bai NEN-004` chỉ kiểm `--bai`.
+    lenh_con = [t for t in lenh[2:3] if not t.startswith("<")]
+    co = [t for t in lenh[2:] if t.startswith("--")]
+    for tu in lenh_con:
+        assert f'"{tu}"' in nguon, f"{lenh[1]} không có lệnh con {tu}"
+    for tu in co:
+        assert f'"{tu}"' in nguon, f"{lenh[1]} không có cờ {tu}"
+    assert lenh_con or co, f"dòng lệnh không kiểm được gì: {' '.join(lenh)}"

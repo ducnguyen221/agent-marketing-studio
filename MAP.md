@@ -39,7 +39,7 @@
 
 | Cần gì | Đọc |
 |---|---|
-| Cách agent làm việc, ranh giới an toàn, 2 cổng duyệt | `AGENTS.md` |
+| Cách agent làm việc, ranh giới an toàn, 3 cổng duyệt | `AGENTS.md` |
 | Không biết bắt đầu từ đâu · ai làm khâu nào | `workflows/00_WORKFLOW_INDEX.md` |
 | Điều hướng cả chu trình 7 khâu | `.agents/skills/campaign-pipeline/SKILL.md` |
 | Sản xuất nội dung từ Content đã duyệt | `.agents/skills/content-production/SKILL.md` |
@@ -54,10 +54,14 @@
 | Dựng HTML tự chứa để xem trước bài | `scripts/pipeline/build_blog_html.py` |
 | Xem toàn cảnh chiến dịch / mọi bài | `scripts/pipeline/build_views.py` (mở `index.html` bằng cách bấm đúp) |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
+| **CHẠY CHIẾN DỊCH TRONG PHIÊN — quy trình MẶC ĐỊNH** (agent chạy trọn đường ống, dừng ở 3 cổng hỏi người ngay; agent phải trả về gì mỗi bước) | `knowledge/toolchains/QUY_TRINH_TRONG_PHIEN.md` |
+| **Bản mô tả đường ống MÁY ĐỌC ĐƯỢC** (10 trạng thái · 3 cổng · lệnh · artefact · 2 chế độ chạy) | `knowledge/data_model/duong_ong.yaml` |
 | **Thứ tự các bước và CỔNG DUYỆT nằm ở đâu** (4 lệnh, 3 cổng — đọc TRƯỚC hai dòng dưới) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` |
 | **Telegram làm TRUNG GIAN người ↔ agent** (vòng đời tiến trình · chuyện "50 giây" · vỡ vòng thì nối lại) | `knowledge/toolchains/TELEGRAM_LAM_TRUNG_GIAN.md` |
 | **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
+| **Điều phối cả đường ống trong phiên** (chạy tới cổng rồi dừng, kê file cho người mở) | `scripts/pipeline/chay_quy_trinh.py` |
+| **Mở / từ chối cổng KHÔNG cần Telegram** (kho cổng dùng chung của mọi mặt tiền) | `scripts/pipeline/cong_duyet.py` |
 | Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dung-trang`/`phat-hanh`) | `scripts/pipeline/campaign_step.py` |
 | **Nối kênh ngoài của BẠN** (`audio_cmd`/`youtube_cmd`/`facebook_cmd` — không khoá CLI nào) | `knowledge/toolchains/TELEGRAM_LAM_TRUNG_GIAN.md` §6b |
 | **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` §6 |
