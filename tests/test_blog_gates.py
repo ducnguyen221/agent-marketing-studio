@@ -12,6 +12,7 @@ Nên ở đây có ba loại khẳng định, và thiếu loại nào cũng đ�
      thứ nó chưa hề đo là cổng nói dối.
 """
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -65,7 +66,8 @@ def test_cong_xanh_khong_bi_do_lay(do):
 def test_so_do_dung_chu_khong_chi_do(do):
     """Đây là phần phân biệt 'đỏ' với 'đỏ đúng lý do'."""
     assert do["G02"]["measured"] == 3            # 3 H2, ngưỡng 6-12
-    assert do["G05"]["measured"] == 0            # 0 nguồn ngoài
+    # Đổi 12/09/2026: G05 đo MỤC `## Nguồn tham khảo`, và fixture đỏ không có mục đó.
+    assert do["G05"]["measured"] == "không có mục"
     assert do["G06"]["measured"] == "0 khối / 0 từ"   # không có khối chính kiến nào
     assert do["G08"]["measured"] == 2            # 2 dấu [KIỂM CHỨNG] còn mở
     assert do["G09"]["measured"] == 2            # 2 URL trong thân post
@@ -109,6 +111,8 @@ def bai_xanh(tmp_path):
         # bản đầu vẫn cho xanh vì nó chỉ khớp dòng tiêu đề của khối.
         + "> **Góc nhìn:** " + "chính kiến của tác giả nói rõ ra. " * 12 + "\n\n"
         + "Theo Reuters, số liệu như vậy. Theo mình thì khác.\n\n"
+        # Nguồn nay phải kê ở MỤC RIÊNG cuối bài, không rải trong thân — đổi 12/09/2026.
+        + "\n## Nguồn tham khảo\n\n"
         + "\n".join(f"- Nguồn {i}: https://vidu{i}.com/bai-viet (truy cập 04/09/2026)"
                     for i in range(1, 5))
         # Đệm cho bài rơi vào dải 2500-4000 từ. Con số 500 chọn bằng cách ĐO rồi chỉnh:
@@ -140,6 +144,12 @@ def bai_xanh(tmp_path):
         _sig + bytes(4) + b"IHDR" + (1080).to_bytes(4, "big") + (1350).to_bytes(4, "big"))
     (PP.p(d, "fb_prompt")).write_text("prompt đã dùng để sinh ảnh. " * 6,
                                           encoding="utf-8")
+    # research.md phải CÓ, và host phải khớp mục Nguồn tham khảo — G05 đối chiếu hai bên.
+    (PP.p(d, "research")).write_text(
+        "---\nkey_sources: bảng nguồn\n---\n\n"
+        + "\n".join(f"| {i} | https://vidu{i}.com/goc | tác giả {i} |"
+                    for i in range(1, 5)),
+        encoding="utf-8")
     return d
 
 
@@ -321,3 +331,69 @@ def test_mien_placeholder_la_HOAN_theo_buoc_khong_phai_THA(bai_xanh):
     for stage in ("publish", "release"):
         r = _theo_ma_stage(bai_xanh, stage)["G23"]
         assert r["status"] == "fail" and r["level"] == G.CHAN, f"{stage}: {r}"
+
+
+# ── G05 và G06 đo CHẤT, không đo vỏ (đổi 12/09/2026) ────────────────────────
+
+def test_G05_dem_nguon_o_MUC_RIENG_khong_dem_link_trong_than(bai_xanh):
+    """Đo thật: NEN-004 có 3 link trong thân nhưng đều là link NỘI BỘ, và 5 nguồn thật
+    nằm ở research.md. Cổng bản cũ đếm link thân bài nên báo 0 và chặn một bài có kỷ luật
+    nguồn tốt. Nay đếm ở mục người đọc kiểm chứng được."""
+    theo = _theo_ma_stage(bai_xanh, "write")
+    assert theo["G05"]["status"] == "pass", theo["G05"]
+
+    blog = PP.p(bai_xanh, "blog")
+    t = blog.read_text(encoding="utf-8")
+    blog.write_text(t.replace("## Nguồn tham khảo", "## Một mục khác"),
+                    encoding="utf-8", newline="\n")
+    r = _theo_ma_stage(bai_xanh, "write")["G05"]
+    assert r["status"] == "fail" and "không có mục" in str(r["measured"]), r
+
+
+def test_G05_van_bat_nguon_LAC_khong_co_trong_research(bai_xanh):
+    """Kê nguồn ở mục riêng không có nghĩa là muốn kê gì cũng được."""
+    blog = PP.p(bai_xanh, "blog")
+    t = blog.read_text(encoding="utf-8")
+    blog.write_text(t + "\n- Nguồn bịa: https://khong-co-trong-research.com/x\n",
+                    encoding="utf-8", newline="\n")
+    r = _theo_ma_stage(bai_xanh, "write")["G05"]
+    assert r["status"] == "fail" and "lạc" in str(r["measured"]), r
+
+
+def test_G06_nhan_CA_H2_lan_khoi_trich_dan(tmp_path, bai_xanh):
+    """Đo thật: NEN-004 có `## Góc nhìn của mình` dài 399 từ mà cổng cũ báo 0 khối."""
+    blog = PP.p(bai_xanh, "blog")
+    t = blog.read_text(encoding="utf-8")
+    # Bỏ khối trích dẫn, thay bằng một mục H2 cùng nghĩa.
+    t = re.sub(r"(?m)^>\s*\*\*Góc nhìn:.*$", "", t)
+    t += "\n## Góc nhìn của mình\n\n" + "chính kiến nói rõ ra. " * 20 + "\n"
+    blog.write_text(t, encoding="utf-8", newline="\n")
+    r = _theo_ma_stage(bai_xanh, "write")["G06"]
+    assert r["status"] == "pass", r
+
+
+def test_G06_H2_RONG_van_do(bai_xanh):
+    """Nhận thêm hình dạng không có nghĩa là hạ chuẩn: mục rỗng vẫn là không có chính kiến."""
+    blog = PP.p(bai_xanh, "blog")
+    t = re.sub(r"(?m)^>\s*\*\*Góc nhìn:.*$", "", blog.read_text(encoding="utf-8"))
+    blog.write_text(t + "\n## Góc nhìn của mình\n\nNgắn thôi.\n",
+                    encoding="utf-8", newline="\n")
+    r = _theo_ma_stage(bai_xanh, "write")["G06"]
+    assert r["status"] == "fail", r
+
+
+def test_G05_KHONG_dem_link_nam_trong_THAN_bai(bai_xanh):
+    """Link rải trong thân không còn bị tính — kể cả link không có trong research.md.
+
+    Đây là chỗ phân biệt "đếm ở mục Nguồn" với "đếm cả bài". Nếu cổng vẫn quét cả bài thì
+    một link minh hoạ giữa thân sẽ bị tính là nguồn lạc và chặn oan.
+    """
+    blog = PP.p(bai_xanh, "blog")
+    t = blog.read_text(encoding="utf-8")
+    dau = t.index("## Nguồn tham khảo")
+    t = t[:dau] + "\nMinh hoạ: https://mot-trang-minh-hoa.com/anh\n\n" + t[dau:]
+    blog.write_text(t, encoding="utf-8", newline="\n")
+
+    r = _theo_ma_stage(bai_xanh, "write")["G05"]
+    assert r["status"] == "pass", f"link trong thân bị tính là nguồn: {r}"
+    assert r["measured"] == "4 nguồn, 0 lạc", r["measured"]

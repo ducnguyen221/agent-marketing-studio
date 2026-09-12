@@ -33,6 +33,7 @@ import sys
 # xong việc. Đo thật 12/09/2026: lỗi này làm bước `check-gates` hỏng và vòng chạy
 # quay tít vì artefact cũ vẫn còn nên không ai thấy bước đó chưa tiến.
 from pathlib import Path
+from urllib.parse import urlsplit
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
@@ -75,7 +76,14 @@ _SO_THU_TU = re.compile(r"^\s*\d+\.\s+\S", re.M)
 # Callout = dòng trích dẫn mở đầu bằng emoji. Cố ý KHÔNG quét cả Unicode: ký tự toán học
 # đậm (U+1D400…) cũng nằm ngoài BMP và sẽ bị đếm nhầm là emoji.
 _CALLOUT = re.compile("^>\\s*[\U0001F300-\U0001FAFF←-➿⬀-⯿]", re.M)
+# Khối chính kiến nhận HAI hình dạng: khối trích dẫn `> **Góc nhìn:**` hoặc một mục
+# `## ...góc nhìn...`. Bắt bài đổi hình dạng chỉ để chiều cổng là bắt nội dung phục vụ
+# phép đo — mà nội dung mới là thứ cổng tồn tại để bảo vệ.
 _GOC_NHIN = re.compile(r"^>\s*\*\*Góc nhìn:", re.M)
+_GOC_NHIN_H2 = re.compile(r"^##\s+.*góc nhìn.*$", re.M | re.I)
+# Mục nguồn cuối bài — chỗ người đọc kiểm chứng được. Nhận vài cách gọi thường gặp.
+_MUC_NGUON = re.compile(r"^##\s+(?:nguồn(?:\s+tham\s+khảo)?|tham\s+khảo|tài\s+liệu)\s*$",
+                        re.M | re.I)
 _THEO_NGUON = re.compile(r"\bTheo\s+(?!mình\b|tôi\b)[A-ZĐÀ-Ỹ]", re.U)
 _THEO_MINH = re.compile(r"\bTheo\s+(?:mình|tôi)\b|\bmình\s+(?:nghĩ|cho rằng)\b", re.I | re.U)
 # Bắt cả chữ thường và các biến thể. Bản đầu chỉ khớp đúng "[KIỂM CHỨNG]" hoa, nên
@@ -103,6 +111,34 @@ def _doc(p: Path) -> str | None:
 
 def _tu(s: str) -> int:
     return len(s.split())
+
+
+def _dem_goc_nhin(blog: str) -> tuple[int, int]:
+    """Số khối chính kiến và số từ của khối DÀI NHẤT, nhận cả hai hình dạng.
+
+    Đếm chữ THỰC SỰ có trong khối. Bản đầu chỉ khớp dòng tiêu đề, nên một khối rỗng hoàn
+    toàn vẫn cho G06 xanh — tức cổng bảo đảm một thứ không tồn tại.
+    """
+    khoi = 0
+    dai_nhat = 0
+
+    for m in _GOC_NHIN.finditer(blog):
+        khoi += 1
+        dong = []
+        for l in blog[m.start():].splitlines():
+            if dong and not l.lstrip().startswith(">"):
+                break
+            dong.append(l.lstrip("> ").strip())
+        dai_nhat = max(dai_nhat, len(" ".join(dong).split()) - 2)  # trừ "**Góc nhìn:**"
+
+    for m in _GOC_NHIN_H2.finditer(blog):
+        khoi += 1
+        sau = blog[m.end():]
+        het = re.search(r"(?m)^##\s", sau)
+        than = sau[:het.start()] if het else sau
+        dai_nhat = max(dai_nhat, _tu(than))
+
+    return khoi, dai_nhat
 
 
 def _thoi_luong(p: Path) -> float | None:
@@ -187,33 +223,48 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
         # cũng cho G05 xanh — mà cổng này tồn tại đúng để chặn việc bịa nguồn.
         # Không có research.md -> chỉ đếm được, và nói rõ là chỉ đếm được.
         nc = _doc(PP.p(d, "research"))
-        if nc is None:
-            s.do("G05", "Nguồn ngoài (chỉ đếm — không có research.md)", len(ngoai),
-                 "3-7", 3 <= len(ngoai) <= 7,
+        # ĐỔI 12/09/2026 — trước đó cổng này đếm link RẢI TRONG THÂN BÀI và đòi 3–7 cái.
+        #
+        # Kênh này viết kể chuyện cho người không chuyên; chèn link giữa dòng làm gãy mạch
+        # đọc, và bộ viết vốn đã dẫn nguồn bằng TÊN + NGÀY ngay tại chỗ khẳng định. Đo thật
+        # trên NEN-004: research.md có 5 nguồn thật, thân bài có 3 link nhưng đều là link
+        # nội bộ sang bài khác ⇒ cổng đếm 0 và báo đỏ một bài có kỷ luật nguồn tốt.
+        #
+        # Nay đo ĐÚNG CHỖ người đọc kiểm chứng được: mục `## Nguồn tham khảo` cuối bài.
+        # Link rải trong thân KHÔNG cấm, chỉ không còn bắt buộc.
+        muc_nguon = _MUC_NGUON.search(blog)
+        than_nguon = blog[muc_nguon.end():] if muc_nguon else ""
+        ke = sorted({u for u in _URL.findall(than_nguon) if home_domain not in u})
+        if not muc_nguon:
+            s.do("G05", "Nguồn ngoài (kê ở mục Nguồn tham khảo)", "không có mục",
+                 "3-7 và khớp research.md", False,
+                 note="bài thiếu mục `## Nguồn tham khảo` — người đọc không kiểm chứng được")
+        elif nc is None:
+            s.do("G05", "Nguồn ngoài (kê ở mục Nguồn tham khảo)", len(ke),
+                 "3-7", 3 <= len(ke) <= 7,
                  note="không đối chiếu được: thiếu research.md")
         else:
             # So theo host, không so nguyên URL: bài hay trích link sâu hơn bảng nguồn.
             def _host(u):
-                return re.sub(r"^https?://(?:www\.)?([^/]+).*$", r"\1", u).lower()
+                # `urlsplit` chu KHONG `re.sub` voi nhom thay the: nhom `` di qua vai
+                # tang cong cu la bi nuot thanh ky tu dieu khien, va khi ay MOI host tra
+                # ve cung mot chuoi nen khong nguon nao bi tinh la lac. Fail-open, cam.
+                # Dinh dung loi nay 12/09/2026 — test bat duoc.
+                return urlsplit(u).netloc.lower().removeprefix("www.")
             host_nguon = {_host(u) for u in _URL.findall(nc)}
-            lac = sorted({u for u in ngoai if _host(u) not in host_nguon})
-            s.do("G05", "Nguồn ngoài (có trong research.md)",
-                 f"{len(ngoai)} nguồn, {len(lac)} lạc", "3-7 và không nguồn nào lạc",
-                 3 <= len(ngoai) <= 7 and not lac,
+            lac = sorted({u for u in ke if _host(u) not in host_nguon})
+            s.do("G05", "Nguồn ngoài (kê ở mục Nguồn tham khảo)",
+                 f"{len(ke)} nguồn, {len(lac)} lạc", "3-7 và khớp research.md",
+                 3 <= len(ke) <= 7 and not lac,
                  note=("URL không có trong research.md: " + "; ".join(lac[:4]))
-                 if lac else "; ".join(ngoai[:5]))
-        gn = len(_GOC_NHIN.findall(blog))
-        # Đếm chữ THỰC SỰ có trong khối chính kiến. Bản đầu chỉ khớp dòng tiêu đề, nên
-        # một khối rỗng hoàn toàn vẫn cho G06 xanh — tức cổng bảo đảm một thứ không tồn tại.
-        tu_gn = 0
-        for m_gn in _GOC_NHIN.finditer(blog):
-            khoi = []
-            for row in blog[m_gn.start():].splitlines():
-                if khoi and not row.lstrip().startswith(">"):
-                    break
-                khoi.append(row.lstrip("> ").strip())
-            tu_gn = max(tu_gn, len(" ".join(khoi).split()) - 2)   # trừ "**Góc nhìn:**"
-        s.do("G06", "Khối > **Góc nhìn:** (số từ)", f"{gn} khối / {tu_gn} từ",
+                 if lac else "; ".join(ke[:5]))
+        # ĐỔI 12/09/2026 — trước đó chỉ nhận khối trích dẫn `> **Góc nhìn:**`.
+        # Đo thật trên NEN-004: bài có mục `## Góc nhìn của mình` dài 399 từ, gấp mười lần
+        # ngưỡng, mà cổng báo 0 khối. Cổng đo VỎ chứ không đo chất. Nay nhận cả hai hình
+        # dạng và vẫn đếm chữ thật — bắt bài đổi hình dạng chỉ để chiều cổng là bắt nội
+        # dung phục vụ phép đo.
+        gn, tu_gn = _dem_goc_nhin(blog)
+        s.do("G06", "Khối chính kiến (H2 hoặc trích dẫn Góc nhìn)", f"{gn} khối / {tu_gn} từ",
              ">=1 khối và >=40 từ", gn >= 1 and tu_gn >= 40,
              note="" if tu_gn >= 40 else "khối chính kiến quá ngắn hoặc rỗng")
         tn, tm = len(_THEO_NGUON.findall(blog)), len(_THEO_MINH.findall(blog))
