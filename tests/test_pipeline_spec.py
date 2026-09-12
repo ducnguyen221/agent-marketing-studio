@@ -131,3 +131,54 @@ def test_lenh_con_va_co_trong_doc_deu_duoc_CLI_hieu(cmd):
     for tu in co:
         assert f'"{tu}"' in source, f"{cmd[1]} không có cờ {tu}"
     assert lenh_con or co, f"dòng lệnh không kiểm được gì: {' '.join(cmd)}"
+
+
+# ── Vỏ PowerShell phải khớp lõi Python ──────────────────────────────────────
+
+RUNNER = ROOT / "scripts" / "runners" / "run-blog-campaign.ps1"
+
+
+def test_runner_ps1_chi_cho_phep_BUOC_CO_THAT():
+    """`ValidateSet` của runner phải là tập con các bước `campaign_step` hiểu được.
+
+    ĐÃ TRẢ GIÁ 12/09/2026: sau đợt đổi tên, `ValidateSet` còn `soan`/`dang` trong khi
+    `campaign_step` đã đổi sang `write`/`publish`. Task chạy theo lịch sẽ chết ở tầng
+    PowerShell với một thông báo chẳng liên quan gì tới nguyên nhân thật.
+    """
+    import campaign_step as CS
+    src = RUNNER.read_text(encoding="utf-8")
+    m = re.search(r"ValidateSet\(([^)]*)\)", src)
+    assert m, "runner không còn ValidateSet — mất luôn lớp chặn tên bước sai"
+    trong_ps1 = {x.strip().strip("'\"") for x in m.group(1).split(",")}
+    hieu_duoc = set(CS.STEPS) | {"status"}
+    assert trong_ps1 <= hieu_duoc, f"runner cho phép bước lạ: {trong_ps1 - hieu_duoc}"
+
+
+def test_runner_ps1_KHONG_con_co_go_hong():
+    """Đợt đổi tên đã bẻ `--lookahead` thành `--batchokahead` ở đúng file này.
+
+    Cờ hỏng nằm trong nhánh `if` chỉ chạy khi có `-Lookahead`, nên không lượt chạy thường
+    nào chạm tới. Nó sẽ nằm im tới đúng ngày ai đó cần dựng trước N ngày.
+    """
+    src = RUNNER.read_text(encoding="utf-8")
+    for co in re.findall(r"'(--[a-z-]+)'", src):
+        assert co in {"--lookahead", "--uat", "--dry-run"}, f"cờ lạ trong runner: {co}"
+
+
+def test_moi_script_NHAC_TEN_trong_doc_deu_CO_THAT():
+    """Bảng tra script chỉ hữu ích khi mọi đường dẫn trong đó mở được.
+
+    Cổng ở trên chỉ soi khối lệnh ```…```; bảng tra viết bằng `code inline` nên lọt lưới.
+    Mà bảng tra chính là chỗ agent nhìn khi một bước hỏng và nó cần biết đọc log ở đâu.
+    """
+    raw = DOC.read_text(encoding="utf-8")
+    thieu = [x for x in sorted(set(re.findall(r"scripts/[a-z_/]+\.(?:py|ps1)", raw)))
+             if not (ROOT / x).is_file()]
+    assert not thieu, f"tài liệu trỏ tới script không tồn tại: {thieu}"
+
+
+def test_bang_tra_co_du_SAU_buoc():
+    """Thiếu một bước trong bảng là agent không biết bước đó gọi gì khi nó hỏng."""
+    raw = DOC.read_text(encoding="utf-8")
+    for step in [b["id"] for b in SPEC["step"] if b["kind"] == "step"]:
+        assert f"`{step}`" in raw, f"bảng tra thiếu bước {step}"

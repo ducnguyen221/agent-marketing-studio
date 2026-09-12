@@ -568,7 +568,7 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
     return {"step": "release", "xu_ly": len(done), "post": done, "failed": failed}
 
 
-BUOC = {"create-post": step_create_post, "write": step_write, "dang": step_publish,
+STEPS = {"create-post": step_create_post, "write": step_write, "publish": step_publish,
         "build-page": step_build_page, "release": step_release}
 
 
@@ -593,7 +593,7 @@ def exit_code(result: dict) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Chạy một bước của chiến dịch blog.")
     ap.add_argument("campaign")
-    ap.add_argument("step", choices=sorted(list(BUOC) + ["status"]))
+    ap.add_argument("step", choices=sorted(list(STEPS) + ["status"]))
     ap.add_argument("--post", default=None,
                     help="giới hạn đúng một bài (mã content_id) — hàng chờ dùng cờ này")
     ap.add_argument("--detail", action="store_true",
@@ -629,11 +629,11 @@ def main() -> int:
         kw["only_post"] = a.post
     if a.step == "create-post":
         kw["lookahead"] = a.lookahead
-    if a.step == "dang":
+    if a.step == "publish":
         kw["uat"] = a.uat
         kw.pop("dry_run", None)
         kw["dry_run"] = a.dry_run
-    result = BUOC[a.step](campaign, **kw)
+    result = STEPS[a.step](campaign, **kw)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return exit_code(result)
 

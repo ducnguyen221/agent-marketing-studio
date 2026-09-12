@@ -10,14 +10,14 @@
 #   create-post ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
 # Gộp lại là dựng lại đúng cái đã bị gỡ 04/09/2026 vì nuốt cổng duyệt của người.
 #
-#   .\run.ps1 -Buoc create-post              dựng bài tới hạn rồi xin duyệt Cổng 1
-#   .\run.ps1 -Buoc soan                  soạn bài đã qua Cổng 1 rồi xin duyệt Cổng 2
-#   .\run.ps1 -Buoc dang                  đăng bài đã qua Cổng 2
-#   .\run.ps1 -Buoc dang -Uat             đăng thử: web ra thư mục nháp, không đụng repo
+#   .\run.ps1 -Step create-post              dựng bài tới hạn rồi xin duyệt Cổng 1
+#   .\run.ps1 -Step write                  soạn bài đã qua Cổng 1 rồi xin duyệt Cổng 2
+#   .\run.ps1 -Step publish                  đăng bài đã qua Cổng 2
+#   .\run.ps1 -Step publish -Uat             đăng thử: web ra thư mục nháp, không đụng repo
 param(
-  [ValidateSet('create-post', 'soan', 'dang')][string]$Buoc = 'create-post',
+  [ValidateSet('create-post', 'write', 'publish')][string]$Step = 'create-post',
   [string]$Config = '',
-  [int]$Truoc = -1,
+  [int]$Lookahead = -1,
   [switch]$Uat,
   [switch]$DryRun
 )
@@ -49,7 +49,7 @@ $cfg = Get-Content $Config -Raw -Encoding UTF8 | ConvertFrom-Json
 # `autonomy` đi theo bản chụp vì PowerShell không đọc được channel.yml. In ra để lượt chạy
 # nền để lại dấu vết: đọc log là biết ngay lượt đó có dừng ở cổng hay không.
 $muc = if ($cfg.autonomy) { [string]$cfg.autonomy } else { 'suggest' }
-Write-Host ("=== " + $Buoc + " · " + (Split-Path $cam -Leaf) + " · autonomy=" + $muc + " ===")
+Write-Host ("=== " + $Step + " · " + (Split-Path $cam -Leaf) + " · autonomy=" + $muc + " ===")
 if ($muc -ne 'full') {
   Write-Host 'che do SUGGEST: buoc nay se DUNG o cong va gui Telegram xin duyet.'
 } else {
@@ -62,8 +62,8 @@ if (-not (Test-Path $py)) {
   exit 2
 }
 
-$argv = @($cam, $Buoc)
-if ($Truoc -ge 0) { $argv += @('--batchokahead', [string]$Truoc) }
+$argv = @($cam, $Step)
+if ($Lookahead -ge 0) { $argv += @('--lookahead', [string]$Lookahead) }
 if ($Uat)         { $argv += '--uat' }
 if ($DryRun)      { $argv += '--dry-run' }
 

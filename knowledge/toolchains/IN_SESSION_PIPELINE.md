@@ -96,6 +96,41 @@ Từ chối có kèm nhận xét thì nhận xét vào kho phản hồi, và vò
 
 Lặp cho tới khi bài `xong` hoặc người bảo dừng.
 
+## 2b. Mỗi bước gọi script nào
+
+Bảng tra nhanh. Bình thường agent chỉ gọi `run_pipeline.py` và nó tự chọn; bảng này để
+**gỡ rối khi một bước hỏng** — biết bước đó thực ra chạy cái gì thì mới đọc log đúng chỗ.
+
+| Bước | Script thi hành | Lệnh gọi thẳng | Sinh ra |
+|---|---|---|---|
+| `create-post` | `scripts/pipeline/new_post.py` | `campaign_step.py <cd> create-post` | thư mục bài + `meta.json` + `publish.json` + khung `content.md` |
+| `write` | hook `runtime.writer_cmd` | `campaign_step.py <cd> write --post <mã>` | `research.md` · `content.md` · `atlas/` `facebook/` `youtube/` |
+| `check-gates` | `scripts/pipeline/blog_gates.py` | `blog_gates.py <thư mục bài>` | `gates.json` |
+| `fix-gates` | hook `runtime.writer_cmd` (đọc thêm `phan-hoi.md`) | `campaign_step.py <cd> write --post <mã>` | `content.md` viết lại |
+| `build-page` | `build_blog_html.py` + `web_publish.py` (+ hook `audio_cmd`) | `campaign_step.py <cd> build-page --post <mã>` | `atlas/atlas.html` + URL vào cột `web` |
+| `release` | hook `youtube_cmd` + `facebook_cmd` | `campaign_step.py <cd> release --post <mã>` | URL vào cột `youtube` / `facebook` |
+
+Cổng và tra cứu:
+
+| Việc | Script |
+|---|---|
+| Xem bài nào ở bước nào | `run_pipeline.py <cd> status` |
+| Đẩy bài tới cổng gần nhất | `run_pipeline.py <cd> run --mode per-post\|by-stage` |
+| Xem ai đang chờ cổng, kèm file để mở | `approval_gate.py <cd> waiting --gate g1\|g2\|g3` |
+| Mở / từ chối cổng | `approval_gate.py <cd> open\|reject --gate … --post … --by … --quote …` |
+| Gửi cổng qua Telegram (tuỳ chọn) | `approve_bus.py send --campaign <cd> --gate g1` |
+| Sinh lại trang đọc | `build_views.py --campaign <cd>` |
+| Xuất Excel | `export_excel.py --campaign <cd>` |
+| Vì sao bài tới trạng thái này | đọc `logs/events.jsonl` |
+| Di trú tên dữ liệu cũ sang mới | `migrate_names.py <cd> [--apply]` |
+
+Chạy nền (không dùng trong phiên): `scripts/runners/run-worker.ps1` cho thợ,
+`scripts/runners/run-approve-poller.ps1` cho poller Telegram,
+`scripts/runners/run-blog-campaign.ps1 -Step create-post` cho task theo lịch.
+
+⚠️ Bốn hook đều **không khoá CLI nào**: không khai thì bước đó bỏ qua chứ không phải lỗi.
+Khai ở khối `runtime:` của `campaign.md`, và chỗ điền là `{post}` (đường dẫn thư mục bài).
+
 ## 3. Ba cổng hỏi gì, và mở file nào để trả lời
 
 | Cổng | Câu hỏi | Người cần mở |

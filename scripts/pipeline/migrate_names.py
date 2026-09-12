@@ -62,7 +62,7 @@ GIA_TRI_GATES = {"xanh": "pass", "do": "fail", "thieu": "missing",
                  "chan": "block", "canh_bao": "warn"}
 
 # Tên bước — nằm trong sổ sự kiện và trong việc của hàng chờ.
-BUOC = {"cho-G1": "await-G1", "cho-G2": "await-G2", "cho-G3": "await-G3",
+STEPS = {"cho-G1": "await-G1", "cho-G2": "await-G2", "cho-G3": "await-G3",
         "dung-bai": "create-post", "soan": "write", "cham-cong": "check-gates",
         "sua-loi-cong": "fix-gates", "dung-trang": "build-page",
         "phat-hanh": "release", "xong": "done", "tiep": "next"}
@@ -93,8 +93,8 @@ def _doi_khoa(d: dict, bang: dict, gia_tri: dict | None = None) -> dict:
         elif isinstance(v, str):
             if gia_tri and v in gia_tri:
                 v = gia_tri[v]
-            elif v in BUOC:
-                v = BUOC[v]
+            elif v in STEPS:
+                v = STEPS[v]
         ra[k2] = v
     return ra
 

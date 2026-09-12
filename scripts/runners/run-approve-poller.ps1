@@ -23,7 +23,7 @@
 # Phủ gần 100%, và tự lành trong vòng 60 giây. Không service nào phải trông.
 param(
   [Parameter(Mandatory = $true)][string]$Campaign,
-  [int]$SongGiay = 3300               # ~55 phút rồi thoát
+  [int]$AliveSeconds = 3300               # ~55 phút rồi thoát
 )
 
 $ErrorActionPreference = 'Stop'
@@ -56,8 +56,8 @@ function Ghi($m) {
   Write-Host $m
 }
 
-Ghi ("=== poller cong duyet · " + (Split-Path $Campaign -Leaf) + " · song " + $SongGiay + "s ===")
-& python $py nhan --campaign $Campaign --follow $SongGiay 2>&1 | ForEach-Object { Ghi ("  " + $_) }
+Ghi ("=== poller cong duyet · " + (Split-Path $Campaign -Leaf) + " · song " + $AliveSeconds + "s ===")
+& python $py receive --campaign $Campaign --follow $AliveSeconds 2>&1 | ForEach-Object { Ghi ("  " + $_) }
 $ma = $LASTEXITCODE
 Ghi ("=== thoat, ma " + $ma + " ===")
 exit $ma

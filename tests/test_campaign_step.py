@@ -192,14 +192,14 @@ def test_da_dang_roi_thi_khong_dang_lai(tmp_path):
 def test_buoc_hong_thi_ma_thoat_KHAC_0():
     assert CS.exit_code({"step": "create-post", "loi": "new_post that bai", "exit": 2}) != 0
     assert CS.exit_code({"step": "write", "failed": [{"id": "T-001", "why": "gen_article"}]}) != 0
-    assert CS.exit_code({"step": "dang", "detail": [{"id": "T-001", "exit": 4}]}) != 0
+    assert CS.exit_code({"step": "publish", "detail": [{"id": "T-001", "exit": 4}]}) != 0
 
 
 def test_KHONG_CO_VIEC_thi_van_la_0():
     """Không có bài nào tới hạn ≠ thất bại. Báo đỏ mỗi ngày rồi thì không ai đọc báo nữa."""
     assert CS.exit_code({"step": "create-post", "tao": 0, "reason": "không có bài nào tới hạn"}) == 0
     assert CS.exit_code({"step": "write", "xu_ly": 0, "failed": [], "cho_nguoi_viet": []}) == 0
-    assert CS.exit_code({"step": "dang", "dang": 1,
+    assert CS.exit_code({"step": "publish", "publish": 1,
                         "detail": [{"id": "T-001", "exit": 0}]}) == 0
 
 
