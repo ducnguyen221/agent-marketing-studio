@@ -179,6 +179,10 @@ def test_moi_script_NHAC_TEN_trong_doc_deu_CO_THAT():
 
 def test_bang_tra_co_du_SAU_buoc():
     """Thiếu một bước trong bảng là agent không biết bước đó gọi gì khi nó hỏng."""
-    raw = DOC.read_text(encoding="utf-8")
+    # Chỉ soi CỘT ĐẦU của bảng. Tìm cả tài liệu thì tên bước xuất hiện ở dòng văn xuôi
+    # nào đó cũng tính là "có", và cổng xanh trong khi bảng đã mất một dòng.
+    o_dau = {l.split("|")[1].strip().strip("`")
+             for l in DOC.read_text(encoding="utf-8").splitlines()
+             if l.startswith("| `")}
     for step in [b["id"] for b in SPEC["step"] if b["kind"] == "step"]:
-        assert f"`{step}`" in raw, f"bảng tra thiếu bước {step}"
+        assert step in o_dau, f"bảng tra thiếu bước {step}"
