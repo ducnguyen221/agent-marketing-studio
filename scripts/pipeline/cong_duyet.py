@@ -361,16 +361,26 @@ def _in_cho(cam: Path, cong: str, *, ra_json: bool) -> int:
     if not ho_so:
         print(f"{cong}: không bài nào đang chờ.")
         return 0
-    print(f"{cong}: {len(ho_so)} bài đang chờ\n")
-    for h in ho_so:
+
+    # TÁCH HAI NHÓM. Cổng 2 gọi là "đang chờ" cả những bài mới chỉ có dòng trong bảng —
+    # chúng chưa viết nên không có file nào để mở. Trộn chung thì một lô 20 bài đổ ra 20
+    # mục dài, người phải tự dò xem mục nào thật sự cần đọc. Bản JSON giữ nguyên cả hai
+    # nhóm: máy không cần được chiều, người thì cần.
+    san_sang = [h for h in ho_so if not h.get("chua_duoc_hoi")]
+    chua = [h for h in ho_so if h.get("chua_duoc_hoi")]
+
+    print(f"{cong}: {len(san_sang)}/{len(ho_so)} bài sẵn sàng hỏi\n")
+    for h in san_sang:
         print(f"· {h['content_id']} — {h['content_name']}")
-        if h.get("chua_duoc_hoi"):
-            print(f"    ⛔ chưa được đem ra hỏi: {h['chua_duoc_hoi']}")
         for nhan, p in h["file"].items():
             print(f"    {nhan:<16} {p}")
         if h["web"]:
             print(f"    {'bản thật':<16} {h['web']}")
         print()
+    if chua:
+        print(f"Chưa được đem ra hỏi ({len(chua)} bài):")
+        for h in chua:
+            print(f"  ⛔ {h['content_id']:<10} {h['chua_duoc_hoi']}")
     return 0
 
 

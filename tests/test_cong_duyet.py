@@ -207,3 +207,29 @@ def test_CLI_cho_in_JSON_doc_duoc_bang_may(tmp_path, capsys):
 
 def test_CLI_khong_thay_campaign_thi_ma_2(tmp_path):
     assert CD.main([str(tmp_path / "khong-co"), "cho", "--cong", "g1"]) == 2
+
+
+def test_CLI_cho_TACH_bai_san_sang_khoi_bai_chua_the_hoi(tmp_path, capsys):
+    """Cổng 2 gọi là "đang chờ" cả bài mới chỉ có dòng trong bảng — chúng không có file nào.
+
+    Trộn chung thì một lô 20 bài đổ ra 20 mục dài và người phải tự dò xem mục nào cần đọc.
+    Bản JSON vẫn giữ cả hai nhóm: máy không cần được chiều, người thì cần.
+    """
+    cam = _cam(tmp_path)
+    # T-001 đã viết và chấm xanh; T-002 mới có dòng trong bảng.
+    CD.mo_cong(cam, "g1", ["T-001", "T-002"], boi="Đức", nguyen_van="ok", qua="phiên")
+    bai = cam / "T-001_bai-mot"
+    bai.mkdir()
+    (bai / "content.md").write_text(
+        "## post:blog_article" + "\n\n" + ("Câu chuyện đời thường mở bài. " * 60),
+        encoding="utf-8", newline="\n")
+    (bai / "gates.json").write_text('{"ket_luan": "xanh", "cong": []}',
+                                    encoding="utf-8", newline="\n")
+
+    CD.main([str(cam), "cho", "--cong", "g2"])
+    ra = capsys.readouterr().out
+    assert "1/2 bài sẵn sàng hỏi" in ra, ra
+    assert "Chưa được đem ra hỏi (1 bài)" in ra, ra
+    # Bài chưa viết KHÔNG được kê file — kê đường dẫn không có thật là mời người mở hụt.
+    dau_t002 = ra.index("T-002")
+    assert "content.md" not in ra[dau_t002:], ra[dau_t002:]
