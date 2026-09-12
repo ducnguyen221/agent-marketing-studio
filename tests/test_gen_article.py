@@ -54,9 +54,9 @@ def test_bo_dau_ngat_cuoi_khoi():
     """
     # Dựng bằng join thay vì chuỗi có escape: nguồn này đi qua nhiều tầng công cụ, mỗi
     # tầng ăn một lớp escape — đã làm hỏng đúng file test này một lần.
-    nguon = "\n".join(["## post:blog_article", "", "Nội dung.", "", "---", "",
+    source = "\n".join(["## post:blog_article", "", "Nội dung.", "", "---", "",
                        "## post:reel", "", "Caption.", ""])
-    ra = G.split_content(nguon)
+    ra = G.split_content(source)
     import tempfile
     d = Path(tempfile.mkdtemp())
     da_ghi = G.write_outputs(ra, str(d))
@@ -94,8 +94,8 @@ def test_KHONG_de_khoi_huong_dan_cua_mau_lot_ra_ban_dang():
     """
     parts = G.split_content(TEMPLATE.read_text(encoding="utf-8"))
     for k, t in parts.items():
-        dau = t.lstrip().split("\n")[0]
-        assert not dau.startswith(">"), f"khối {k} vẫn mở đầu bằng hướng dẫn: {dau[:60]}"
+        start = t.lstrip().split("\n")[0]
+        assert not start.startswith(">"), f"khối {k} vẫn mở đầu bằng hướng dẫn: {start[:60]}"
     assert "Bản FULL cho feed" not in parts.get("fb_post", "")
     assert "Sapo in đậm" not in parts.get("blog", "")
 

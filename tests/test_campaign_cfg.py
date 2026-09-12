@@ -22,23 +22,23 @@ CFG = GOC / "scripts" / "pipeline" / "campaign_cfg.py"
 def _tram(tmp_path: Path, *, campaign_fm: str, brand_json: dict | None = None,
           brand_md: str | None = None, channel_brand: str = "") -> Path:
     """Dựng một trạm tối thiểu: 1 kênh + 1 chiến dịch. Trả về thư mục chiến dịch."""
-    kenh = tmp_path / "kenh-thu"
-    (kenh / "cd-thu").mkdir(parents=True)
-    (kenh / "channel.yml").write_text(
+    channel = tmp_path / "kenh-thu"
+    (channel / "cd-thu").mkdir(parents=True)
+    (channel / "channel.yml").write_text(
         "schema: channel/1\nid: kenh-thu\nlabel: \"Kênh thử\"\n"
         "platforms:\n  - channel: youtube\n    post_formats: [youtube_video]\n"
         + channel_brand, encoding="utf-8")
     if brand_json is not None:
-        (kenh / "brand.json").write_text(json.dumps(brand_json, ensure_ascii=False),
+        (channel / "brand.json").write_text(json.dumps(brand_json, ensure_ascii=False),
                                         encoding="utf-8")
     if brand_md is not None:
-        (kenh / "brand.md").write_text(brand_md, encoding="utf-8")
-    (kenh / "cd-thu" / "campaign.md").write_text(campaign_fm, encoding="utf-8")
-    return kenh / "cd-thu"
+        (channel / "brand.md").write_text(brand_md, encoding="utf-8")
+    (channel / "cd-thu" / "campaign.md").write_text(campaign_fm, encoding="utf-8")
+    return channel / "cd-thu"
 
 
-def _chay(cam: Path):
-    return subprocess.run([sys.executable, str(CFG), "--campaign", str(cam)],
+def _chay(campaign: Path):
+    return subprocess.run([sys.executable, str(CFG), "--campaign", str(campaign)],
                           capture_output=True, text=True, encoding="utf-8")
 
 
@@ -54,23 +54,23 @@ def test_gop_toi_thieu_va_co_meta(tmp_path):
     assert d["_meta"]["schema"] == "campaign-config/1"
     assert d["_meta"]["campaign"] == "cd-thu" and d["_meta"]["channel"] == "kenh-thu"
     # Bản chụp phải TỰ NÓI nó là bản sinh — người mở ra sửa tay là mất lúc chạy sau.
-    assert "đừng sửa tay" in d["_meta"]["canh_bao"].lower()
+    assert "đừng sửa tay" in d["_meta"]["warn"].lower()
 
 
 def test_campaign_de_len_kenh(tmp_path):
     """Cùng một khoá ở hai tầng: campaign phải thắng. Sai chiều = mọi campaign giống nhau."""
-    cam = _tram(tmp_path, brand_json={"label": "của kênh", "repo": "r"},
+    campaign = _tram(tmp_path, brand_json={"label": "của kênh", "repo": "r"},
                 campaign_fm=FM_TOI_THIEU)
-    d = json.loads(_chay(cam).stdout)
+    d = json.loads(_chay(campaign).stdout)
     assert d["label"] == "Nhãn thử"      # campaign đè
     assert d["repo"] == "r"              # khoá kênh vẫn còn
 
 
 def test_channel_yml_brand_lam_nen_brand_json_de_len(tmp_path):
     """`channel.yml:brand` là đích đến, `brand.json` là bản đang chạy — bản đang chạy thắng."""
-    cam = _tram(tmp_path, channel_brand="brand:\n  repo: moi\n  gh_repo: gh\n",
+    campaign = _tram(tmp_path, channel_brand="brand:\n  repo: moi\n  gh_repo: gh\n",
                 brand_json={"repo": "dang-chay"}, campaign_fm=FM_TOI_THIEU)
-    d = json.loads(_chay(cam).stdout)
+    d = json.loads(_chay(campaign).stdout)
     assert d["repo"] == "dang-chay"
     assert d["gh_repo"] == "gh"          # khoá chỉ có ở channel.yml không bị mất
 
@@ -132,9 +132,9 @@ def test_frontmatter_hong_thi_dung_han_khong_nuot(tmp_path):
 
 def test_brand_md_gop_cau_chu_cap_kenh(tmp_path):
     """profile.md đã gộp vào brand.md — câu chữ cấp kênh phải ra được tới bản chụp."""
-    cam = _tram(tmp_path, brand_md="---\ntagline: \"Câu định vị\"\nwelcome: \"Chào\"\n---\n\nGiọng.\n",
+    campaign = _tram(tmp_path, brand_md="---\ntagline: \"Câu định vị\"\nwelcome: \"Chào\"\n---\n\nGiọng.\n",
                 campaign_fm=FM_TOI_THIEU)
-    d = json.loads(_chay(cam).stdout)
+    d = json.loads(_chay(campaign).stdout)
     assert d["tagline"] == "Câu định vị" and d["welcome"] == "Chào"
 
 
@@ -154,9 +154,9 @@ def test_export_excel_doc_het_khoa_research_md_co_cot_tuong_ung():
     fm, _ = md_io.read_fm(GOC / "templates" / "station" / "_channel" / "_campaign" / "_content" / "research.md")
     khai = set(fm) - {"schema", "campaign_id", "content_id"}
     co_cot = khai & set(EX.COT_CONTENT)
-    nguon = (GOC / "scripts" / "pipeline" / "export_excel.py").read_text(encoding="utf-8")
+    source = (GOC / "scripts" / "pipeline" / "export_excel.py").read_text(encoding="utf-8")
     # Cắt đúng thân hàm dựng dòng Content để không khớp nhầm chỗ khác trong file.
-    than = nguon.split("def _dong_content")[1].split("def _dong_post")[0]
+    than = source.split("def _dong_content")[1].split("def _dong_post")[0]
     thieu = sorted(k for k in co_cot if f'"{k}"' not in than)
     assert not thieu, (
         f"research.md khai {sorted(thieu)} và sheet Content có cột tương ứng, "
@@ -166,11 +166,11 @@ def test_export_excel_doc_het_khoa_research_md_co_cot_tuong_ung():
 def test_autonomy_di_theo_ban_chup(tmp_path):
     """PowerShell 5.1 không đọc được YAML — không có khoá này trong bản chụp thì cổng tự
     trị ở tầng runner KHÔNG TỒN TẠI, nó chỉ còn là một lời dặn trong tài liệu."""
-    cam = _tram(tmp_path, campaign_fm=FM_TOI_THIEU)
-    (cam.parent / "channel.yml").write_text(
-        (cam.parent / "channel.yml").read_text(encoding="utf-8") + "autonomy: full\n",
+    campaign = _tram(tmp_path, campaign_fm=FM_TOI_THIEU)
+    (campaign.parent / "channel.yml").write_text(
+        (campaign.parent / "channel.yml").read_text(encoding="utf-8") + "autonomy: full\n",
         encoding="utf-8")
-    r = _chay(cam)
+    r = _chay(campaign)
     assert r.returncode == 0, r.stderr
     assert json.loads(r.stdout)["autonomy"] == "full"
 
@@ -192,8 +192,8 @@ def test_campaign_md_KHONG_tu_nang_quyen_duoc(tmp_path):
     """
     fm = FM_TOI_THIEU.replace("  runner: chay.ps1",
                               "  runner: chay.ps1\n  autonomy: full")
-    cam = _tram(tmp_path, campaign_fm=fm)
-    r = _chay(cam)
+    campaign = _tram(tmp_path, campaign_fm=fm)
+    r = _chay(campaign)
     assert r.returncode == 0, r.stderr
     assert json.loads(r.stdout)["autonomy"] == "suggest", \
         "campaign.md nâng được quyền cho chính nó — cổng tự trị thủng"

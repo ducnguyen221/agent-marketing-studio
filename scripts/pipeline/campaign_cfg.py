@@ -96,12 +96,12 @@ def _doc_fm(p: Path) -> dict:
     return fm
 
 
-def gop(cam_dir: Path) -> dict:
+def gop(campaign_dir: Path) -> dict:
     """Ghép 4 tầng thành một dict phẳng + các khối lồng. Không ghi file nào."""
-    cam_md = cam_dir / SP.MOC_CHIEN_DICH
+    cam_md = campaign_dir / SP.MOC_CHIEN_DICH
     if not cam_md.is_file():
         raise FileNotFoundError(
-            f"không thấy {SP.MOC_CHIEN_DICH} trong {cam_dir}.\n"
+            f"không thấy {SP.MOC_CHIEN_DICH} trong {campaign_dir}.\n"
             f"Một thư mục chiến dịch được nhận ra BẰNG file này — thiếu nó thì cả "
             f"check_tree, build_views lẫn export_excel đều không thấy chiến dịch.")
 
@@ -207,11 +207,11 @@ def gop(cam_dir: Path) -> dict:
     #
     # Tuyệt đối chứ không tương đối: runner `Set-Location` sang thư mục repo tin ở giữa
     # chừng (git pull/push), nên đường tương đối sẽ trỏ sai từ đó trở đi.
-    ra["out_root"] = str(cam_dir / (ra.get("out_dir") or "out"))
-    ra["log_dir"] = str(cam_dir / "logs")
+    ra["out_root"] = str(campaign_dir / (ra.get("out_dir") or "out"))
+    ra["log_dir"] = str(campaign_dir / "logs")
     # Prompt cũng là thứ RIÊNG của chiến dịch, không phải của kênh: hai chiến dịch cùng
     # kênh (bản tin ngày và bản tin tuần) có cách viết khác hẳn nhau.
-    ra["prompt_path"] = str(cam_dir / (ra.get("prompt") or "prompt.txt"))
+    ra["prompt_path"] = str(campaign_dir / (ra.get("prompt") or "prompt.txt"))
 
     thieu = [k for k in BAT_BUOC if not ra.get(k)]
     if thieu:
@@ -222,7 +222,7 @@ def gop(cam_dir: Path) -> dict:
 
     ra["_meta"] = {
         "schema": SCHEMA,
-        "campaign": cam_dir.name,
+        "campaign": campaign_dir.name,
         "channel": kenh_dir.name,
         "generated_at": datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"),
         "generated_from": [
@@ -231,7 +231,7 @@ def gop(cam_dir: Path) -> dict:
             "brand.md" if (kenh_dir / "brand.md").is_file() else None,
             SP.MOC_CHIEN_DICH,
         ],
-        "canh_bao": "BẢN CHỤP SINH TỰ ĐỘNG — đừng sửa tay, lượt chạy sau ghi đè.",
+        "warn": "BẢN CHỤP SINH TỰ ĐỘNG — đừng sửa tay, lượt chạy sau ghi đè.",
     }
     ra["_meta"]["generated_from"] = [x for x in ra["_meta"]["generated_from"] if x]
     return ra
@@ -243,9 +243,9 @@ def main(argv=None) -> int:
     ap.add_argument("--out", default="", help="ghi ra file thay vì stdout")
     a = ap.parse_args(argv)
 
-    cam = Path(a.campaign).expanduser().resolve()
+    campaign = Path(a.campaign).expanduser().resolve()
     try:
-        cfg = gop(cam)
+        cfg = gop(campaign)
     except (FileNotFoundError, ValueError, yaml.YAMLError, json.JSONDecodeError) as e:
         sys.stderr.write(f"campaign_cfg: {e}\n")
         return 2
@@ -254,7 +254,7 @@ def main(argv=None) -> int:
     if a.out:
         # Nguyên tử: PowerShell có thể đọc file này ngay sau khi lệnh trả về; ghi thẳng
         # thì có cửa sổ đọc phải file viết dở.
-        md_io.ghi_nguyen_tu(Path(a.out), txt)
+        md_io.write_atomic(Path(a.out), txt)
     else:
         sys.stdout.write(txt)
     return 0

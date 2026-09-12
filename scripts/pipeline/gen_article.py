@@ -114,16 +114,16 @@ def _bo_huong_dan_dau_khoi(text):
     Phần bỏ được TRẢ VỀ để ghi vào báo cáo: bỏ im lặng thì một trích dẫn mở bài hợp lệ
     biến mất mà không ai biết.
     """
-    dong = text.split("\n")
+    row = text.split("\n")
     i = 0
-    while i < len(dong) and not dong[i].strip():
+    while i < len(row) and not row[i].strip():
         i += 1
-    if i >= len(dong) or not dong[i].lstrip().startswith(">"):
+    if i >= len(row) or not row[i].lstrip().startswith(">"):
         return text, ""
-    dau = i
-    while i < len(dong) and dong[i].lstrip().startswith(">"):
+    start = i
+    while i < len(row) and row[i].lstrip().startswith(">"):
         i += 1
-    return "\n".join(dong[i:]).strip("\n"), "\n".join(dong[dau:i]).strip("\n")
+    return "\n".join(row[i:]).strip("\n"), "\n".join(row[start:i]).strip("\n")
 
 
 def split_content(md_text, da_bo=None):
@@ -139,12 +139,12 @@ def split_content(md_text, da_bo=None):
     cur = None     # (key, level, list)
     for raw in lines:
         # Thứ tự nhận dạng: neo "## post:x" -> "### comment_1" -> heading đánh số.
-        ma = _ANCHOR_RE.match(raw)
-        mc = _COMMENT_RE.match(raw) if ma is None else None
-        m = _SECTION_RE.match(raw) if (ma is None and mc is None) else None
-        if ma is not None:
-            level = len(ma.group(1))
-            key = _ANCHOR_TO_KEY.get(ma.group(2).lower())
+        job_id = _ANCHOR_RE.match(raw)
+        mc = _COMMENT_RE.match(raw) if job_id is None else None
+        m = _SECTION_RE.match(raw) if (job_id is None and mc is None) else None
+        if job_id is not None:
+            level = len(job_id.group(1))
+            key = _ANCHOR_TO_KEY.get(job_id.group(2).lower())
         elif mc is not None:
             # comment_1 lồng bên trong facebook_post: đóng khối cha rồi mở khối riêng,
             # bất kể cấp heading, nên ép level về cấp của khối đang mở.
@@ -155,7 +155,7 @@ def split_content(md_text, da_bo=None):
             num = int(m.group(2))
             label = m.group(3).strip()
             key = _classify_heading(num, label)
-        if ma is not None or mc is not None or m:
+        if job_id is not None or mc is not None or m:
             if key is not None:
                 # Đóng section hiện tại nếu heading mới cùng cấp hoặc nông hơn.
                 if cur and level <= cur[1]:

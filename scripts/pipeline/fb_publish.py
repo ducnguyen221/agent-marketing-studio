@@ -88,7 +88,7 @@ def _muc_tu_tri(duong_bai: str | None, station: str | None = None) -> tuple[str,
     Không tìm được kênh → trả `("?", …)`, và người gọi coi đó là CHƯA CHO PHÉP.
     """
     if not duong_bai:
-        return "?", "không biết bài thuộc kênh nào (thiếu --bai)"
+        return "?", "không biết bài thuộc kênh nào (thiếu --post)"
     d = Path(duong_bai).resolve()
 
     # Kênh phải CÓ TRONG SỔ. Trước bản vá này hàm lấy `channel.yml` đầu tiên gặp khi đi ngược
@@ -112,32 +112,32 @@ def _muc_tu_tri(duong_bai: str | None, station: str | None = None) -> tuple[str,
             return "?", f"{cha} có trong CHANNELS.md nhưng thiếu channel.yml"
         try:
             import yaml
-            muc = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("autonomy")
-            return (muc or "?"), str(f)
+            level = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("autonomy")
+            return (level or "?"), str(f)
         except Exception as e:              # noqa: BLE001
             return "?", f"{f} đọc không được: {e}"
     return "?", (f"{d} không nằm trong kênh nào của CHANNELS.md "
                  f"({len(dang_ky)} kênh đã đăng ký)")
 
 
-def _cong_2(bai: Path, message_file: str, comment_file: str) -> tuple[bool, str]:
-    """Kiểm bài ĐÃ QUA CỔNG 2 chưa, và `--bai` có đúng là chỗ chứa nội dung đang đăng không.
+def _cong_2(post: Path, message_file: str, comment_file: str) -> tuple[bool, str]:
+    """Kiểm bài ĐÃ QUA CỔNG 2 chưa, và `--post` có đúng là chỗ chứa nội dung đang đăng không.
 
     Hai điều, vì thiếu điều nào cũng đủ để đăng nhầm:
 
-    1. **`--bai` phải chứa chính file đang đăng.** Nếu không, trỏ `--bai` vào một kênh đang
+    1. **`--post` phải chứa chính file đang đăng.** Nếu không, trỏ `--post` vào một kênh đang
        `autonomy: full` là mở được cổng cho nội dung của kênh khác — cổng tự trị thành ra
        vô nghĩa vì nó gác một thứ không liên quan tới thứ sắp đăng.
     2. **`posts[]` của kênh facebook phải `review.status == approved`, có `approved_by`,**
        và `quality_check` không `failed`. Cổng tự trị trả lời "kênh này có được đăng tự động
        không"; Cổng 2 trả lời "bài NÀY có được đăng không". Hai câu khác nhau.
     """
-    d = Path(bai).resolve()
+    d = Path(post).resolve()
     for f in (message_file, comment_file):
         try:
             Path(f).resolve().relative_to(d)
         except ValueError:
-            return False, (f"--bai {d} không chứa {f} — cổng phải gác đúng nội dung sắp "
+            return False, (f"--post {d} không chứa {f} — cổng phải gác đúng nội dung sắp "
                            f"đăng, không phải một thư mục bất kỳ")
 
     pj_p = d / "publish.json"
@@ -175,7 +175,7 @@ def main(argv=None) -> int:
     ap.add_argument("--image", required=True, help="ảnh infographic đính kèm")
     ap.add_argument("--comment-file", required=True, help="comment đầu — PHẢI có ít nhất 1 URL")
     ap.add_argument("--dry-run", action="store_true", help="kiểm hết nhưng không gọi Graph")
-    ap.add_argument("--bai", help="thư mục bài — nguồn của cổng tự trị VÀ cổng 2. Bắt buộc khi đăng thật.")
+    ap.add_argument("--post", help="thư mục bài — nguồn của cổng tự trị VÀ cổng 2. Bắt buộc khi đăng thật.")
     ap.add_argument("--station", default=None,
                     help="trạm chứa CHANNELS.md (mặc định: như studio_paths)")
     a = ap.parse_args(argv)
@@ -208,33 +208,33 @@ def main(argv=None) -> int:
         return 0
 
     # --- CỔNG 2: bài NÀY đã được người duyệt chưa -------------------------------
-    if not a.bai:
+    if not a.post:
         sys.stderr.write(chr(10).join([
             "",
-            "Thiếu --bai. Đăng thật bắt buộc có nó, vì hai cổng đều đọc từ thư mục bài:",
+            "Thiếu --post. Đăng thật bắt buộc có nó, vì hai cổng đều đọc từ thư mục bài:",
             "  · Cổng 2   — publish.json: người đã duyệt chưa, ai duyệt",
             "  · tự trị   — channel.yml: kênh có được đăng tự động không",
             "",
-            "Chạy lại với --bai <thư mục bài>, hoặc --dry-run để chỉ kiểm.",
+            "Chạy lại với --post <thư mục bài>, hoặc --dry-run để chỉ kiểm.",
             ""]))
         return 4
-    ok2, vi_sao = _cong_2(Path(a.bai), a.message_file, a.comment_file)
+    ok2, why = _cong_2(Path(a.post), a.message_file, a.comment_file)
     if not ok2:
         sys.stderr.write(chr(10).join([
-            "", f"KHÔNG đăng thật — chưa qua Cổng 2: {vi_sao}", "",
+            "", f"KHÔNG đăng thật — chưa qua Cổng 2: {why}", "",
             "Cổng 2 là dấu vết của NGƯỜI, không phải cái cờ:",
             '  register_publish.py <bài> approve --by "<tên>" --note "<câu duyệt nguyên văn>"',
             ""]))
         return 4
-    print(f"  cổng 2   : {vi_sao}")
+    print(f"  cổng 2   : {why}")
 
     # --- CỔNG TỰ TRỊ: chỉ `full` mới được đăng thật ------------------------------
-    muc, nguon = _muc_tu_tri(a.bai, a.station)
-    if muc != "full":
+    level, source = _muc_tu_tri(a.post, a.station)
+    if level != "full":
         sys.stderr.write(chr(10).join([
             "",
-            f"KHÔNG đăng thật — mức tự trị của kênh là {muc!r}, cần 'full'.",
-            f"  đọc từ: {nguon}",
+            f"KHÔNG đăng thật — mức tự trị của kênh là {level!r}, cần 'full'.",
+            f"  đọc từ: {source}",
             "",
             "Mọi cổng nội dung đã qua. Muốn đăng thì chọn một trong hai:",
             "  · người tự đăng bằng tay (mặc định, và là ý của chủ kênh);",

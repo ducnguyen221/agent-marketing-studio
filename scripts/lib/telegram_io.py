@@ -47,7 +47,7 @@ API = "https://api.telegram.org/bot{token}/{method}"
 # 100s và 60s đều trả về sau **50,7s**. Nên 50 là trần thật; xin hơn chỉ tốn chữ.
 #
 # Hệ quả thiết kế: một lượt gọi phủ tối đa ~50s. Muốn phủ liên tục thì lặp NHIỀU lượt
-# trong một tiến trình (xem `approve_bus.py nhan --lien-tuc`), không phải xin timeout to hơn.
+# trong một tiến trình (xem `approve_bus.py nhan --follow`), không phải xin timeout to hơn.
 LONG_POLL_MAX = 50
 
 # Telegram cắt cụt `callback_data` dài hơn 64 byte — và cắt IM LẶNG. Nút bấm vào không ăn,
@@ -95,7 +95,7 @@ def _goi_that(token: str, method: str, payload: dict) -> dict:
 
 
 def _goi_file_that(token: str, method: str, truong: dict, ten_file: str,
-                   noi_dung: bytes) -> dict:
+                   text: bytes) -> dict:
     """Gửi FILE — `multipart/form-data`, không dùng chung đường với `_goi_that`.
 
     Vì sao phải có đường riêng: `_goi_that` mã hoá bằng `urlencode`, chỉ chở được chuỗi.
@@ -103,16 +103,16 @@ def _goi_file_that(token: str, method: str, truong: dict, ten_file: str,
     một tin nhắn thì Telegram cắt ở 4.096 ký tự và người duyệt đọc một bài cụt.
     """
     ranh = "----------boundary" + secrets.token_hex(12)
-    dem = []
+    count = []
     for k, v in truong.items():
-        dem.append(f"--{ranh}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n"
+        count.append(f"--{ranh}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n"
                    .encode("utf-8"))
-    dem.append(
+    count.append(
         f"--{ranh}\r\nContent-Disposition: form-data; name=\"document\"; "
         f"filename=\"{ten_file}\"\r\nContent-Type: text/markdown\r\n\r\n".encode("utf-8"))
-    dem.append(noi_dung)
-    dem.append(f"\r\n--{ranh}--\r\n".encode("utf-8"))
-    than = b"".join(dem)
+    count.append(text)
+    count.append(f"\r\n--{ranh}--\r\n".encode("utf-8"))
+    than = b"".join(count)
 
     req = urllib.request.Request(
         API.format(token=token, method=method), data=than,
@@ -148,21 +148,21 @@ class Bot:
 
         self._goi = goi or _goi_that
         self._goi_file = goi_file or _goi_file_that
-        self.duong_dan = p
+        self.log_path = p
 
     # ── Danh tính & quyền ───────────────────────────────────────────────────
 
     def __repr__(self) -> str:
         # KHÔNG in token. Một đối tượng bot sẽ bị in ra log sớm muộn.
-        return f"<Bot cấu_hình={self.duong_dan.name} chats={list(self._chats)}>"
+        return f"<Bot cấu_hình={self.log_path.name} chats={list(self._chats)}>"
 
     __str__ = __repr__
 
-    def _chat(self, ten: str | None = None):
-        ten = ten or os.environ.get("TG_CHAT") or "mac_dinh"
-        c = self._chats.get(ten)
+    def _chat(self, name: str | None = None):
+        name = name or os.environ.get("TG_CHAT") or "mac_dinh"
+        c = self._chats.get(name)
         if not c:
-            raise KeyError(f"không có chat {ten!r} trong {self.duong_dan}")
+            raise KeyError(f"không có chat {name!r} trong {self.log_path}")
         return c["chat_id"]
 
     @property
@@ -176,18 +176,18 @@ class Bot:
         cấu hình do người gõ tay có thể là chuỗi. So lệch kiểu thì hàm này luôn trả False
         và KHÔNG AI duyệt được gì — hỏng câm, đúng loại phải chặn từ đầu.
         """
-        cho_phep = {str(c.get("chat_id")) for c in self._chats.values()}
-        return str(chat_id) in cho_phep
+        allow = {str(c.get("chat_id")) for c in self._chats.values()}
+        return str(chat_id) in allow
 
     # ── Gọi API ─────────────────────────────────────────────────────────────
 
     def _api(self, method: str, payload: dict) -> dict:
-        kq = self._goi(self._token, method, payload)
-        if not kq.get("ok"):
+        result = self._goi(self._token, method, payload)
+        if not result.get("ok"):
             # Ném thay vì trả im lặng: `ok:false` mà đi tiếp nghĩa là lỗi lộ ra ở chỗ xa
             # hơn nhiều, lúc không còn biết vì sao.
-            raise RuntimeError(f"Telegram {method} lỗi — {kq.get('description', kq)}")
-        return kq
+            raise RuntimeError(f"Telegram {method} lỗi — {result.get('description', result)}")
+        return result
 
     # ── Gửi ─────────────────────────────────────────────────────────────────
 
@@ -199,7 +199,7 @@ class Bot:
 
     CAP_CHU_THICH = 1024          # Telegram cắt caption ở 1.024 ký tự
 
-    def gui_tai_lieu(self, duong_dan, chu_thich: str = "", chat: str | None = None) -> int:
+    def gui_tai_lieu(self, log_path, chu_thich: str = "", chat: str | None = None) -> int:
         """Gửi một FILE kèm chú thích. Trả `message_id`.
 
         Dùng cho Cổng 2: người duyệt phải ĐỌC ĐƯỢC bài thì cổng mới có nghĩa. Trước 11/09
@@ -208,33 +208,33 @@ class Bot:
         Chú thích bị CẮT CHỦ ĐỘNG ở `CAP_CHU_THICH`: để Telegram tự cắt thì nó cắt giữa
         chừng và không báo gì.
         """
-        d = Path(duong_dan)
-        noi_dung = d.read_bytes()
+        d = Path(log_path)
+        text = d.read_bytes()
         ct = chu_thich or ""
         if len(ct) > self.CAP_CHU_THICH:
             ct = ct[: self.CAP_CHU_THICH - 1] + "…"
         truong = {"chat_id": str(self._chat(chat))}
         if ct:
             truong["caption"] = ct
-        kq = self._goi_file(self._token, "sendDocument", truong, d.name, noi_dung)
-        if not kq.get("ok"):
-            raise RuntimeError(f"Telegram sendDocument lỗi — {kq.get('description', kq)}")
-        return kq["result"]["message_id"]
+        result = self._goi_file(self._token, "sendDocument", truong, d.name, text)
+        if not result.get("ok"):
+            raise RuntimeError(f"Telegram sendDocument lỗi — {result.get('description', result)}")
+        return result["result"]["message_id"]
 
     @staticmethod
     def _ban_phim(nut) -> str:
-        hang = []
+        queue = []
         for h in nut:
             o = []
-            for nhan, data in h:
+            for label, data in h:
                 n = len(str(data).encode("utf-8"))
                 if n > CAP_CALLBACK:
                     raise ValueError(
                         f"callback_data {n} byte, quá giới hạn {CAP_CALLBACK} của Telegram: "
                         f"{data!r}. Telegram sẽ cắt cụt IM LẶNG và nút bấm vào không ăn.")
-                o.append({"text": nhan, "callback_data": data})
-            hang.append(o)
-        return json.dumps({"inline_keyboard": hang}, ensure_ascii=False)
+                o.append({"text": label, "callback_data": data})
+            queue.append(o)
+        return json.dumps({"inline_keyboard": queue}, ensure_ascii=False)
 
     def gui_kem_nut(self, text: str, nut, chat: str | None = None,
                     *, html: bool = False) -> int:

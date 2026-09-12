@@ -8,7 +8,7 @@
 # luôn tác dụng cảnh báo cho MỌI task khác. (Đức chốt 10/09/2026.)
 #
 # Đổi lại, nó tự có cách chứng minh còn sống: mỗi lượt `getUpdates` THÀNH CÔNG ghi một nhịp
-# vào `logs/tg-poll-alive.json`. `approve_bus.py trang-thai` đọc nhịp đó và nói sống/chết.
+# vào `logs/tg-poll-alive.json`. `approve_bus.py poller-status` đọc nhịp đó và nói sống/chết.
 #
 # ## Vì sao SỐNG CÓ HẠN rồi thoát, thay vì chạy mãi
 #
@@ -57,7 +57,7 @@ function Ghi($m) {
 }
 
 Ghi ("=== poller cong duyet · " + (Split-Path $Campaign -Leaf) + " · song " + $SongGiay + "s ===")
-& python $py nhan --campaign $Campaign --lien-tuc $SongGiay 2>&1 | ForEach-Object { Ghi ("  " + $_) }
+& python $py nhan --campaign $Campaign --follow $SongGiay 2>&1 | ForEach-Object { Ghi ("  " + $_) }
 $ma = $LASTEXITCODE
 Ghi ("=== thoat, ma " + $ma + " ===")
 exit $ma

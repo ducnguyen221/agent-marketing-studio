@@ -32,44 +32,44 @@ import post_content
 import md_io
 
 # Thứ tự đường ống. Dùng để sắp xếp báo cáo, và để thợ biết bước nào đi trước bước nào.
-THU_TU = ["cho-G1", "dung-bai", "soan", "cham-cong", "sua-loi-cong",
-          "cho-G2", "dung-trang", "cho-G3", "phat-hanh", "xong"]
+ORDER = ["await-G1", "create-post", "write", "check-gates", "fix-gates",
+          "await-G2", "build-page", "await-G3", "release", "done"]
 
 # Bước nào CẦN NGƯỜI, bước nào máy tự làm được. Thợ chỉ được nhặt việc máy làm được.
-CAN_NGUOI = {"cho-G1", "cho-G2", "cho-G3"}
+NEEDS_HUMAN = {"await-G1", "await-G2", "await-G3"}
 
 
-def buoc_ke(cam: Path, d: dict) -> str:
+def next_step(campaign: Path, d: dict) -> str:
     """Bước KẾ TIẾP của một dòng trong bảng Content.
 
     Đọc theo đúng thứ tự đường ống và trả về bước ĐẦU TIÊN chưa xong. Fail-closed: thiếu
     dữ kiện thì lùi về bước sớm hơn, không bao giờ nhảy cóc lên trước.
     """
-    cam = Path(cam)
+    campaign = Path(campaign)
     if not (d.get("g1") or "").strip():
-        return "cho-G1"
+        return "await-G1"
 
     f = (d.get("folder") or "").strip()
-    bai = cam / f.lstrip("./") if f else None
-    if not bai or not bai.is_dir():
-        return "dung-bai"
+    post = campaign / f.lstrip("./") if f else None
+    if not post or not post.is_dir():
+        return "create-post"
 
-    if not post_content.da_viet(bai):
-        return "soan"
+    if not post_content.has_content(post):
+        return "write"
 
-    g = bai / "gates.json"
+    g = post / "gates.json"
     if not g.is_file():
-        return "cham-cong"
+        return "check-gates"
     try:
-        if (json.loads(g.read_text(encoding="utf-8")).get("ket_luan") or "").lower() == "do":
-            return "sua-loi-cong"
+        if (json.loads(g.read_text(encoding="utf-8")).get("verdict") or "").lower() == "fail":
+            return "fix-gates"
     except json.JSONDecodeError:
-        return "cham-cong"             # sổ cổng hỏng = coi như chưa chấm
+        return "check-gates"             # sổ cổng hỏng = coi như chưa chấm
 
     if not (d.get("g2") or "").strip():
-        return "cho-G2"
+        return "await-G2"
     if not (d.get("web") or "").strip():
-        return "dung-trang"
+        return "build-page"
 
     # CỔNG 3 — duyệt BẢN THẬT trên web. Bật bằng cách KHAI CỘT `g3` trong bảng Content.
     #
@@ -80,43 +80,43 @@ def buoc_ke(cam: Path, d: dict) -> str:
     # Phân biệt bằng `in d`, KHÔNG bằng giá trị rỗng: cột có mà để trống nghĩa là *chưa
     # duyệt* (phải dừng), còn không có cột nghĩa là *không dùng cổng này* (đi tiếp).
     if "g3" in d and not (d.get("g3") or "").strip():
-        return "cho-G3"
+        return "await-G3"
 
     if not (d.get("published") or "").strip():
-        return "phat-hanh"
-    return "xong"
+        return "release"
+    return "done"
 
 
-def tinh(cam: Path) -> list[dict]:
+def compute(campaign: Path) -> list[dict]:
     """Mỗi bài một mục: `{content_id, buoc, can_nguoi, folder}`."""
-    cam = Path(cam)
-    _, than = md_io.read_fm(cam / "campaign.md")
-    _, dong = md_io.read_table(than, "CONTENT")
+    campaign = Path(campaign)
+    _, than = md_io.read_fm(campaign / "campaign.md")
+    _, row = md_io.read_table(than, "CONTENT")
     ra = []
-    for d in dong:
-        b = buoc_ke(cam, d)
-        ra.append({"content_id": d.get("content_id", ""), "buoc": b,
-                   "can_nguoi": b in CAN_NGUOI,
+    for d in row:
+        b = next_step(campaign, d)
+        ra.append({"content_id": d.get("content_id", ""), "step": b,
+                   "can_nguoi": b in NEEDS_HUMAN,
                    "folder": (d.get("folder") or "").strip()})
     return ra
 
 
-def tom_tat(cam: Path) -> dict:
+def summary(campaign: Path) -> dict:
     """Đếm theo bước, sắp theo thứ tự đường ống."""
-    ds = tinh(cam)
-    dem = {}
+    ds = compute(campaign)
+    count = {}
     for x in ds:
-        dem[x["buoc"]] = dem.get(x["buoc"], 0) + 1
-    return {b: dem[b] for b in THU_TU if b in dem}
+        count[x["step"]] = count.get(x["step"], 0) + 1
+    return {b: count[b] for b in ORDER if b in count}
 
 
-def dang_chu(cam: Path, *, chi_tiet: bool = False) -> str:
+def as_text(campaign: Path, *, detail: bool = False) -> str:
     """Bản in cho người và cho agent đọc. Ngắn có chủ đích."""
-    ds = tinh(cam)
-    tt = tom_tat(cam)
+    ds = compute(campaign)
+    tt = summary(campaign)
     d = [f"{b:<14} {n}" for b, n in tt.items()]
-    if chi_tiet:
+    if detail:
         d.append("")
-        for x in sorted(ds, key=lambda y: (THU_TU.index(y["buoc"]), y["content_id"])):
-            d.append(f"{x['content_id']:<10} {x['buoc']}")
+        for x in sorted(ds, key=lambda y: (ORDER.index(y["step"]), y["content_id"])):
+            d.append(f"{x['content_id']:<10} {x['step']}")
     return "\n".join(d)

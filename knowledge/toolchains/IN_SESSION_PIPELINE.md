@@ -14,8 +14,8 @@
 ## 1. Một hình vẽ
 
 ```
-dung-bai ─[ Cổng 1 ]─ soan ─ cham-cong ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]─ phat-hanh
-                              └ sua-loi-cong ┘
+create-post ─[ Cổng 1 ]─ soan ─ check-gates ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+                              └ fix-gates ┘
                                 (tối đa 3 vòng)
 ```
 
@@ -31,7 +31,7 @@ Ba cổng là của **người**. Sáu bước còn lại agent chạy được 
 ### Bước 0 — nhìn tình hình trước khi động vào gì
 
 ```
-python scripts/pipeline/run_pipeline.py <chiến dịch> tinh-hinh
+python scripts/pipeline/run_pipeline.py <chiến dịch> status
 ```
 
 Trả về bài nào đang ở bước nào, xếp theo đúng thứ tự đường ống. **Đọc cái này trước** thay
@@ -46,14 +46,14 @@ vì nạp cả `campaign.md` — 90 dòng brief không giúp gì cho câu hỏi 
 | `tung-bai` | bài quan trọng, hoặc đang dò xem quy trình chạy đúng chưa | mỗi bài một lần ở mỗi cổng |
 | `theo-giai-doan` | chạy đều nhiều bài | **một lần cho cả lô** ở mỗi cổng |
 
-Và hỏi luôn **bao nhiêu bài**: một bài cụ thể (`--bai NEN-004`), N bài (`--so-bai 5`), hay
-làm hết (`--so-bai 0`). Mặc định 5 nếu người không nói gì.
+Và hỏi luôn **bao nhiêu bài**: một bài cụ thể (`--post NEN-004`), N bài (`--count 5`), hay
+làm hết (`--count 0`). Mặc định 5 nếu người không nói gì.
 
 ### Bước 2 — chạy tới cổng gần nhất
 
 ```
-python scripts/pipeline/run_pipeline.py <chiến dịch> chay \
-       --che-do theo-giai-doan --so-bai 5
+python scripts/pipeline/run_pipeline.py <chiến dịch> run \
+       --mode theo-giai-doan --count 5
 ```
 
 Lệnh này chạy **nhiều bước liên tiếp** rồi dừng khi đụng cổng. Nó **không bao giờ tự mở
@@ -67,7 +67,7 @@ và cổng thành con dấu cao su:
 1. **bước vừa chạy, cho bài nào**
 2. **artefact sinh ra, kèm ĐƯỜNG DẪN ĐẦY ĐỦ** để người bấm mở được ngay
 3. **kết quả chấm cổng** nếu bước đó có chấm — xanh mấy, đỏ mấy, đỏ ở cổng nào
-4. **bước kế tiếp** mà `tinh-trang` suy ra
+4. **bước kế tiếp** mà `status` suy ra
 5. nếu đã tới cổng — **câu hỏi cần người trả lời**, và **danh sách file phải đọc** trước khi
    trả lời
 
@@ -80,14 +80,14 @@ Người nói "ok, duyệt bài 004 và 005" hay "bài 004 mở bài dài quá, 
 kho cổng, **chép nguyên văn câu người vừa nói**:
 
 ```
-python scripts/pipeline/approval_gate.py <chiến dịch> mo --cong g2 \
-       --bai NEN-004,NEN-005 --boi "Đức" --nguyen-van "ok, duyệt bài 004 và 005"
+python scripts/pipeline/approval_gate.py <chiến dịch> open --gate g2 \
+       --post NEN-004,NEN-005 --by "Đức" --quote "ok, duyệt bài 004 và 005"
 
-python scripts/pipeline/approval_gate.py <chiến dịch> tu-choi --cong g2 \
-       --bai NEN-004 --boi "Đức" --nguyen-van "mở bài dài quá, cắt bớt"
+python scripts/pipeline/approval_gate.py <chiến dịch> reject --gate g2 \
+       --post NEN-004 --by "Đức" --quote "mở bài dài quá, cắt bớt"
 ```
 
-⚠️ **`--nguyen-van` không phải thủ tục giấy tờ.** Nó là thứ ngăn agent tự đóng dấu thay
+⚠️ **`--quote` không phải thủ tục giấy tờ.** Nó là thứ ngăn agent tự đóng dấu thay
 người: chép được câu của người thì câu đó phải đã tồn tại. Thiếu nó, lệnh **từ chối chạy**.
 
 Từ chối có kèm nhận xét thì nhận xét vào kho phản hồi, và vòng viết lại đọc đúng chỗ đó.
@@ -127,8 +127,8 @@ sẵn; agent gọi tay từng lệnh con thì phải tự nhớ.
 
 ### Việc theo BÀI, đừng để bước quét cả chiến dịch
 
-Các bước `soan`, `sua-loi-cong`, `dung-trang`, `phat-hanh` mặc định quét **cả chiến dịch**.
-Chạy một bài thì phải truyền `--bai <mã>`. Quên cờ đó thì một lượt cho NEN-002 viết lại luôn
+Các bước `soan`, `fix-gates`, `build-page`, `release` mặc định quét **cả chiến dịch**.
+Chạy một bài thì phải truyền `--post <mã>`. Quên cờ đó thì một lượt cho NEN-002 viết lại luôn
 NEN-001 và NEN-003: số lần viết lại đếm sai nên trần chống-quay-tít mất nghĩa, và lượt chạy
 kéo hàng giờ.
 
@@ -148,17 +148,17 @@ lại cùng một dấu vết và không bao giờ lệch nhau.
 
 | Muốn gì | Mở cái gì |
 |---|---|
-| Nhìn nhanh trong phiên | `run_pipeline.py <cd> tinh-hinh` |
+| Nhìn nhanh trong phiên | `run_pipeline.py <cd> status` |
 | Trang đọc, bấm đúp là mở | `campaign.html` — mục *Tiến độ đường ống* và *Đang chờ mình quyết*, có link mở thẳng từng file |
 | Bảng để lọc / xoay / gửi người khác | `export_excel.py --campaign <cd>` — cột `pipeline_step` nói bài tắc ở đâu |
-| Vì sao bài tới trạng thái này | `logs/su-kien.jsonl` |
+| Vì sao bài tới trạng thái này | `logs/events.jsonl` |
 
 Sinh lại trang đọc: `python scripts/pipeline/build_views.py --campaign <cd>`.
 
 ## 7. Thứ agent KHÔNG được làm
 
 - **Không tự mở cổng.** Kể cả khi chắc chắn người sẽ đồng ý.
-- **Không bịa `--nguyen-van`.** Câu đó phải là câu người thật sự đã nói.
+- **Không bịa `--quote`.** Câu đó phải là câu người thật sự đã nói.
 - **Không sửa tay bảng Content** để đánh dấu duyệt. Đi qua `approval_gate.py` để còn dấu vết
   trong sổ sự kiện và để giữ tính idempotent.
 - **Không đọc `.xlsx` làm nguồn.** Nó là bản xuất một chiều; nguồn là `campaign.md`.

@@ -92,17 +92,17 @@ def test_chuoi_day_du_va_KHONG_tu_dat_approved(station):
     _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id", "THU-001",
           "--slug", "a", "--title", "Bài A", "--station", station)
 
-    bai = station / "k" / "CMP-2609-t" / "THU-001_a"
-    assert sorted(x.name for x in bai.iterdir() if x.is_dir()) == ["atlas", "facebook", "youtube"]
+    post = station / "k" / "CMP-2609-t" / "THU-001_a"
+    assert sorted(x.name for x in post.iterdir() if x.is_dir()) == ["atlas", "facebook", "youtube"]
     for f in ("meta.json", "research.md", "content.md"):
-        assert (bai / f).is_file()
+        assert (post / f).is_file()
 
     _, body = M.read_fm(station / "k" / "CMP-2609-t" / "campaign.md")
-    dong = M.read_table(body, "CONTENT")[1][0]
-    assert dong["status"] == "proposed"
-    assert dong["g1"] == "" and dong["g2"] == "", \
+    row = M.read_table(body, "CONTENT")[1][0]
+    assert row["status"] == "proposed"
+    assert row["g1"] == "" and row["g2"] == "", \
         "Cổng 1 và 2 là của NGƯỜI — script không được tự đặt"
-    assert dong["folder"] == "./THU-001_a/"
+    assert row["folder"] == "./THU-001_a/"
 
 
 def test_khong_ghi_de_thu_muc_da_co(station):
@@ -138,7 +138,7 @@ def test_bo_qua_cong_van_tao_duoc_khi_biet_minh_lam_gi(station):
     _chay(ROOT / "scripts/pipeline/new_campaign.py", "--channel", "k", "--id", "CMP-2609-t",
           "--name", "CD", "--prefix", "THU", "--station", station)
     _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id", "THU-001",
-          "--slug", "a", "--title", "Bài A", "--station", station, "--bo-qua-cong")
+          "--slug", "a", "--title", "Bài A", "--station", station, "--skip-gate")
     assert (station / "k" / "CMP-2609-t" / "THU-001_a" / "meta.json").is_file()
 
 
@@ -152,7 +152,7 @@ def _cd_san_sang(station):
 
 
 def test_bulk_tao_ca_loat(station, tmp_path):
-    cam = _cd_san_sang(station)
+    campaign = _cd_san_sang(station)
     tsv = tmp_path / "loat.tsv"
     tsv.write_text(chr(10).join([
         "# id<TAB>slug<TAB>title<TAB>angle".replace("<TAB>", chr(9)),
@@ -162,52 +162,52 @@ def test_bulk_tao_ca_loat(station, tmp_path):
     _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t",
           "--bulk", tsv, "--station", station)
 
-    assert (cam / "THU-001_a" / "meta.json").is_file()
-    assert (cam / "THU-002_b" / "meta.json").is_file()
-    dong = M.read_table(M.read_fm(cam / "campaign.md")[1], "CONTENT")[1]
-    assert [d["content_id"] for d in dong] == ["THU-001", "THU-002"]
-    assert dong[0]["angle"] == "góc 1"
-    assert all(d["status"] == "proposed" and d["g1"] == "" for d in dong),         "bulk vẫn phải để Cổng 1 cho người"
+    assert (campaign / "THU-001_a" / "meta.json").is_file()
+    assert (campaign / "THU-002_b" / "meta.json").is_file()
+    row = M.read_table(M.read_fm(campaign / "campaign.md")[1], "CONTENT")[1]
+    assert [d["content_id"] for d in row] == ["THU-001", "THU-002"]
+    assert row[0]["angle"] == "góc 1"
+    assert all(d["status"] == "proposed" and d["g1"] == "" for d in row),         "bulk vẫn phải để Cổng 1 cho người"
 
 
 def test_bulk_loi_MOT_dong_thi_khong_tao_bai_nao(station, tmp_path):
     """Nửa loạt thành công nửa loạt lỗi là trạng thái khó dọn nhất — kiểm hết rồi mới tạo."""
-    cam = _cd_san_sang(station)
+    campaign = _cd_san_sang(station)
     tsv = tmp_path / "loat.tsv"
     tsv.write_text(("THU-001	a	Bài A" + chr(10) +
                     "SAI-002	b	Bài B" + chr(10)), encoding="utf-8")
     r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t",
               "--bulk", tsv, "--station", station, mong_doi=2)
     assert "KHÔNG tạo bài nào" in r.stderr and "SAI-002" in r.stderr
-    assert not (cam / "THU-001_a").exists(), "dòng hợp lệ đứng trước cũng không được tạo"
+    assert not (campaign / "THU-001_a").exists(), "dòng hợp lệ đứng trước cũng không được tạo"
 
 
 def test_content_id_trung_thi_TU_CHOI_chu_khong_xoa_Cong_1(station):
     """Lỗi thật (Fable 05/09): chỉ kiểm THƯ MỤC nên `--id THU-001 --slug b` ghi đè dòng đã
     `approved` về `proposed` với g1 rỗng — máy xoá quyết định của người, không báo."""
-    cam = _cd_san_sang(station)
+    campaign = _cd_san_sang(station)
     _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
           "THU-001", "--slug", "a", "--title", "Bài A", "--station", station)
 
     # người duyệt Cổng 1
-    fm, body = M.read_fm(cam / "campaign.md")
+    fm, body = M.read_fm(campaign / "campaign.md")
     body = M.upsert_row(body, "CONTENT", "content_id",
                         {"content_id": "THU-001", "status": "approved", "g1": "2026-09-05"})
-    M.write_fm(cam / "campaign.md", fm, body)
+    M.write_fm(campaign / "campaign.md", fm, body)
 
     r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
               "THU-001", "--slug", "b", "--title", "Bài A lần 2", "--station", station,
               mong_doi=2)
     assert "đã có trong bảng Content" in r.stderr
 
-    d = M.read_table(M.read_fm(cam / "campaign.md")[1], "CONTENT")[1][0]
+    d = M.read_table(M.read_fm(campaign / "campaign.md")[1], "CONTENT")[1][0]
     assert d["status"] == "approved" and d["g1"] == "2026-09-05", \
         "quyết định của NGƯỜI ở Cổng 1 không được phép bị máy ghi đè"
-    assert not (cam / "THU-001_b").exists()
+    assert not (campaign / "THU-001_b").exists()
 
 
 def test_bulk_cung_TU_CHOI_id_da_co_trong_bang(station, tmp_path):
-    cam = _cd_san_sang(station)
+    campaign = _cd_san_sang(station)
     _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
           "THU-001", "--slug", "a", "--title", "Bài A", "--station", station)
     tsv = tmp_path / "loat.tsv"
@@ -254,10 +254,10 @@ def test_channels_va_cta_RONG_thi_van_bi_bat(station):
 
 
 def test_pillar_ngoai_danh_sach_cua_kenh_thi_CHAN(station):
-    cam = _cd_san_sang(station)
-    fm, body = M.read_fm(cam / "campaign.md")
+    campaign = _cd_san_sang(station)
+    fm, body = M.read_fm(campaign / "campaign.md")
     fm["content_pillar"] = "khong-co-trong-kenh"
-    M.write_fm(cam / "campaign.md", fm, body)
+    M.write_fm(campaign / "campaign.md", fm, body)
     r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
               "THU-001", "--slug", "a", "--title", "X", "--station", station, mong_doi=2)
     assert "không có trong pillars của kênh" in r.stderr
@@ -286,10 +286,10 @@ def test_platforms_gia_tri_la_thi_TU_CHOI(station):
 def test_primary_cta_phai_la_ENUM_khong_phai_cau_van(station):
     """Codex 05/09: không kiểm enum thì "Đọc bài dài trên atlas" cũng lọt, và cột này mất
     tác dụng phân loại ngay từ bài đầu tiên."""
-    cam = _cd_san_sang(station)
-    fm, body = M.read_fm(cam / "campaign.md")
+    campaign = _cd_san_sang(station)
+    fm, body = M.read_fm(campaign / "campaign.md")
     fm["primary_cta"] = "Đọc bài dài trên atlas"
-    M.write_fm(cam / "campaign.md", fm, body)
+    M.write_fm(campaign / "campaign.md", fm, body)
     r = _chay(ROOT / "scripts/pipeline/new_post.py", "--campaign", "CMP-2609-t", "--id",
               "THU-001", "--slug", "a", "--title", "X", "--station", station, mong_doi=2)
     assert "primary_cta" in r.stderr and "không hợp lệ" in r.stderr
@@ -298,10 +298,10 @@ def test_primary_cta_phai_la_ENUM_khong_phai_cau_van(station):
 def test_channels_phai_la_TAP_CON_cua_platforms_kenh(station):
     """Chiến dịch khai đăng YouTube trong khi kênh chưa khai nền tảng đó = post mồ côi
     ngay từ `register_publish init`."""
-    cam = _cd_san_sang(station)
-    fm, body = M.read_fm(cam / "campaign.md")
+    campaign = _cd_san_sang(station)
+    fm, body = M.read_fm(campaign / "campaign.md")
     fm["channels"] = ["web_blog", "youtube"]
-    M.write_fm(cam / "campaign.md", fm, body)
+    M.write_fm(campaign / "campaign.md", fm, body)
     # kênh chỉ khai web_blog
     yml = (station / "k" / "channel.yml").read_text(encoding="utf-8")
     i = yml.index("  - channel: youtube")
@@ -313,7 +313,7 @@ def test_channels_phai_la_TAP_CON_cua_platforms_kenh(station):
     assert "youtube" in r.stderr and "platforms của kênh" in r.stderr
 
 
-# ── --dien-vao-dong: lịch lập TRƯỚC, thư mục dựng SAU ───────────────────────
+# ── --fill-row: lịch lập TRƯỚC, thư mục dựng SAU ───────────────────────
 #
 # Chiến dịch dài kỳ lập cả trăm dòng lịch trước rồi mới dựng thư mục từng đợt. Đường mặc
 # định của `new_post.py` giả định NGƯỢC LẠI: nó là người TẠO dòng, nên gặp dòng có sẵn là
@@ -323,39 +323,39 @@ def test_channels_phai_la_TAP_CON_cua_platforms_kenh(station):
 NP = ROOT / "scripts/pipeline/new_post.py"
 
 
-def _dat_lich(cam, cid="THU-001", ten="Bài đã lên lịch", g1="", status="proposed"):
+def _dat_lich(campaign, cid="THU-001", name="Bài đã lên lịch", g1="", status="proposed"):
     """Thêm một dòng lịch CHƯA có thư mục — đúng hình dạng chiến dịch lập lịch trước."""
-    fm, body = M.read_fm(cam / "campaign.md")
-    cot, _ = M.read_table(body, "CONTENT")
+    fm, body = M.read_fm(campaign / "campaign.md")
+    col, _ = M.read_table(body, "CONTENT")
     body = M.upsert_row(body, "CONTENT", "content_id", {
-        "content_id": cid, "content_name": ten, "pillar": "tru-cot-1",
+        "content_id": cid, "content_name": name, "pillar": "tru-cot-1",
         "angle": "explainer", "funnel": "awareness", "priority": "high",
         "status": status, "g1": g1, "g2": "", "schedule": "2026-09-20",
-        "published": "", "folder": ""}, cot)
-    M.write_fm(cam / "campaign.md", fm, body)
+        "published": "", "folder": ""}, col)
+    M.write_fm(campaign / "campaign.md", fm, body)
 
 
-def _dong(cam, cid="THU-001"):
-    _, body = M.read_fm(cam / "campaign.md")
+def _dong(campaign, cid="THU-001"):
+    _, body = M.read_fm(campaign / "campaign.md")
     return {d["content_id"]: d for d in M.read_table(body, "CONTENT")[1]}[cid]
 
 
 def test_dien_vao_dong_dung_thu_muc_cho_dong_CO_SAN(station):
-    cam = _cd_san_sang(station)
-    _dat_lich(cam)
+    campaign = _cd_san_sang(station)
+    _dat_lich(campaign)
     _chay(NP, "--campaign", "CMP-2609-t", "--id", "THU-001", "--slug", "bai-len-lich",
-          "--title", "Bài đã lên lịch", "--station", station, "--dien-vao-dong")
-    assert (cam / "THU-001_bai-len-lich" / "meta.json").is_file()
-    assert _dong(cam)["folder"].strip("./ ") == "THU-001_bai-len-lich"
+          "--title", "Bài đã lên lịch", "--station", station, "--fill-row")
+    assert (campaign / "THU-001_bai-len-lich" / "meta.json").is_file()
+    assert _dong(campaign)["folder"].strip("./ ") == "THU-001_bai-len-lich"
 
 
 def test_dien_vao_dong_KHONG_XOA_quyet_dinh_Cong_1(station):
     """Đây là toàn bộ lý do cổng trùng tồn tại. Chế độ mới không được mở lại lỗ đó."""
-    cam = _cd_san_sang(station)
-    _dat_lich(cam, g1="2026-09-01", status="approved")
+    campaign = _cd_san_sang(station)
+    _dat_lich(campaign, g1="2026-09-01", status="approved")
     _chay(NP, "--campaign", "CMP-2609-t", "--id", "THU-001", "--slug", "bai-len-lich",
-          "--title", "Bài đã lên lịch", "--station", station, "--dien-vao-dong")
-    d = _dong(cam)
+          "--title", "Bài đã lên lịch", "--station", station, "--fill-row")
+    d = _dong(campaign)
     assert d["g1"] == "2026-09-01", "XOÁ MẤT ngày duyệt Cổng 1 của người"
     assert d["status"] == "approved", "hạ status đã duyệt về proposed"
 
@@ -364,5 +364,5 @@ def test_dien_vao_dong_ma_dong_CHUA_CO_thi_dung_han(station):
     """Chế độ này chỉ để ĐIỀN. Không có dòng nghĩa là gọi nhầm chế độ."""
     _cd_san_sang(station)
     r = _chay(NP, "--campaign", "CMP-2609-t", "--id", "THU-404", "--slug", "khong-co",
-              "--title", "Không có", "--station", station, "--dien-vao-dong", mong_doi=2)
+              "--title", "Không có", "--station", station, "--fill-row", mong_doi=2)
     assert "THU-404" in (r.stdout + r.stderr)

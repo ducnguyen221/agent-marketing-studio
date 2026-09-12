@@ -83,31 +83,31 @@ def test_co_file_de_quet():
     assert any(p.suffix == ".xlsx" for p, _ in FILES), "phải có ít nhất 1 .xlsx để chứng minh nhánh đọc zip có chạy"
 
 
-@pytest.mark.parametrize("cam", CAM_TUYET_DOI)
-def test_khong_ro_ri_danh_tinh(cam):
+@pytest.mark.parametrize("campaign", CAM_TUYET_DOI)
+def test_khong_ro_ri_danh_tinh(campaign):
     dinh = []
-    for p, noi_dung in FILES:
-        if cam in noi_dung:
-            dong = noi_dung[:noi_dung.index(cam)].count("\n") + 1
-            dinh.append(f"{p.relative_to(ROOT).as_posix()}:{dong}")
-    assert not dinh, f"chuỗi {cam!r} xuất hiện trong repo public tại: {dinh[:12]}"
+    for p, text in FILES:
+        if campaign in text:
+            row = text[:text.index(campaign)].count("\n") + 1
+            dinh.append(f"{p.relative_to(ROOT).as_posix()}:{row}")
+    assert not dinh, f"chuỗi {campaign!r} xuất hiện trong repo public tại: {dinh[:12]}"
 
 
 def test_khong_lo_token():
     dinh = []
-    for p, noi_dung in FILES:
+    for p, text in FILES:
         for mau in MAU_TOKEN + [MAU_EMAIL]:
-            if mau.search(noi_dung):
+            if mau.search(text):
                 dinh.append(f"{p.relative_to(ROOT).as_posix()} ({mau.pattern[:18]}…)")
     assert not dinh, f"có chuỗi hình dạng token: {dinh}"
 
 
 def test_fixtures_trung_tinh():
     """`fixtures/` là mốc đối chứng — số liệu phải dùng được mà không lộ ai là ai."""
-    ten = re.compile(r"KPIM|COMPA|Tobi", re.I)
+    name = re.compile(r"KPIM|COMPA|Tobi", re.I)
     dinh = [p.relative_to(ROOT).as_posix()
-            for p, noi_dung in FILES
-            if p.parts[len(ROOT.parts):][:1] == ("fixtures",) and ten.search(noi_dung)]
+            for p, text in FILES
+            if p.parts[len(ROOT.parts):][:1] == ("fixtures",) and name.search(text)]
     assert not dinh, f"fixtures/ phải trung tính, còn tên tổ chức ở: {dinh}"
 
 
@@ -120,16 +120,16 @@ def test_prompt_MAU_khong_khoa_vao_mot_nguoi():
     một cổng tự miễn trừ mình là cổng vô dụng.
     """
     import unicodedata
-    cam = [unicodedata.normalize("NFC", x) for x in
+    campaign = [unicodedata.normalize("NFC", x) for x in
            ("Nguy" + chr(0x1EC5) + "n Quang " + chr(0x110) + chr(0x1EE9) + "c",
             "COMPA Class", "T" + "obi", "KP" + "IM")]
-    thu_muc = ROOT / ".agents" / "prompts"
-    assert thu_muc.is_dir(), "không thấy .agents/prompts — đường dẫn đổi?"
+    folder = ROOT / ".agents" / "prompts"
+    assert folder.is_dir(), "không thấy .agents/prompts — đường dẫn đổi?"
 
     dinh = []
-    for f in sorted(thu_muc.glob("*.txt")):
+    for f in sorted(folder.glob("*.txt")):
         t = unicodedata.normalize("NFC", f.read_text(encoding="utf-8"))
-        for x in cam:
+        for x in campaign:
             if x in t:
                 dinh.append(f"{f.name} còn {x!r}")
     assert not dinh, ("prompt mẫu bị khoá vào một người/tổ chức:\n  " + "\n  ".join(dinh))
@@ -137,8 +137,8 @@ def test_prompt_MAU_khong_khoa_vao_mot_nguoi():
 
 def test_prompt_MAU_co_du_cho_trong_va_co_dan_cach_dien():
     """Bỏ tên mà không để chỗ trống thì agent sẽ tự bịa một cái tên."""
-    thu_muc = ROOT / ".agents" / "prompts"
-    for f in sorted(thu_muc.glob("*.txt")):
+    folder = ROOT / ".agents" / "prompts"
+    for f in sorted(folder.glob("*.txt")):
         t = f.read_text(encoding="utf-8")
         if "{{AUTHOR}}" in t or "{{CHANNEL}}" in t:
             assert "ĐIỀN TRƯỚC KHI DÙNG" in t, \
@@ -170,12 +170,12 @@ def test_TEMPLATE_khong_mang_nhan_dien_that():
     assert tm.is_dir(), "không thấy templates/ — đường dẫn đổi?"
 
     # Tên miền, email, tên người, id pixel của kênh đầu tiên.
-    cam = [
+    campaign = [
         "ducng" + "uyen.vn", "ducng" + "uyen221", "ducng" + "uyen.ams",
         "Duc Ngu" + "yen", "17170417" + "32866196",
         "C:" + chr(92) + "Users" + chr(92) + "Duc" + "Nguyen",
     ]
-    cam = [unicodedata.normalize("NFC", x) for x in cam]
+    campaign = [unicodedata.normalize("NFC", x) for x in campaign]
     # Tên kênh thật: bắt cả "AI News" lẫn "Data News" mà không đụng chữ "news" chung.
     mau_kenh = re.compile(r"\b(AI|Data)\s+News\b")
 
@@ -187,13 +187,13 @@ def test_TEMPLATE_khong_mang_nhan_dien_that():
             t = unicodedata.normalize("NFC", f.read_text(encoding="utf-8"))
         except UnicodeDecodeError:
             continue
-        ten = f.relative_to(ROOT).as_posix()
-        for x in cam:
+        name = f.relative_to(ROOT).as_posix()
+        for x in campaign:
             if x in t:
-                dinh.append(f"{ten} còn {x!r}")
+                dinh.append(f"{name} còn {x!r}")
         m = mau_kenh.search(t)
         if m:
-            dinh.append(f"{ten} còn tên kênh thật {m.group()!r}")
+            dinh.append(f"{name} còn tên kênh thật {m.group()!r}")
 
     assert not dinh, (
         "khuôn trong templates/ mang nhận diện thật — sửa thành khoá cấu hình "

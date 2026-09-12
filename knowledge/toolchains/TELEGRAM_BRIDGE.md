@@ -32,7 +32,7 @@ lớp 1  MỘT LƯỢT getUpdates
        ⚠️ TRẢ VỀ NGAY khi có tin — 50 giây chỉ là trần lúc KHÔNG có gì.
        ⇒ độ trễ thật ≈ một vòng mạng, cỡ 1 giây.
 
-lớp 2  VÒNG LẶP nối lượt          (nhan_lien_tuc)
+lớp 2  VÒNG LẶP nối lượt          (receive_loop)
        hết 50 giây mà không có gì → gọi lượt mới NGAY, không nghỉ.
        ⇒ không hề có "khe hở 50 giây". Phủ liên tục 55 phút.
 
@@ -79,7 +79,7 @@ rò rỉ gì cũng bị dọn, và trạng thái "còn sống" được chứng 
                                                           ▼
                                           ┌──────────────────────────────────┐
                                           │ run-approve-poller.ps1           │
-                                          │  └ approve_bus.py nhan --lien-tuc│
+                                          │  └ approve_bus.py nhan --follow│
                                           │                                  │
      duyệt / góp ý ──►  giữ 24h  ◄────────┤  getUpdates(offset, timeout=50)  │
                                  ────────►│  trả về NGAY khi có tin          │
@@ -94,7 +94,7 @@ rò rỉ gì cũng bị dọn, và trạng thái "còn sống" được chứng 
                                    ▼                      ▼                      ▼
                             ✅ ĐI TIẾP            ❌ KHÔNG ĐI TIẾP        📝 CÓ NHẬN XÉT
                          ghi g1 / publish.json    lý do = chữ của người   nguyên văn vào
-                                   │                      │               tg-phan-hoi.json
+                                   │                      │               feedback.json
                                    └──────────────────────┴──────────────────────┘
                                                           │ ghi MỘT dòng việc
                                                           ▼
@@ -131,7 +131,7 @@ suốt 10 phút đó**, nhịp tim đứng lại, lượt sau tưởng nó chế
 
 ```
 người gõ trên Telegram
-   └─► logs/tg-phan-hoi.json      giữ ĐỦ mọi lần, KHÔNG ghi đè
+   └─► logs/feedback.json      giữ ĐỦ mọi lần, KHÔNG ghi đè
         └─► <bài>/phan-hoi.md      trong khối có rào ```…```
              └─► bộ viết ĐỌC FILE  không nhận qua dòng lệnh
 ```
@@ -162,8 +162,8 @@ poller chết ngay khi vừa dựng  ──►  Task Scheduler thấy sạch  �
 **Gốc:** khoá không được gia hạn, hoặc không được nhả. Con đang sống trông như chết nên bị
 cướp khoá; con chết để lại khoá còn mới nên mọi lượt sau đều bỏ qua rồi thoát.
 
-**Chặn bằng:** nhịp tim ghi mỗi chu kỳ (`gia_han_lock`) + luôn nhả trong `finally`
-(`nha_lock`). Cả hai đều có test đi kèm, và cả hai đều **đã từng bị gỡ mất** bởi một đợt
+**Chặn bằng:** nhịp tim ghi mỗi chu kỳ (`renew_lock`) + luôn nhả trong `finally`
+(`release_lock`). Cả hai đều có test đi kèm, và cả hai đều **đã từng bị gỡ mất** bởi một đợt
 mutation testing bỏ quên trong working tree.
 
 ⚠️ **Task Scheduler chạy THẲNG working tree.** Sửa dở hoặc đột biến còn nằm đó là nó nuốt
@@ -177,7 +177,7 @@ agent viết  ──►  người chê  ──►  agent viết lại  ──►
 
 Mỗi vòng đốt ~10 phút agent. Không ai cố ý, nhưng một bài "gần đúng" có thể quay 10 vòng.
 
-**Chặn bằng:** trần số lần viết lại (đề xuất **3**), đếm trong `.viet-lan.json`. Quá trần
+**Chặn bằng:** trần số lần viết lại (đề xuất **3**), đếm trong `.write-count.json`. Quá trần
 thì **dừng và báo người quyết tay**, không tự quay tiếp.
 
 ### 5.3 Vòng lặp NHÂN TIẾN TRÌNH — đã xảy ra 11/09/2026
@@ -215,7 +215,7 @@ chỉ là chạy lại, không phải khôi phục gì.
 |---|---|---|---|
 | Poller chết giữa chừng | không ai nghe Telegram | **có**, ≤60 giây | Task Scheduler dựng lại; `offset` trên đĩa nên không mất tin |
 | Máy tắt qua đêm | im lặng | **có**, khi bật máy | Telegram giữ update 24 giờ |
-| Máy tắt > 24 giờ | tin cũ mất | không | Gửi lại cổng: `approve_bus.py gui --cong g2` |
+| Máy tắt > 24 giờ | tin cũ mất | không | Gửi lại cổng: `approve_bus.py gui --gate g2` |
 | Khoá mồ côi (chủ đã chết) | mọi lượt in `bo_qua_vi_lock` rồi thoát | **có**, sau 180 giây | Hết hạn tự bị cướp. Gấp thì xoá `logs/tg-poller.lock` |
 | Agent chết giữa bài | bài dở dang | **có** | Việc còn trong hàng chờ → thợ nhặt lại. `_da_viet` bắt bài rỗng nên không lọt |
 | Thợ chết giữa việc | việc treo | **có** | Việc chưa đánh dấu xong → lượt sau nhặt lại |
@@ -230,7 +230,7 @@ duyệt**. Nó chỉ là mặt tiền. Cổng 1 sống ở cột `g1` trong `cam
 ### Kiểm tra sức khoẻ khi nghi ngờ
 
 ```
-approve_bus.py trang-thai --campaign <đường dẫn>
+approve_bus.py poller-status --campaign <đường dẫn>
 ```
 
 Đọc ba con số: `nhip_vao.song` (poller còn thở không) · `tuoi_giay` (thở lần cuối bao lâu
@@ -242,28 +242,28 @@ rồi, phải < 180) · `cho_g1`/`cho_g2` (bài nào đang chờ cổng nào).
 
 | Mảnh | File | Vì sao có nó |
 |---|---|---|
-| Sổ sự kiện | `lib/event_log.py` → `logs/su-kien.jsonl` | Trả lời *vì sao* bài tới trạng thái đó. Chỉ nối thêm nên không có cuộc đua |
-| Trạng thái suy ra | `lib/pipeline_state.py` → `tinh-trang` | Agent nối lại việc tốn **~350 token** thay vì 9.555 |
-| Hàng chờ | `lib/work_queue.py` → `logs/viec/` | Poller ghi việc rồi đi tiếp; không bao giờ tự chạy bước nặng |
+| Sổ sự kiện | `lib/event_log.py` → `logs/events.jsonl` | Trả lời *vì sao* bài tới trạng thái đó. Chỉ nối thêm nên không có cuộc đua |
+| Trạng thái suy ra | `lib/pipeline_state.py` → `status` | Agent nối lại việc tốn **~350 token** thay vì 9.555 |
+| Hàng chờ | `lib/work_queue.py` → `logs/jobs/` | Poller ghi việc rồi đi tiếp; không bao giờ tự chạy bước nặng |
 | Thợ | `pipeline/worker.py` | Nhặt MỘT việc, gọi agent, rồi thoát |
 
 **Ba luật đã trả giá để có, đừng gỡ:**
 
-1. **Thợ không bao giờ đụng vào `cho-G1`/`cho-G2`.** Agent tự duyệt bài của chính nó là mất
+1. **Thợ không bao giờ đụng vào `await-G1`/`await-G2`.** Agent tự duyệt bài của chính nó là mất
    sạch ý nghĩa cổng. Chắn này có **hai lớp**, gỡ một lớp thì test vẫn xanh — phải gỡ cả hai
    mới thấy đỏ.
 2. **Hỏi ARTEFACT, đừng hỏi mã thoát.** `blog_gates` trả mã 1 khi cổng đỏ, `soan` trả khác 0
    khi bài chưa đạt — cả hai **đã làm xong việc**. Tin mã thoát thì đúng những bài cần đi
-   tiếp lại bị vứt vào `hong/`. (Đây là vế ngược của luật *"mã thoát 0 không đủ để tính là
+   tiếp lại bị vứt vào `failed/`. (Đây là vế ngược của luật *"mã thoát 0 không đủ để tính là
    xong"* — cùng một nguyên tắc.)
-3. **Bước phải giới hạn ĐÚNG MỘT BÀI** (`--bai`). Bước vốn quét cả chiến dịch; thiếu cờ này
+3. **Bước phải giới hạn ĐÚNG MỘT BÀI** (`--post`). Bước vốn quét cả chiến dịch; thiếu cờ này
    thì một việc cho NEN-002 viết lại luôn NEN-001 và NEN-003 — đo thật **27 phút** cho một
    việc, và kế toán số lần viết lại thành vô nghĩa.
 
 **Đường ống nay ĐỦ 6 bước, 3 cổng** (12/09/2026):
 
 ```
-dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]─ phat-hanh
+create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
 ```
 
 Cổng 3 **chỉ bật khi bảng Content có khai cột `g3`** — chiến dịch cũ chạy y như trước.
@@ -272,9 +272,9 @@ Ba hook cho phần phụ thuộc máy, cùng luật với `writer_cmd`: `audio_c
 `youtube_cmd`, `facebook_cmd`. Không khai thì bỏ qua, **không phải lỗi** — chiến dịch chỉ
 có web vẫn chạy trót lọt.
 
-⚠️ `dang` là **tên cũ** của `dung-trang`. Bản cũ không ghi URL ngược vào bảng nên
+⚠️ `dang` là **tên cũ** của `build-page`. Bản cũ không ghi URL ngược vào bảng nên
 `pipeline_state` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần nữa. Nay nó uỷ
-quyền cho `dung-trang`; lệnh cũ vẫn chạy và được luôn phần ghi URL.
+quyền cho `build-page`; lệnh cũ vẫn chạy và được luôn phần ghi URL.
 
 ## 7. Bảng tra nhanh khi có sự cố
 

@@ -51,7 +51,7 @@ actual_spend:
 runtime:
   label:                    # tên ngắn engine dùng trong tên file log, tiêu đề
   runner:                   # tìm theo BA chỗ: thư mục này > scripts/runners/ của repo > engine của máy
-  runner_args: ""           # vd "-Brand ai -Publish" · hoặc "-Buoc dung-bai" cho run-blog-campaign.ps1
+  runner_args: ""           # vd "-Brand ai -Publish" · hoặc "-Buoc create-post" cho run-blog-campaign.ps1
   # prompt: prompt.txt
   # out_dir: daily-out
   # yt_playlist: ""
@@ -59,26 +59,26 @@ runtime:
   #
   # ── Chiến dịch blog dài kỳ (run-blog-campaign.ps1) ────────────────────────
   # SÁU bước RỜI, mỗi lượt chạy một bước:
-  #   dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]─ phat-hanh
+  #   create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
   # Gộp các bước là dựng lại thứ đã bị gỡ vì nuốt cổng duyệt của người vào giữa chuỗi.
-  # `dang` là TÊN CŨ của `dung-trang`, giữ để lệnh cũ không gãy.
+  # `dang` là TÊN CŨ của `build-page`, giữ để lệnh cũ không gãy.
   #
   # Cổng 3 bật bằng cách KHAI CỘT `g3` trong bảng Content (mẫu này đã khai sẵn).
   # Bỏ cột đó đi = tắt Cổng 3, đi thẳng từ dựng trang tới phát hành.
   #
   # ── BỐN HOOK — repo KHÔNG khoá CLI hay agent nào ──────────────────────────
-  # Mỗi hook là một lệnh CỦA BẠN. Chỗ thay được: {bai} thư mục bài · {cid} mã bài ·
+  # Mỗi hook là một lệnh CỦA BẠN. Chỗ thay được: {post} thư mục bài · {cid} mã bài ·
   # {cam} thư mục chiến dịch · {web} URL bài (chỉ ở hai hook cuối).
   #
-  # writer_cmd:   '<lệnh của bạn> --bai "{bai}"'
+  # writer_cmd:   '<lệnh của bạn> --post "{post}"'
   #     Vào : thư mục bài (meta.json · research.md · content.md khung · prompt.txt ·
   #           phan-hoi.md nếu bị trả lại).  Ra: điền đầy content.md theo neo `## post:`.
   #     KHÔNG khai = bước `soan` báo *chờ người viết* và dừng. Fail-closed, không đoán.
   #     ⚠️ Mã thoát 0 KHÔNG đủ để tính là xong — hệ còn kiểm content.md có chữ thật không.
   #
-  # audio_cmd:    '<lệnh của bạn> --bai "{bai}"'      # → atlas/audio.mp3, TUỲ CHỌN
-  # youtube_cmd:  '<lệnh của bạn> --bai "{bai}"'      # in JSON có khoá `url`, TUỲ CHỌN
-  # facebook_cmd: '<lệnh của bạn> --bai "{bai}" --web "{web}"'   # in JSON `url`, TUỲ CHỌN
+  # audio_cmd:    '<lệnh của bạn> --post "{post}"'      # → atlas/audio.mp3, TUỲ CHỌN
+  # youtube_cmd:  '<lệnh của bạn> --post "{post}"'      # in JSON có khoá `url`, TUỲ CHỌN
+  # facebook_cmd: '<lệnh của bạn> --post "{post}" --web "{web}"'   # in JSON `url`, TUỲ CHỌN
   #
   # Ba hook cuối KHÔNG khai thì BỎ QUA, không phải lỗi — chiến dịch chỉ có web + ảnh +
   # post vẫn chạy trót lọt. Repo có sẵn `scripts/pipeline/fb_publish.py` làm bản tham

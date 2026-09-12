@@ -8,10 +8,10 @@
 ## 1. Ba bước rời, hai cổng ở giữa
 
 ```
-dung-bai ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
+create-post ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
    │                      │                   │
    │ new_post             │ gen_article       │ web_publish
-   │ --dien-vao-dong      │ blog_gates (23)   │ fb_publish
+   │ --fill-row      │ blog_gates (23)   │ fb_publish
    │                      │ register_publish  │ register_publish set
    │                      │   init            │
 ```
@@ -21,7 +21,7 @@ lệnh, nên một bước hỏng là phải chạy lại từ đầu, và cổn
 chuỗi*. Mỗi bước ở đây chạy lại được độc lập, và hai cổng nằm **giữa** các bước chứ không
 lẫn vào trong.
 
-**Mỗi lượt gọi = một bước.** `run.ps1 -Buoc dung-bai` / `-Buoc soan` / `-Buoc dang`.
+**Mỗi lượt gọi = một bước.** `run.ps1 -Buoc create-post` / `-Buoc soan` / `-Buoc dang`.
 
 ## 2. Cổng nằm ở đâu — KHÔNG có kho thứ hai
 
@@ -49,9 +49,9 @@ chỉ NGƯỜI sửa `channel.yml`. Cả ba đều có test, và test đã đư�
 ## 4. Duyệt qua Telegram
 
 ```
-approve_bus.py gui  --campaign <đường dẫn> --cong g1|g2 [--lo N] [--che-do per_post|batch_gate]
+approve_bus.py gui  --campaign <đường dẫn> --gate g1|g2 [--batch N] [--mode per_post|batch_gate]
 approve_bus.py nhan --campaign <đường dẫn>
-approve_bus.py trang-thai --campaign <đường dẫn>
+approve_bus.py poller-status --campaign <đường dẫn>
 ```
 
 Bấm nút, hoặc nhắn `duyet NEN-003` / `tu choi NEN-003 <lý do>`.
@@ -75,7 +75,7 @@ cùng hỏng ồn ào**, chứ KHÔNG phải lặng lẽ ăn trộm update của
 
 > Bản đầu của tài liệu này viết là "im lặng". Đó là **suy đoán chưa đo**, và phép đo bác
 > bỏ nó. Giữ lại ghi chú này vì nó đổi cách phòng: không cần dựng cổng phát hiện ngầm,
-> chỉ cần ĐỌC LỖI — `loi_lien_tiep` trong kết quả `nhan --lien-tuc` là đủ để nhận ra.
+> chỉ cần ĐỌC LỖI — `loi_lien_tiep` trong kết quả `nhan --follow` là đủ để nhận ra.
 
 ## 5. Đăng web
 
@@ -121,7 +121,7 @@ Task Scheduler (mỗi phút, IgnoreNew)
         ▼
 run-approve-poller.ps1  ── sống ~55 phút rồi TỰ THOÁT
         ▼
-approve_bus.py nhan --lien-tuc 3300
+approve_bus.py nhan --follow 3300
         ├─ ① GIÀNH LOCK -> có người giữ thì THOÁT ÊM mã 0 (đường chạy bình thường mỗi phút)
         ├─ ② vòng lặp: getUpdates(timeout=50) -> xử lý -> ghi nhịp -> gia hạn lock -> log
         └─ ③ nhả lock trong `finally`
@@ -150,15 +150,15 @@ rủi ro trùng một nhịp.
 | Của họ | Ta | Vì sao |
 |---|---|---|
 | Worker polling tách khỏi runtime agent | **Đã có** | Poller là tiến trình riêng, không nằm trong runner chiến dịch |
-| Spool bền: ghi update xuống đĩa TRƯỚC khi xử lý | **Lấy phần LÕI, bỏ phần vỏ** | Rủi ro thật hẹp hơn kiến trúc của họ nhiều: chỗ duy nhất mất dữ liệu là **token bị tiêu trước khi ghi cổng xong** — ghi hỏng thì cú bấm rơi vĩnh viễn và người bấm lại chỉ nhận "đã dùng rồi". Vá đúng chỗ hẹp đó (chỉ tiêu token SAU khi `_ap_dung` trả về) rẻ hơn nhập cả một tầng hàng đợi |
+| Spool bền: ghi update xuống đĩa TRƯỚC khi xử lý | **Lấy phần LÕI, bỏ phần vỏ** | Rủi ro thật hẹp hơn kiến trúc của họ nhiều: chỗ duy nhất mất dữ liệu là **token bị tiêu trước khi ghi cổng xong** — ghi hỏng thì cú bấm rơi vĩnh viễn và người bấm lại chỉ nhận "đã dùng rồi". Vá đúng chỗ hẹp đó (chỉ tiêu token SAU khi `_apply` trả về) rẻ hơn nhập cả một tầng hàng đợi |
 | **Nhịp sống đo bằng chiều VÀO, không phải chiều RA** | **LẤY** | Đây là bài học đắt nhất |
 
 Về cái thứ ba: trước bản đó OpenClaw tính lời gọi API **đi ra** (gửi tin) là dấu hiệu "bot
-còn sống" — nên chiều **vào** chết mà không ai biết. Đúng hình dạng đó ở đây: `gui_cong`
+còn sống" — nên chiều **vào** chết mà không ai biết. Đúng hình dạng đó ở đây: `send_gate`
 vẫn gửi tin xin duyệt đều đặn trong khi `nhan` đã ngừng nhận, mọi thứ nhìn vẫn bình thường
 cho tới lúc có người thắc mắc sao bấm không ăn. Nên nhịp CHỈ ghi sau một lượt `getUpdates`
 thành công; gửi được tin **không tính**. Xem `logs/tg-poll-alive.json`, đọc bằng
-`approve_bus.py trang-thai`.
+`approve_bus.py poller-status`.
 
 **Poller KHÔNG đi qua `notify-run.ps1`** (Đức chốt 10/09): nó chạy gần như liên tục, báo
 mỗi lượt là hàng nghìn tin một ngày — và tin báo nhiều tới mức đó thì không ai đọc nữa,
@@ -168,16 +168,16 @@ nhịp ở trên.
 ⚠️ **Nợ kiến trúc đã biết:** trạng thái poller gắn theo CHIẾN DỊCH, mà `getUpdates` chỉ cho
 một người đọc trên mỗi bot token. Hai chiến dịch cùng duyệt qua Telegram là hai poller đạp
 nhau — **ồn ào**, cả hai cùng nhận `Conflict` và không bên nào chạy êm.
-`canh_bao_hai_poller()` cảnh báo TRƯỚC khi tới nước đó. Cách sửa đúng khi thật sự cần hai
+`warn_two_pollers()` cảnh báo TRƯỚC khi tới nước đó. Cách sửa đúng khi thật sự cần hai
 chiến dịch: **một poller cho cả trạm**, định tuyến update theo token.
 
 ## 6. Ba cái bẫy đã trả giá ở tầng này
 
 | Bẫy | Hình dạng | Cách chặn |
 |---|---|---|
-| **Bước hỏng vẫn `exit=0`** | Task Scheduler đọc mã thoát rồi báo ✅ cho một lượt không làm được gì | `ma_thoat()` suy từ KẾT QUẢ, có test |
-| **Lịch lập trước, `new_post` không điền được** | `new_post` giả định nó TẠO dòng nên gặp dòng có sẵn là dừng | chế độ `--dien-vao-dong`, chỉ ghi cột `folder` |
-| **Hai chế độ lệch nhau** | dựng 3 bài mà tin xin duyệt hỏi 10 | `gui_cong(cids=…)` hỏi đúng những bài vừa xử lý |
+| **Bước hỏng vẫn `exit=0`** | Task Scheduler đọc mã thoát rồi báo ✅ cho một lượt không làm được gì | `exit_code()` suy từ KẾT QUẢ, có test |
+| **Lịch lập trước, `new_post` không điền được** | `new_post` giả định nó TẠO dòng nên gặp dòng có sẵn là dừng | chế độ `--fill-row`, chỉ ghi cột `folder` |
+| **Hai chế độ lệch nhau** | dựng 3 bài mà tin xin duyệt hỏi 10 | `send_gate(cids=…)` hỏi đúng những bài vừa xử lý |
 
 Cả ba **không unit test nào bắt được** — chúng chỉ lộ khi chạy thật trên dữ liệu thật. Đó
 là lý do UAT không phải bước thừa.
@@ -186,9 +186,9 @@ là lý do UAT không phải bước thừa.
 
 ```bash
 export PYTHONIOENCODING=utf-8
-python scripts/pipeline/campaign_step.py <chiến dịch> dung-bai --dry-run
-python scripts/pipeline/approve_bus.py trang-thai --campaign <chiến dịch>
-python scripts/pipeline/web_publish.py --bai <thư mục bài> --uat
+python scripts/pipeline/campaign_step.py <chiến dịch> create-post --dry-run
+python scripts/pipeline/approve_bus.py poller-status --campaign <chiến dịch>
+python scripts/pipeline/web_publish.py --post <thư mục bài> --uat
 ```
 
 `--uat` chép ra `.uat-web/` cạnh bài, **không đụng repo web**.

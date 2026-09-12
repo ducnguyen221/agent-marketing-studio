@@ -37,11 +37,11 @@ NHI_PHAN = {".png", ".jpg", ".jpeg", ".mp3", ".mp4", ".xlsx", ".ico", ".woff", "
 
 def _tracked():
     ra = subprocess.run(["git", "ls-files", "-z"], cwd=ROOT, capture_output=True, check=True)
-    for ten in ra.stdout.decode().split("\0"):
-        if not ten or ten.startswith(MIEN_TRU) or Path(ten).suffix.lower() in NHI_PHAN:
+    for name in ra.stdout.decode().split("\0"):
+        if not name or name.startswith(MIEN_TRU) or Path(name).suffix.lower() in NHI_PHAN:
             continue
         try:
-            yield ten, (ROOT / ten).read_text(encoding="utf-8")
+            yield name, (ROOT / name).read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
             continue
 
@@ -53,22 +53,22 @@ def test_co_file_de_quet():
     assert len(FILES) > 50, f"chỉ thấy {len(FILES)} file — nghi lỗi môi trường, cổng sẽ luôn xanh"
 
 
-@pytest.mark.parametrize("chuoi,vi_sao", list(CAM.items()))
-def test_chuoi_cua_mo_hinh_da_bo(chuoi, vi_sao):
+@pytest.mark.parametrize("chuoi,why", list(CAM.items()))
+def test_chuoi_cua_mo_hinh_da_bo(chuoi, why):
     dinh = []
-    for ten, noi_dung in FILES:
-        if chuoi in noi_dung:
-            dong = noi_dung[:noi_dung.index(chuoi)].count("\n") + 1
-            dinh.append(f"{ten}:{dong}")
-    assert not dinh, f"{chuoi!r} — {vi_sao}. Còn ở: {dinh[:10]}"
+    for name, text in FILES:
+        if chuoi in text:
+            row = text[:text.index(chuoi)].count("\n") + 1
+            dinh.append(f"{name}:{row}")
+    assert not dinh, f"{chuoi!r} — {why}. Còn ở: {dinh[:10]}"
 
 
 def test_mot_file_khong_duoc_mang_hai_luat_link():
     """Ca cụ thể đã xảy ra: cùng một file vừa nói 'thân bài 0 URL' vừa nói 'link đầu bài'."""
-    for ten, noi_dung in FILES:
-        if "Thân bài không chứa URL" in noi_dung or "thân bài 0 URL" in noi_dung.lower():
-            assert "đặt ĐẦU bài" not in noi_dung, \
-                f"{ten} mang hai luật link trái nhau trong cùng một file"
+    for name, text in FILES:
+        if "Thân bài không chứa URL" in text or "thân bài 0 URL" in text.lower():
+            assert "đặt ĐẦU bài" not in text, \
+                f"{name} mang hai luật link trái nhau trong cùng một file"
 
 
 def test_moi_cho_ghi_file_deu_ep_xuong_dong_LF():
@@ -83,13 +83,13 @@ def test_moi_cho_ghi_file_deu_ep_xuong_dong_LF():
         for m in re.finditer(r"\.write_text\((.*?)\)\n", s, re.S):
             goi = m.group(1)
             if "encoding=" in goi and "newline=" not in goi:
-                dong = s[:m.start()].count("\n") + 1
-                thieu.append(f"{f.relative_to(ROOT)}:{dong}")
+                row = s[:m.start()].count("\n") + 1
+                thieu.append(f"{f.relative_to(ROOT)}:{row}")
         for m in re.finditer(r"\bopen\((?!.*['\"]rb?['\"])(.*?)\)", s):
             goi = m.group(1)
             if '"w"' in goi and "newline=" not in goi:
-                dong = s[:m.start()].count("\n") + 1
-                thieu.append(f"{f.relative_to(ROOT)}:{dong} (open w)")
+                row = s[:m.start()].count("\n") + 1
+                thieu.append(f"{f.relative_to(ROOT)}:{row} (open w)")
     assert not thieu, "ghi file mà không ép newline='\n': " + ", ".join(thieu)
 
 
@@ -103,7 +103,7 @@ def test_tai_lieu_KHONG_tro_vao_file_ma():
     import re
     MAU = re.compile(r"`((?:scripts|templates|knowledge|workflows|output_styles|tests|"
                      r"\.agents|examples|docs|schema)/[A-Za-z0-9_./-]*)`")
-    hong = []
+    failed = []
     for f in list(ROOT.glob("*.md")) + list(ROOT.glob("workflows/*.md")) \
             + list(ROOT.glob(".agents/**/*.md")) + list(ROOT.glob("knowledge/**/*.md")) \
             + list(ROOT.glob("examples/*.md")):
@@ -112,8 +112,8 @@ def test_tai_lieu_KHONG_tro_vao_file_ma():
             if "<" in d or "*" in d or d.endswith("/"):
                 continue          # mẫu có chỗ trống, hoặc chỉ là thư mục — bỏ qua
             if not (ROOT / d).exists():
-                hong.append(f"{f.relative_to(ROOT)} → {d}")
-    assert not hong, "tài liệu trỏ vào file không tồn tại:\n  " + "\n  ".join(hong)
+                failed.append(f"{f.relative_to(ROOT)} → {d}")
+    assert not failed, "tài liệu trỏ vào file không tồn tại:\n  " + "\n  ".join(failed)
 
 
 def test_so_cong_trong_tai_lieu_KHOP_so_cong_thuc_te():
@@ -123,9 +123,9 @@ def test_so_cong_trong_tai_lieu_KHOP_so_cong_thuc_te():
     đếm được là dấu hiệu rõ nhất rằng tài liệu đã ngừng theo kịp code.
     """
     import re
-    ma = re.findall(r'"(G\d{2})\b', (ROOT / "scripts/pipeline/blog_gates.py")
+    job_id = re.findall(r'"(G\d{2})\b', (ROOT / "scripts/pipeline/blog_gates.py")
                     .read_text(encoding="utf-8"))
-    that = len(set(ma))
+    that = len(set(job_id))
     assert that >= 20, f"không đếm được mã cổng (thấy {that}) — regex hỏng?"
 
     sai = []
@@ -155,12 +155,12 @@ def test_DATA_MODEL_dinh_nghia_DU_moi_cot_dang_chay():
     _s.path.insert(0, str(ROOT / "scripts" / "pipeline"))
     import new_post
 
-    doc = (ROOT / "knowledge/data_model/DATA_MODEL.md").read_text(encoding="utf-8")
-    thieu = [c for c in new_post.COT if f"`{c}`" not in doc]
+    read = (ROOT / "knowledge/data_model/DATA_MODEL.md").read_text(encoding="utf-8")
+    thieu = [c for c in new_post.COT if f"`{c}`" not in read]
     assert not thieu, ("DATA_MODEL không định nghĩa cột đang chạy: " + ", ".join(thieu))
 
     for k in new_post.BAT_BUOC:
-        assert f"`{k}`" in doc, f"trường bắt buộc {k} không có trong DATA_MODEL"
+        assert f"`{k}`" in read, f"trường bắt buộc {k} không có trong DATA_MODEL"
 
 
 def test_tai_lieu_KHONG_khai_trang_thai_ma_code_khong_sinh():
@@ -225,8 +225,8 @@ def test_moi_duong_dan_templates_trong_ma_va_tai_lieu_deu_ton_tai():
     # Bắt cả `templates/a/b.md` lẫn `templates\a\b.md` (PowerShell dùng dấu ngược).
     mau = re.compile(r"templates[\\/][A-Za-z0-9_\-./\\]+")
     chet = []
-    for ten, noi_dung in _tracked():
-        for m in mau.finditer(noi_dung):
+    for name, text in _tracked():
+        for m in mau.finditer(text):
             # Cắt dấu câu dính đuôi khi đường dẫn nằm giữa câu văn.
             duong = m.group().rstrip(".,;:)`\"'").replace("\\", "/").rstrip("/")
             # `templates/<gì đó>` không có đuôi file và cũng không phải thư mục có thật thì
@@ -234,7 +234,7 @@ def test_moi_duong_dan_templates_trong_ma_va_tai_lieu_deu_ton_tai():
             if "." not in Path(duong).name and not (ROOT / duong).is_dir():
                 continue
             if not (ROOT / duong).exists():
-                chet.append(ten + ": " + duong)
+                chet.append(name + ": " + duong)
 
     assert not chet, (
         "đường dẫn templates/ trỏ vào chỗ không tồn tại — sửa đường dẫn hoặc tạo file:\n  "
@@ -258,7 +258,7 @@ def test_script_MAU_khong_lo_duong_dan_may_that():
         if f.suffix.lower() not in (".ps1", ".py", ".md", ".yml", ".json"):
             continue
         for m in mau.finditer(f.read_text(encoding="utf-8", errors="replace")):
-            if m.group(1).lower() not in ("username", "user", "ten", "you"):
+            if m.group(1).lower() not in ("username", "user", "name", "you"):
                 xau.append(f"{f.relative_to(ROOT)}: {m.group(0)}")
     assert not xau, "duong dan may that lot vao template: " + ", ".join(xau)
 

@@ -40,34 +40,34 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-TEN_SO = "su-kien.jsonl"
+LOG_NAME = "events.jsonl"
 
 # Đọc đuôi: nhảy về cuối file rồi lùi dần, thay vì nạp cả file. Sổ chạy cả năm vẫn không
 # làm chậm lượt dò. 64 KB đủ chứa vài trăm dòng — quá đủ cho câu hỏi "gần đây thế nào".
-DUOI_BYTE = 64 * 1024
+TAIL_BYTES = 64 * 1024
 
 
-def duong_dan(cam: Path) -> Path:
-    return Path(cam) / "logs" / TEN_SO
+def log_path(campaign: Path) -> Path:
+    return Path(campaign) / "logs" / LOG_NAME
 
 
-def ghi(cam: Path, viec: str, *, bai: str | None = None, boi: str = "",
-        luc: datetime | None = None, **chi_tiet) -> None:
+def write(campaign: Path, job: str, *, post: str | None = None, by: str = "",
+        at: datetime | None = None, **detail) -> None:
     """Nối MỘT dòng vào sổ. Không bao giờ đọc file trước khi ghi.
 
-    `viec` là danh từ ngắn, ổn định, dùng để lọc: `g1_duyet`, `g2_tu_choi`, `phan_hoi`,
+    `viec` là danh từ ngắn, ổn định, dùng để lọc: `g1_approved`, `g2_rejected`, `feedback`,
     `soan_xong`, `soan_hong`. Đặt tên theo VIỆC ĐÃ XẢY RA, không theo ý định.
 
     Ghi sổ hỏng **KHÔNG được làm hỏng việc chính**. Sổ là thứ để đọc lại sau; đánh đổ cả
     lượt duyệt vì không ghi được một dòng nhật ký là sai thứ tự ưu tiên.
     """
-    d = {"luc": (luc or datetime.now().astimezone()).isoformat(), "viec": viec}
-    if bai:
-        d["bai"] = bai
-    if boi:
-        d["boi"] = boi
-    d.update(chi_tiet)
-    p = duong_dan(cam)
+    d = {"at": (at or datetime.now().astimezone()).isoformat(), "job": job}
+    if post:
+        d["post"] = post
+    if by:
+        d["by"] = by
+    d.update(detail)
+    p = log_path(campaign)
     try:
         p.parent.mkdir(parents=True, exist_ok=True)
         # "a" + một lệnh write cho MỘT dòng: hệ điều hành nối vào cuối, không cần khoá.
@@ -79,27 +79,27 @@ def ghi(cam: Path, viec: str, *, bai: str | None = None, boi: str = "",
         sys.stderr.write(f"event_log: không ghi được sổ ({e}) — việc chính vẫn tiếp tục.\n")
 
 
-def doc(cam: Path, *, bai: str | None = None, n: int = 20) -> list[dict]:
+def read(campaign: Path, *, post: str | None = None, n: int = 20) -> list[dict]:
     """`n` sự kiện GẦN NHẤT, cũ trước mới sau. `bai` để lọc đúng một bài.
 
-    Chỉ đọc phần đuôi file (`DUOI_BYTE`), nên sổ to bao nhiêu cũng không đổi chi phí.
+    Chỉ đọc phần đuôi file (`TAIL_BYTES`), nên sổ to bao nhiêu cũng không đổi chi phí.
 
     Dòng hỏng bị BỎ QUA LẶNG LẼ ở đây là có chủ đích: hàm này phục vụ việc *đọc lại cho
     hiểu*, và một dòng rách không đáng làm hỏng cả lượt đọc. Chỗ cần chặt chẽ là lúc GHI.
     """
-    p = duong_dan(cam)
+    p = log_path(campaign)
     if not p.is_file():
         return []
     with p.open("rb") as f:
         f.seek(0, os.SEEK_END)
         kt = f.tell()
-        f.seek(max(0, kt - DUOI_BYTE))
+        f.seek(max(0, kt - TAIL_BYTES))
         tho = f.read().decode("utf-8", errors="replace")
-    dong = tho.splitlines()
-    if kt > DUOI_BYTE and dong:
-        dong = dong[1:]                    # dòng đầu gần như chắc chắn bị cắt giữa chừng
+    row = tho.splitlines()
+    if kt > TAIL_BYTES and row:
+        row = row[1:]                    # dòng đầu gần như chắc chắn bị cắt giữa chừng
     ra = []
-    for d in dong:
+    for d in row:
         d = d.strip()
         if not d:
             continue
@@ -107,7 +107,7 @@ def doc(cam: Path, *, bai: str | None = None, n: int = 20) -> list[dict]:
             o = json.loads(d)
         except json.JSONDecodeError:
             continue
-        if bai and o.get("bai") != bai:
+        if post and o.get("post") != post:
             continue
         ra.append(o)
     return ra[-n:]

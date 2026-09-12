@@ -74,32 +74,32 @@ def _khung(post_id, content_id, channel, post_format, kpi) -> dict:
     }
 
 
-def _ngu_canh(bai: Path):
+def _ngu_canh(post: Path):
     """Trả về (meta, campaign_dir, fm_campaign, channel_dir, cfg_channel)."""
     import yaml
-    meta = _doc_json(bai / "meta.json", {})
-    cam_dir = SP.campaign_of(bai)
-    fm_cam, _ = md_io.read_fm(cam_dir / "campaign.md")
-    kenh_dir = SP.channel_of(bai)
+    meta = _doc_json(post / "meta.json", {})
+    campaign_dir = SP.campaign_of(post)
+    fm_cam, _ = md_io.read_fm(campaign_dir / "campaign.md")
+    kenh_dir = SP.channel_of(post)
     cfg = yaml.safe_load((kenh_dir / "channel.yml").read_text(encoding="utf-8")) or {}
-    return meta, cam_dir, fm_cam, kenh_dir, cfg
+    return meta, campaign_dir, fm_cam, kenh_dir, cfg
 
 
 # ---------------------------------------------------------------- lệnh
 
-def cmd_init(bai: Path) -> int:
-    meta, cam_dir, fm_cam, kenh_dir, cfg = _ngu_canh(bai)
-    content = (PP.p(bai, "content").read_text(encoding="utf-8")
-               if PP.p(bai, "content").is_file() else "")
+def cmd_init(post: Path) -> int:
+    meta, campaign_dir, fm_cam, kenh_dir, cfg = _ngu_canh(post)
+    content = (PP.p(post, "content").read_text(encoding="utf-8")
+               if PP.p(post, "content").is_file() else "")
     kpi = fm_cam.get("kpi") or {}
-    cho_phep = set(fm_cam.get("channels") or [])
+    allow = set(fm_cam.get("channels") or [])
 
-    pj = _doc_json(PP.p(bai, "publish"), {}) or {}
+    pj = _doc_json(PP.p(post, "publish"), {}) or {}
     cu = {p["post_id"]: p for p in pj.get("posts", [])}
     posts = []
     for nen in (cfg.get("platforms") or []):
         ch = nen.get("channel")
-        if cho_phep and ch not in cho_phep:
+        if allow and ch not in allow:
             continue
         for fmt in (nen.get("post_formats") or []):
             neo = SP.NEO.get(fmt, "")
@@ -115,12 +115,12 @@ def cmd_init(bai: Path) -> int:
     pj.setdefault("summary", "")
     pj.setdefault("key_terms_explained", [])
     pj.setdefault("claims_cited", [])
-    _ghi_json(PP.p(bai, "publish"), pj)
+    _ghi_json(PP.p(post, "publish"), pj)
     print(f"  {len(posts)} post: " + " · ".join(p['post_id'] for p in posts))
     return 0
 
 
-def cmd_approve(bai: Path, by: str, note: str, chi_post: str, feedback: str,
+def cmd_approve(post: Path, by: str, note: str, chi_post: str, feedback: str,
                 override_qa: str) -> int:
     if not by.strip():
         sys.stderr.write("--by bắt buộc: Cổng 2 phải biết AI duyệt.\n")
@@ -131,7 +131,7 @@ def cmd_approve(bai: Path, by: str, note: str, chi_post: str, feedback: str,
             "Cổng 2 là dấu vết, không phải cái cờ bật lên. Không có câu duyệt tường minh\n"
             "trong phiên thì KHÔNG được chạy lệnh này.\n")
         return 2
-    pj = _doc_json(PP.p(bai, "publish"))
+    pj = _doc_json(PP.p(post, "publish"))
     if not pj:
         sys.stderr.write("chưa có publish.json — chạy `init` trước.\n")
         return 2
@@ -160,25 +160,25 @@ def cmd_approve(bai: Path, by: str, note: str, chi_post: str, feedback: str,
             ""]))
         return 2
 
-    _ghi_json(PP.p(bai, "publish"), pj)
-    _mirror_g2(bai, str(date.today()))
+    _ghi_json(PP.p(post, "publish"), pj)
+    _mirror_g2(post, str(date.today()))
     print(f"  duyệt {n} post bởi {by} — đã ghi dấu vết vào publish.json và ô g2")
     return 0
 
 
-def cmd_qa(bai: Path) -> int:
-    g = _doc_json(PP.p(bai, "gates"))
+def cmd_qa(post: Path) -> int:
+    g = _doc_json(PP.p(post, "gates"))
     if not g:
         sys.stderr.write("chưa có gates.json — chạy blog_gates.py trước.\n")
         return 2
-    pj = _doc_json(PP.p(bai, "publish"))
-    kq = "passed" if g.get("ket_luan") == "xanh" else "failed"
+    pj = _doc_json(PP.p(post, "publish"))
+    result = "passed" if g.get("verdict") == "pass" else "failed"
     for p in pj["posts"]:
-        p["quality_check"] = kq
-        p["agent_status"] = "completed" if kq == "passed" else "blocked"
+        p["quality_check"] = result
+        p["agent_status"] = "completed" if result == "passed" else "blocked"
         p["updated_at"] = _now()
-    _ghi_json(PP.p(bai, "publish"), pj)
-    print(f"  quality_check = {kq} ({g.get('do_chan', 0)} cổng đỏ-chặn)")
+    _ghi_json(PP.p(post, "publish"), pj)
+    print(f"  quality_check = {result} ({g.get('fail_block', 0)} cổng đỏ-chặn)")
     return 0
 
 
@@ -204,13 +204,13 @@ def _verify(channel: str, post_format: str, link: str, platform_id: str,
     return (r.status_code == 200), r.status_code, f"HTTP {r.status_code}"
 
 
-def _thay_placeholder(bai: Path, channel: str, link: str) -> list[str]:
+def _thay_placeholder(post: Path, channel: str, link: str) -> list[str]:
     ph = PLACEHOLDER.get(channel)
     if not ph:
         return []
     doi = []
     for khoa in PP.FILE_CONG_KHAI:
-        f = PP.p(bai, khoa)
+        f = PP.p(post, khoa)
         if not f.is_file():
             continue
         s = f.read_text(encoding="utf-8")
@@ -220,9 +220,9 @@ def _thay_placeholder(bai: Path, channel: str, link: str) -> list[str]:
     return doi
 
 
-def cmd_set(bai: Path, chi_post: str, link: str, platform_id: str, comment_id: str,
+def cmd_set(post: Path, chi_post: str, link: str, platform_id: str, comment_id: str,
             at: str, no_verify: bool) -> int:
-    pj = _doc_json(PP.p(bai, "publish"))
+    pj = _doc_json(PP.p(post, "publish"))
     if not pj:
         sys.stderr.write("chưa có publish.json — chạy `init` trước.\n")
         return 2
@@ -237,16 +237,16 @@ def cmd_set(bai: Path, chi_post: str, link: str, platform_id: str, comment_id: s
                          f"Chạy `approve --by … --note \"…\"` trước.\n")
         return 2
 
-    ok, code, vi_sao = _verify(p["channel"], p["post_format"], link, platform_id,
+    ok, code, why = _verify(p["channel"], p["post_format"], link, platform_id,
                                comment_id, no_verify)
     if not ok:
-        sys.stderr.write(f"KHÔNG ghi sổ: {vi_sao}\n")
+        sys.stderr.write(f"KHÔNG ghi sổ: {why}\n")
         return 1
 
-    doi = _thay_placeholder(bai, p["channel"], link)
+    doi = _thay_placeholder(post, p["channel"], link)
     con = [PP.LAYOUT[k] for k in PP.FILE_CONG_KHAI
-           if PP.p(bai, k).is_file() and PLACEHOLDER.get(p["channel"], "\0")
-           in PP.p(bai, k).read_text(encoding="utf-8")]
+           if PP.p(post, k).is_file() and PLACEHOLDER.get(p["channel"], "\0")
+           in PP.p(post, k).read_text(encoding="utf-8")]
     if con:
         sys.stderr.write(f"KHÔNG ghi sổ: còn placeholder sau khi thay ở {con}\n")
         return 1
@@ -260,17 +260,17 @@ def cmd_set(bai: Path, chi_post: str, link: str, platform_id: str, comment_id: s
     moc = [q["publish"]["at"] for q in pj["posts"] if q["publish"].get("at")]
     pj["published_at"] = min(moc) if moc else ""
     _mirror_v1(pj)
-    _ghi_json(PP.p(bai, "publish"), pj)
-    _cap_nhat_nguoc(bai, pj)
+    _ghi_json(PP.p(post, "publish"), pj)
+    _cap_nhat_nguoc(post, pj)
 
-    print(f"  {p['post_id']} → published ({vi_sao})")
+    print(f"  {p['post_id']} → published ({why})")
     if doi:
         print(f"  đã thay {PLACEHOLDER[p['channel']]} trong: {', '.join(doi)}")
     return 0
 
 
-def cmd_metrics(bai: Path, chi_post: str, **so) -> int:
-    pj = _doc_json(PP.p(bai, "publish"))
+def cmd_metrics(post: Path, chi_post: str, **so) -> int:
+    pj = _doc_json(PP.p(post, "publish"))
     hop = [p for p in pj["posts"] if p["post_id"].rsplit("-", 1)[-1] == chi_post]
     if len(hop) != 1:
         sys.stderr.write(f"--post {chi_post!r} khớp {len(hop)} post\n")
@@ -281,7 +281,7 @@ def cmd_metrics(bai: Path, chi_post: str, **so) -> int:
             p["actual"][k] = v
     p["actual"]["updated_at"] = _now()
     p["updated_at"] = _now()
-    _ghi_json(PP.p(bai, "publish"), pj)
+    _ghi_json(PP.p(post, "publish"), pj)
     print(f"  {p['post_id']} actual = " + " · ".join(f"{k}={v}" for k, v in p["actual"].items()
                                                      if v is not None and k != "updated_at"))
     print("  nhớ append một dòng vào Mục 9 (Báo cáo) của campaign.md — actual GHI ĐÈ, "
@@ -289,19 +289,19 @@ def cmd_metrics(bai: Path, chi_post: str, **so) -> int:
     return 0
 
 
-def cmd_migrate(bai: Path) -> int:
-    pj = _doc_json(PP.p(bai, "publish"))
+def cmd_migrate(post: Path) -> int:
+    pj = _doc_json(PP.p(post, "publish"))
     if not pj:
         sys.stderr.write("không có publish.json\n")
         return 2
     if pj.get("schema") == SCHEMA:
         print("  đã là publish/2 — không đổi gì")
         return 0
-    meta, cam_dir, fm_cam, kenh_dir, cfg = _ngu_canh(bai)
+    meta, campaign_dir, fm_cam, kenh_dir, cfg = _ngu_canh(post)
     kpi = fm_cam.get("kpi") or {}
     posts = []
 
-    def them(ch, fmt, link, pid_nen="", cid="", http=None):
+    def add(ch, fmt, link, pid_nen="", cid="", http=None):
         if not (link or pid_nen):
             return
         p = _khung(SP.post_id(meta.get("post_id", pj.get("post_id", "")), ch, fmt),
@@ -319,23 +319,23 @@ def cmd_migrate(bai: Path) -> int:
         posts.append(p)
 
     v = pj.get("verified") or {}
-    them("youtube", "youtube_video", pj.get("youtube_url", ""))
-    them("web_blog", "blog_article", pj.get("blog_url") or pj.get("url", ""),
+    add("youtube", "youtube_video", pj.get("youtube_url", ""))
+    add("web_blog", "blog_article", pj.get("blog_url") or pj.get("url", ""),
          http=v.get("blog_http"))
-    them("facebook", "facebook_post", pj.get("fb_permalink", ""),
+    add("facebook", "facebook_post", pj.get("fb_permalink", ""),
          pj.get("fb_post_id", ""), pj.get("fb_comment_id", ""))
 
     pj.update({"schema": SCHEMA, "migrated_from": "publish/1", "posts": posts,
                "campaign_id": fm_cam.get("id", pj.get("campaign_id", "")),
                "channel_id": cfg.get("id", ""), "title": pj.get("title", meta.get("title", ""))})
-    _ghi_json(PP.p(bai, "publish"), pj)
+    _ghi_json(PP.p(post, "publish"), pj)
     print(f"  publish/1 → publish/2 · {len(posts)} post: "
           + " · ".join(p["post_id"] for p in posts))
     return 0
 
 
-def cmd_show(bai: Path, ra_json: bool) -> int:
-    pj = _doc_json(PP.p(bai, "publish"))
+def cmd_show(post: Path, ra_json: bool) -> int:
+    pj = _doc_json(PP.p(post, "publish"))
     if not pj:
         sys.stderr.write("không có publish.json\n")
         return 2
@@ -367,40 +367,40 @@ def _mirror_v1(pj: dict) -> None:
             pj["fb_comment_id"] = p["publish"]["comment_id"]
 
 
-def _mirror_g2(bai: Path, ngay: str) -> None:
-    cam_dir = SP.campaign_of(bai)
-    meta = _doc_json(bai / "meta.json", {})
-    fm, body = md_io.read_fm(cam_dir / "campaign.md")
+def _mirror_g2(post: Path, day: str) -> None:
+    campaign_dir = SP.campaign_of(post)
+    meta = _doc_json(post / "meta.json", {})
+    fm, body = md_io.read_fm(campaign_dir / "campaign.md")
     body = md_io.upsert_row(body, "CONTENT", "content_id",
-                            {"content_id": meta.get("post_id", ""), "g2": ngay}, chi_cap_nhat=True)
-    md_io.write_fm(cam_dir / "campaign.md", fm, body)
+                            {"content_id": meta.get("post_id", ""), "g2": day}, chi_cap_nhat=True)
+    md_io.write_fm(campaign_dir / "campaign.md", fm, body)
 
 
-def _cap_nhat_nguoc(bai: Path, pj: dict) -> None:
+def _cap_nhat_nguoc(post: Path, pj: dict) -> None:
     """campaign.md · CAMPAIGNS.md · continuity.json — ba nơi phải khớp sau khi đăng."""
-    cam_dir = SP.campaign_of(bai)
-    kenh_dir = SP.channel_of(bai)
+    campaign_dir = SP.campaign_of(post)
+    kenh_dir = SP.channel_of(post)
     da_dang = [p for p in pj["posts"] if p["publish"]["status"] == "published"]
-    ngay = (pj.get("published_at") or "")[:10]
+    day = (pj.get("published_at") or "")[:10]
 
-    fm, body = md_io.read_fm(cam_dir / "campaign.md")
+    fm, body = md_io.read_fm(campaign_dir / "campaign.md")
     if da_dang:
         # URL THẬT vào bảng Content — Đức yêu cầu 04/09: mở lại bài sau này không phải đi
         # lục từng publish.json, và campaign.html render được thành nút bấm.
         # Duyệt theo THỨ TỰ MẪU, không theo thứ tự trong publish.json: cột sinh ra theo thứ
         # tự đăng thì mỗi kênh một kiểu bảng, đọc chéo giữa các chiến dịch là rối.
         COT_LINK = [("web_blog", "web"), ("youtube", "youtube"), ("facebook", "facebook")]
-        dong = {"content_id": pj.get("post_id", ""), "status": "published", "published": ngay}
+        row = {"content_id": pj.get("post_id", ""), "status": "published", "published": day}
         link = {p["channel"]: p["publish"].get("link") for p in da_dang}
         for kenh_p, c in COT_LINK:
             if link.get(kenh_p):
-                dong[c] = link[kenh_p]
+                row[c] = link[kenh_p]
         # them_cot: bảng cũ chưa có 3 cột link thì nới ra, đừng nuốt URL.
-        body = md_io.upsert_row(body, "CONTENT", "content_id", dong,
+        body = md_io.upsert_row(body, "CONTENT", "content_id", row,
                                 them_cot=True, chi_cap_nhat=True)
-    md_io.write_fm(cam_dir / "campaign.md", fm, body)
+    md_io.write_fm(campaign_dir / "campaign.md", fm, body)
 
-    _, body2 = md_io.read_fm(cam_dir / "campaign.md")
+    _, body2 = md_io.read_fm(campaign_dir / "campaign.md")
     dong_ct = md_io.read_table(body2, "CONTENT")[1]
     so = kenh_dir / "CAMPAIGNS.md"
     fm3, body3 = md_io.read_fm(so)
@@ -424,8 +424,8 @@ def _cap_nhat_nguoc(bai: Path, pj: dict) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Sổ đăng bài (publish.json).")
-    ap.add_argument("bai", help="thư mục bài")
-    sub = ap.add_subparsers(dest="lenh", required=True)
+    ap.add_argument("post_dir", help="thư mục bài")
+    sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init")
     sub.add_parser("qa")
     pa = sub.add_parser("approve")
@@ -450,25 +450,25 @@ def main(argv=None) -> int:
     psh.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
 
-    bai = Path(a.bai).resolve()
-    if not bai.is_dir():
-        sys.stderr.write(f"không phải thư mục: {bai}\n")
+    post = Path(a.post_dir).resolve()
+    if not post.is_dir():
+        sys.stderr.write(f"không phải thư mục: {post}\n")
         return 2
-    if a.lenh == "init":
-        return cmd_init(bai)
-    if a.lenh == "qa":
-        return cmd_qa(bai)
-    if a.lenh == "approve":
-        return cmd_approve(bai, a.by, a.note, a.post, a.feedback, a.override_qa)
-    if a.lenh == "set":
-        return cmd_set(bai, a.post, a.link, a.platform_id, a.comment_id, a.at, a.no_verify)
-    if a.lenh == "metrics":
-        return cmd_metrics(bai, a.post, view=a.view, interaction=a.interaction,
+    if a.cmd == "init":
+        return cmd_init(post)
+    if a.cmd == "qa":
+        return cmd_qa(post)
+    if a.cmd == "approve":
+        return cmd_approve(post, a.by, a.note, a.post, a.feedback, a.override_qa)
+    if a.cmd == "set":
+        return cmd_set(post, a.post, a.link, a.platform_id, a.comment_id, a.at, a.no_verify)
+    if a.cmd == "metrics":
+        return cmd_metrics(post, a.post, view=a.view, interaction=a.interaction,
                            reaction=a.reaction, comment=a.comment, share=a.share,
                            click=a.click, reach=a.reach)
-    if a.lenh == "migrate":
-        return cmd_migrate(bai)
-    return cmd_show(bai, a.json)
+    if a.cmd == "migrate":
+        return cmd_migrate(post)
+    return cmd_show(post, a.json)
 
 
 if __name__ == "__main__":

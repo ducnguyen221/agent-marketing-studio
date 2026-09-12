@@ -11,7 +11,7 @@
 #
 #   runtime:
 #     writer_cmd: 'powershell -NoProfile -ExecutionPolicy Bypass -File
-#                  D:	ram\<kênh>iet-bai.ps1 -Bai "{bai}"'
+#                  D:	ram\<kênh>iet-bai.ps1 -Bai "{post}"'
 #
 # ## HỢP ĐỒNG — hai vế, không hơn
 #

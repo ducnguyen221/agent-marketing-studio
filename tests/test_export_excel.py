@@ -26,7 +26,7 @@ COT = ["content_id", "content_name", "pillar", "funnel", "angle", "priority",
 
 
 @pytest.fixture
-def cam(tmp_path):
+def campaign(tmp_path):
     C = tmp_path / "CMP-2609-x"
     B = C / "AST-001_slug"
     B.mkdir(parents=True)
@@ -61,15 +61,15 @@ def _mo(p):
     return openpyxl.load_workbook(p)
 
 
-def test_bo_cot_KHOP_template_cu(cam):
+def test_bo_cot_KHOP_template_cu(campaign):
     """Cột lệch template = biểu mẫu, công thức và pivot của người dùng hỏng câm."""
     tpl = _mo(TPL)
     for sheet, cot_ta in (("Content", EX.COT_CONTENT), ("Post", EX.COT_POST)):
         assert [c.value for c in tpl[sheet][1]] == cot_ta, f"sheet {sheet} lệch template"
 
 
-def test_xuat_du_ba_sheet_va_du_lieu_that(cam):
-    w = _mo(EX.xuat(cam))
+def test_xuat_du_ba_sheet_va_du_lieu_that(campaign):
+    w = _mo(EX.xuat(campaign))
     assert w.sheetnames == ["Campaign", "Content", "Post"]
 
     h = [c.value for c in w["Content"][1]]
@@ -86,56 +86,56 @@ def test_xuat_du_ba_sheet_va_du_lieu_that(cam):
     assert p["target_view"] == 500, "chỉ tiêu cũng phải sang, để so được với thực tế"
 
 
-def test_dict_long_TRAI_PHANG_chu_khong_vo(cam):
+def test_dict_long_TRAI_PHANG_chu_khong_vo(campaign):
     """kpi_target là dict — nhét cả object vào một ô thì openpyxl từ chối thẳng."""
-    ws = _mo(EX.xuat(cam))["Campaign"]
+    ws = _mo(EX.xuat(campaign))["Campaign"]
     kv = {r[0].value: r[1].value for r in ws.iter_rows(min_row=2)}
     assert kv["kpi_target.blog"] == 300 and kv["kpi_target.youtube"] == 150
 
 
-def test_ghi_ro_day_la_BAN_XUAT(cam):
+def test_ghi_ro_day_la_BAN_XUAT(campaign):
     """Không ghi rõ thì có người sẽ sửa Excel và tưởng đã sửa dữ liệu."""
-    ws = _mo(EX.xuat(cam))["Campaign"]
+    ws = _mo(EX.xuat(campaign))["Campaign"]
     cuoi = [c.value for c in ws[ws.max_row]]
     assert "NGUỒN SỰ THẬT" in str(cuoi[0]) and "campaign.md" in str(cuoi[1])
     assert "KHÔNG quay ngược" in str(cuoi[2])
 
 
-def test_truong_chua_co_thi_DE_TRONG_chu_khong_bia(cam):
-    d = dict(zip([c.value for c in _mo(EX.xuat(cam))["Content"][1]],
-                 [c.value for c in _mo(EX.xuat(cam))["Content"][2]]))
+def test_truong_chua_co_thi_DE_TRONG_chu_khong_bia(campaign):
+    d = dict(zip([c.value for c in _mo(EX.xuat(campaign))["Content"][1]],
+                 [c.value for c in _mo(EX.xuat(campaign))["Content"][2]]))
     assert d["notes"] in ("", None), "ô rỗng nói 'chưa biết' — đừng bịa cho đầy bảng"
 
 
-def test_bai_chua_dang_thi_KHONG_co_dong_Post(cam):
-    fm, body = M.read_fm(cam / "campaign.md")
+def test_bai_chua_dang_thi_KHONG_co_dong_Post(campaign):
+    fm, body = M.read_fm(campaign / "campaign.md")
     body = M.upsert_row(body, "CONTENT", "content_id",
                         {"content_id": "AST-002", "folder": "./AST-002_chua/"})
-    M.write_fm(cam / "campaign.md", fm, body)
-    w = _mo(EX.xuat(cam))
+    M.write_fm(campaign / "campaign.md", fm, body)
+    w = _mo(EX.xuat(campaign))
     assert w["Content"].max_row == 3, "Content có cả bài chưa đăng"
     assert w["Post"].max_row == 2, "Post chỉ có bài đã có publish.json"
 
 
-def test_xuat_lai_KHONG_dung_vao_markdown(cam):
-    truoc = (cam / "campaign.md").read_text(encoding="utf-8")
-    EX.xuat(cam)
-    EX.xuat(cam)
-    assert (cam / "campaign.md").read_text(encoding="utf-8") == truoc
-    assert not list(cam.glob("*.tmp")), "file tạm phải được đổi tên, không để lại"
+def test_xuat_lai_KHONG_dung_vao_markdown(campaign):
+    lookahead = (campaign / "campaign.md").read_text(encoding="utf-8")
+    EX.xuat(campaign)
+    EX.xuat(campaign)
+    assert (campaign / "campaign.md").read_text(encoding="utf-8") == lookahead
+    assert not list(campaign.glob("*.tmp")), "file tạm phải được đổi tên, không để lại"
 
 
-def test_cot_pipeline_step_noi_bai_dang_TAC_o_dau(cam):
+def test_cot_pipeline_step_noi_bai_dang_TAC_o_dau(campaign):
     """Bản xuất phải nói bài đang ở BƯỚC nào, không chỉ nói đã đăng hay chưa.
 
     Người mở Excel là để làm báo cáo tiến độ. `status=published` trả lời được "xong chưa"
     nhưng không trả lời được "tắc ở đâu" — mà đó mới là câu người hỏi khi 90 bài chạy song
     song. Cột này SUY RA từ artefact, không phải một ô người gõ tay.
     """
-    w = _mo(EX.xuat(cam))
+    w = _mo(EX.xuat(campaign))
     h = [c.value for c in w["Content"][1]]
     assert h[-1] == "pipeline_step", "cột phải nằm CUỐI — chèn giữa là biểu mẫu cũ lệch cột"
     d = dict(zip(h, [c.value for c in w["Content"][2]]))
     assert d["pipeline_step"], "cột có mà bỏ trống thì thà đừng thêm"
-    import pipeline_state as TT
-    assert d["pipeline_step"] in TT.THU_TU + ["?"], d["pipeline_step"]
+    import pipeline_state as PS
+    assert d["pipeline_step"] in PS.ORDER + ["?"], d["pipeline_step"]

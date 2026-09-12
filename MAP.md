@@ -62,13 +62,13 @@
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
 | **Điều phối cả đường ống trong phiên** (chạy tới cổng rồi dừng, kê file cho người mở) | `scripts/pipeline/run_pipeline.py` |
 | **Mở / từ chối cổng KHÔNG cần Telegram** (kho cổng dùng chung của mọi mặt tiền) | `scripts/pipeline/approval_gate.py` |
-| Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dung-trang`/`phat-hanh`) | `scripts/pipeline/campaign_step.py` |
+| Chạy MỘT bước của chiến dịch dài kỳ (`create-post`/`soan`/`build-page`/`release`) | `scripts/pipeline/campaign_step.py` |
 | **Nối kênh ngoài của BẠN** (`audio_cmd`/`youtube_cmd`/`facebook_cmd` — không khoá CLI nào) | `knowledge/toolchains/TELEGRAM_BRIDGE.md` §6b |
 | **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` §6 |
 | Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
-| **Bài nào đang ở bước nào** (suy ra, ~350 token thay vì nạp cả campaign.md) | `campaign_step.py <cam> tinh-trang [--chi-tiet]` |
-| **Vì sao bài tới trạng thái đó** (sổ sự kiện chỉ-nối-thêm) | `logs/su-kien.jsonl` · `scripts/lib/event_log.py` |
-| **Hàng chờ việc** (thư mục là trạng thái, `rename` là phép giành lượt) | `logs/viec/{cho,dang-lam,xong,hong}/` · `scripts/lib/work_queue.py` |
+| **Bài nào đang ở bước nào** (suy ra, ~350 token thay vì nạp cả campaign.md) | `campaign_step.py <cam> status [--detail]` |
+| **Vì sao bài tới trạng thái đó** (sổ sự kiện chỉ-nối-thêm) | `logs/events.jsonl` · `scripts/lib/event_log.py` |
+| **Hàng chờ việc** (thư mục là trạng thái, `rename` là phép giành lượt) | `logs/jobs/{cho,running,xong,hong}/` · `scripts/lib/work_queue.py` |
 | **Thợ tự gọi agent sau khi duyệt** (một việc mỗi lượt, một agent một lúc) | `scripts/pipeline/worker.py` · `scripts/runners/run-worker.ps1` |
 | Đăng bài lên web (đích khai bằng cấu hình, không khoá cứng) | `scripts/pipeline/web_publish.py` |
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |

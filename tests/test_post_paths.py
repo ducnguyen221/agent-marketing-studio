@@ -29,11 +29,11 @@ def test_khong_hai_khoa_tro_cung_mot_file():
 
 
 def test_file_kenh_nam_dung_thu_muc_kenh():
-    for khoa, thu_muc in [("yt_video", "youtube"), ("yt_thumb", "youtube"), ("yt_desc", "youtube"),
+    for khoa, folder in [("yt_video", "youtube"), ("yt_thumb", "youtube"), ("yt_desc", "youtube"),
                           ("blog", "atlas"), ("atlas_html", "atlas"), ("audio", "atlas"),
                           ("fb_post", "facebook"), ("fb_comment", "facebook"),
                           ("fb_image", "facebook"), ("fb_prompt", "facebook"), ("fb_reel", "facebook")]:
-        assert P.LAYOUT[khoa].startswith(thu_muc + "/"), f"{khoa} không nằm trong {thu_muc}/"
+        assert P.LAYOUT[khoa].startswith(folder + "/"), f"{khoa} không nằm trong {folder}/"
 
 
 def test_phan_nghien_cuu_nam_o_GOC():
@@ -48,8 +48,8 @@ def test_moi_khoa_cong_khai_deu_ton_tai():
 
 
 def test_p_va_tao_thu_muc(tmp_path):
-    P.tao_thu_muc(tmp_path)
-    for t in P.THU_MUC_KENH:
+    P.make_dirs(tmp_path)
+    for t in P.CHANNEL_DIR:
         assert (tmp_path / t).is_dir()
     assert P.p(tmp_path, "fb_post") == tmp_path / "facebook" / "post.txt"
 

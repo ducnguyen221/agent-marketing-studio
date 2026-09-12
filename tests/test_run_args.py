@@ -55,36 +55,36 @@ PROBE_KHONG_BRAND = """param(
 
 def _tram(tmp_path: Path, runner_args: str, probe: str = PROBE) -> Path:
     """Dựng trạm tối thiểu 1 kênh + 1 chiến dịch, trả về thư mục chiến dịch."""
-    cam = tmp_path / "kenh-thu" / "cd-thu"
-    cam.mkdir(parents=True)
-    (cam.parent / "channel.yml").write_text(
+    campaign = tmp_path / "kenh-thu" / "cd-thu"
+    campaign.mkdir(parents=True)
+    (campaign.parent / "channel.yml").write_text(
         'schema: channel/1\nid: kenh-thu\nlabel: "Kênh thử"\n'
         "platforms:\n  - channel: youtube\n    post_formats: [youtube_video]\n",
         encoding="utf-8")
-    (cam / "campaign.md").write_text(
+    (campaign / "campaign.md").write_text(
         "---\nschema: campaign/1\nid: cd-thu\nchannel: kenh-thu\n"
         'runtime:\n  label: "Nhãn thử"\n  runner: probe.ps1\n'
         f'  runner_args: "{runner_args}"\n---\n\nThân bài.\n', encoding="utf-8")
-    (cam / "probe.ps1").write_text(probe, encoding="utf-8-sig")
+    (campaign / "probe.ps1").write_text(probe, encoding="utf-8-sig")
 
     # `run.ps1` trỏ cứng tới `campaign_cfg.py` qua $env:USERPROFILE. Test phải chạy được
     # trên BẢN CLONE ở đường dẫn bất kỳ, nên trỏ lại vào repo đang kiểm. Chỉ đổi đúng
     # dòng đó — phần đang được kiểm (ghép đối số) giữ nguyên từng byte.
-    goc = MAU.read_text(encoding="utf-8-sig")
+    src = MAU.read_text(encoding="utf-8-sig")
     cfgpy = (GOC / "scripts" / "pipeline" / "campaign_cfg.py").as_posix()
-    dau, _, duoi = goc.partition("$cfgpy  = ")
+    start, _, duoi = src.partition("$cfgpy  = ")
     assert duoi, "run.ps1 doi cach dat $cfgpy — sua lai test cho khop"
-    goc = dau + "$cfgpy  = '" + cfgpy + "'\n" + duoi.split("\n", 1)[1]
-    (cam / "run.ps1").write_text(goc, encoding="utf-8-sig")
-    return cam
+    src = start + "$cfgpy  = '" + cfgpy + "'\n" + duoi.split("\n", 1)[1]
+    (campaign / "run.ps1").write_text(src, encoding="utf-8-sig")
+    return campaign
 
 
-def _chay(cam: Path, *them: str):
+def _chay(campaign: Path, *add: str):
     moi = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
     return subprocess.run(
-        [PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(cam / "run.ps1"), *them],
+        [PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(campaign / "run.ps1"), *add],
         capture_output=True, text=True, encoding="utf-8", errors="replace",
-        cwd=str(cam), env=moi)
+        cwd=str(campaign), env=moi)
 
 
 def test_doi_so_buoc_theo_ten_khong_theo_vi_tri(tmp_path):
@@ -155,31 +155,31 @@ def _tram_runner_repo(tmp_path: Path, runner_ten: str) -> tuple[Path, Path]:
     (ban_sao / "runners").mkdir(exist_ok=True)
     (ban_sao / "runners" / runner_ten).write_text(PROBE, encoding="utf-8-sig")
 
-    cam = tmp_path / "kenh-thu" / "cd-thu"
-    cam.mkdir(parents=True)
-    (cam.parent / "channel.yml").write_text(
+    campaign = tmp_path / "kenh-thu" / "cd-thu"
+    campaign.mkdir(parents=True)
+    (campaign.parent / "channel.yml").write_text(
         'schema: channel/1\nid: kenh-thu\nlabel: "Kênh thử"\n'
         "platforms:\n  - channel: youtube\n    post_formats: [youtube_video]\n",
         encoding="utf-8")
-    (cam / "campaign.md").write_text(
+    (campaign / "campaign.md").write_text(
         "---\nschema: campaign/1\nid: cd-thu\nchannel: kenh-thu\n"
         f'runtime:\n  label: "Nhãn thử"\n  runner: {runner_ten}\n'
         '  runner_args: "-Brand ai -Publish"\n---\n\nThân bài.\n', encoding="utf-8")
 
-    goc = MAU.read_text(encoding="utf-8-sig")
-    dau, _, duoi = goc.partition("$cfgpy  = ")
-    goc = (dau + "$cfgpy  = '"
+    src = MAU.read_text(encoding="utf-8-sig")
+    start, _, duoi = src.partition("$cfgpy  = ")
+    src = (start + "$cfgpy  = '"
            + (ban_sao / "pipeline" / "campaign_cfg.py").as_posix() + "'\n"
            + duoi.split("\n", 1)[1])
-    (cam / "run.ps1").write_text(goc, encoding="utf-8-sig")
-    return cam, ban_sao
+    (campaign / "run.ps1").write_text(src, encoding="utf-8-sig")
+    return campaign, ban_sao
 
 
 def test_runner_dung_chung_tim_thay_o_scripts_runners_cua_repo(tmp_path):
     """Runner đi kèm repo phải chạy được ngay sau khi clone, không cần chép vào từng
     chiến dịch — nếu không thì mỗi chiến dịch giữ một bản sao và chúng trôi khỏi nhau."""
-    cam, _ = _tram_runner_repo(tmp_path, "probe-chung.ps1")
-    r = _chay(cam)
+    campaign, _ = _tram_runner_repo(tmp_path, "probe-chung.ps1")
+    r = _chay(campaign)
     assert r.returncode == 0, r.stdout + r.stderr
     assert "PROBE" in r.stdout, r.stdout
     assert "Brand=[ai]" in r.stdout and "Publish=[True]" in r.stdout, r.stdout
@@ -187,12 +187,12 @@ def test_runner_dung_chung_tim_thay_o_scripts_runners_cua_repo(tmp_path):
 
 def test_runner_trong_thu_muc_chien_dich_VAN_thang_ban_cua_repo(tmp_path):
     """Thứ tự ưu tiên: chiến dịch > repo > engine. Một chiến dịch phải ghi đè được."""
-    cam, ban_sao = _tram_runner_repo(tmp_path, "probe-chung.ps1")
+    campaign, ban_sao = _tram_runner_repo(tmp_path, "probe-chung.ps1")
     (ban_sao / "runners" / "probe-chung.ps1").write_text(
         'param([string]$Config="")\n"PROBE SAI — ban cua REPO da chay"\n',
         encoding="utf-8-sig")
-    (cam / "probe-chung.ps1").write_text(PROBE, encoding="utf-8-sig")
-    r = _chay(cam)
+    (campaign / "probe-chung.ps1").write_text(PROBE, encoding="utf-8-sig")
+    r = _chay(campaign)
     assert r.returncode == 0, r.stdout + r.stderr
     assert "PROBE SAI" not in r.stdout, "bản của repo thắng bản của chiến dịch — sai thứ tự"
     assert "Brand=[ai]" in r.stdout, r.stdout

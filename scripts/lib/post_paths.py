@@ -49,7 +49,7 @@ LAYOUT = {
 }
 
 # Thư mục con phải tạo khi dựng bài mới.
-THU_MUC_KENH = ("youtube", "atlas", "facebook")
+CHANNEL_DIR = ("youtube", "atlas", "facebook")
 
 # File bản công khai — thứ thật sự đến tay người đọc (cổng lộ lọt quét đúng nhóm này).
 FILE_CONG_KHAI = ("blog", "fb_post", "fb_comment", "yt_desc", "fb_reel", "atlas_html")
@@ -64,9 +64,9 @@ def p(thu_muc_bai, khoa: str) -> Path:
     return Path(thu_muc_bai) / LAYOUT[khoa]
 
 
-def tao_thu_muc(thu_muc_bai) -> None:
+def make_dirs(thu_muc_bai) -> None:
     d = Path(thu_muc_bai)
-    for t in THU_MUC_KENH:
+    for t in CHANNEL_DIR:
         (d / t).mkdir(parents=True, exist_ok=True)
 
 

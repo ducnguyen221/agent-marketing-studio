@@ -5,7 +5,7 @@ máy bạn — bộ viết, giọng đọc, token YouTube, token Facebook — v�
 bạn khai một dòng lệnh, engine gọi nó.
 
 ```
-dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]─ phat-hanh
+create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
                        │                    │                       │
                   writer_cmd           audio_cmd            youtube_cmd
                                                             facebook_cmd
@@ -16,9 +16,9 @@ dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]�
 | Khoá | Khi nào chạy | Bắt buộc? | Ra cái gì |
 |---|---|---|---|
 | `writer_cmd` | bước `soan` | **có** | điền đầy `content.md` theo neo `## post:` |
-| `audio_cmd` | bước `dung-trang` | không | `atlas/audio.mp3` |
-| `youtube_cmd` | bước `phat-hanh` | không | một dòng JSON có khoá `url` |
-| `facebook_cmd` | bước `phat-hanh` | không | một dòng JSON có khoá `url` |
+| `audio_cmd` | bước `build-page` | không | `atlas/audio.mp3` |
+| `youtube_cmd` | bước `release` | không | một dòng JSON có khoá `url` |
+| `facebook_cmd` | bước `release` | không | một dòng JSON có khoá `url` |
 
 **Không khai `writer_cmd`** ⇒ bước `soan` báo *chờ người viết* rồi dừng. Fail-closed, không
 đoán. **Không khai ba hook còn lại** ⇒ bỏ qua, **không phải lỗi**: chiến dịch chỉ có web +
@@ -26,7 +26,7 @@ dung-bai ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ dung-trang ─[ Cổng 3 ]�
 
 ## Chỗ thay được trong lệnh
 
-`{bai}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch · `{web}` URL bài đã lên
+`{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch · `{web}` URL bài đã lên
 trang (chỉ có ở `youtube_cmd` và `facebook_cmd`).
 
 Lệnh được tách bằng `shlex(posix=False)` và chạy **không qua shell**: đường dẫn Windows giữ
@@ -41,7 +41,7 @@ nguyên dấu `\`, và dấu `;` trong cấu hình không thành lệnh thứ ha
 ```yaml
 runtime:
   writer_cmd: 'powershell -NoProfile -ExecutionPolicy Bypass -File
-               D:\tram\<kênh>\viet-bai.ps1 -Bai "{bai}"'
+               D:\tram\<kênh>\viet-bai.ps1 -Bai "{post}"'
 ```
 
 **Đừng sửa file mẫu tại chỗ trong repo.** Repo là bản chung; trạm là máy của bạn. Lẫn hai

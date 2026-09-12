@@ -13,7 +13,7 @@ gọi đúng một lệnh, và lệnh này:
    là gì, và **mở file nào để trả lời được câu hỏi đó**.
 
 Nó **không bao giờ tự mở cổng**. Mở cổng cần câu nói của người, và câu đó phải đi qua
-`approval_gate.mo_cong(--nguyen-van ...)`.
+`approval_gate.open_gate(--quote ...)`.
 
 ## Khác gì `worker.py`
 
@@ -22,7 +22,7 @@ Cùng chạy một đường ống, khác chủ:
 | | `worker.py` | `run_pipeline.py` |
 |---|---|---|
 | ai gọi | scheduled task, chạy nền | **agent, trong phiên** |
-| lấy việc từ | hàng chờ (`logs/viec/`) | người chỉ định, hoặc suy từ bảng |
+| lấy việc từ | hàng chờ (`logs/jobs/`) | người chỉ định, hoặc suy từ bảng |
 | mỗi lượt | đúng MỘT việc rồi thoát | chạy tới khi đụng cổng |
 | tới cổng thì | trả việc về, báo Telegram | **in ra cho agent hỏi người ngay** |
 
@@ -39,9 +39,9 @@ cổng. Chạy đường nào cũng để lại cùng một dấu vết.
 ## Lệnh
 
 ```
-run_pipeline.py <chiến dịch> tinh-hinh [--json]
-run_pipeline.py <chiến dịch> chay [--che-do tung-bai|theo-giai-doan]
-                                    [--bai A,B | --so-bai N] [--toi-buoc <bước>]
+run_pipeline.py <chiến dịch> status [--json]
+run_pipeline.py <chiến dịch> run [--mode tung-bai|theo-giai-doan]
+                                    [--post A,B | --count N] [--until <bước>]
                                     [--json] [--dry-run]
 ```
 
@@ -60,21 +60,21 @@ sys.stderr.reconfigure(encoding="utf-8")
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "lib"))
 sys.path.insert(0, str(_HERE))
-import approval_gate as CD  # noqa: E402
-import worker as TV  # noqa: E402
-import pipeline_state as TT  # noqa: E402
+import approval_gate as AG  # noqa: E402
+import worker as WK  # noqa: E402
+import pipeline_state as PS  # noqa: E402
 
-CHE_DO = ("tung-bai", "theo-giai-doan")
-SO_BAI_MAC_DINH = 5
+MODES = ("tung-bai", "theo-giai-doan")
+DEFAULT_POSTS = 5
 
 # Trần an toàn cho MỘT lượt gọi. Không phải giới hạn nghiệp vụ — nó chặn ca vòng lặp: một
 # bước báo xong mà `pipeline_state` vẫn suy ra đúng bước đó thì hai bên quay tít cho tới hết
 # quota. Trần nhỏ hơn số bước của đường ống là hụt, nên lấy gấp đôi.
-TRAN_BUOC_MOI_BAI = 2 * len(TT.THU_TU)
+MAX_STEPS_PER_POST = 2 * len(PS.ORDER)
 
 # Bước KHÔNG có artefact riêng của một bài để hỏi. Danh sách này phải ngắn và có lý do:
 # mỗi tên trong đây là một chỗ ta buộc phải tin mã thoát, tức một chỗ có thể hỏng câm.
-KHONG_CO_ARTEFACT = {"dung-bai"}
+NO_ARTEFACT = {"create-post"}
 
 
 def loi(m: str) -> None:
@@ -83,266 +83,266 @@ def loi(m: str) -> None:
 
 # ── Đọc tình hình ───────────────────────────────────────────────────────────
 
-def _dong_theo_ma(cam: Path) -> dict:
-    return {d["content_id"]: d for d in CD.doc_bang(cam)[3]}
+def _rows_by_id(campaign: Path) -> dict:
+    return {d["content_id"]: d for d in AG.read_content_table(campaign)[3]}
 
 
-def tinh_hinh(cam: Path) -> dict:
+def overview(campaign: Path) -> dict:
     """Bài nào đang ở bước nào — gộp theo bước để người nhìn một cái là nắm."""
-    cam = Path(cam)
-    theo_buoc: dict[str, list[str]] = {}
-    for d in CD.doc_bang(cam)[3]:
-        theo_buoc.setdefault(TT.buoc_ke(cam, d), []).append(d["content_id"])
-    return {"tong": sum(len(v) for v in theo_buoc.values()),
+    campaign = Path(campaign)
+    by_step: dict[str, list[str]] = {}
+    for d in AG.read_content_table(campaign)[3]:
+        by_step.setdefault(PS.next_step(campaign, d), []).append(d["content_id"])
+    return {"total": sum(len(v) for v in by_step.values()),
             # Theo ĐÚNG thứ tự đường ống, không theo thứ tự từ điển: người đọc cần thấy
             # bài đang tắc ở đâu trên đường, không cần bảng chữ cái.
-            "theo_buoc": {b: theo_buoc[b] for b in TT.THU_TU if b in theo_buoc}}
+            "by_step": {b: by_step[b] for b in PS.ORDER if b in by_step}}
 
 
-def _cong_cua_buoc(buoc: str) -> str | None:
-    return buoc.replace("cho-G", "g") if buoc in TT.CAN_NGUOI else None
+def _gate_of_step(step: str) -> str | None:
+    return step.replace("await-G", "g") if step in PS.NEEDS_HUMAN else None
 
 
-def _ho_so_cong(cam: Path, cid: str, cong: str) -> dict:
-    dong = _dong_theo_ma(cam).get(cid) or {}
-    h = CD.ho_so_bai(cam, dong)
-    h["cong"] = cong
-    if cong == "g2":
-        h["chua_duoc_hoi"] = CD.vi_sao_chua_duoc_hoi(cam, dong)
+def _gate_files(campaign: Path, cid: str, gate: str) -> dict:
+    row = _rows_by_id(campaign).get(cid) or {}
+    h = AG.post_files(campaign, row)
+    h["gate"] = gate
+    if gate == "g2":
+        h["not_ready"] = AG.why_not_ready(campaign, row)
     return h
 
 
 # ── Chọn bài ────────────────────────────────────────────────────────────────
 
-def chon_bai(cam: Path, *, bai: list[str] | None, so_bai: int | None) -> list[str]:
+def pick_posts(campaign: Path, *, post: list[str] | None, count: int | None) -> list[str]:
     """Người chỉ định bài nào thì đúng bài đó. Không chỉ định thì lấy N bài ĐANG CHẠY ĐƯỢC.
 
     "Chạy được" = bước kế tiếp không phải cổng và không phải `xong`. Lấy cả bài đang chờ
     cổng vào lô là mời agent chạy một bước mà nó không được phép chạy.
     """
-    cam = Path(cam)
-    hien = _dong_theo_ma(cam)
-    if bai:
-        thieu = [c for c in bai if c not in hien]
+    campaign = Path(campaign)
+    hien = _rows_by_id(campaign)
+    if post:
+        thieu = [c for c in post if c not in hien]
         if thieu:
             raise ValueError(f"không có trong bảng Content: {', '.join(thieu)}")
-        return list(bai)
-    chay_duoc = [d["content_id"] for d in CD.doc_bang(cam)[3]
-                 if TT.buoc_ke(cam, d) not in TT.CAN_NGUOI | {"xong"}]
-    n = SO_BAI_MAC_DINH if so_bai is None else so_bai
+        return list(post)
+    chay_duoc = [d["content_id"] for d in AG.read_content_table(campaign)[3]
+                 if PS.next_step(campaign, d) not in PS.NEEDS_HUMAN | {"done"}]
+    n = DEFAULT_POSTS if count is None else count
     return chay_duoc if n <= 0 else chay_duoc[:n]
 
 
 # ── Chạy ────────────────────────────────────────────────────────────────────
 
-def _chay_mot_buoc(cam: Path, cid: str, buoc: str, *, chay) -> dict:
+def _run_one_step(campaign: Path, cid: str, step: str, *, run) -> dict:
     """Chạy một bước cho một bài và kết luận theo ARTEFACT, không theo mã thoát.
 
-    Cùng luật với `worker._da_ra_artefact`: `blog_gates` trả mã 1 khi cổng đỏ và `soan`
+    Cùng luật với `worker._has_artefact`: `blog_gates` trả mã 1 khi cổng đỏ và `soan`
     trả khác 0 khi bài chưa đạt — cả hai ĐÃ LÀM XONG VIỆC. Đọc mã thoát rồi kết luận hỏng
     thì đúng những bài cần đi tiếp lại bị làm lại rồi vứt đi.
     """
-    dong = _dong_theo_ma(cam).get(cid) or {}
-    thu_muc = (dong.get("folder") or "").strip().lstrip("./")
-    bai_p = Path(cam) / thu_muc if thu_muc else Path(cam)
+    row = _rows_by_id(campaign).get(cid) or {}
+    folder = (row.get("folder") or "").strip().lstrip("./")
+    post_dir = Path(campaign) / folder if folder else Path(campaign)
 
-    lenh = TV.LENH.get(buoc, [buoc])
-    ok_tat_ca, thong_diep = True, []
-    for l in lenh:
-        ok, ra = chay(cam, l, cid)
+    cmd = WK.COMMANDS.get(step, [step])
+    ok_tat_ca, message = True, []
+    for l in cmd:
+        ok, ra = run(campaign, l, cid)
         ok_tat_ca = ok_tat_ca and ok
         if ra:
-            thong_diep.append(ra)
+            message.append(ra)
 
-    ra_artefact = TV._da_ra_artefact(buoc, bai_p)
-    return {"bai": cid, "buoc": buoc,
-            "ma_thoat_sach": ok_tat_ca,
-            "ra_artefact": ra_artefact,
-            # Xong hay chưa hỏi ARTEFACT. `dung-bai` là NGOẠI LỆ CÓ TÊN: nó tạo thư mục
+    has_artefact = WK._has_artefact(step, post_dir)
+    return {"post": cid, "step": step,
+            "clean_exit": ok_tat_ca,
+            "has_artefact": has_artefact,
+            # Xong hay chưa hỏi ARTEFACT. `create-post` là NGOẠI LỆ CÓ TÊN: nó tạo thư mục
             # cho nhiều bài cùng lúc nên không có artefact riêng của một bài để hỏi, đành
             # tin mã thoát. Ngoại lệ có tên khác hẳn với mặc định tin mã thoát.
-            "xong": ra_artefact or (buoc in KHONG_CO_ARTEFACT and ok_tat_ca),
-            "thong_diep": "\n".join(thong_diep)[-800:]}
+            "done": has_artefact or (step in NO_ARTEFACT and ok_tat_ca),
+            "message": "\n".join(message)[-800:]}
 
 
-def chay(cam: Path, *, che_do: str = "tung-bai", bai: list[str] | None = None,
-         so_bai: int | None = None, toi_buoc: str | None = None,
-         dry_run: bool = False, chay_buoc=None) -> dict:
+def run(campaign: Path, *, mode: str = "tung-bai", post: list[str] | None = None,
+         count: int | None = None, until: str | None = None,
+         dry_run: bool = False, run_step=None) -> dict:
     """Đẩy các bài đã chọn đi tới khi đụng cổng. KHÔNG BAO GIỜ tự mở cổng.
 
-    `chay_buoc=None` được giải nghĩa TẠI ĐÂY chứ không đặt sẵn ở chữ ký hàm: giá trị mặc
-    định của tham số bị đóng băng lúc `def` chạy, nên vá `TV._chay_buoc` sau đó không có
+    `run_step=None` được giải nghĩa TẠI ĐÂY chứ không đặt sẵn ở chữ ký hàm: giá trị mặc
+    định của tham số bị đóng băng lúc `def` chạy, nên vá `TV._run_step` sau đó không có
     tác dụng — test tưởng đang chạy bộ giả mà thật ra gọi tiến trình con thật.
     """
-    cam = Path(cam)
-    chay_buoc = chay_buoc or TV._chay_buoc
-    if che_do not in CHE_DO:
-        raise ValueError(f"chế độ lạ: {che_do!r} — chỉ có {', '.join(CHE_DO)}")
-    ds = chon_bai(cam, bai=bai, so_bai=so_bai)
-    kq: dict = {"che_do": che_do, "bai": ds, "da_chay": [], "hong": [],
-                "dung_o_cong": {}, "xong_han": []}
+    campaign = Path(campaign)
+    run_step = run_step or WK._run_step
+    if mode not in MODES:
+        raise ValueError(f"chế độ lạ: {mode!r} — chỉ có {', '.join(MODES)}")
+    ds = pick_posts(campaign, post=post, count=count)
+    result: dict = {"mode": mode, "post": ds, "ran": [], "failed": [],
+                "waiting": {}, "finished": []}
 
     if dry_run:
-        kq["ke_hoach"] = [{"bai": c,
-                           "buoc_ke": TT.buoc_ke(cam, _dong_theo_ma(cam).get(c) or {})}
+        result["plan"] = [{"post": c,
+                           "next_step": PS.next_step(campaign, _rows_by_id(campaign).get(c) or {})}
                           for c in ds]
-        return kq
+        return result
 
-    if che_do == "tung-bai":
+    if mode == "tung-bai":
         for cid in ds:
-            _day_mot_bai(cam, cid, kq, toi_buoc=toi_buoc, chay_buoc=chay_buoc)
+            _advance_post(campaign, cid, result, until=until, run_step=run_step)
     else:
         # Theo giai đoạn: mỗi vòng đẩy CẢ LÔ đúng một bước, để các bài tới cổng cùng lúc
         # rồi hỏi người một lần. Đẩy lần lượt từng bài tới cổng thì người bị hỏi N lần —
         # đúng thứ chế độ này sinh ra để tránh.
-        for _ in range(TRAN_BUOC_MOI_BAI):
+        for _ in range(MAX_STEPS_PER_POST):
             da_lam = False
             for cid in list(ds):
-                b = TT.buoc_ke(cam, _dong_theo_ma(cam).get(cid) or {})
-                if b in TT.CAN_NGUOI:
-                    _ghi_dung_o_cong(cam, cid, _cong_cua_buoc(b), kq)
+                b = PS.next_step(campaign, _rows_by_id(campaign).get(cid) or {})
+                if b in PS.NEEDS_HUMAN:
+                    _mark_waiting(campaign, cid, _gate_of_step(b), result)
                     ds = [x for x in ds if x != cid]
                     continue
-                if b == "xong":
-                    if cid not in kq["xong_han"]:
-                        kq["xong_han"].append(cid)
+                if b == "done":
+                    if cid not in result["finished"]:
+                        result["finished"].append(cid)
                     ds = [x for x in ds if x != cid]
                     continue
-                if toi_buoc and b == toi_buoc:
+                if until and b == until:
                     ds = [x for x in ds if x != cid]
                     continue
-                r = _chay_mot_buoc(cam, cid, b, chay=chay_buoc)
-                kq["da_chay"].append(r)
+                r = _run_one_step(campaign, cid, b, run=run_step)
+                result["ran"].append(r)
                 da_lam = True
-                if not r["xong"]:
-                    kq["hong"].append(r)
+                if not r["done"]:
+                    result["failed"].append(r)
                     ds = [x for x in ds if x != cid]     # bài hỏng thì thôi đẩy tiếp
             if not da_lam:
                 break
-    kq["tinh_hinh"] = tinh_hinh(cam)
-    return kq
+    result["overview"] = overview(campaign)
+    return result
 
 
-def _ghi_dung_o_cong(cam: Path, cid: str, cong: str, kq: dict) -> None:
+def _mark_waiting(campaign: Path, cid: str, gate: str, result: dict) -> None:
     """Ghi một bài vào nhóm chờ cổng. KHÔNG ghi trùng: một bài chỉ hỏi người một lần."""
-    ds = kq["dung_o_cong"].setdefault(cong, [])
+    ds = result["waiting"].setdefault(gate, [])
     if cid not in [h["content_id"] for h in ds]:
-        ds.append(_ho_so_cong(cam, cid, cong))
+        ds.append(_gate_files(campaign, cid, gate))
 
 
-def _day_mot_bai(cam: Path, cid: str, kq: dict, *, toi_buoc: str | None, chay_buoc) -> None:
-    for _ in range(TRAN_BUOC_MOI_BAI):
-        b = TT.buoc_ke(cam, _dong_theo_ma(cam).get(cid) or {})
-        if b in TT.CAN_NGUOI:
-            _ghi_dung_o_cong(cam, cid, _cong_cua_buoc(b), kq)
+def _advance_post(campaign: Path, cid: str, result: dict, *, until: str | None, run_step) -> None:
+    for _ in range(MAX_STEPS_PER_POST):
+        b = PS.next_step(campaign, _rows_by_id(campaign).get(cid) or {})
+        if b in PS.NEEDS_HUMAN:
+            _mark_waiting(campaign, cid, _gate_of_step(b), result)
             return
-        if b == "xong":
-            kq["xong_han"].append(cid)
+        if b == "done":
+            result["finished"].append(cid)
             return
-        if toi_buoc and b == toi_buoc:
+        if until and b == until:
             return
-        r = _chay_mot_buoc(cam, cid, b, chay=chay_buoc)
-        kq["da_chay"].append(r)
-        if not r["xong"]:
-            kq["hong"].append(r)
+        r = _run_one_step(campaign, cid, b, run=run_step)
+        result["ran"].append(r)
+        if not r["done"]:
+            result["failed"].append(r)
             return
-    kq["hong"].append({"bai": cid, "buoc": "?",
-                       "thong_diep": f"quá {TRAN_BUOC_MOI_BAI} bước mà chưa tới cổng — "
+    result["failed"].append({"post": cid, "step": "?",
+                       "message": f"quá {MAX_STEPS_PER_POST} bước mà chưa tới cổng — "
                                      "nghi bước báo xong nhưng trạng thái không tiến"})
 
 
 # ── In cho người ────────────────────────────────────────────────────────────
 
-def _in_tinh_hinh(t: dict) -> None:
-    print(f"{t['tong']} bài\n")
-    for b, ds in t["theo_buoc"].items():
+def _print_overview(t: dict) -> None:
+    print(f"{t['total']} bài\n")
+    for b, ds in t["by_step"].items():
         print(f"  {b:<14} {len(ds):>3}  {', '.join(ds[:12])}"
               + (" …" if len(ds) > 12 else ""))
 
 
-def _in_ket_qua(kq: dict) -> None:
-    if kq.get("ke_hoach") is not None:
+def _print_result(result: dict) -> None:
+    if result.get("plan") is not None:
         print("KẾ HOẠCH (chưa chạy gì):")
-        for k in kq["ke_hoach"]:
-            print(f"  {k['bai']:<10} → {k['buoc_ke']}")
+        for k in result["plan"]:
+            print(f"  {k['post']:<10} → {k['next_step']}")
         return
 
-    if kq["da_chay"]:
+    if result["ran"]:
         print("ĐÃ CHẠY")
-        for r in kq["da_chay"]:
-            dau = "✔" if r["xong"] else "✘"
-            print(f"  {dau} {r['bai']:<10} {r['buoc']}")
+        for r in result["ran"]:
+            start = "✔" if r["done"] else "✘"
+            print(f"  {start} {r['post']:<10} {r['step']}")
         print()
-    if kq["hong"]:
+    if result["failed"]:
         print("HỎNG — dừng ở đây, cần xem log")
-        for r in kq["hong"]:
-            print(f"  ✘ {r['bai']} · {r.get('buoc')}")
-            for d in (r.get("thong_diep") or "").splitlines()[-6:]:
+        for r in result["failed"]:
+            print(f"  ✘ {r['post']} · {r.get('step')}")
+            for d in (r.get("message") or "").splitlines()[-6:]:
                 print(f"      {d}")
         print()
-    for cong, ds in kq["dung_o_cong"].items():
-        print(f"⛔ DỪNG Ở {cong.upper()} — {len(ds)} bài chờ người quyết\n")
+    for gate, ds in result["waiting"].items():
+        print(f"⛔ DỪNG Ở {gate.upper()} — {len(ds)} bài chờ người quyết\n")
         for h in ds:
             print(f"  · {h['content_id']} — {h['content_name']}")
-            if h.get("chua_duoc_hoi"):
-                print(f"      ⚠️ chưa được đem ra hỏi: {h['chua_duoc_hoi']}")
-            for nhan, p in h["file"].items():
-                print(f"      {nhan:<16} {p}")
+            if h.get("not_ready"):
+                print(f"      ⚠️ chưa được đem ra hỏi: {h['not_ready']}")
+            for label, p in h["file"].items():
+                print(f"      {label:<16} {p}")
             if h.get("web"):
                 print(f"      {'bản thật':<16} {h['web']}")
-        print(f"\n  Duyệt:   approval_gate.py <chiến dịch> mo --cong {cong} "
-              f"--bai <mã> --boi \"<tên>\" --nguyen-van \"<câu người nói>\"")
-        print(f"  Từ chối: approval_gate.py <chiến dịch> tu-choi --cong {cong} "
-              f"--bai <mã> --boi \"<tên>\" --nguyen-van \"<nhận xét>\"\n")
-    if kq["xong_han"]:
-        print(f"✅ xong hẳn: {', '.join(kq['xong_han'])}")
+        print(f"\n  Duyệt:   approval_gate.py <chiến dịch> open --gate {gate} "
+              f"--post <mã> --by \"<tên>\" --quote \"<câu người nói>\"")
+        print(f"  Từ chối: approval_gate.py <chiến dịch> reject --gate {gate} "
+              f"--post <mã> --by \"<tên>\" --quote \"<nhận xét>\"\n")
+    if result["finished"]:
+        print(f"✅ xong hẳn: {', '.join(result['finished'])}")
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="Điều phối đường ống trong phiên — chạy tới cổng rồi dừng hỏi người.")
     ap.add_argument("campaign")
-    sub = ap.add_subparsers(dest="lenh", required=True)
+    sub = ap.add_subparsers(dest="cmd", required=True)
 
-    pt = sub.add_parser("tinh-hinh", help="bài nào đang ở bước nào")
+    pt = sub.add_parser("status", help="bài nào đang ở bước nào")
     pt.add_argument("--json", action="store_true")
 
-    pc = sub.add_parser("chay", help="đẩy các bài tới cổng gần nhất")
-    pc.add_argument("--che-do", choices=list(CHE_DO), default="tung-bai")
-    pc.add_argument("--bai", default=None, help="mã bài, phân tách bằng dấu phẩy")
-    pc.add_argument("--so-bai", type=int, default=None,
-                    help=f"lấy N bài đang chạy được (mặc định {SO_BAI_MAC_DINH}; 0 = hết)")
-    pc.add_argument("--toi-buoc", default=None, help="dừng TRƯỚC bước này")
+    pc = sub.add_parser("run", help="đẩy các bài tới cổng gần nhất")
+    pc.add_argument("--mode", choices=list(MODES), default="tung-bai")
+    pc.add_argument("--post", default=None, help="mã bài, phân tách bằng dấu phẩy")
+    pc.add_argument("--count", type=int, default=None,
+                    help=f"lấy N bài đang chạy được (mặc định {DEFAULT_POSTS}; 0 = hết)")
+    pc.add_argument("--until", default=None, help="dừng TRƯỚC bước này")
     pc.add_argument("--dry-run", action="store_true")
     pc.add_argument("--json", action="store_true")
 
     a = ap.parse_args(argv)
-    cam = Path(a.campaign)
-    if not (cam / "campaign.md").is_file():
-        loi(f"không thấy {cam / 'campaign.md'}")
+    campaign = Path(a.campaign)
+    if not (campaign / "campaign.md").is_file():
+        loi(f"không thấy {campaign / 'campaign.md'}")
         return 2
 
-    if a.lenh == "tinh-hinh":
-        t = tinh_hinh(cam)
+    if a.cmd == "status":
+        t = overview(campaign)
         print(json.dumps(t, ensure_ascii=False, indent=2) if a.json else "", end="")
         if not a.json:
-            _in_tinh_hinh(t)
+            _print_overview(t)
         return 0
 
     try:
-        kq = chay(cam, che_do=a.che_do,
-                  bai=[x.strip() for x in a.bai.split(",") if x.strip()] if a.bai else None,
-                  so_bai=a.so_bai, toi_buoc=a.toi_buoc, dry_run=a.dry_run)
+        result = run(campaign, mode=a.mode,
+                  post=[x.strip() for x in a.post.split(",") if x.strip()] if a.post else None,
+                  count=a.count, until=a.until, dry_run=a.dry_run)
     except ValueError as e:
         loi(str(e))
         return 2
 
     if a.json:
-        print(json.dumps(kq, ensure_ascii=False, indent=2))
+        print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
-        _in_ket_qua(kq)
+        _print_result(result)
     # Dừng ở cổng KHÔNG phải hỏng: đó là kết quả đúng của đường ống có cổng người.
-    return 3 if kq["hong"] else 0
+    return 3 if result["failed"] else 0
 
 
 if __name__ == "__main__":

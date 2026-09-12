@@ -91,19 +91,19 @@ def _kiem_http(url: str, gia_lap: str | None) -> int:
         return 0
 
 
-def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
-         gia_lap_http=None) -> int:
-    bai = bai.resolve()
-    if not bai.is_dir():
-        loi(f"không thấy thư mục bài: {bai}")
+def dang(post: Path, *, uat=False, dry_run=False, no_push=False,
+         fake_http=None) -> int:
+    post = post.resolve()
+    if not post.is_dir():
+        loi(f"không thấy thư mục bài: {post}")
         return 2
 
     # ── Cấu hình đích ───────────────────────────────────────────────────────
-    kenh = SP.channel_of(bai)
-    cfg = _doc_yaml(kenh / "channel.yml")
+    channel = SP.channel_of(post)
+    cfg = _doc_yaml(channel / "channel.yml")
     wt = cfg.get("web_target")
     if not wt:
-        loi(f"{kenh / 'channel.yml'}: thiếu khối `web_target` — không đoán đích đăng.\n"
+        loi(f"{channel / 'channel.yml'}: thiếu khối `web_target` — không đoán đích đăng.\n"
             f"  Khai `web_target` (xem docstring của script này) rồi chạy lại.")
         return 2
     if wt.get("kind", "git_static") != "git_static":
@@ -111,7 +111,7 @@ def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
         return 2
 
     # ── Bài ─────────────────────────────────────────────────────────────────
-    mp = bai / "meta.json"
+    mp = post / "meta.json"
     if not mp.is_file():
         loi(f"không thấy {mp}")
         return 2
@@ -129,7 +129,7 @@ def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
     anh_xa = wt.get("files") or FILE_MAC_DINH
     cap = []
     for nguon_rel, mau in anh_xa.items():
-        n = bai / nguon_rel
+        n = post / nguon_rel
         if not n.is_file():
             if nguon_rel == BAT_BUOC:
                 loi(f"thiếu file bắt buộc: {n}")
@@ -142,11 +142,11 @@ def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
 
     # ── UAT: chép ra nháp CẠNH BÀI, không đụng repo web ─────────────────────
     if uat:
-        nhap = bai / ".uat-web" / cat
+        nhap = post / ".uat-web" / cat
         nhap.mkdir(parents=True, exist_ok=True)
-        for n, ten in cap:
-            shutil.copy2(n, nhap / ten)
-        print(json.dumps({"uat": True, "thu_muc": str(nhap),
+        for n, name in cap:
+            shutil.copy2(n, nhap / name)
+        print(json.dumps({"uat": True, "folder": str(nhap),
                           "files": [t for _, t in cap]}, ensure_ascii=False))
         return 0
 
@@ -155,19 +155,19 @@ def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
         loi(f"{repo} không phải repo git.")
         return 2
     dich_rel = str(wt["content_dir"]).format(category=cat, slug=slug)
-    dich = repo / dich_rel
+    dest = repo / dich_rel
 
     if dry_run:
-        print(json.dumps({"dry_run": True, "dich": str(dich),
+        print(json.dumps({"dry_run": True, "dich": str(dest),
                           "files": [t for _, t in cap]}, ensure_ascii=False))
         return 0
 
     # ── Chép ────────────────────────────────────────────────────────────────
-    dich.mkdir(parents=True, exist_ok=True)
+    dest.mkdir(parents=True, exist_ok=True)
     da_chep = []
-    for n, ten in cap:
-        shutil.copy2(n, dich / ten)
-        da_chep.append(f"{dich_rel}/{ten}".replace("\\", "/"))
+    for n, name in cap:
+        shutil.copy2(n, dest / name)
+        da_chep.append(f"{dich_rel}/{name}".replace("\\", "/"))
 
     # ── Lệnh hậu kỳ (sinh manifest, build index…) ───────────────────────────
     if wt.get("post_cmd"):
@@ -189,7 +189,7 @@ def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
         loi(f"git commit thất bại:\n{r.stdout}{r.stderr}")
         return 3
 
-    if not khong_push:
+    if not no_push:
         nhanh = wt.get("branch") or "main"
         r = _chay(["git", "push", "origin", nhanh], repo)
         if r.returncode != 0:
@@ -199,9 +199,9 @@ def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
     # ── Kiểm 200 TRƯỚC khi báo thành công ───────────────────────────────────
     url = f"{str(wt['base_url']).rstrip('/')}/{cat}/{slug}.html"
     if wt.get("verify", "http_200") == "http_200":
-        ma = _kiem_http(url, gia_lap_http)
-        if ma != 200:
-            loi(f"đăng xong nhưng {url} trả HTTP {ma} — KHÔNG ghi sổ.\n"
+        job_id = _kiem_http(url, fake_http)
+        if job_id != 200:
+            loi(f"đăng xong nhưng {url} trả HTTP {job_id} — KHÔNG ghi sổ.\n"
                 f"  Trang tĩnh cần vài chục giây để dựng lại; chạy lại bước kiểm sau ít phút.")
             return 4
 
@@ -212,16 +212,16 @@ def dang(bai: Path, *, uat=False, dry_run=False, khong_push=False,
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Đăng một bài lên web (đích khai bằng cấu hình).")
-    ap.add_argument("--bai", required=True, help="thư mục bài")
+    ap.add_argument("--post", required=True, help="thư mục bài")
     ap.add_argument("--uat", action="store_true",
                     help="chép ra .uat-web/ cạnh bài, KHÔNG đụng repo web")
     ap.add_argument("--dry-run", action="store_true", help="chỉ in ra sẽ làm gì")
-    ap.add_argument("--khong-push", action="store_true", help="commit nhưng không push")
-    ap.add_argument("--gia-lap-http", default=None,
+    ap.add_argument("--no-push", action="store_true", help="commit nhưng không push")
+    ap.add_argument("--fake-http", default=None,
                     help="CHỈ DÙNG TRONG TEST — ép mã HTTP thay vì gọi mạng thật")
     a = ap.parse_args()
-    return dang(Path(a.bai), uat=a.uat, dry_run=a.dry_run,
-                khong_push=a.khong_push, gia_lap_http=a.gia_lap_http)
+    return dang(Path(a.post), uat=a.uat, dry_run=a.dry_run,
+                no_push=a.no_push, fake_http=a.fake_http)
 
 
 if __name__ == "__main__":

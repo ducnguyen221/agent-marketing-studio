@@ -28,7 +28,7 @@ def cay(tmp_path):
     K = S / "tobi"
     C = K / "CMP-2609-x"
     B = C / "AST-001_slug"
-    PP.tao_thu_muc(B)
+    PP.make_dirs(B)
     M.write_fm(S / "CHANNELS.md", {"schema": "channels/1", "channels": [
         {"id": "tobi", "label": "Tobi", "path": "./tobi", "status": "active"}]}, "# Sổ\n")
     (K / "channel.yml").write_text(
@@ -55,7 +55,7 @@ def cay(tmp_path):
 
 
 def test_cay_dung_thi_XANH(cay):
-    s = CT.chay(cay[0])
+    s = CT.run_cmd(cay[0])
     assert s.do == [], f"cây đúng mà báo đỏ: {s.do}"
 
 
@@ -64,14 +64,14 @@ def test_path_trong_CHANNELS_chet(cay):
     fm, body = M.read_fm(S / "CHANNELS.md")
     fm["channels"][0]["path"] = "./khong-ton-tai"
     M.write_fm(S / "CHANNELS.md", fm, body)
-    assert any("không tồn tại" in x for x in CT.chay(S).do)
+    assert any("không tồn tại" in x for x in CT.run_cmd(S).do)
 
 
 def test_thu_muc_chien_dich_mo_coi(cay):
     S, K, _, _ = cay
     (K / "CMP-2609-y").mkdir()
     M.write_fm(K / "CMP-2609-y" / "campaign.md", {"id": "CMP-2609-y", "channel": "tobi"}, "")
-    assert any("mồ côi" in x and "CMP-2609-y" in x for x in CT.chay(S).do)
+    assert any("mồ côi" in x and "CMP-2609-y" in x for x in CT.run_cmd(S).do)
 
 
 def test_bai_co_thu_muc_ma_khong_co_dong_trong_bang(cay):
@@ -79,7 +79,7 @@ def test_bai_co_thu_muc_ma_khong_co_dong_trong_bang(cay):
     B2 = C / "AST-002_khac"
     B2.mkdir()
     json.dump({"post_id": "AST-002"}, (B2 / "meta.json").open("w", encoding="utf-8"))
-    assert any("mồ côi" in x and "AST-002" in x for x in CT.chay(S).do)
+    assert any("mồ côi" in x and "AST-002" in x for x in CT.run_cmd(S).do)
 
 
 def test_dong_trong_bang_ma_khong_co_thu_muc(cay):
@@ -88,7 +88,7 @@ def test_dong_trong_bang_ma_khong_co_thu_muc(cay):
     body = M.upsert_row(body, "CONTENT", "content_id",
                         {"content_id": "AST-009", "folder": "./AST-009_ao/"})
     M.write_fm(C / "campaign.md", fm, body)
-    assert any("AST-009_ao" in x and "không tồn tại" in x for x in CT.chay(S).do)
+    assert any("AST-009_ao" in x and "không tồn tại" in x for x in CT.run_cmd(S).do)
 
 
 def test_id_campaign_lech_ten_thu_muc(cay):
@@ -96,7 +96,7 @@ def test_id_campaign_lech_ten_thu_muc(cay):
     fm, body = M.read_fm(C / "campaign.md")
     fm["id"] = "CMP-2609-KHAC"
     M.write_fm(C / "campaign.md", fm, body)
-    assert any("≠ tên thư mục" in x for x in CT.chay(S).do)
+    assert any("≠ tên thư mục" in x for x in CT.run_cmd(S).do)
 
 
 def test_pillar_ngoai_bo_cua_kenh(cay):
@@ -104,7 +104,7 @@ def test_pillar_ngoai_bo_cua_kenh(cay):
     fm, body = M.read_fm(C / "campaign.md")
     fm["content_pillar"] = "khong-co-trong-kenh"
     M.write_fm(C / "campaign.md", fm, body)
-    assert any("pillars" in x for x in CT.chay(S).do)
+    assert any("pillars" in x for x in CT.run_cmd(S).do)
 
 
 def test_neo_post_content_khong_co_trong_content_md(cay):
@@ -114,7 +114,7 @@ def test_neo_post_content_khong_co_trong_content_md(cay):
                     "post_format": "blog_article", "post_content": "post:khong_co",
                     "review": {}, "publish": {}}]
     (B / "publish.json").write_text(json.dumps(pj, ensure_ascii=False), encoding="utf-8")
-    assert any("không có khối đó" in x for x in CT.chay(S).do)
+    assert any("không có khối đó" in x for x in CT.run_cmd(S).do)
 
 
 def test_approved_ma_khong_ghi_ai_duyet(cay):
@@ -124,7 +124,7 @@ def test_approved_ma_khong_ghi_ai_duyet(cay):
                     "post_format": "blog_article", "post_content": "post:blog_article",
                     "review": {"status": "approved", "approved_by": ""}, "publish": {}}]
     (B / "publish.json").write_text(json.dumps(pj, ensure_ascii=False), encoding="utf-8")
-    assert any("Cổng 2 phải có dấu vết" in x for x in CT.chay(S).do)
+    assert any("Cổng 2 phải có dấu vết" in x for x in CT.run_cmd(S).do)
 
 
 def test_fb_da_dang_ma_thieu_comment_id(cay):
@@ -135,7 +135,7 @@ def test_fb_da_dang_ma_thieu_comment_id(cay):
                     "review": {"status": "approved", "approved_by": "Đ"},
                     "publish": {"status": "published", "link": "x", "comment_id": ""}}]
     (B / "publish.json").write_text(json.dumps(pj, ensure_ascii=False), encoding="utf-8")
-    assert any("mồ côi" in x for x in CT.chay(S).do)
+    assert any("mồ côi" in x for x in CT.run_cmd(S).do)
 
 
 def test_cli_exit_khac_0_khi_do(cay):
@@ -163,7 +163,7 @@ def test_folder_long_out_ngay_KHONG_bi_bao_do(cay):
                         {"content_id": "AST-002", "status": "published",
                          "published": "2026-09-06", "folder": "out/2026-09-06"}, None)
     M.write_fm(C / "campaign.md", fm, body)
-    do = CT.chay(S).do
+    do = CT.run_cmd(S).do
     assert not any("out/2026-09-06" in x for x in do), do
 
 
@@ -175,5 +175,5 @@ def test_folder_long_TRO_SAI_van_phai_do(cay):
                         {"content_id": "AST-003", "status": "published",
                          "published": "2026-09-06", "folder": "out/2026-09-99"}, None)
     M.write_fm(C / "campaign.md", fm, body)
-    do = CT.chay(S).do
+    do = CT.run_cmd(S).do
     assert any("out/2026-09-99" in x for x in do), do

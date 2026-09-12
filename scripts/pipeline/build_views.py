@@ -37,8 +37,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
-import pipeline_state as TT  # noqa: E402
-import approval_gate as CD  # noqa: E402
+import pipeline_state as PS  # noqa: E402
+import approval_gate as AG  # noqa: E402
 
 # Nhãn tiếng Việt cho cột. Cột nào không có ở đây thì in nguyên tên khoá — thêm cột mới
 # vào bảng không được làm vỡ trang.
@@ -51,9 +51,9 @@ NHAN = {
     "bài": "Bài", "đã đăng": "Đã đăng",
 }
 COT_LINK = ("web", "youtube", "facebook")
-TRANG_THAI = {"proposed": "đề xuất", "approved": "đã duyệt", "in_progress": "đang làm",
+STATUSES = {"proposed": "đề xuất", "approved": "đã duyệt", "in_progress": "đang làm",
               "review": "chờ duyệt", "published": "đã đăng", "paused": "tạm dừng",
-              "done": "xong", "archived": "lưu trữ"}
+              "done": "done", "archived": "lưu trữ"}
 
 
 def _e(s) -> str:
@@ -68,7 +68,7 @@ def _js(o) -> str:
 
 # ══════════════════════════════════════════════════════════════════ đọc dữ liệu
 
-def _tien_do(cam_dir: Path, dong: list) -> dict:
+def _progress(campaign_dir: Path, row: list) -> dict:
     """Bài nào đang ở bước nào, và bài đang chờ cổng thì MỞ FILE NÀO để duyệt.
 
     Trang này là chỗ người xem tiến độ mà không phải gõ lệnh. Nếu nó chỉ nói "T-001 chờ
@@ -79,48 +79,48 @@ def _tien_do(cam_dir: Path, dong: list) -> dict:
     `campaign.md`, nên tương đối là bấm được, còn tuyệt đối thì gãy khi ai đó chép cây
     thư mục đi nơi khác.
     """
-    theo_buoc: dict[str, list[str]] = {}
-    cho_cong: dict[str, list[dict]] = {}
-    for d in dong:
+    by_step: dict[str, list[str]] = {}
+    waiting_at: dict[str, list[dict]] = {}
+    for d in row:
         try:
-            b = TT.buoc_ke(cam_dir, d)
+            b = PS.next_step(campaign_dir, d)
         except Exception:                      # noqa: BLE001 — trang đọc KHÔNG được sập
             b = "?"                            # vì một dòng lỗi; báo "?" rồi đi tiếp
-        theo_buoc.setdefault(b, []).append(d.get("content_id", ""))
-        if b in TT.CAN_NGUOI:
-            h = CD.ho_so_bai(cam_dir, d)
-            cho_cong.setdefault(b.replace("cho-G", "g"), []).append({
+        by_step.setdefault(b, []).append(d.get("content_id", ""))
+        if b in PS.NEEDS_HUMAN:
+            h = AG.post_files(campaign_dir, d)
+            waiting_at.setdefault(b.replace("cho-G", "g"), []).append({
                 "content_id": h["content_id"], "content_name": h["content_name"],
                 "web": h["web"],
-                "file": {k: os.path.relpath(v, cam_dir).replace(os.sep, "/")
+                "file": {k: os.path.relpath(v, campaign_dir).replace(os.sep, "/")
                          for k, v in h["file"].items()}})
-    return {"theo_buoc": {b: theo_buoc[b] for b in TT.THU_TU if b in theo_buoc},
-            "khac": {b: v for b, v in theo_buoc.items() if b not in TT.THU_TU},
-            "cho_cong": cho_cong}
+    return {"by_step": {b: by_step[b] for b in PS.ORDER if b in by_step},
+            "khac": {b: v for b, v in by_step.items() if b not in PS.ORDER},
+            "waiting_at": waiting_at}
 
 
-def doc_campaign(cam_dir: Path) -> dict:
+def read_campaign(campaign_dir: Path) -> dict:
     """Một chiến dịch → dict thuần, không dính Path (để nhúng JSON được)."""
-    fm, body = md_io.read_fm(cam_dir / "campaign.md")
-    cot, dong = md_io.read_table(body, "CONTENT")
+    fm, body = md_io.read_fm(campaign_dir / "campaign.md")
+    col, row = md_io.read_table(body, "CONTENT")
     return {
-        "tien_do": _tien_do(cam_dir, dong),
-        "id": fm.get("id", cam_dir.name), "name": fm.get("name", ""),
-        "dir": cam_dir.name, "status": fm.get("status", ""),
+        "tien_do": _progress(campaign_dir, row),
+        "id": fm.get("id", campaign_dir.name), "name": fm.get("name", ""),
+        "dir": campaign_dir.name, "status": fm.get("status", ""),
         "brief": fm.get("brief", "") or fm.get("key_message", ""),
         "fm": {k: v for k, v in fm.items() if not isinstance(v, (dict, list)) or k == "channels"},
-        "cot": cot, "dong": dong,
-        "so_bai": len(dong),
-        "da_dang": sum(1 for d in dong if d.get("status") == "published"),
+        "col": col, "row": row,
+        "count": len(row),
+        "da_dang": sum(1 for d in row if d.get("status") == "published"),
     }
 
 
-def doc_kenh(k: dict) -> dict:
+def read_channel(k: dict) -> dict:
     d = k["dir"]
     cams = []
     for c in sorted(d.iterdir()) if d.is_dir() else []:
         if (c / "campaign.md").is_file():
-            cams.append(doc_campaign(c))
+            cams.append(read_campaign(c))
     return {"id": k["id"], "label": k.get("label", k["id"]), "dir": str(d),
             "status": k.get("status", ""), "campaigns": cams}
 
@@ -225,7 +225,7 @@ bản ĐỌC. Nguồn duy nhất là các file <code>.md</code>; sửa ở đó 
 """
 
 
-def _o(khoa: str, gia_tri: str) -> str:
+def _box(khoa: str, gia_tri: str) -> str:
     """Một ô. Cột link thành nút bấm được; trạng thái thành chip."""
     v = (gia_tri or "").strip()
     if not v:
@@ -233,8 +233,8 @@ def _o(khoa: str, gia_tri: str) -> str:
     if khoa in COT_LINK and v.startswith("http"):
         return f'<td><a href="{_e(v)}" target="_blank" rel="noopener">mở ↗</a></td>'
     if khoa == "status":
-        lop = "dang" if v == "published" else ("cho" if v in ("review", "approved") else "")
-        return f'<td><span class="chip {lop}">{_e(TRANG_THAI.get(v, v))}</span></td>'
+        lop = "dang" if v == "published" else ("pending" if v in ("review", "approved") else "")
+        return f'<td><span class="chip {lop}">{_e(STATUSES.get(v, v))}</span></td>'
     if khoa == "folder":
         return f'<td class="nho"><a href="{_e(v)}">{_e(v)}</a></td>'
     if khoa == "content_name":
@@ -242,64 +242,64 @@ def _o(khoa: str, gia_tri: str) -> str:
     return f"<td>{_e(v)}</td>"
 
 
-def _bang(cot: list, dong: list, id_bang: str) -> str:
-    if not dong:
+def _bang(col: list, row: list, id_bang: str) -> str:
+    if not row:
         return '<div class="cuon"><div class="trong">Chưa có dòng nào.</div></div>'
-    th = "".join(f"<th>{_e(NHAN.get(c, c))}</th>" for c in cot)
+    th = "".join(f"<th>{_e(NHAN.get(c, c))}</th>" for c in col)
     tr = "".join(
         f'<tr data-tt="{_e(d.get("status", ""))}">'
-        + "".join(_o(c, d.get(c, "")) for c in cot) + "</tr>" for d in dong)
+        + "".join(_box(c, d.get(c, "")) for c in col) + "</tr>" for d in row)
     return (f'<div class="cuon"><table id="{id_bang}"><thead><tr>{th}</tr></thead>'
             f"<tbody>{tr}</tbody></table></div>")
 
 
 # ══════════════════════════════════════════════════════════════════ campaign.html
 
-# Nhãn cho mười trạng thái của đường ống. Nguồn thứ tự là `pipeline_state.THU_TU`, ở đây chỉ
+# Nhãn cho mười trạng thái của đường ống. Nguồn thứ tự là `pipeline_state.ORDER`, ở đây chỉ
 # dịch sang tiếng người — thiếu nhãn thì in nguyên mã bước, không được làm vỡ trang.
-NHAN_BUOC = {
-    "cho-G1": "Chờ Cổng 1 · duyệt đề tài",
-    "dung-bai": "Dựng thư mục bài",
-    "soan": "Đang chờ soạn",
-    "cham-cong": "Chờ chấm 23 cổng",
-    "sua-loi-cong": "Cổng đỏ · chờ viết lại",
-    "cho-G2": "Chờ Cổng 2 · duyệt trước khi đăng",
-    "dung-trang": "Chờ dựng trang + đăng web",
-    "cho-G3": "Chờ Cổng 3 · duyệt bản thật",
-    "phat-hanh": "Chờ phát hành kênh ngoài",
-    "xong": "Xong hẳn",
+STEP_LABELS = {
+    "await-G1": "Chờ Cổng 1 · duyệt đề tài",
+    "create-post": "Dựng thư mục bài",
+    "write": "Đang chờ soạn",
+    "check-gates": "Chờ chấm 23 cổng",
+    "fix-gates": "Cổng đỏ · chờ viết lại",
+    "await-G2": "Chờ Cổng 2 · duyệt trước khi đăng",
+    "build-page": "Chờ dựng trang + đăng web",
+    "await-G3": "Chờ Cổng 3 · duyệt bản thật",
+    "release": "Chờ phát hành kênh ngoài",
+    "done": "Xong hẳn",
 }
-NHAN_CONG = {"g1": "Cổng 1 — duyệt đề tài",
+GATE_LABELS = {"g1": "Cổng 1 — duyệt đề tài",
              "g2": "Cổng 2 — duyệt trước khi đăng",
              "g3": "Cổng 3 — duyệt BẢN THẬT trên web"}
 
 
-def _html_tien_do(td: dict) -> str:
+def _html_progress(td: dict) -> str:
     """Khối 'bài đang ở đâu' + 'ai đang chờ mình quyết', kèm link mở file."""
-    hang = []
-    for b, ds in list(td["theo_buoc"].items()) + list(td.get("khac", {}).items()):
-        nhan = NHAN_BUOC.get(b, b)
-        cho = ' class="cho"' if b in ("cho-G1", "cho-G2", "cho-G3") else ""
-        hang.append(f'<tr{cho}><td>{_e(nhan)}</td><td class="so-nho">{len(ds)}</td>'
+    queue = []
+    for b, ds in list(td["by_step"].items()) + list(td.get("khac", {}).items()):
+        label = STEP_LABELS.get(b, b)
+        pending = ' class="cho"' if b in ("await-G1", "await-G2", "await-G3") else ""
+        queue.append(f'<tr{pending}><td>{_e(label)}</td><td class="so-nho">{len(ds)}</td>'
                     f'<td class="mo nho">{_e(", ".join(ds[:14]))}'
                     f'{" …" if len(ds) > 14 else ""}</td></tr>')
     bang = ('<div class="cuon"><table><thead><tr><th>Bước</th><th>Số bài</th>'
-            '<th>Bài</th></tr></thead><tbody>' + "".join(hang) + "</tbody></table></div>")
+            '<th>Bài</th></tr></thead><tbody>' + "".join(queue) + "</tbody></table></div>")
 
     khoi = []
-    for cong, ds in td.get("cho_cong", {}).items():
-        muc = []
+    for gate, ds in td.get("waiting_at", {}).items():
+        level = []
         for h in ds:
-            lk = " · ".join(f'<a href="./{_e(p)}">{_e(nhan)}</a>'
-                            for nhan, p in h["file"].items())
+            lk = " · ".join(f'<a href="./{_e(p)}">{_e(label)}</a>'
+                            for label, p in h["file"].items())
             if h.get("web"):
                 lk += (" · " if lk else "") + f'<a href="{_e(h["web"])}">bản thật</a>'
-            muc.append(f'<li><b>{_e(h["content_id"])}</b> — {_e(h["content_name"])}'
+            level.append(f'<li><b>{_e(h["content_id"])}</b> — {_e(h["content_name"])}'
                        + (f'<div class="nho">{lk}</div>' if lk
                           else '<div class="nho mo">chưa có file nào để mở</div>')
                        + "</li>")
-        khoi.append(f'<div class="the"><b>{_e(NHAN_CONG.get(cong, cong))}</b>'
-                    f'<ul class="ds">{"".join(muc)}</ul></div>')
+        khoi.append(f'<div class="the"><b>{_e(GATE_LABELS.get(gate, gate))}</b>'
+                    f'<ul class="ds">{"".join(level)}</ul></div>')
     if not khoi:
         khoi = ['<div class="the mo">Không bài nào đang chờ người quyết.</div>']
     return bang + '<h2>Đang chờ mình quyết</h2>' + "".join(khoi)
@@ -310,16 +310,16 @@ def html_campaign(c: dict) -> str:
     bo_qua = {"schema", "id", "name", "status"}
     kv = "".join(f"<dt>{_e(NHAN.get(k, k))}</dt><dd>{_e(', '.join(v) if isinstance(v, list) else v)}</dd>"
                  for k, v in fm.items() if k not in bo_qua and v not in (None, "", []))
-    chua_xong = c["so_bai"] - c["da_dang"]
+    chua_xong = c["count"] - c["da_dang"]
     than = f"""
 <div class="dau"><div>
   <h1>{_e(c['name'] or c['id'])}</h1>
-  <div class="mo nho">{_e(c['id'])} · <span class="chip">{_e(TRANG_THAI.get(c['status'], c['status']))}</span>
+  <div class="mo nho">{_e(c['id'])} · <span class="chip">{_e(STATUSES.get(c['status'], c['status']))}</span>
   · <a href="./campaign.md">campaign.md</a></div>
 </div></div>
 
 <div class="luoi">
-  <div class="the"><div class="so">{c['so_bai']}</div><div class="mo nho">bài trong chiến dịch</div></div>
+  <div class="the"><div class="so">{c['count']}</div><div class="mo nho">bài trong chiến dịch</div></div>
   <div class="the"><div class="so">{c['da_dang']}</div><div class="mo nho">đã đăng</div></div>
   <div class="the"><div class="so">{chua_xong}</div><div class="mo nho">chưa xong</div></div>
 </div>
@@ -328,35 +328,35 @@ def html_campaign(c: dict) -> str:
 <div class="the"><dl class="kv">{kv or '<dt class="mo">chưa điền</dt><dd></dd>'}</dl></div>
 
 <h2>Tiến độ đường ống</h2>
-{_html_tien_do(c['tien_do'])}
+{_html_progress(c['tien_do'])}
 
 <h2>Danh sách bài</h2>
 <div class="thanh">
   <input type="search" id="q" placeholder="Tìm trong bảng…">
   <select id="tt"><option value="">Mọi trạng thái</option>
-    {''.join(f'<option value="{_e(k)}">{_e(v)}</option>' for k, v in TRANG_THAI.items())}</select>
+    {''.join(f'<option value="{_e(k)}">{_e(v)}</option>' for k, v in STATUSES.items())}</select>
   <span class="mo nho" id="dem"></span>
   <button id="csv">⤓ Xuất CSV</button>
 </div>
-{_bang(c['cot'], c['dong'], 'bang')}
+{_bang(c['col'], c['row'], 'bang')}
 """
     js = f"""
-var DL={_js({"cot": c["cot"], "dong": c["dong"], "id": c["id"]})};
+var DL={_js({"col": c["col"], "row": c["row"], "id": c["id"]})};
 var tb=document.getElementById('bang');
 if(tb){{ gan(tb);
   function lam(){{ var n=locBang(tb,document.getElementById('q').value,
                                 document.getElementById('tt').value);
-    document.getElementById('dem').textContent=n+'/'+DL.dong.length+' dòng'; }}
+    document.getElementById('dem').textContent=n+'/'+DL.row.length+' dòng'; }}
   document.getElementById('q').oninput=lam; document.getElementById('tt').onchange=lam; lam();
 }}
-document.getElementById('csv').onclick=function(){{xuatCSV(DL.cot,DL.dong,DL.id+'_content.csv');}};
+document.getElementById('csv').onclick=function(){{xuatCSV(DL.col,DL.row,DL.id+'_content.csv');}};
 """
     return _khung(f"{c['name'] or c['id']} — chiến dịch", than, js)
 
 
 # ══════════════════════════════════════════════════════════════════ index.html
 
-def _duong_toi(goc: Path, dich: Path) -> str:
+def _path_to(src: Path, dest: Path) -> str:
     """Đường từ `index.html` tới một file, ưu tiên TƯƠNG ĐỐI.
 
     Kênh không bắt buộc nằm trong trạm (`studio_paths` nói rõ). Ghép cứng `<trạm>/<id>/`
@@ -364,34 +364,34 @@ def _duong_toi(goc: Path, dich: Path) -> str:
     Khác ổ đĩa thì relpath không tính được, lúc đó dùng `file:///` tuyệt đối.
     """
     try:
-        return os.path.relpath(dich, goc).replace("\\", "/")
+        return os.path.relpath(dest, src).replace("\\", "/")
     except ValueError:
-        return dich.resolve().as_uri()
+        return dest.resolve().as_uri()
 
 
-def html_index(kenhs: list, ten_station: str, goc: Path | None = None) -> str:
-    hang, tong, dang = [], 0, 0
+def html_index(kenhs: list, ten_station: str, src: Path | None = None) -> str:
+    queue, tong, dang = [], 0, 0
     for k in kenhs:
         for c in k["campaigns"]:
-            for d in c["dong"]:
+            for d in c["row"]:
                 tong += 1
                 if d.get("status") == "published":
                     dang += 1
-                hang.append({"kenh": k["label"], "campaign_id": c["id"],
+                queue.append({"kenh": k["label"], "campaign_id": c["id"],
                              "campaign_name": c["name"],
                              **{x: d.get(x, "") for x in
                                 ("content_id", "content_name", "status", "schedule",
                                  "published", "web", "youtube", "facebook")}})
-    cot = ["kenh", "campaign_id", "campaign_name", "content_id", "content_name",
+    col = ["kenh", "campaign_id", "campaign_name", "content_id", "content_name",
            "status", "schedule", "published", "web", "youtube", "facebook"]
     NHAN["kenh"] = "Kênh"
 
     the_kenh = ""
     for k in kenhs:
         ds = "".join(
-            f'<li><a href="{_e(_duong_toi(goc, Path(k["dir"]) / c["dir"] / "campaign.html"))}">'
+            f'<li><a href="{_e(_path_to(src, Path(k["dir"]) / c["dir"] / "campaign.html"))}">'
             f'{_e(c["name"] or c["id"])}</a>'
-            f' <span class="mo nho">· {c["da_dang"]}/{c["so_bai"]} đã đăng</span></li>'
+            f' <span class="mo nho">· {c["da_dang"]}/{c["count"]} đã đăng</span></li>'
             for c in k["campaigns"]) or '<li class="mo">chưa có chiến dịch nào</li>'
         the_kenh += (f'<div class="the"><b>{_e(k["label"])}</b>'
                      f'<div class="mo nho">{_e(k["id"])} · {len(k["campaigns"])} chiến dịch</div>'
@@ -418,22 +418,22 @@ def html_index(kenhs: list, ten_station: str, goc: Path | None = None) -> str:
 <div class="thanh">
   <input type="search" id="q" placeholder="Tìm bài, kênh, chiến dịch…">
   <select id="tt"><option value="">Mọi trạng thái</option>
-    {''.join(f'<option value="{_e(k)}">{_e(v)}</option>' for k, v in TRANG_THAI.items())}</select>
+    {''.join(f'<option value="{_e(k)}">{_e(v)}</option>' for k, v in STATUSES.items())}</select>
   <span class="mo nho" id="dem"></span>
   <button id="csv">⤓ Xuất CSV</button>
 </div>
-{_bang(cot, hang, 'bang')}
+{_bang(col, queue, 'bang')}
 """
     js = f"""
-var DL={_js({"cot": cot, "dong": hang})};
+var DL={_js({"col": col, "row": queue})};
 var tb=document.getElementById('bang');
 if(tb){{ gan(tb);
   function lam(){{ var n=locBang(tb,document.getElementById('q').value,
                                 document.getElementById('tt').value);
-    document.getElementById('dem').textContent=n+'/'+DL.dong.length+' dòng'; }}
+    document.getElementById('dem').textContent=n+'/'+DL.row.length+' dòng'; }}
   document.getElementById('q').oninput=lam; document.getElementById('tt').onchange=lam; lam();
 }}
-document.getElementById('csv').onclick=function(){{xuatCSV(DL.cot,DL.dong,'toan_canh.csv');}};
+document.getElementById('csv').onclick=function(){{xuatCSV(DL.col,DL.row,'toan_canh.csv');}};
 """
     return _khung(f"Toàn cảnh — {ten_station}", than, js)
 
@@ -447,23 +447,23 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     if a.campaign:
-        cam = Path(a.campaign).resolve()
-        if not (cam / "campaign.md").is_file():
-            sys.stderr.write(f"không thấy campaign.md trong {cam}\n")
+        campaign = Path(a.campaign).resolve()
+        if not (campaign / "campaign.md").is_file():
+            sys.stderr.write(f"không thấy campaign.md trong {campaign}\n")
             return 2
-        md_io.ghi_nguyen_tu(cam / "campaign.html", html_campaign(doc_campaign(cam)))
-        print(f"  {cam / 'campaign.html'}")
+        md_io.write_atomic(campaign / "campaign.html", html_campaign(read_campaign(campaign)))
+        print(f"  {campaign / 'campaign.html'}")
         return 0
 
     station = SP.root(a.station).resolve()
-    kenhs = [doc_kenh(k) for k in SP.channels(station)]
+    kenhs = [read_channel(k) for k in SP.channels(station)]
     n = 0
     for k in kenhs:
         for c in k["campaigns"]:
             p = Path(k["dir"]) / c["dir"] / "campaign.html"
-            md_io.ghi_nguyen_tu(p, html_campaign(c))
+            md_io.write_atomic(p, html_campaign(c))
             n += 1
-    md_io.ghi_nguyen_tu(station / "index.html",
+    md_io.write_atomic(station / "index.html",
                         html_index(kenhs, station.name, station))
     print(f"  {n} campaign.html")
     print(f"  {station / 'index.html'}  ← mở bằng cách bấm đúp")

@@ -539,7 +539,7 @@
         <h3>Bộ viết là của bạn, repo không khoá CLI nào</h3>
         <p>Repo này <b>không gọi thẳng</b> một trợ lý AI nào. Bạn khai lệnh của mình vào <code style="font-family:var(--mono);font-size:.85em">runtime.writer_cmd</code> — Claude, Codex, một script Python, hay một người thật ngồi viết cũng được. Hợp đồng chỉ có hai vế: vào là thư mục bài, ra là <code style="font-family:var(--mono);font-size:.85em">content.md</code> đã điền theo neo. Không khai thì bước soạn báo <i>chờ người viết</i> và dừng.</p>
         <p style="margin-top:10px"><b>Mã thoát 0 không đủ để được tính là xong.</b> Hệ kiểm lại bài có chữ thật không — bộ viết chạy êm mà file vẫn trống thì vẫn tính là hỏng. Đó là hình dạng hỏng nguy hiểm nhất: chỉ tin mã thoát thì bài rỗng đi thẳng tới bước đăng.</p>
-        <span class="kbd">writer_cmd: '&lt;lệnh của bạn&gt; --bai "{bai}"'</span>
+        <span class="kbd">writer_cmd: '&lt;lệnh của bạn&gt; --post "{post}"'</span>
       </article>
 
       <article class="feat full reveal">

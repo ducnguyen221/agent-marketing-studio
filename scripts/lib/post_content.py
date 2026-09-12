@@ -18,10 +18,10 @@ from pathlib import Path
 
 # Thân bài blog ngắn hơn ngần này thì coi như chưa viết. Con số không thiêng; nó chỉ cần
 # lớn hơn phần chữ CÒN LẠI của khuôn sau khi lọc, và nhỏ hơn một bài thật ngắn nhất.
-TOI_THIEU_BLOG = 800
+MIN_BLOG_WORDS = 800
 
 
-def da_viet(bai: Path) -> bool:
+def has_content(post: Path) -> bool:
     """`content.md` đã có chữ THẬT chưa, hay còn là khung mẫu?
 
     ĐÃ TRẢ GIÁ 10/09/2026 — cổng này từng FAIL-OPEN. Bản đầu đếm ký tự (ngưỡng 400) và coi
@@ -35,11 +35,11 @@ def da_viet(bai: Path) -> bool:
     Dấu hiệu đúng, cả ba phải thoả:
       1. có neo `## post:blog_article` — thiếu là chưa dựng đúng khuôn
       2. thân dưới neo đó không còn `{{...}}` — khuôn đầy chỗ trống, bài xong thì hết
-      3. thân đủ dài (`TOI_THIEU_BLOG`) — chặn trường hợp xoá sạch chỗ trống rồi bỏ đó
+      3. thân đủ dài (`MIN_BLOG_WORDS`) — chặn trường hợp xoá sạch chỗ trống rồi bỏ đó
 
     Thư mục bài chưa tồn tại cũng là **chưa viết** — fail-closed, không đoán.
     """
-    p = Path(bai) / "content.md"
+    p = Path(post) / "content.md"
     if not p.is_file():
         return False
     raw = p.read_text(encoding="utf-8")
@@ -58,4 +58,4 @@ def da_viet(bai: Path) -> bool:
     than = re.sub(r"<!--.*?-->", "", than, flags=re.S)
     than = re.sub(r"(?m)^\s*>.*$", "", than)      # khối chỉ dẫn của khuôn
     than = re.sub(r"(?m)^\s*#{1,6}\s.*$", "", than)
-    return len(than.strip()) >= TOI_THIEU_BLOG
+    return len(than.strip()) >= MIN_BLOG_WORDS

@@ -1,21 +1,21 @@
 ﻿# run-blog-campaign.ps1 — VỎ MỎNG cho Task Scheduler. Logic thật nằm ở campaign_step.py.
 #
-# Vì sao mỏng: bước `dung-bai` phải đọc bảng Content trong Markdown để biết bài nào tới
+# Vì sao mỏng: bước `create-post` phải đọc bảng Content trong Markdown để biết bài nào tới
 # hạn. PowerShell 5.1 không đọc nổi YAML/Markdown có cấu trúc — đó chính là lý do
 # `campaign_cfg.py` ra đời. Viết lại bộ đọc bảng bằng PowerShell là đi ngược một bài học
 # đã trả giá. PowerShell chỉ giữ vai nó làm tốt: mặt tiền cho Task Scheduler và
 # notify-run.ps1.
 #
 # Ba bước RỜI, mỗi lượt chạy đúng một bước:
-#   dung-bai ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
+#   create-post ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
 # Gộp lại là dựng lại đúng cái đã bị gỡ 04/09/2026 vì nuốt cổng duyệt của người.
 #
-#   .\run.ps1 -Buoc dung-bai              dựng bài tới hạn rồi xin duyệt Cổng 1
+#   .\run.ps1 -Buoc create-post              dựng bài tới hạn rồi xin duyệt Cổng 1
 #   .\run.ps1 -Buoc soan                  soạn bài đã qua Cổng 1 rồi xin duyệt Cổng 2
 #   .\run.ps1 -Buoc dang                  đăng bài đã qua Cổng 2
 #   .\run.ps1 -Buoc dang -Uat             đăng thử: web ra thư mục nháp, không đụng repo
 param(
-  [ValidateSet('dung-bai', 'soan', 'dang')][string]$Buoc = 'dung-bai',
+  [ValidateSet('create-post', 'soan', 'dang')][string]$Buoc = 'create-post',
   [string]$Config = '',
   [int]$Truoc = -1,
   [switch]$Uat,
@@ -63,7 +63,7 @@ if (-not (Test-Path $py)) {
 }
 
 $argv = @($cam, $Buoc)
-if ($Truoc -ge 0) { $argv += @('--truoc', [string]$Truoc) }
+if ($Truoc -ge 0) { $argv += @('--batchokahead', [string]$Truoc) }
 if ($Uat)         { $argv += '--uat' }
 if ($DryRun)      { $argv += '--dry-run' }
 

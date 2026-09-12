@@ -70,33 +70,33 @@ def main(argv=None) -> int:
         return 2
 
     try:
-        kenh = SP.channel_dir(a.channel, a.station)
+        channel = SP.channel_dir(a.channel, a.station)
     except KeyError as e:
         sys.stderr.write(f"{e}\n")
         return 2
-    if not (kenh / "channel.yml").is_file():
-        sys.stderr.write(f"{kenh} không phải thư mục kênh (thiếu channel.yml)\n")
+    if not (channel / "channel.yml").is_file():
+        sys.stderr.write(f"{channel} không phải thư mục kênh (thiếu channel.yml)\n")
         return 2
 
     # pillar phải nằm trong bộ của kênh — bắt sớm còn hơn để check_tree bắt muộn
     import yaml
-    cfg = yaml.safe_load((kenh / "channel.yml").read_text(encoding="utf-8")) or {}
+    cfg = yaml.safe_load((channel / "channel.yml").read_text(encoding="utf-8")) or {}
     pillars = cfg.get("pillars") or []
     if a.pillar and pillars and a.pillar not in pillars:
         sys.stderr.write(f"--pillar {a.pillar!r} không có trong channel.yml:pillars {pillars}\n")
         return 2
 
-    dich = kenh / a.id
-    if (dich / "campaign.md").exists():
-        sys.stderr.write(f"đã có chiến dịch ở {dich} — dừng, không ghi đè\n")
+    dest = channel / a.id
+    if (dest / "campaign.md").exists():
+        sys.stderr.write(f"đã có chiến dịch ở {dest} — dừng, không ghi đè\n")
         return 2
     if a.dry_run:
-        print(f"  [dry-run] sẽ tạo {dich}/campaign.md và thêm dòng vào {kenh / 'CAMPAIGNS.md'}")
+        print(f"  [dry-run] sẽ tạo {dest}/campaign.md và thêm dòng vào {channel / 'CAMPAIGNS.md'}")
         return 0
 
-    dich.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(TPL_CAM / "campaign.md", dich / "campaign.md")
-    fm, body = md_io.read_fm(dich / "campaign.md")
+    dest.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(TPL_CAM / "campaign.md", dest / "campaign.md")
+    fm, body = md_io.read_fm(dest / "campaign.md")
     fm.update({"id": a.id, "channel": a.channel, "id_prefix": a.prefix, "name": a.name,
                "created": str(date.today()), "status": "proposed"})
     # `content_pillar` phải nằm trong `channel.yml:pillars`. Không truyền `--pillar` thì lấy
@@ -127,21 +127,21 @@ def main(argv=None) -> int:
         # parse-fail IM LẶNG, tức scheduled task "chạy" mà không làm gì.
         mau = TPL_CAM / "run.ps1"
         if mau.is_file():
-            (dich / "run.ps1").write_bytes(mau.read_bytes())
+            (dest / "run.ps1").write_bytes(mau.read_bytes())
         # `prompt.txt` cấp CHIẾN DỊCH = prompt bước CHỌN đề tài, chạy mỗi kỳ.
         # Khác `<bài>/prompt.txt` (bước VIẾT một bài cụ thể). Hai bước, hai prompt —
         # gộp lại thì lời dặn "chọn gì" và "viết thế nào" trộn vào nhau và cả hai cùng mờ.
         mau_p = TPL_CAM / "prompt.txt"
-        if mau_p.is_file() and not (dich / "prompt.txt").exists():
-            shutil.copy2(mau_p, dich / "prompt.txt")
+        if mau_p.is_file() and not (dest / "prompt.txt").exists():
+            shutil.copy2(mau_p, dest / "prompt.txt")
     if cfg.get("kpi_default"):
         fm["kpi"] = dict(cfg["kpi_default"])
     if cfg.get("owner"):
         fm["owner"] = cfg["owner"]
     body = body.replace("# Hồ sơ chiến dịch — Tên chiến dịch", f"# Hồ sơ chiến dịch — {a.name}")
-    md_io.write_fm(dich / "campaign.md", fm, body)
+    md_io.write_fm(dest / "campaign.md", fm, body)
 
-    so = kenh / "CAMPAIGNS.md"
+    so = channel / "CAMPAIGNS.md"
     fm2, body2 = md_io.read_fm(so)
     body2 = md_io.upsert_row(body2, "CAMPAIGNS", "campaign_id", {
         "campaign_id": a.id, "tên": a.name, "pillar": a.pillar or "",
@@ -150,7 +150,7 @@ def main(argv=None) -> int:
     fm2["updated"] = str(date.today())
     md_io.write_fm(so, fm2, body2)
 
-    print(f"  chiến dịch: {dich / 'campaign.md'}")
+    print(f"  chiến dịch: {dest / 'campaign.md'}")
     print(f"  sổ        : {so}")
     print(f"  tiếp      : điền frontmatter + Mục 1-3, rồi new_post.py --campaign {a.id} "
           f"--id {a.prefix}-001 --slug … --title \"…\"")

@@ -47,10 +47,10 @@ def write_fm(path, fm: dict, body: str) -> None:
     txt = ("---\n"
            + yaml.safe_dump(fm, allow_unicode=True, sort_keys=False, width=100)
            + "---\n" + body)
-    ghi_nguyen_tu(path, txt)
+    write_atomic(path, txt)
 
 
-def ghi_nguyen_tu(path, text: str) -> None:
+def write_atomic(path, text: str) -> None:
     """Ghi một file bất kỳ, nguyên tử. Công khai vì build_views cũng cần:
     trang HTML ghi dở dang mà người vừa bấm mở là trang trắng."""
     p = Path(path)
@@ -70,31 +70,31 @@ def ghi_nguyen_tu(path, text: str) -> None:
 
 # ---------------------------------------------------------------- bảng giữa marker
 
-def _moc(ten: str) -> tuple[str, str]:
-    return f"<!-- {ten}:BEGIN -->", f"<!-- {ten}:END -->"
+def _moc(name: str) -> tuple[str, str]:
+    return f"<!-- {name}:BEGIN -->", f"<!-- {name}:END -->"
 
 
-def _tach_o(dong: str) -> list[str]:
+def _tach_o(row: str) -> list[str]:
     """Tách một dòng bảng thành các ô. `\\|` là dấu | thật trong nội dung, không phải vách."""
-    dong = dong.strip()
-    if dong.startswith("|"):
-        dong = dong[1:]
-    if dong.endswith("|") and not dong.endswith("\\|"):
-        dong = dong[:-1]
-    o, dem = [], []
+    row = row.strip()
+    if row.startswith("|"):
+        row = row[1:]
+    if row.endswith("|") and not row.endswith("\\|"):
+        row = row[:-1]
+    o, count = [], []
     i = 0
-    while i < len(dong):
-        if dong[i] == "\\" and i + 1 < len(dong) and dong[i + 1] == "|":
-            dem.append("|")
+    while i < len(row):
+        if row[i] == "\\" and i + 1 < len(row) and row[i + 1] == "|":
+            count.append("|")
             i += 2
-        elif dong[i] == "|":
-            o.append("".join(dem).strip())
-            dem = []
+        elif row[i] == "|":
+            o.append("".join(count).strip())
+            count = []
             i += 1
         else:
-            dem.append(dong[i])
+            count.append(row[i])
             i += 1
-    o.append("".join(dem).strip())
+    o.append("".join(count).strip())
     return o
 
 
@@ -110,28 +110,28 @@ def read_table(body: str, ten_moc: str) -> tuple[list[str], list[dict]]:
 
     Bảng rỗng (chỉ có header) -> (cột, []). Không có marker -> ([], []).
     """
-    dau, cuoi = _moc(ten_moc)
-    i, j = body.find(dau), body.find(cuoi)
+    start, cuoi = _moc(ten_moc)
+    i, j = body.find(start), body.find(cuoi)
     if i < 0 or j < 0 or j < i:
         return [], []
-    khoi = [d for d in body[i + len(dau):j].splitlines() if d.strip().startswith("|")]
+    khoi = [d for d in body[i + len(start):j].splitlines() if d.strip().startswith("|")]
     if not khoi:
         return [], []
-    cot = _tach_o(khoi[0])
-    dong = []
+    col = _tach_o(khoi[0])
+    row = []
     for d in khoi[1:]:
         o = _tach_o(d)
         if all(re.fullmatch(r":?-{2,}:?", x.strip()) for x in o if x.strip()):
             continue                       # dòng phân cách |---|---|
-        dong.append({c: (o[k] if k < len(o) else "") for k, c in enumerate(cot)})
-    return cot, dong
+        row.append({c: (o[k] if k < len(o) else "") for k, c in enumerate(col)})
+    return col, row
 
 
-def render_table(cot: list[str], dong: list[dict]) -> str:
-    ra = ["| " + " | ".join(cot) + " |",
-          "|" + "|".join("---" for _ in cot) + "|"]
-    for d in dong:
-        ra.append("| " + " | ".join(_o_an_toan(d.get(c, "")) for c in cot) + " |")
+def render_table(col: list[str], row: list[dict]) -> str:
+    ra = ["| " + " | ".join(col) + " |",
+          "|" + "|".join("---" for _ in col) + "|"]
+    for d in row:
+        ra.append("| " + " | ".join(_o_an_toan(d.get(c, "")) for c in col) + " |")
     return "\n".join(ra)
 
 
@@ -151,28 +151,28 @@ def upsert_row(body: str, ten_moc: str, khoa: str, dong_moi: dict,
     tưởng đã ghi, giá trị bốc hơi, và không gì báo. `them_cot=True` để cố ý mở thêm cột
     (bảng cũ chưa có cột web/youtube/facebook thì register_publish tự nới ra).
     """
-    dau, cuoi = _moc(ten_moc)
-    i, j = body.find(dau), body.find(cuoi)
+    start, cuoi = _moc(ten_moc)
+    i, j = body.find(start), body.find(cuoi)
     if i < 0 or j < 0:
-        raise ValueError(f"không thấy marker {dau} … {cuoi} — file sai mẫu?")
-    cot, dong = read_table(body, ten_moc)
-    if not cot:
-        cot = cot_mac_dinh or list(dong_moi)
-    if khoa not in cot:
-        raise ValueError(f"bảng không có cột khoá {khoa!r}; có: {cot}")
+        raise ValueError(f"không thấy marker {start} … {cuoi} — file sai mẫu?")
+    col, row = read_table(body, ten_moc)
+    if not col:
+        col = cot_mac_dinh or list(dong_moi)
+    if khoa not in col:
+        raise ValueError(f"bảng không có cột khoá {khoa!r}; có: {col}")
 
-    la = [k for k in dong_moi if k not in cot]
+    la = [k for k in dong_moi if k not in col]
     if la:
         if not them_cot:
             raise ValueError(f"bảng {ten_moc} không có cột {la} — ghi vào sẽ mất im lặng. "
-                             f"Cột đang có: {cot}. Cố ý nới bảng thì truyền them_cot=True.")
-        cot = cot + la
-        for d in dong:
+                             f"Cột đang có: {col}. Cố ý nới bảng thì truyền them_cot=True.")
+        col = col + la
+        for d in row:
             for k in la:
                 d.setdefault(k, "")
 
     da_co = False
-    for d in dong:
+    for d in row:
         if d.get(khoa) == dong_moi.get(khoa):
             d.update({k: v for k, v in dong_moi.items() if v is not None})
             da_co = True
@@ -182,6 +182,6 @@ def upsert_row(body: str, ten_moc: str, khoa: str, dong_moi: dict,
             raise KeyError(f"bảng {ten_moc} không có dòng {khoa}={dong_moi.get(khoa)!r} — "
                            f"không thêm dòng mới ở chế độ chỉ-cập-nhật. "
                            f"Kiểm lại meta.json/publish.json của bài.")
-        dong.append({c: dong_moi.get(c, "") for c in cot})
+        row.append({c: dong_moi.get(c, "") for c in col})
 
-    return body[:i + len(dau)] + "\n" + render_table(cot, dong) + "\n" + body[j:]
+    return body[:i + len(start)] + "\n" + render_table(col, row) + "\n" + body[j:]

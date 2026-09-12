@@ -30,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
-import pipeline_state as TT  # noqa: E402
+import pipeline_state as PS  # noqa: E402
 
 try:
     import openpyxl
@@ -70,7 +70,7 @@ ANH_XA = {"content_id": "content_id", "content_name": "content_name",
 XANH = PatternFill("solid", fgColor="1F3864") if openpyxl else None
 
 
-def _dong_content(cam_dir: Path, dong_md: list) -> list[dict]:
+def _dong_content(campaign_dir: Path, dong_md: list) -> list[dict]:
     """Một dòng Content = dòng trong campaign.md, làm giàu bằng research.md của bài."""
     ra = []
     for d in dong_md:
@@ -78,9 +78,9 @@ def _dong_content(cam_dir: Path, dong_md: list) -> list[dict]:
         for md_k, xl_k in ANH_XA.items():
             if d.get(md_k):
                 o[xl_k] = d[md_k]
-        thu_muc = (d.get("folder") or "").strip("./")
-        r = cam_dir / thu_muc / "research.md"
-        if thu_muc and r.is_file():
+        folder = (d.get("folder") or "").strip("./")
+        r = campaign_dir / folder / "research.md"
+        if folder and r.is_file():
             fm, _ = md_io.read_fm(r)
             # Danh sách này phải phủ MỌI khoá `research.md` có mà sheet Content cũng có.
             # Ba khoá cuối (`key_sources`, `content_relationship`, `notes`) trước đây bị bỏ
@@ -102,20 +102,20 @@ def _dong_content(cam_dir: Path, dong_md: list) -> list[dict]:
                 if v not in (None, "", []):
                     o[xl_k] = ", ".join(v) if isinstance(v, list) else str(v)
         try:
-            o["pipeline_step"] = TT.buoc_ke(cam_dir, d)
+            o["pipeline_step"] = PS.next_step(campaign_dir, d)
         except Exception:                      # noqa: BLE001 — một dòng hỏng không được
             o["pipeline_step"] = "?"           # làm hỏng cả bản xuất
         ra.append(o)
     return ra
 
 
-def _dong_post(cam_dir: Path, dong_md: list) -> list[dict]:
+def _dong_post(campaign_dir: Path, dong_md: list) -> list[dict]:
     """Một dòng Post = một mục trong `publish.json` của bài. Chưa đăng thì chưa có dòng."""
     ra = []
     for d in dong_md:
-        thu_muc = (d.get("folder") or "").strip("./")
-        pj_p = cam_dir / thu_muc / "publish.json"
-        if not (thu_muc and pj_p.is_file()):
+        folder = (d.get("folder") or "").strip("./")
+        pj_p = campaign_dir / folder / "publish.json"
+        if not (folder and pj_p.is_file()):
             continue
         pj = json.loads(pj_p.read_text(encoding="utf-8"))
         for p in pj.get("posts", []):
@@ -146,39 +146,39 @@ def _dong_post(cam_dir: Path, dong_md: list) -> list[dict]:
             })
             # Khoá THẬT trong publish.json là `actual` và `target` — `register_publish
             # metrics` ghi vào đó. Đọc nhầm tên khoá thì mọi ô số liệu im lặng rỗng.
-            for ten in ("view", "interaction", "reaction", "comment", "share", "click", "reach"):
-                v = (p.get("actual") or {}).get(ten)
+            for name in ("view", "interaction", "reaction", "comment", "share", "click", "reach"):
+                v = (p.get("actual") or {}).get(name)
                 if v is not None:
-                    o["actual_" + ten] = v
-            for ten in ("view", "interaction"):
-                v = (p.get("target") or {}).get(ten)
+                    o["actual_" + name] = v
+            for name in ("view", "interaction"):
+                v = (p.get("target") or {}).get(name)
                 if v is not None:
-                    o["target_" + ten] = v
+                    o["target_" + name] = v
             if (p.get("actual") or {}).get("updated_at"):
                 o["metric_updated_at"] = p["actual"]["updated_at"]
             ra.append(o)
     return ra
 
 
-def _sheet(wb, ten: str, cot: list[str], dong: list[dict]):
-    ws = wb.create_sheet(ten)
-    ws.append(cot)
-    for c in range(1, len(cot) + 1):
+def _sheet(wb, name: str, col: list[str], row: list[dict]):
+    ws = wb.create_sheet(name)
+    ws.append(col)
+    for c in range(1, len(col) + 1):
         o = ws.cell(1, c)
         o.font = Font(bold=True, color="FFFFFF")
         o.fill = XANH
         o.alignment = Alignment(vertical="center")
-        ws.column_dimensions[get_column_letter(c)].width = max(12, min(38, len(cot[c - 1]) + 8))
-    for d in dong:
-        ws.append([d.get(k, "") for k in cot])
+        ws.column_dimensions[get_column_letter(c)].width = max(12, min(38, len(col[c - 1]) + 8))
+    for d in row:
+        ws.append([d.get(k, "") for k in col])
     ws.freeze_panes = "A2"
-    if dong:
-        ws.auto_filter.ref = f"A1:{get_column_letter(len(cot))}{len(dong) + 1}"
+    if row:
+        ws.auto_filter.ref = f"A1:{get_column_letter(len(col))}{len(row) + 1}"
     return ws
 
 
-def xuat(cam_dir: Path, out: Path | None = None) -> Path:
-    fm, body = md_io.read_fm(cam_dir / "campaign.md")
+def xuat(campaign_dir: Path, out: Path | None = None) -> Path:
+    fm, body = md_io.read_fm(campaign_dir / "campaign.md")
     _, dong_md = md_io.read_table(body, "CONTENT")
 
     wb = openpyxl.Workbook()
@@ -200,7 +200,7 @@ def xuat(cam_dir: Path, out: Path | None = None) -> Path:
     ws.append(["", "", ""])
     # Đường dẫn TƯƠNG ĐỐI (kênh/chiến_dịch/campaign.md). Đường tuyệt đối mang theo tên
     # người dùng và tên máy — file .xlsx này được gửi đi và có bản nằm trong repo công khai.
-    neo = f"{cam_dir.parent.name}/{cam_dir.name}/campaign.md"
+    neo = f"{campaign_dir.parent.name}/{campaign_dir.name}/campaign.md"
     ws.append(["⚠️ NGUỒN SỰ THẬT", neo,
                "File Excel này là BẢN XUẤT. Sửa ở đây KHÔNG quay ngược về Markdown — "
                "sửa campaign.md rồi xuất lại."])
@@ -209,17 +209,17 @@ def xuat(cam_dir: Path, out: Path | None = None) -> Path:
         ws.column_dimensions[get_column_letter(c)].width = w
     ws.freeze_panes = "A2"
 
-    _sheet(wb, "Content", COT_CONTENT, _dong_content(cam_dir, dong_md))
-    _sheet(wb, "Post", COT_POST, _dong_post(cam_dir, dong_md))
+    _sheet(wb, "Content", COT_CONTENT, _dong_content(campaign_dir, dong_md))
+    _sheet(wb, "Post", COT_POST, _dong_post(campaign_dir, dong_md))
 
-    dich = Path(out) if out else cam_dir / f"{fm.get('id', cam_dir.name)}.xlsx"
-    dich.parent.mkdir(parents=True, exist_ok=True)
+    dest = Path(out) if out else campaign_dir / f"{fm.get('id', campaign_dir.name)}.xlsx"
+    dest.parent.mkdir(parents=True, exist_ok=True)
     # openpyxl không ghi nguyên tử được; ghi tạm rồi đổi tên, để người đang mở file cũ
     # không gặp một file .xlsx cụt.
-    tmp = dich.with_suffix(".xlsx.tmp")
+    tmp = dest.with_suffix(".xlsx.tmp")
     wb.save(tmp)
-    tmp.replace(dich)
-    return dich
+    tmp.replace(dest)
+    return dest
 
 
 def main(argv=None) -> int:
@@ -237,11 +237,11 @@ def main(argv=None) -> int:
         return 2
 
     if a.campaign:
-        cam = Path(a.campaign).resolve()
-        if not (cam / "campaign.md").is_file():
-            sys.stderr.write(f"không thấy campaign.md trong {cam}\n")
+        campaign = Path(a.campaign).resolve()
+        if not (campaign / "campaign.md").is_file():
+            sys.stderr.write(f"không thấy campaign.md trong {campaign}\n")
             return 2
-        print(f"  {xuat(cam, Path(a.out) if a.out else None)}")
+        print(f"  {xuat(campaign, Path(a.out) if a.out else None)}")
         return 0
 
     station = SP.root(a.station).resolve()

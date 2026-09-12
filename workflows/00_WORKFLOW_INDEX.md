@@ -98,7 +98,7 @@ Mỗi phần tử `posts[]` phải có: `post_id`, `channel`, `post_format`, `po
 
 Trạng thái cổng có **ba** giá trị: xanh · đỏ · **thiếu**. Cổng không chạy được là *chưa biết*,
 **không bao giờ** được cộng vào xanh. Miễn trừ một cổng thì phải ghi lý do:
-`--cho-phep "tên=lý do"` — nới danh sách từ khoá để đỡ đỏ là làm hỏng cổng cho mọi bài sau.
+`--allow "tên=lý do"` — nới danh sách từ khoá để đỡ đỏ là làm hỏng cổng cho mọi bài sau.
 
 **Còn nghi ngờ thì để `failed` và ghi lý do, đừng tự xác nhận `passed`.** `register_publish qa`
 đọc thẳng `gates.json` nên nó không đoán — nhưng nó cũng chỉ thấy thứ cổng đo được.

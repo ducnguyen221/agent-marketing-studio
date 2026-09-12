@@ -29,15 +29,15 @@ BAI_DO = ROOT / "fixtures" / "bai_do"
 HOME = "ducnguyen.vn"
 
 
-def _theo_ma(kq):
-    return {r["ma"]: r for r in kq["cong"]}
+def _theo_ma(result):
+    return {r["job_id"]: r for r in result["gate"]}
 
 
 # ------------------------------------------------------------------ 1. fixture đỏ
 
 @pytest.fixture(scope="module")
 def do():
-    return _theo_ma(G.chay(BAI_DO, HOME))
+    return _theo_ma(G.run_cmd(BAI_DO, HOME))
 
 
 def test_fixture_do_ton_tai():
@@ -45,59 +45,59 @@ def test_fixture_do_ton_tai():
 
 
 def test_dung_tap_cong_bi_chan(do):
-    chan = {ma for ma, r in do.items() if r["trang_thai"] == "do" and r["muc"] == G.CHAN}
+    chan = {job_id for job_id, r in do.items() if r["status"] == "fail" and r["level"] == G.CHAN}
     assert chan == {"G01", "G02", "G05", "G06", "G08", "G09", "G11",
                     "G12", "G13", "G14", "G17", "G18", "G19", "G20"}
 
 
 def test_dung_tap_cong_canh_bao(do):
-    cb = {ma for ma, r in do.items() if r["trang_thai"] == "do" and r["muc"] == G.CANH_BAO}
+    cb = {job_id for job_id, r in do.items() if r["status"] == "fail" and r["level"] == G.CANH_BAO}
     assert cb == {"G04", "G07", "G10", "G15"}, "cảnh báo không được leo thành chặn"
 
 
 def test_cong_xanh_khong_bi_do_lay(do):
     """Bài sai nhiều thứ nhưng CÓ bảng và KHÔNG lộ tên tool -> ba cổng này phải xanh."""
-    assert do["G03"]["trang_thai"] == "xanh"
-    assert do["G21"]["trang_thai"] == "xanh"
-    assert do["G22"]["trang_thai"] == "xanh"
+    assert do["G03"]["status"] == "pass"
+    assert do["G21"]["status"] == "pass"
+    assert do["G22"]["status"] == "pass"
 
 
 def test_so_do_dung_chu_khong_chi_do(do):
     """Đây là phần phân biệt 'đỏ' với 'đỏ đúng lý do'."""
-    assert do["G02"]["do_duoc"] == 3            # 3 H2, ngưỡng 6-12
-    assert do["G05"]["do_duoc"] == 0            # 0 nguồn ngoài
-    assert do["G06"]["do_duoc"] == "0 khối / 0 từ"   # không có khối chính kiến nào
-    assert do["G08"]["do_duoc"] == 2            # 2 dấu [KIỂM CHỨNG] còn mở
-    assert do["G09"]["do_duoc"] == 2            # 2 URL trong thân post
-    assert do["G11"]["do_duoc"] == 0            # 0 ký tự bold
-    assert do["G13"]["do_duoc"] == 2            # 2 hashtag, ngưỡng 6-13
+    assert do["G02"]["measured"] == 3            # 3 H2, ngưỡng 6-12
+    assert do["G05"]["measured"] == 0            # 0 nguồn ngoài
+    assert do["G06"]["measured"] == "0 khối / 0 từ"   # không có khối chính kiến nào
+    assert do["G08"]["measured"] == 2            # 2 dấu [KIỂM CHỨNG] còn mở
+    assert do["G09"]["measured"] == 2            # 2 URL trong thân post
+    assert do["G11"]["measured"] == 0            # 0 ký tự bold
+    assert do["G13"]["measured"] == 2            # 2 hashtag, ngưỡng 6-13
     # đỏ THUẦN vì đếm sai (5≠8): hình dạng đúng, ảnh src đúng — để phép đếm giữ nguyên ý nghĩa
-    assert do["G17"]["do_duoc"] == "5 scene, 0 thiếu nội dung, 0 mất ảnh src"
-    assert do["G18"]["do_duoc"] == "0 loại"      # không thẻ og: nào
-    assert do["G20"]["do_duoc"] == "95 / 1"     # tóm tắt 95 từ, 1 key-term
+    assert do["G17"]["measured"] == "5 scene, 0 thiếu nội dung, 0 mất ảnh src"
+    assert do["G18"]["measured"] == "0 loại"      # không thẻ og: nào
+    assert do["G20"]["measured"] == "95 / 1"     # tóm tắt 95 từ, 1 key-term
 
 
 def test_cong_noi_ra_bang_chung_cu_the(do):
     """Cổng phải chỉ được chỗ sai, không chỉ nói 'sai'."""
-    assert "https://" in do["G09"]["ghi_chu"], "G09 phải liệt kê chính các URL nó bắt được"
+    assert "https://" in do["G09"]["note"], "G09 phải liệt kê chính các URL nó bắt được"
 
 
 def test_khong_suy_dien_hau_qua(do):
     """Luật phát ngôn: cổng chỉ nói cái nó ĐO ĐƯỢC."""
-    cam = ["reach", "bóp", "thuật toán", "sẽ bị", "chất lượng kém", "bài dở"]
-    for ma, r in do.items():
-        van_ban = f"{r['cong']} {r['ghi_chu']}".lower()
-        for tu in cam:
-            assert tu not in van_ban, f"{ma} suy diễn hậu quả thay vì báo số đo: {r}"
+    campaign = ["reach", "bóp", "thuật toán", "sẽ bị", "chất lượng kém", "bài dở"]
+    for job_id, r in do.items():
+        van_ban = f"{r['gate']} {r['note']}".lower()
+        for tu in campaign:
+            assert tu not in van_ban, f"{job_id} suy diễn hậu quả thay vì báo số đo: {r}"
 
 
 # ------------------------------------------------------------------ 2. bài hợp lệ
 
 @pytest.fixture
 def bai_xanh(tmp_path):
-    d = tmp_path / "bai"
+    d = tmp_path / "post"
     d.mkdir()
-    PP.tao_thu_muc(d)
+    PP.make_dirs(d)
     than = "\n\n".join(
         [f"## Mục {i}\n\nMột đoạn nội dung. " * 3 for i in range(1, 9)]
     )
@@ -144,21 +144,21 @@ def bai_xanh(tmp_path):
 
 
 def test_bai_hop_le_khong_bi_keu_oan(bai_xanh):
-    kq = G.chay(bai_xanh, HOME)
-    do_ra = [(r["ma"], r["cong"], r["do_duoc"], r["luat"])
-             for r in kq["cong"] if r["trang_thai"] == "do"]
+    result = G.run_cmd(bai_xanh, HOME)
+    do_ra = [(r["job_id"], r["gate"], r["measured"], r["rule"])
+             for r in result["gate"] if r["status"] == "fail"]
     assert do_ra == [], f"cổng kêu oan trên bài hợp lệ: {do_ra}"
 
 
 # ------------------------------------------------------------------ 3. thiếu ≠ xanh
 
 def test_thieu_dau_vao_khong_duoc_bao_xanh(tmp_path):
-    kq = G.chay(tmp_path, HOME)
-    theo = _theo_ma(kq)
-    assert theo["G01"]["trang_thai"] == "thieu"
-    assert theo["G18"]["trang_thai"] == "thieu"
-    assert kq["xanh"] == 0, "thư mục rỗng mà có cổng xanh = cổng đang nói dối"
-    assert kq["thieu"] == 22
+    result = G.run_cmd(tmp_path, HOME)
+    theo = _theo_ma(result)
+    assert theo["G01"]["status"] == "missing"
+    assert theo["G18"]["status"] == "missing"
+    assert result["pass"] == 0, "thư mục rỗng mà có cổng xanh = cổng đang nói dối"
+    assert result["missing"] == 22
 
 
 def test_g23_bat_placeholder_con_sot(bai_xanh):
@@ -168,34 +168,34 @@ def test_g23_bat_placeholder_con_sot(bai_xanh):
     youtube_desc.txt mang nguyên {{BLOG_URL}} vẫn qua sạch — đo được trên bài thật 04/09.
     Với quy trình đăng TAY thì đây là lỗ chết người: người dán nguyên văn lên YouTube.
     """
-    assert _theo_ma(G.chay(bai_xanh, HOME))["G23"]["trang_thai"] == "xanh"
+    assert _theo_ma(G.run_cmd(bai_xanh, HOME))["G23"]["status"] == "pass"
 
     (PP.p(bai_xanh, "yt_desc")).write_text("Bản đầy đủ: {{BLOG_URL}}", encoding="utf-8")
-    r = _theo_ma(G.chay(bai_xanh, HOME))["G23"]
-    assert r["trang_thai"] == "do" and r["muc"] == G.CHAN
-    assert "description.txt" in r["ghi_chu"] and "{{BLOG_URL}}" in r["ghi_chu"], \
+    r = _theo_ma(G.run_cmd(bai_xanh, HOME))["G23"]
+    assert r["status"] == "fail" and r["level"] == G.CHAN
+    assert "description.txt" in r["note"] and "{{BLOG_URL}}" in r["note"], \
         "cổng phải chỉ rõ placeholder nào ở file nào, không chỉ nói 'có placeholder'"
 
 
 def test_thu_muc_rong_van_bao_thieu_G23(tmp_path):
-    assert _theo_ma(G.chay(tmp_path, HOME))["G23"]["trang_thai"] == "thieu"
+    assert _theo_ma(G.run_cmd(tmp_path, HOME))["G23"]["status"] == "missing"
 
 
 # ------------------------------------------------------------------ 4. miễn trừ G21
 
-def _bai_co_ten_tool(tmp_path, ten="codex"):
-    d = tmp_path / "bai"
+def _bai_co_ten_tool(tmp_path, name="codex"):
+    d = tmp_path / "post"
     d.mkdir()
-    PP.tao_thu_muc(d)
-    (PP.p(d, "blog")).write_text(f"# Bài\n\nBài này nói về {ten} của một hãng khác.\n",
+    PP.make_dirs(d)
+    (PP.p(d, "blog")).write_text(f"# Bài\n\nBài này nói về {name} của một hãng khác.\n",
                                encoding="utf-8")
     return d
 
 
 def test_g21_chan_khi_khong_mien_tru(tmp_path):
-    theo = _theo_ma(G.chay(_bai_co_ten_tool(tmp_path), HOME))
-    assert theo["G21"]["trang_thai"] == "do"
-    assert theo["G21"]["muc"] == G.CHAN
+    theo = _theo_ma(G.run_cmd(_bai_co_ten_tool(tmp_path), HOME))
+    assert theo["G21"]["status"] == "fail"
+    assert theo["G21"]["level"] == G.CHAN
 
 
 def test_g21_mien_tru_thi_khong_chan_nhung_VAN_BAO_CAO(tmp_path):
@@ -204,28 +204,28 @@ def test_g21_mien_tru_thi_khong_chan_nhung_VAN_BAO_CAO(tmp_path):
     Nếu miễn trừ làm cái tên biến mất khỏi báo cáo thì sáu tháng sau không ai biết nó ở
     đó, và nó được sao chép sang bài sau mà không ai xét lại.
     """
-    theo = _theo_ma(G.chay(_bai_co_ten_tool(tmp_path), HOME,
-                           cho_phep={"codex": "là chủ đề bài báo, không phải tool nội bộ"}))
-    assert theo["G21"]["trang_thai"] == "xanh"
-    assert "codex" in theo["G21"]["ghi_chu"], "tên được miễn trừ vẫn phải hiện trong báo cáo"
-    assert "MIỄN TRỪ" in theo["G21"]["ghi_chu"]
-    assert "chủ đề bài báo" in theo["G21"]["ghi_chu"], "lý do phải đi kèm, không chỉ là cờ bật"
+    theo = _theo_ma(G.run_cmd(_bai_co_ten_tool(tmp_path), HOME,
+                           allow={"codex": "là chủ đề bài báo, không phải tool nội bộ"}))
+    assert theo["G21"]["status"] == "pass"
+    assert "codex" in theo["G21"]["note"], "tên được miễn trừ vẫn phải hiện trong báo cáo"
+    assert "MIỄN TRỪ" in theo["G21"]["note"]
+    assert "chủ đề bài báo" in theo["G21"]["note"], "lý do phải đi kèm, không chỉ là cờ bật"
 
 
 def test_mien_tru_duoc_ghi_vao_gates_json(tmp_path):
-    kq = G.chay(_bai_co_ten_tool(tmp_path), HOME, cho_phep={"codex": "lý do X"})
-    assert kq["mien_tru"] == {"codex": "lý do X"}, "gates.json phải lưu lại ai miễn trừ cái gì"
+    result = G.run_cmd(_bai_co_ten_tool(tmp_path), HOME, allow={"codex": "lý do X"})
+    assert result["waived"] == {"codex": "lý do X"}, "gates.json phải lưu lại ai miễn trừ cái gì"
 
 
 def test_mien_tru_mot_ten_khong_mo_duong_cho_ten_khac(tmp_path):
     """Miễn trừ phải hẹp đúng cái tên được nêu."""
-    d = tmp_path / "bai"
+    d = tmp_path / "post"
     d.mkdir()
-    PP.tao_thu_muc(d)
+    PP.make_dirs(d)
     (PP.p(d, "blog")).write_text("Bài nhắc codex và nhắc cả omnivoice.", encoding="utf-8")
-    theo = _theo_ma(G.chay(d, HOME, cho_phep={"codex": "chủ đề bài"}))
-    assert theo["G21"]["trang_thai"] == "do", "omnivoice không được miễn trừ nên vẫn phải chặn"
-    assert "omnivoice" in theo["G21"]["ghi_chu"]
+    theo = _theo_ma(G.run_cmd(d, HOME, allow={"codex": "chủ đề bài"}))
+    assert theo["G21"]["status"] == "fail", "omnivoice không được miễn trừ nên vẫn phải chặn"
+    assert "omnivoice" in theo["G21"]["note"]
 
 
 def test_g17_bat_dang_dict_du_dem_dung_8(tmp_path):
@@ -236,19 +236,19 @@ def test_g17_bat_dang_dict_du_dem_dung_8(tmp_path):
     lặp thẳng, gặp chuỗi và chết bằng "'str' object has no attribute 'get'".
     Cổng dễ dãi hơn công cụ thật thì tệ hơn không có cổng — nó cấp một lời bảo đảm sai.
     """
-    d = tmp_path / "bai"
+    d = tmp_path / "post"
     d.mkdir()
-    PP.tao_thu_muc(d)
+    PP.make_dirs(d)
     (PP.p(d, "scenes")).write_text(
         json.dumps({"scenes": [{"kind": "concept"} for _ in range(8)]}), encoding="utf-8")
-    r = _theo_ma(G.chay(d, HOME))["G17"]
-    assert r["trang_thai"] == "do", "đủ 8 phần tử nhưng sai dạng thì renderer vẫn vỡ"
-    assert "mảng" in r["luat"]
+    r = _theo_ma(G.run_cmd(d, HOME))["G17"]
+    assert r["status"] == "fail", "đủ 8 phần tử nhưng sai dạng thì renderer vẫn vỡ"
+    assert "mảng" in r["rule"]
 
 
 def test_cli_tu_choi_mien_tru_khong_ly_do(tmp_path, capsys):
     d = _bai_co_ten_tool(tmp_path)
-    assert G.main([str(d), "--home-domain", HOME, "--cho-phep", "codex", "--json-only"]) == 2
+    assert G.main([str(d), "--home-domain", HOME, "--allow", "codex", "--json-only"]) == 2
     assert "thiếu lý do" in capsys.readouterr().err
 
 
@@ -256,5 +256,5 @@ def test_cli_ghi_gates_json_va_exit_khac_0(tmp_path):
     d = tmp_path / "bai_do"
     shutil.copytree(BAI_DO, d)
     assert G.main([str(d), "--home-domain", HOME, "--json-only"]) == 1
-    ghi = json.loads((d / "gates.json").read_text(encoding="utf-8"))
-    assert ghi["tong"] == 23 and ghi["ket_luan"] == "do"
+    write = json.loads((d / "gates.json").read_text(encoding="utf-8"))
+    assert write["total"] == 23 and write["verdict"] == "fail"

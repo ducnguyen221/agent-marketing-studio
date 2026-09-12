@@ -34,7 +34,7 @@ import fb_format as FF  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import post_paths as PP  # noqa: E402
 
-CHAN, CANH_BAO = "chan", "canh_bao"
+CHAN, CANH_BAO = "block", "warn"
 
 _URL = re.compile(r"https?://[^\s)>\]\"']+", re.I)
 # URL TRẦN: Facebook tự biến "ducnguyen.vn/atlas/x" hay "www.abc.com" thành link, nên
@@ -96,19 +96,19 @@ class SoKetQua:
     def __init__(self):
         self.rows: list[dict] = []
 
-    def do(self, ma, ten, gia_tri, luat, dat, muc=CHAN, ghi_chu=""):
-        self.rows.append({"ma": ma, "cong": ten, "do_duoc": gia_tri, "luat": luat,
-                          "trang_thai": "xanh" if dat else "do",
-                          "muc": "" if dat else muc, "ghi_chu": ghi_chu})
+    def do(self, job_id, name, gia_tri, luat, dat, level=CHAN, note=""):
+        self.rows.append({"job_id": job_id, "gate": name, "measured": gia_tri, "rule": luat,
+                          "status": "pass" if dat else "fail",
+                          "level": "" if dat else level, "note": note})
 
-    def thieu(self, ma, ten, vi_sao):
-        self.rows.append({"ma": ma, "cong": ten, "do_duoc": None, "luat": "—",
-                          "trang_thai": "thieu", "muc": "", "ghi_chu": vi_sao})
+    def thieu(self, job_id, name, why):
+        self.rows.append({"job_id": job_id, "gate": name, "measured": None, "rule": "—",
+                          "status": "missing", "level": "", "note": why})
 
 
-def chay(thu_muc: Path, home_domain: str, loai: str = "full",
-         cho_phep: dict[str, str] | None = None) -> dict:
-    """`cho_phep` = {needle: lý do} — MIỄN TRỪ CÓ GHI LÝ DO cho G21.
+def run_cmd(folder: Path, home_domain: str, kind: str = "full",
+         allow: dict[str, str] | None = None) -> dict:
+    """`allow` = {needle: lý do} — MIỄN TRỪ CÓ GHI LÝ DO cho G21.
 
     Vì sao cần: danh sách needle của G21 so khớp chuỗi thô, nên nó không phân biệt được
     "công cụ sản xuất nội bộ của mình bị lộ" với "tên sản phẩm của hãng khác, đang là
@@ -120,17 +120,17 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     nhưng kèm lý do do người nêu và không chặn. Miễn trừ nào cũng để lại dấu trong
     gates.json — im lặng bỏ qua và miễn trừ có ghi lý do là hai chuyện khác nhau.
     """
-    cho_phep = {k.lower(): v for k, v in (cho_phep or {}).items()}
-    d = thu_muc
+    allow = {k.lower(): v for k, v in (allow or {}).items()}
+    d = folder
     s = SoKetQua()
 
     # ---------------------------------------------------------------- blog.md
     blog = _doc(PP.p(d, "blog"))
     if blog is None:
-        for ma, ten in [("G01", "Độ dài blog"), ("G02", "Số H2"), ("G03", "Bảng/list"),
+        for job_id, name in [("G01", "Độ dài blog"), ("G02", "Số H2"), ("G03", "Bảng/list"),
                         ("G04", "Callout"), ("G05", "Nguồn ngoài"), ("G06", "Khối chính kiến"),
                         ("G07", "Fact vs opinion"), ("G08", "[KIỂM CHỨNG] còn mở")]:
-            s.thieu(ma, ten, f"không có {PP.LAYOUT['blog']}")
+            s.thieu(job_id, name, f"không có {PP.LAYOUT['blog']}")
     else:
         n = _tu(blog)
         s.do("G01", "Độ dài blog (từ)", n, "2500-4000", 2500 <= n <= 4000)
@@ -148,7 +148,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         if nc is None:
             s.do("G05", "Nguồn ngoài (chỉ đếm — không có research.md)", len(ngoai),
                  "3-7", 3 <= len(ngoai) <= 7,
-                 ghi_chu="không đối chiếu được: thiếu research.md")
+                 note="không đối chiếu được: thiếu research.md")
         else:
             # So theo host, không so nguyên URL: bài hay trích link sâu hơn bảng nguồn.
             def _host(u):
@@ -158,7 +158,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
             s.do("G05", "Nguồn ngoài (có trong research.md)",
                  f"{len(ngoai)} nguồn, {len(lac)} lạc", "3-7 và không nguồn nào lạc",
                  3 <= len(ngoai) <= 7 and not lac,
-                 ghi_chu=("URL không có trong research.md: " + "; ".join(lac[:4]))
+                 note=("URL không có trong research.md: " + "; ".join(lac[:4]))
                  if lac else "; ".join(ngoai[:5]))
         gn = len(_GOC_NHIN.findall(blog))
         # Đếm chữ THỰC SỰ có trong khối chính kiến. Bản đầu chỉ khớp dòng tiêu đề, nên
@@ -166,14 +166,14 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         tu_gn = 0
         for m_gn in _GOC_NHIN.finditer(blog):
             khoi = []
-            for dong in blog[m_gn.start():].splitlines():
-                if khoi and not dong.lstrip().startswith(">"):
+            for row in blog[m_gn.start():].splitlines():
+                if khoi and not row.lstrip().startswith(">"):
                     break
-                khoi.append(dong.lstrip("> ").strip())
+                khoi.append(row.lstrip("> ").strip())
             tu_gn = max(tu_gn, len(" ".join(khoi).split()) - 2)   # trừ "**Góc nhìn:**"
         s.do("G06", "Khối > **Góc nhìn:** (số từ)", f"{gn} khối / {tu_gn} từ",
              ">=1 khối và >=40 từ", gn >= 1 and tu_gn >= 40,
-             ghi_chu="" if tu_gn >= 40 else "khối chính kiến quá ngắn hoặc rỗng")
+             note="" if tu_gn >= 40 else "khối chính kiến quá ngắn hoặc rỗng")
         tn, tm = len(_THEO_NGUON.findall(blog)), len(_THEO_MINH.findall(blog))
         s.do("G07", "Dẫn nguồn / nêu ý riêng", f"{tn} / {tm}", "mỗi loại >=1",
              tn >= 1 and tm >= 1, CANH_BAO)
@@ -184,16 +184,16 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     fb = _doc(PP.p(d, "fb_post"))
     cmt = _doc(PP.p(d, "fb_comment")) or ""
     if fb is None:
-        for ma, ten in [("G09", "URL trong thân post"), ("G10", "Độ dài post"),
+        for job_id, name in [("G09", "URL trong thân post"), ("G10", "Độ dài post"),
                         ("G11", "Ký tự Unicode bold"), ("G12", "Markdown literal"),
                         ("G13", "Hashtag"), ("G14", "Comment đầu")]:
-            s.thieu(ma, ten, f"không có {PP.LAYOUT['fb_post']}")
+            s.thieu(job_id, name, f"không có {PP.LAYOUT['fb_post']}")
     else:
         m = FF.check(fb, cmt)
         tran = [u for u in _URL_TRAN.findall(fb.split(FF.MARKER_COMMENT)[0])]
         tong_url = m["so_url_than_bai"] + len(tran)
         s.do("G09", "URL trong thân post (kể cả link trần)", tong_url, "= 0",
-             tong_url == 0, ghi_chu="; ".join(m["url_than_bai"] + tran[:3]))
+             tong_url == 0, note="; ".join(m["url_than_bai"] + tran[:3]))
         s.do("G10", "Độ dài post (ký tự)", m["so_ky_tu"], "4000-7500",
              4000 <= m["so_ky_tu"] <= 7500, CANH_BAO)
         # G11 hai tầng. Tầng 1: có chữ đậm không. Tầng 2: chữ đậm có GIỮ ĐƯỢC DẤU không.
@@ -206,13 +206,13 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         if mat_dau:
             s.do("G11", "Ký tự Unicode bold",
                  f'{m["so_ky_tu_bold"]} đậm nhưng 0 dấu', "chữ đậm phải giữ dấu", False,
-                 ghi_chu=f'phần thường có {m["so_chu_co_dau_ngoai_bold"]} chữ có dấu, '
+                 note=f'phần thường có {m["so_chu_co_dau_ngoai_bold"]} chữ có dấu, '
                          f'phần đậm có 0 — nhiều khả năng gõ tay thay vì dùng '
                          f'fb_format.bold()')
         else:
             s.do("G11", "Ký tự Unicode bold", m["so_ky_tu_bold"], "> 0",
                  m["so_ky_tu_bold"] > 0,
-                 ghi_chu=f'{m["so_dau_trong_bold"]} dấu trong vùng đậm'
+                 note=f'{m["so_dau_trong_bold"]} dấu trong vùng đậm'
                          if m["so_ky_tu_bold"] else "")
         s.do("G12", "Markdown literal", m["markdown_literal"], "= 0",
              m["markdown_literal"] == 0)
@@ -224,7 +224,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
                      if home_domain in u or "youtu" in u.lower()]
         s.do("G14", "Comment đầu có link về nhà/YouTube", len(dung_dich), ">=1",
              len(dung_dich) >= 1,
-             ghi_chu=("không thấy fb_comment.txt lẫn neo ### comment_1"
+             note=("không thấy fb_comment.txt lẫn neo ### comment_1"
                       if not m["co_comment"] else
                       f"có {len(url_cmt)} URL nhưng không URL nào về {home_domain}/YouTube"
                       if url_cmt and not dung_dich else ""))
@@ -236,7 +236,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     else:
         n = _tu(pod)
         s.do("G15", "Độ dài podcast (từ)", n, "750-1000", 750 <= n <= 1000, CANH_BAO,
-             ghi_chu=f"~{n / 3.8:.0f}s khi đọc ở 3,8 từ/giây (đo thật, xem baseline)")
+             note=f"~{n / 3.8:.0f}s khi đọc ở 3,8 từ/giây (đo thật, xem baseline)")
 
     da, dv = _thoi_luong(PP.p(d, "audio")), _thoi_luong(PP.p(d, "yt_video"))
     if da is None or dv is None:
@@ -251,7 +251,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     else:
         try:
             js = json.loads(sc)
-            can = 8 if loai == "full" else 4
+            can = 8 if kind == "full" else 4
             if not isinstance(js, list):
                 # make_podcast_video.py làm `scenes = json.load(f)` rồi lặp thẳng, nên nó đòi
                 # MẢNG ở cấp cao nhất. Bọc trong {"scenes": [...]} thì nó lặp qua các KHOÁ,
@@ -261,13 +261,13 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
                 # cấp một lời bảo đảm sai. Nay cổng đo đúng hợp đồng của renderer.
                 s.do("G17", "Số scene", f"JSON là {type(js).__name__}, không phải mảng",
                      "mảng ở cấp cao nhất", False,
-                     ghi_chu="renderer lặp thẳng trên JSON -> bọc trong {\"scenes\": [...]} sẽ vỡ")
+                     note="renderer lặp thẳng trên JSON -> bọc trong {\"scenes\": [...]} sẽ vỡ")
             else:
                 # Không chỉ ĐẾM. Scene rỗng {} vẫn qua phép đếm, rồi renderer dựng ra
                 # slide trắng với nhãn mặc định của một dự án khác — video 8 cảnh trống
                 # mà cổng báo xanh.
                 HOP_LE = {"cover", "concept", "versus", "list", "image", "closing"}
-                hong = [i for i, sc_ in enumerate(js)
+                failed = [i for i, sc_ in enumerate(js)
                         if not isinstance(sc_, dict)
                         or sc_.get("kind") not in HOP_LE
                         or not (sc_.get("title") or sc_.get("lines")
@@ -279,11 +279,11 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
                            if isinstance(sc_, dict) and sc_.get("src")
                            and not (d / sc_["src"]).exists()]
                 s.do("G17", "Số scene (hình dạng + ảnh src có thật)",
-                     f"{len(js)} scene, {len(hong)} thiếu nội dung, {len(mat_src)} mất ảnh src",
-                     f"= {can} ({loai}), mọi scene có kind + nội dung, src tồn tại",
-                     len(js) == can and not hong and not mat_src,
-                     ghi_chu="; ".join(filter(None, [
-                         f"scene rỗng/sai kind ở vị trí {hong[:5]}" if hong else "",
+                     f"{len(js)} scene, {len(failed)} thiếu nội dung, {len(mat_src)} mất ảnh src",
+                     f"= {can} ({kind}), mọi scene có kind + nội dung, src tồn tại",
+                     len(js) == can and not failed and not mat_src,
+                     note="; ".join(filter(None, [
+                         f"scene rỗng/sai kind ở vị trí {failed[:5]}" if failed else "",
                          f"src không tồn tại ở vị trí {mat_src[:5]}" if mat_src else ""])))
         except json.JSONDecodeError as e:
             s.do("G17", "Số scene", f"JSON hỏng: {e}", "đọc được", False)
@@ -300,7 +300,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
         thieu_og = CAN_CO - loai_og
         s.do("G18", "Thẻ og: khác nhau", f"{len(loai_og)} loại",
              "đủ title/description/image/url/type", not thieu_og,
-             ghi_chu=f"thiếu: {', '.join(sorted(thieu_og))}" if thieu_og else "")
+             note=f"thiếu: {', '.join(sorted(thieu_og))}" if thieu_og else "")
 
     # ---------------------------------------------------------------- ảnh Facebook
     # Đọc KÍCH THƯỚC THẬT từ khối IHDR của PNG (8 byte tại offset 16) thay vì chỉ hỏi
@@ -309,7 +309,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
     # infographic.png là tên chính thức từ 04/09: một ảnh vừa đăng Facebook vừa đặt đầu bài
     # blog, thay cho ảnh Facebook kiểu cũ (một nền + ba dòng chữ).
     # KHÔNG giữ tương thích tên ảnh cũ: "nới một lần là nới mãi" — cùng lý do
-    # repo chọn --cho-phep thay vì nới danh sách needle của G21.
+    # repo chọn --allow thay vì nới danh sách needle của G21.
     f_anh, f_prompt = PP.p(d, "fb_image"), PP.p(d, "fb_prompt")
     kich_thuoc, prompt_len = None, 0
     if f_anh.exists():
@@ -330,7 +330,7 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
          f"{kich_thuoc or 'không có PNG'} · prompt {prompt_len} ký tự",
          ">=800x800 và prompt >=100 ký tự",
          du_lon and prompt_len >= 100,
-         ghi_chu="ảnh sinh bằng model KHÔNG tái lập - mất prompt là mất cách dựng lại")
+         note="ảnh sinh bằng model KHÔNG tái lập - mất prompt là mất cách dựng lại")
 
     # ---------------------------------------------------------------- sổ continuity
     cont = _doc(PP.p(d, "publish"))
@@ -350,101 +350,101 @@ def chay(thu_muc: Path, home_domain: str, loai: str = "full",
 
     # ---------------------------------------------------------------- lộ lọt
     cong_khai = {}
-    for ten in FILE_CONG_KHAI:
-        t = _doc(d / ten)
+    for name in FILE_CONG_KHAI:
+        t = _doc(d / name)
         if t:
-            cong_khai[ten] = t
+            cong_khai[name] = t
     if not cong_khai:
         s.thieu("G21", "Tên công cụ nội bộ", "chưa có file công khai nào để quét")
         s.thieu("G22", "Tên tổ chức trong bản công khai", "chưa có file công khai nào để quét")
         s.thieu("G23", "Placeholder {{...}}", "chưa có file công khai nào để quét")
     else:
         hit, mien = [], []
-        for ten, t in cong_khai.items():
+        for name, t in cong_khai.items():
             for x in TOOL_NOI_BO:
                 if x not in t.lower():
                     continue
-                nhan = f"{ten}:{t.lower().count(x)}x'{x}'"
-                (mien if x in cho_phep else hit).append(
-                    f"{nhan} — MIỄN TRỪ: {cho_phep[x]}" if x in cho_phep else nhan)
+                label = f"{name}:{t.lower().count(x)}x'{x}'"
+                (mien if x in allow else hit).append(
+                    f"{label} — MIỄN TRỪ: {allow[x]}" if x in allow else label)
         s.do("G21", "Tên công cụ nội bộ", len(hit), "= 0", not hit,
-             ghi_chu="; ".join(hit[:6] + mien[:4]))
+             note="; ".join(hit[:6] + mien[:4]))
         # G23 — placeholder còn sót. Cả quy trình đăng (kể cả đăng tay) đứng trên giả định
         # "mọi {{...}} đã được thay bằng link thật". Vòng 1 chỉ nhìn placeholder GIÁN TIẾP
         # qua G14 ở comment, nên youtube_desc.txt và fb_desc.txt mang nguyên {{BLOG_URL}}
         # vẫn qua sạch — đo được ngày 04/09 trên chính bài này.
-        ph = [f"{ten}:{m}" for ten, t in cong_khai.items()
+        ph = [f"{name}:{m}" for name, t in cong_khai.items()
               for m in re.findall(r"\{\{[^}\n]*\}\}", t)]
         s.do("G23", "Placeholder {{...}} trong file công khai", len(ph), "= 0", not ph,
-             ghi_chu="; ".join(ph[:6]))
+             note="; ".join(ph[:6]))
 
-        hit2 = [ten for ten, t in cong_khai.items() if TEN_TO_CHUC.search(t)]
+        hit2 = [name for name, t in cong_khai.items() if TEN_TO_CHUC.search(t)]
         s.do("G22", "Tên tổ chức trong bản công khai", len(hit2), "= 0 nếu bài sẽ vào repo",
              not hit2, CANH_BAO,
-             ghi_chu="; ".join(hit2) + " - bài đăng kênh nhà thì đây là bình thường"
+             note="; ".join(hit2) + " - bài đăng kênh nhà thì đây là bình thường"
              if hit2 else "")
 
-    do_chan = [r for r in s.rows if r["trang_thai"] == "do" and r["muc"] == CHAN]
+    fail_block = [r for r in s.rows if r["status"] == "fail" and r["level"] == CHAN]
     return {
-        "thu_muc": str(d),
-        "mien_tru": cho_phep,
-        "tong": len(s.rows),
-        "xanh": sum(1 for r in s.rows if r["trang_thai"] == "xanh"),
-        "do_chan": len(do_chan),
-        "do_canh_bao": sum(1 for r in s.rows if r["trang_thai"] == "do" and r["muc"] == CANH_BAO),
-        "thieu": sum(1 for r in s.rows if r["trang_thai"] == "thieu"),
-        "ket_luan": "do" if do_chan else "xanh",
-        "cong": s.rows,
+        "folder": str(d),
+        "waived": allow,
+        "total": len(s.rows),
+        "pass": sum(1 for r in s.rows if r["status"] == "pass"),
+        "fail_block": len(fail_block),
+        "fail_warn": sum(1 for r in s.rows if r["status"] == "fail" and r["level"] == CANH_BAO),
+        "missing": sum(1 for r in s.rows if r["status"] == "missing"),
+        "verdict": "fail" if fail_block else "pass",
+        "gate": s.rows,
     }
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="23 cổng đếm được cho một bài blog.")
-    ap.add_argument("thu_muc", help="thư mục bài (chứa blog.md, fb_post.txt...)")
+    ap.add_argument("folder", help="thư mục bài (chứa blog.md, fb_post.txt...)")
     ap.add_argument("--home-domain", default=None,
                     help="domain nhà, để loại khỏi phép đếm nguồn ngoài")
-    ap.add_argument("--loai", choices=["full", "short"], default="full")
+    ap.add_argument("--kind", choices=["full", "short"], default="full")
     ap.add_argument("--json-only", action="store_true", help="chỉ in JSON, không in bảng")
-    ap.add_argument("--cho-phep", action="append", default=[], metavar="TÊN=LÝ DO",
+    ap.add_argument("--allow", action="append", default=[], metavar="TÊN=LÝ DO",
                     help="miễn trừ G21 cho một tên, BẮT BUỘC kèm lý do. Lặp lại được. "
                          "Miễn trừ vẫn được in ra báo cáo và ghi vào gates.json.")
     a = ap.parse_args(argv)
 
-    d = Path(a.thu_muc)
+    d = Path(a.folder)
     if not d.is_dir():
         sys.stderr.write(f"không phải thư mục: {d}\n")
         return 2
 
     home = a.home_domain or re.sub(r"^https?://([^/]+).*$", r"\1",
                                    os.environ.get("ATLAS_BASE_URL", "https://ducnguyen.vn"))
-    cho_phep = {}
-    for muc in a.cho_phep:
-        ten, _, ly_do = muc.partition("=")
-        if not ly_do.strip():
+    allow = {}
+    for level in a.allow:
+        name, _, reason = level.partition("=")
+        if not reason.strip():
             sys.stderr.write(
-                f"--cho-phep {muc!r} thiếu lý do.\n"
-                "Đúng cú pháp: --cho-phep \"tên=vì sao đây không phải rò rỉ\"\n"
+                f"--allow {level!r} thiếu lý do.\n"
+                "Đúng cú pháp: --allow \"tên=vì sao đây không phải rò rỉ\"\n"
                 "Miễn trừ không kèm lý do thì sáu tháng sau không ai biết vì sao nó ở đó,\n"
                 "và nó sẽ được sao chép sang bài tiếp theo mà không ai xét lại.\n")
             return 2
-        cho_phep[ten.strip()] = ly_do.strip()
-    kq = chay(d, home, a.loai, cho_phep)
-    PP.p(d, "gates").write_text(json.dumps(kq, ensure_ascii=False, indent=2) + "\n",
+        allow[name.strip()] = reason.strip()
+    result = run_cmd(d, home, a.kind, allow)
+    PP.p(d, "gates").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n",
                                 encoding="utf-8", newline="\n")
 
     if a.json_only:
-        sys.stdout.write(json.dumps(kq, ensure_ascii=False, indent=2) + "\n")
+        sys.stdout.write(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
     else:
-        nhan = {"xanh": "OK  ", "do": "DO  ", "thieu": "--  "}
-        for r in kq["cong"]:
-            muc = f" [{r['muc']}]" if r["muc"] else ""
-            gc = f"   {r['ghi_chu']}" if r["ghi_chu"] else ""
-            sys.stdout.write(f"{nhan[r['trang_thai']]}{r['ma']} {r['cong']:<36} "
-                             f"= {str(r['do_duoc']):<13} luật {r['luat']}{muc}{gc}\n")
-        sys.stdout.write(f"\n  {kq['xanh']} xanh · {kq['do_chan']} đỏ-chặn · "
-                         f"{kq['do_canh_bao']} đỏ-cảnh-báo · {kq['thieu']} thiếu "
-                         f"(trên {kq['tong']} cổng)\n  -> gates.json\n")
-    return 1 if kq["ket_luan"] == "do" else 0
+        label = {"pass": "OK  ", "fail": "DO  ", "missing": "--  "}
+        for r in result["gate"]:
+            level = f" [{r['level']}]" if r["level"] else ""
+            gc = f"   {r['note']}" if r["note"] else ""
+            sys.stdout.write(f"{label[r['status']]}{r['job_id']} {r['gate']:<36} "
+                             f"= {str(r['measured']):<13} luật {r['rule']}{level}{gc}\n")
+        sys.stdout.write(f"\n  {result['pass']} xanh · {result['fail_block']} đỏ-chặn · "
+                         f"{result['fail_warn']} đỏ-cảnh-báo · {result['missing']} thiếu "
+                         f"(trên {result['total']} cổng)\n  -> gates.json\n")
+    return 1 if result["verdict"] == "fail" else 0
 
 
 if __name__ == "__main__":

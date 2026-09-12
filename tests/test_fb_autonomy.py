@@ -19,7 +19,7 @@ SCRIPT = ROOT / "scripts" / "pipeline" / "fb_publish.py"
 
 
 @pytest.fixture
-def bai(tmp_path):
+def post(tmp_path):
     """Một bài HỢP LỆ hoàn toàn — mọi cổng nội dung đều qua, chỉ còn cổng tự trị."""
     K = tmp_path / "kenh"
     B = K / "CMP-2609-x" / "AST-001_a" / "facebook"
@@ -45,52 +45,52 @@ def bai(tmp_path):
     return tmp_path, K, B
 
 
-def _chay(tmp, B, bai_dir, them=()):
+def _chay(tmp, B, bai_dir, add=()):
     return subprocess.run(
         [PY, str(SCRIPT), "--config", str(tmp / "cfg.json"),
          "--message-file", str(B / "post.txt"), "--image", str(B / "anh.png"),
-         "--comment-file", str(B / "comment.txt"), "--bai", str(bai_dir),
-         "--station", str(tmp), *them],
+         "--comment-file", str(B / "comment.txt"), "--post", str(bai_dir),
+         "--station", str(tmp), *add],
         capture_output=True, text=True, encoding="utf-8")
 
 
-def test_suggest_thi_TU_CHOI_dang_that(bai):
-    tmp, K, B = bai
+def test_suggest_thi_TU_CHOI_dang_that(post):
+    tmp, K, B = post
     r = _chay(tmp, B, B.parent)
     assert r.returncode == 4, "phải từ chối, và bằng một mã thoát riêng"
     assert "mức tự trị của kênh là 'suggest'" in r.stderr
     assert str(K / "channel.yml") in r.stderr, "phải nói rõ đọc từ FILE NÀO"
 
 
-def test_KHONG_tim_thay_channel_yml_thi_coi_nhu_CHUA_CHO_PHEP(bai):
+def test_KHONG_tim_thay_channel_yml_thi_coi_nhu_CHUA_CHO_PHEP(post):
     """Fail-closed. Không biết mức tự trị mà vẫn đăng là đúng kiểu lỗi tệ nhất."""
-    tmp, K, B = bai
+    tmp, K, B = post
     (K / "channel.yml").unlink()
     r = _chay(tmp, B, B.parent)
     assert r.returncode == 4 and "thiếu channel.yml" in r.stderr
 
 
-def test_thieu_bai_cung_la_CHUA_CHO_PHEP(bai):
-    tmp, K, B = bai
+def test_thieu_bai_cung_la_CHUA_CHO_PHEP(post):
+    tmp, K, B = post
     r = subprocess.run(
         [PY, str(SCRIPT), "--config", str(tmp / "cfg.json"),
          "--message-file", str(B / "post.txt"), "--image", str(B / "anh.png"),
          "--comment-file", str(B / "comment.txt"), "--station", str(tmp)],
         capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == 4
-    assert "Thiếu --bai" in r.stderr and "Cổng 2" in r.stderr
+    assert "Thiếu --post" in r.stderr and "Cổng 2" in r.stderr
 
 
-def test_dry_run_van_chay_duoc_khi_suggest(bai):
+def test_dry_run_van_chay_duoc_khi_suggest(post):
     """Cổng chỉ chặn ĐĂNG THẬT. Kiểm thử phải luôn chạy được, nếu không người ta bỏ kiểm."""
-    tmp, K, B = bai
+    tmp, K, B = post
     r = _chay(tmp, B, B.parent, ["--dry-run"])
     assert r.returncode == 0 and "dry-run" in r.stdout
 
 
-def test_full_thi_KHONG_bi_cong_tu_tri_chan(bai):
+def test_full_thi_KHONG_bi_cong_tu_tri_chan(post):
     """Đặt `full` thì cổng này mở — bằng chứng: lỗi tiếp theo là lỗi MẠNG, không phải cổng."""
-    tmp, K, B = bai
+    tmp, K, B = post
     (K / "channel.yml").write_text("schema: channel/1\nid: k\nautonomy: full\n",
                                    encoding="utf-8")
     r = _chay(tmp, B, B.parent)
@@ -100,10 +100,10 @@ def test_full_thi_KHONG_bi_cong_tu_tri_chan(bai):
 
 # ══════════════════════════════════════════════════════ Cổng 2 (Codex chỉ ra 05/09)
 
-def test_CHUA_qua_Cong_2_thi_khong_dang_du_kenh_la_full(bai):
+def test_CHUA_qua_Cong_2_thi_khong_dang_du_kenh_la_full(post):
     """Cổng tự trị trả lời 'kênh này có được đăng tự động không'. Cổng 2 trả lời 'bài NÀY có
     được đăng không'. Thiếu câu thứ hai thì bài chưa ai duyệt vẫn lên."""
-    tmp, K, B = bai
+    tmp, K, B = post
     (K / "channel.yml").write_text("schema: channel/1\nid: k\nautonomy: full\n",
                                    encoding="utf-8")
     pj = json.loads((B.parent / "publish.json").read_text(encoding="utf-8"))
@@ -115,8 +115,8 @@ def test_CHUA_qua_Cong_2_thi_khong_dang_du_kenh_la_full(bai):
     assert "review.status='pending'" in r.stderr
 
 
-def test_duyet_ma_KHONG_ghi_ai_duyet_thi_khong_tinh(bai):
-    tmp, K, B = bai
+def test_duyet_ma_KHONG_ghi_ai_duyet_thi_khong_tinh(post):
+    tmp, K, B = post
     (K / "channel.yml").write_text("schema: channel/1\nid: k\nautonomy: full\n",
                                    encoding="utf-8")
     pj = json.loads((B.parent / "publish.json").read_text(encoding="utf-8"))
@@ -126,21 +126,21 @@ def test_duyet_ma_KHONG_ghi_ai_duyet_thi_khong_tinh(bai):
     assert r.returncode == 4 and "approved_by" in r.stderr
 
 
-def test_KHONG_MUON_duoc_kenh_full_cua_bai_khac(bai, tmp_path):
-    """`--bai` trỏ sang một kênh `full` bất kỳ trong khi nội dung là của kênh khác — cổng
+def test_KHONG_MUON_duoc_kenh_full_cua_bai_khac(post, tmp_path):
+    """`--post` trỏ sang một kênh `full` bất kỳ trong khi nội dung là của kênh khác — cổng
     tự trị khi đó đang gác một thứ không liên quan tới thứ sắp đăng."""
-    tmp, K, B = bai
+    tmp, K, B = post
     K2 = tmp_path / "kenh_full"
     (K2 / "CMP-x" / "BAI-1").mkdir(parents=True)
     (K2 / "channel.yml").write_text("schema: channel/1\nid: k2\nautonomy: full\n",
                                     encoding="utf-8")
     r = _chay(tmp, B, K2 / "CMP-x" / "BAI-1")
     assert r.returncode == 4
-    assert "không chứa" in r.stderr, "phải từ chối vì --bai không chứa nội dung đang đăng"
+    assert "không chứa" in r.stderr, "phải từ chối vì --post không chứa nội dung đang đăng"
 
 
-def test_qua_ca_hai_cong_thi_di_tiep(bai):
-    tmp, K, B = bai
+def test_qua_ca_hai_cong_thi_di_tiep(post):
+    tmp, K, B = post
     (K / "channel.yml").write_text("schema: channel/1\nid: k\nautonomy: full\n",
                                    encoding="utf-8")
     r = _chay(tmp, B, B.parent)
@@ -148,10 +148,10 @@ def test_qua_ca_hai_cong_thi_di_tiep(bai):
     assert "Cổng 2 OK" in r.stdout
 
 
-def test_channel_yml_LAC_CHO_khong_mo_duoc_cong(bai, tmp_path):
+def test_channel_yml_LAC_CHO_khong_mo_duoc_cong(post, tmp_path):
     """Codex 05/09: cổng đi ngược cây lấy `channel.yml` đầu tiên — một file lạc chỗ với
     `autonomy: full` là đăng thật được. Cổng chặn agent thì không được tin file agent tạo."""
-    tmp, K, B = bai
+    tmp, K, B = post
     (B.parent / "channel.yml").write_text("schema: channel/1\nid: gia\nautonomy: full\n",
                                           encoding="utf-8")
     r = _chay(tmp, B, B.parent)
@@ -159,8 +159,8 @@ def test_channel_yml_LAC_CHO_khong_mo_duoc_cong(bai, tmp_path):
     assert "'suggest'" in r.stderr,         "phải đọc channel.yml của kênh TRONG SỔ, không phải file lạc chỗ gần hơn"
 
 
-def test_bai_ngoai_moi_kenh_dang_ky_thi_TU_CHOI(bai, tmp_path):
-    tmp, K, B = bai
+def test_bai_ngoai_moi_kenh_dang_ky_thi_TU_CHOI(post, tmp_path):
+    tmp, K, B = post
     ngoai = tmp_path / "ngoai" / "fb"
     ngoai.mkdir(parents=True)
     for f in ("post.txt", "comment.txt", "anh.png"):
@@ -169,6 +169,6 @@ def test_bai_ngoai_moi_kenh_dang_ky_thi_TU_CHOI(bai, tmp_path):
     r = subprocess.run(
         [PY, str(SCRIPT), "--config", str(tmp / "cfg.json"),
          "--message-file", str(ngoai / "post.txt"), "--image", str(ngoai / "anh.png"),
-         "--comment-file", str(ngoai / "comment.txt"), "--bai", str(ngoai.parent),
+         "--comment-file", str(ngoai / "comment.txt"), "--post", str(ngoai.parent),
          "--station", str(tmp)], capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == 4 and "không nằm trong kênh nào" in r.stderr

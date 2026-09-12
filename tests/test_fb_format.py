@@ -46,8 +46,8 @@ def test_bold_so_va_chu_thuong():
 
 
 def test_unbold_khu_hoi_quy():
-    goc = "Vibe coding là gì? 2026"
-    assert F.unbold(F.bold(goc)) == goc
+    src = "Vibe coding là gì? 2026"
+    assert F.unbold(F.bold(src)) == src
 
 
 def test_dem_dau_trong_va_ngoai_vung_dam():
@@ -96,26 +96,26 @@ def test_fixture_do_dung_ly_do():
     m = F.check(BAI_DO)
     loi = {x["chi_so"]: x for x in F.danh_gia(m)}
 
-    assert loi["so_url_than_bai"]["do_duoc"] == 1
-    assert loi["so_hashtag"]["do_duoc"] == 2
-    assert loi["so_ky_tu_bold"]["do_duoc"] == 0
-    assert loi["markdown_literal"]["do_duoc"] == 2   # cặp ** mở và đóng
-    assert loi["so_url_comment"]["do_duoc"] == 0
-    assert loi["so_ky_tu"]["muc"] == "canh_bao", "độ dài chỉ cảnh báo, không chặn"
+    assert loi["so_url_than_bai"]["measured"] == 1
+    assert loi["so_hashtag"]["measured"] == 2
+    assert loi["so_ky_tu_bold"]["measured"] == 0
+    assert loi["markdown_literal"]["measured"] == 2   # cặp ** mở và đóng
+    assert loi["so_url_comment"]["measured"] == 0
+    assert loi["so_ky_tu"]["level"] == "warn", "độ dài chỉ cảnh báo, không chặn"
 
-    chan = [k for k, v in loi.items() if v["muc"] == "chan"]
+    chan = [k for k, v in loi.items() if v["level"] == "block"]
     assert set(chan) == {"so_url_than_bai", "so_hashtag", "so_ky_tu_bold",
                          "markdown_literal", "so_url_comment"}
 
 
 def test_bai_xanh_khong_bao_dong_gia():
-    bai = (
+    post = (
         F.bold("Chuyện gì đang xảy ra") + "\n\n"
         + "Nội dung dài. " * 400 + "\n\n"
         + "#AI #Data #CongNghe #HocMai #Prompt #Agent\n\n"
         + "### comment_1\n\nBản đầy đủ: https://ducnguyen.vn/atlas/content/ai/x.html\n"
     )
-    m = F.check(bai)
+    m = F.check(post)
     assert F.danh_gia(m) == [], "bài hợp lệ không được sinh cổng đỏ nào"
     assert m["co_comment"] is True
 

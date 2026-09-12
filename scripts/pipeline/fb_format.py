@@ -115,12 +115,12 @@ def _tich_dau_trong_bold(s: str) -> dict:
       MỘT ký tự U+1ED9, không có ký tự tổ hợp nào).
     Dùng cùng một phép đếm cho cả hai thì phần ngoài luôn ra 0 và cổng vô dụng.
     """
-    lo, hi = BOLD_RANGE
+    batch, hi = BOLD_RANGE
     n_bold = n_dau_trong = n_chu_dau_ngoai = 0
     dang_bold = False
     for ch in s:
         o = ord(ch)
-        if lo <= o <= hi:
+        if batch <= o <= hi:
             n_bold += 1
             dang_bold = True
         elif 0x0300 <= o <= 0x036F:          # ký tự tổ hợp
@@ -166,24 +166,24 @@ def check(text: str, comment: str = "") -> dict:
 
 # Ngưỡng: lấy từ 3 bài đã đăng thật (fixtures/baseline/blog_baseline.md), không từ cảm giác.
 NGUONG = {
-    "so_ky_tu": (4000, 7500, "canh_bao"),
-    "so_url_than_bai": (0, 0, "chan"),
-    "so_hashtag": (6, 13, "chan"),
-    "so_ky_tu_bold": (1, None, "chan"),
-    "markdown_literal": (0, 0, "chan"),
-    "so_url_comment": (1, None, "chan"),
+    "so_ky_tu": (4000, 7500, "warn"),
+    "so_url_than_bai": (0, 0, "block"),
+    "so_hashtag": (6, 13, "block"),
+    "so_ky_tu_bold": (1, None, "block"),
+    "markdown_literal": (0, 0, "block"),
+    "so_url_comment": (1, None, "block"),
 }
 
 
 def danh_gia(m: dict) -> list[dict]:
     """Đối chiếu số đo với ngưỡng. Mỗi dòng nói rõ ĐO ĐƯỢC GÌ, không diễn giải hậu quả."""
     ra = []
-    for khoa, (lo, hi, muc) in NGUONG.items():
+    for khoa, (batch, hi, level) in NGUONG.items():
         v = m[khoa]
-        ok = (lo is None or v >= lo) and (hi is None or v <= hi)
+        ok = (batch is None or v >= batch) and (hi is None or v <= hi)
         if not ok:
-            khoang = f"{lo}" if lo == hi else f"{lo}..{hi if hi is not None else '∞'}"
-            ra.append({"chi_so": khoa, "do_duoc": v, "luat": khoang, "muc": muc})
+            khoang = f"{batch}" if batch == hi else f"{batch}..{hi if hi is not None else '∞'}"
+            ra.append({"chi_so": khoa, "measured": v, "rule": khoang, "level": level})
     return ra
 
 
@@ -209,10 +209,10 @@ def main(argv=None) -> int:
 
     m = check(text, cmt)
     loi = danh_gia(m)
-    ket = {"file": a.check, "do_duoc": m, "vi_pham": loi,
-           "ket_luan": "do" if any(x["muc"] == "chan" for x in loi) else "xanh"}
+    ket = {"file": a.check, "measured": m, "vi_pham": loi,
+           "verdict": "fail" if any(x["level"] == "block" for x in loi) else "pass"}
     sys.stdout.write(json.dumps(ket, ensure_ascii=False, indent=2) + "\n")
-    return 1 if ket["ket_luan"] == "do" else 0
+    return 1 if ket["verdict"] == "fail" else 0
 
 
 if __name__ == "__main__":

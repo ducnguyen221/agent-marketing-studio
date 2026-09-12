@@ -12,7 +12,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-import pipeline_state as TT  # noqa: E402
+import pipeline_state as PS  # noqa: E402
 
 FM = """---
 schema: campaign/1
@@ -46,8 +46,8 @@ def _dong(**ghi_de):
     return d
 
 
-def _bai(cam, ten="T-001_bai", *, viet_that=True):
-    b = cam / ten
+def _bai(campaign, name="T-001_bai", *, viet_that=True):
+    b = campaign / name
     b.mkdir(parents=True, exist_ok=True)
     if viet_that:
         (b / "content.md").write_text(
@@ -60,102 +60,102 @@ def _bai(cam, ten="T-001_bai", *, viet_that=True):
     return b
 
 
-def _gates(bai, ket_luan):
-    (bai / "gates.json").write_text(
-        json.dumps({"tong": 23, "ket_luan": ket_luan, "do_chan": 0, "cong": []}),
+def _gates(post, verdict):
+    (post / "gates.json").write_text(
+        json.dumps({"total": 23, "verdict": verdict, "fail_block": 0, "gate": []}),
         encoding="utf-8")
 
 
 # ── từng nấc của đường ống ──────────────────────────────────────────────────
 
 def test_chua_duyet_de_tai_thi_cho_G1(tmp_path):
-    assert TT.buoc_ke(_cam(tmp_path), _dong()) == "cho-G1"
+    assert PS.next_step(_cam(tmp_path), _dong()) == "await-G1"
 
 
 def test_duyet_de_tai_nhung_chua_co_thu_muc_thi_dung_bai(tmp_path):
-    cam = _cam(tmp_path)
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01")) == "dung-bai"
+    campaign = _cam(tmp_path)
+    assert PS.next_step(campaign, _dong(g1="2026-09-01")) == "create-post"
 
 
 def test_khai_folder_nhung_thu_muc_KHONG_TON_TAI_van_la_dung_bai(tmp_path):
     """Khai trong bảng không chứng minh thư mục có thật. Fail-closed, không nhảy cóc."""
-    cam = _cam(tmp_path)
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", folder="./T-001_khong-co")) == "dung-bai"
+    campaign = _cam(tmp_path)
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", folder="./T-001_khong-co")) == "create-post"
 
 
 def test_co_thu_muc_nhung_con_KHUON_thi_soan(tmp_path):
-    cam = _cam(tmp_path)
-    _bai(cam, viet_that=False)
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", folder="./T-001_bai")) == "soan"
+    campaign = _cam(tmp_path)
+    _bai(campaign, viet_that=False)
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", folder="./T-001_bai")) == "write"
 
 
 def test_viet_xong_nhung_CHUA_CHAM_thi_cham_cong(tmp_path):
     """Ca thật NEN-002: gọi thẳng bộ viết, nhảy cóc bước chấm, file bài trông hoàn hảo."""
-    cam = _cam(tmp_path)
-    _bai(cam)
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", folder="./T-001_bai")) == "cham-cong"
+    campaign = _cam(tmp_path)
+    _bai(campaign)
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", folder="./T-001_bai")) == "check-gates"
 
 
 def test_cham_roi_ma_DO_thi_sua_loi_cong(tmp_path):
-    cam = _cam(tmp_path)
-    _gates(_bai(cam), "do")
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", folder="./T-001_bai")) == "sua-loi-cong"
+    campaign = _cam(tmp_path)
+    _gates(_bai(campaign), "fail")
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", folder="./T-001_bai")) == "fix-gates"
 
 
 def test_gates_HONG_coi_nhu_chua_cham(tmp_path):
     """Sổ cổng rách thì lùi về chấm lại, KHÔNG được coi là đã qua."""
-    cam = _cam(tmp_path)
-    b = _bai(cam)
+    campaign = _cam(tmp_path)
+    b = _bai(campaign)
     (b / "gates.json").write_text("{ rách", encoding="utf-8")
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", folder="./T-001_bai")) == "cham-cong"
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", folder="./T-001_bai")) == "check-gates"
 
 
 def test_cong_xanh_nhung_chua_duyet_noi_dung_thi_cho_G2(tmp_path):
-    cam = _cam(tmp_path)
-    _gates(_bai(cam), "xanh")
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", folder="./T-001_bai")) == "cho-G2"
+    campaign = _cam(tmp_path)
+    _gates(_bai(campaign), "pass")
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", folder="./T-001_bai")) == "await-G2"
 
 
 def test_duyet_noi_dung_roi_thi_dung_trang(tmp_path):
-    cam = _cam(tmp_path)
-    _gates(_bai(cam), "xanh")
-    assert TT.buoc_ke(
-        cam, _dong(g1="2026-09-01", g2="2026-09-02", folder="./T-001_bai")) == "dung-trang"
+    campaign = _cam(tmp_path)
+    _gates(_bai(campaign), "pass")
+    assert PS.next_step(
+        campaign, _dong(g1="2026-09-01", g2="2026-09-02", folder="./T-001_bai")) == "build-page"
 
 
 def test_len_web_roi_thi_phat_hanh(tmp_path):
-    cam = _cam(tmp_path)
-    _gates(_bai(cam), "xanh")
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", g2="2026-09-02",
-                                 folder="./T-001_bai", web="https://x/y")) == "phat-hanh"
+    campaign = _cam(tmp_path)
+    _gates(_bai(campaign), "pass")
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", g2="2026-09-02",
+                                 folder="./T-001_bai", web="https://x/y")) == "release"
 
 
 def test_dang_roi_thi_xong(tmp_path):
-    cam = _cam(tmp_path)
-    _gates(_bai(cam), "xanh")
-    assert TT.buoc_ke(cam, _dong(g1="2026-09-01", g2="2026-09-02", folder="./T-001_bai",
-                                 web="https://x/y", published="2026-09-03")) == "xong"
+    campaign = _cam(tmp_path)
+    _gates(_bai(campaign), "pass")
+    assert PS.next_step(campaign, _dong(g1="2026-09-01", g2="2026-09-02", folder="./T-001_bai",
+                                 web="https://x/y", published="2026-09-03")) == "done"
 
 
 # ── tính chất của cả bản ────────────────────────────────────────────────────
 
 def test_KHONG_GHI_GI_ra_dia(tmp_path):
     """Module này chỉ ĐỌC. Ghi ra đĩa là đẻ nguồn sự thật thứ hai — thứ cả hệ đang tránh."""
-    cam = _cam(tmp_path)
-    truoc = {p.name: p.stat().st_mtime_ns for p in cam.rglob("*") if p.is_file()}
-    TT.tinh(cam)
-    TT.tom_tat(cam)
-    TT.dang_chu(cam, chi_tiet=True)
-    sau = {p.name: p.stat().st_mtime_ns for p in cam.rglob("*") if p.is_file()}
-    assert truoc == sau, f"đã ghi/sửa file: {set(sau) ^ set(truoc)}"
+    campaign = _cam(tmp_path)
+    lookahead = {p.name: p.stat().st_mtime_ns for p in campaign.rglob("*") if p.is_file()}
+    PS.compute(campaign)
+    PS.summary(campaign)
+    PS.as_text(campaign, detail=True)
+    sau = {p.name: p.stat().st_mtime_ns for p in campaign.rglob("*") if p.is_file()}
+    assert lookahead == sau, f"đã ghi/sửa file: {set(sau) ^ set(lookahead)}"
 
 
 def test_buoc_can_nguoi_duoc_danh_dau(tmp_path):
     """Thợ chỉ được nhặt việc MÁY làm được. Nhầm chỗ này là agent tự mở cổng duyệt."""
-    cam = _cam(tmp_path)
-    x = TT.tinh(cam)[0]
-    assert x["buoc"] == "cho-G1" and x["can_nguoi"] is True
-    assert TT.CAN_NGUOI == {"cho-G1", "cho-G2", "cho-G3"}
+    campaign = _cam(tmp_path)
+    x = PS.compute(campaign)[0]
+    assert x["step"] == "await-G1" and x["can_nguoi"] is True
+    assert PS.NEEDS_HUMAN == {"await-G1", "await-G2", "await-G3"}
 
 
 def test_ban_suy_ra_RE_HON_HAN_doc_ca_campaign(tmp_path):
@@ -164,15 +164,15 @@ def test_ban_suy_ra_RE_HON_HAN_doc_ca_campaign(tmp_path):
     Số đo thật 11/09/2026 trên chiến dịch 90 bài: cả file 38.220 ký tự, bản suy ra 1.390.
     Test giữ cho tỉ lệ đó không âm thầm xấu đi khi ai đó thêm cột vào bản in.
     """
-    cam = _cam(tmp_path)
-    ca_file = (cam / "campaign.md").read_text(encoding="utf-8")
-    assert len(TT.dang_chu(cam, chi_tiet=True)) < len(ca_file) / 3, "bản suy ra phình quá"
+    campaign = _cam(tmp_path)
+    ca_file = (campaign / "campaign.md").read_text(encoding="utf-8")
+    assert len(PS.as_text(campaign, detail=True)) < len(ca_file) / 3, "bản suy ra phình quá"
 
 
 def test_tom_tat_sap_theo_THU_TU_duong_ong(tmp_path):
-    cam = _cam(tmp_path)
-    assert list(TT.tom_tat(cam)) == ["cho-G1"]
-    assert TT.THU_TU.index("soan") < TT.THU_TU.index("cho-G2") < TT.THU_TU.index("xong")
+    campaign = _cam(tmp_path)
+    assert list(PS.summary(campaign)) == ["await-G1"]
+    assert PS.ORDER.index("write") < PS.ORDER.index("await-G2") < PS.ORDER.index("done")
 
 
 # ── CỔNG 3: chỗ ở, và tương thích ngược ─────────────────────────────────────
@@ -200,37 +200,37 @@ def test_BANG_CU_khong_co_cot_g3_thi_bo_qua_Cong_3(tmp_path):
     Thêm một cổng mà làm đứng hết các chiến dịch đang chạy là cái giá không đáng trả. Không
     khai cột = không bật Cổng 3, đi thẳng tới phát hành.
     """
-    cam = _cam(tmp_path)
-    _gates(_bai(cam), "xanh")
+    campaign = _cam(tmp_path)
+    _gates(_bai(campaign), "pass")
     d = _dong(g1="2026-09-01", g2="2026-09-02", folder="./T-001_bai", web="https://x/y")
-    assert TT.buoc_ke(cam, d) == "phat-hanh"
+    assert PS.next_step(campaign, d) == "release"
 
 
 def test_CO_cot_g3_nhung_TRONG_thi_dung_o_cho_G3(tmp_path):
     """Khai cột = bật cổng. Trang đã sống nhưng chưa ai mở link xem bằng mắt."""
-    cam = _cam_g3(tmp_path)
-    _gates(_bai(cam), "xanh")
+    campaign = _cam_g3(tmp_path)
+    _gates(_bai(campaign), "pass")
     d = _dong(g1="2026-09-01", g2="2026-09-02", g3="", folder="./T-001_bai",
               web="https://x/y")
-    assert TT.buoc_ke(cam, d) == "cho-G3"
+    assert PS.next_step(campaign, d) == "await-G3"
 
 
 def test_g3_da_duyet_thi_di_tiep_phat_hanh(tmp_path):
-    cam = _cam_g3(tmp_path)
-    _gates(_bai(cam), "xanh")
+    campaign = _cam_g3(tmp_path)
+    _gates(_bai(campaign), "pass")
     d = _dong(g1="2026-09-01", g2="2026-09-02", g3="2026-09-03",
               folder="./T-001_bai", web="https://x/y")
-    assert TT.buoc_ke(cam, d) == "phat-hanh"
+    assert PS.next_step(campaign, d) == "release"
 
 
 def test_cho_G3_la_buoc_CAN_NGUOI(tmp_path):
     """Thợ không được tự mở Cổng 3. Nó là chỗ người mở link xem bằng mắt."""
-    assert "cho-G3" in TT.CAN_NGUOI
+    assert "await-G3" in PS.NEEDS_HUMAN
 
 
 def test_chua_len_web_thi_KHONG_hoi_Cong_3(tmp_path):
     """Cổng 3 duyệt BẢN THẬT. Chưa có trang thật thì chưa có gì để xem."""
-    cam = _cam_g3(tmp_path)
-    _gates(_bai(cam), "xanh")
+    campaign = _cam_g3(tmp_path)
+    _gates(_bai(campaign), "pass")
     d = _dong(g1="2026-09-01", g2="2026-09-02", g3="", folder="./T-001_bai", web="")
-    assert TT.buoc_ke(cam, d) == "dung-trang"
+    assert PS.next_step(campaign, d) == "build-page"

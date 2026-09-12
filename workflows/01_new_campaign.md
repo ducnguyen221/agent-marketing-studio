@@ -88,7 +88,7 @@ key_message · content_pillar · channels · primary_cta
 
 Vì sao chặn ở đây: bài viết ra từ một chiến dịch chưa rõ đối tượng và thông điệp thì viết
 xong mới biết lệch — và lúc đó đã tốn cả vòng nghiên cứu, dựng tiếng và dựng hình. Chặn ở
-khâu tạo rẻ hơn nhiều. Biết mình đang làm gì thì `--bo-qua-cong` bỏ chặn.
+khâu tạo rẻ hơn nhiều. Biết mình đang làm gì thì `--skip-gate` bỏ chặn.
 
 ⚠️ `id` trong frontmatter phải **khớp tên thư mục**. Lệch là mọi tra cứu theo mã đều trượt,
 và `check_tree.py` báo đỏ.

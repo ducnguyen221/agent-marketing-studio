@@ -12,7 +12,7 @@
 > "xanh": không kiểm được là *chưa biết*, không phải *đã qua*. Một hệ mà "không kiểm được"
 > bị tính là "đạt" thì càng nhiều cổng càng nguy hiểm.
 >
-> Miễn trừ một cổng thì **ghi lý do**: `--cho-phep "tên=lý do"`. Nới danh sách từ khoá cho
+> Miễn trừ một cổng thì **ghi lý do**: `--allow "tên=lý do"`. Nới danh sách từ khoá cho
 > đỡ đỏ là làm hỏng cổng đó cho mọi bài về sau.
 
 ---

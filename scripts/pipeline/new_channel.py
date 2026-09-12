@@ -87,10 +87,10 @@ def main(argv=None) -> int:
     # đường TUYỆT ĐỐI cho một kênh vốn nằm ngay trong STATION — chép STATION sang máy khác
     # là đường đó chết.
     station = SP.root(a.station).resolve()
-    dich = Path(a.path).expanduser()
-    dich = dich.resolve() if dich.is_absolute() else (station / a.path).resolve()
-    if (dich / "channel.yml").exists():
-        sys.stderr.write(f"đã có kênh ở {dich} — dừng, không ghi đè\n")
+    dest = Path(a.path).expanduser()
+    dest = dest.resolve() if dest.is_absolute() else (station / a.path).resolve()
+    if (dest / "channel.yml").exists():
+        sys.stderr.write(f"đã có kênh ở {dest} — dừng, không ghi đè\n")
         return 2
 
     # Mã kênh đã có trong SỔ = kênh đã tồn tại, dù ở đường khác. Trước bản vá này script chỉ
@@ -109,14 +109,14 @@ def main(argv=None) -> int:
             return 2
 
     if a.dry_run:
-        print(f"  [dry-run] sẽ tạo {dich} và thêm dòng vào {station / 'CHANNELS.md'}")
+        print(f"  [dry-run] sẽ tạo {dest} và thêm dòng vào {station / 'CHANNELS.md'}")
         return 0
 
     # --- thư mục kênh
     # Thư mục kênh chỉ có FILE PHẲNG + các thư mục chiến dịch. profile/ và memory/ trước
     # đây mỗi cái chứa đúng MỘT file — lồng thêm một cấp chỉ để phải bấm thêm một lần.
-    dich.mkdir(parents=True, exist_ok=True)
-    (dich / "continuity.json").write_text("[]\n", encoding="utf-8", newline="\n")
+    dest.mkdir(parents=True, exist_ok=True)
+    (dest / "continuity.json").write_text("[]\n", encoding="utf-8", newline="\n")
 
     yml = (TPL_KENH / "channel.yml").read_text(encoding="utf-8")
     yml = (yml.replace("id: ten-kenh", f"id: {a.id}")
@@ -138,13 +138,13 @@ def main(argv=None) -> int:
         return 2
     if set(chon) != PLATFORM_HOP_LE:
         yml = _loc_platforms(yml, chon)
-    (dich / "channel.yml").write_text(yml, encoding="utf-8", newline="\n")
+    (dest / "channel.yml").write_text(yml, encoding="utf-8", newline="\n")
 
-    cam = (TPL_KENH / "CAMPAIGNS.md").read_text(encoding="utf-8")
-    cam = (cam.replace("channel: ten-kenh", f"channel: {a.id}")
+    campaign = (TPL_KENH / "CAMPAIGNS.md").read_text(encoding="utf-8")
+    campaign = (campaign.replace("channel: ten-kenh", f"channel: {a.id}")
               .replace("updated: 2026-01-01", f"updated: {date.today()}")
               .replace("# Sổ chiến dịch — Tên kênh", f"# Sổ chiến dịch — {a.label}"))
-    (dich / "CAMPAIGNS.md").write_text(cam, encoding="utf-8", newline="\n")
+    (dest / "CAMPAIGNS.md").write_text(campaign, encoding="utf-8", newline="\n")
 
     # `brand.md` — hồ sơ kênh cho NGƯỜI đọc: nhận diện, giọng, chính kiến, cái không làm.
     #
@@ -155,15 +155,15 @@ def main(argv=None) -> int:
     # Bước viết bài đọc file này FAIL-CLOSED: đọc không được thì DỪNG, không viết tiếp với
     # chính kiến rỗng. Ba bài đầu của một kênh cũ từng viết với chính kiến rỗng suốt mà
     # không ai biết, vì tham số là optional và script im lặng chạy tiếp.
-    if not (dich / "brand.md").exists():
+    if not (dest / "brand.md").exists():
         mau = TPL_KENH / "brand.md"
         if mau.is_file():
             fm_b, body_b = md_io.read_fm(mau)
             fm_b.update({"channel": a.id, "label": a.label})
-            md_io.write_fm(dich / "brand.md", fm_b,
+            md_io.write_fm(dest / "brand.md", fm_b,
                            body_b.replace("<Tên kênh>", a.label))
         else:
-            shutil.copy2(TPL_KENH / "channel.yml", dich / "brand.md")  # không nên xảy ra
+            shutil.copy2(TPL_KENH / "channel.yml", dest / "brand.md")  # không nên xảy ra
 
     # ── Script cấp kênh: chỉ chép khi kênh THẬT SỰ có nền tảng cần tới chúng.
     #
@@ -176,9 +176,9 @@ def main(argv=None) -> int:
     # Nhận diện đọc từ bản chụp `-Config`; không có thì dùng mặc định trong file.
     CAN_WEB = {"build-index.ps1": "web_blog", "subscribe.gs": "web_blog",
                "send_newsletter.py": "web_blog", "build_yt_desc.py": "youtube"}
-    for ten, nen in CAN_WEB.items():
-        if nen in chon and (TPL_KENH / ten).is_file() and not (dich / ten).exists():
-            shutil.copy2(TPL_KENH / ten, dich / ten)
+    for name, nen in CAN_WEB.items():
+        if nen in chon and (TPL_KENH / name).is_file() and not (dest / name).exists():
+            shutil.copy2(TPL_KENH / name, dest / name)
 
     # --- ghi vào sổ kênh
     so = station / "CHANNELS.md"
@@ -193,15 +193,15 @@ def main(argv=None) -> int:
     fm, body = md_io.read_fm(so)
     ds = [c for c in (fm.get("channels") or []) if c.get("id") != a.id]
     try:
-        p_ghi = "./" + str(dich.relative_to(station)).replace("\\", "/")
+        p_ghi = "./" + str(dest.relative_to(station)).replace("\\", "/")
     except ValueError:
-        p_ghi = str(dich).replace("\\", "/")      # kênh nằm NGOÀI station -> đường tuyệt đối
+        p_ghi = str(dest).replace("\\", "/")      # kênh nằm NGOÀI station -> đường tuyệt đối
     ds.append({"id": a.id, "label": a.label, "path": p_ghi, "status": "active", "note": ""})
     fm["channels"] = ds
     fm["updated"] = str(date.today())
     md_io.write_fm(so, fm, body)
 
-    print(f"  kênh   : {dich}")
+    print(f"  kênh   : {dest}")
     print(f"  sổ kênh: {so}  ({len(ds)} kênh)")
     print(f"  tiếp   : new_campaign.py --channel {a.id} --id CMP-YYMM-slug --name \"…\" --prefix XXX")
     print("  token  : channel.yml mới khai tên biến MẪU — nối vào tài khoản thật theo")

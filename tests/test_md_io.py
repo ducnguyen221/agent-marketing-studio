@@ -53,9 +53,9 @@ def test_khong_co_frontmatter_thi_tra_ca_file(tmp_path):
 
 
 def test_doc_bang_giua_marker():
-    cot, dong = M.read_table(THAN, "CONTENT")
-    assert cot == ["content_id", "tên", "status"]
-    assert len(dong) == 1 and dong[0]["content_id"] == "AST-001"
+    col, row = M.read_table(THAN, "CONTENT")
+    assert col == ["content_id", "tên", "status"]
+    assert len(row) == 1 and row[0]["content_id"] == "AST-001"
 
 
 def test_upsert_KHONG_dung_chu_ngoai_marker():
@@ -66,28 +66,28 @@ def test_upsert_KHONG_dung_chu_ngoai_marker():
     assert "## Ghi chú" in moi and "Chữ của người ở SAU bảng." in moi
     assert moi.index("Đoạn văn của NGƯỜI") < moi.index("<!-- CONTENT:BEGIN -->")
     assert moi.index("## Ghi chú") > moi.index("<!-- CONTENT:END -->")
-    _, dong = M.read_table(moi, "CONTENT")
-    assert [d["content_id"] for d in dong] == ["AST-001", "AST-002"]
+    _, row = M.read_table(moi, "CONTENT")
+    assert [d["content_id"] for d in row] == ["AST-001", "AST-002"]
 
 
 def test_upsert_la_TRON_khong_phai_ghi_de():
     """Cập nhật một cột không được xoá cột người tự điền."""
     moi = M.upsert_row(THAN, "CONTENT", "content_id",
                        {"content_id": "AST-001", "status": "archived"})
-    _, dong = M.read_table(moi, "CONTENT")
-    assert dong[0]["status"] == "archived"
-    assert dong[0]["tên"] == "Bài một", "cột không nhắc tới phải giữ nguyên"
+    _, row = M.read_table(moi, "CONTENT")
+    assert row[0]["status"] == "archived"
+    assert row[0]["tên"] == "Bài một", "cột không nhắc tới phải giữ nguyên"
 
 
 def test_o_co_dau_gach_dung_khong_pha_bang():
     moi = M.upsert_row(THAN, "CONTENT", "content_id",
                        {"content_id": "AST-003", "tên": "A | B | C", "status": "proposed"})
-    _, dong = M.read_table(moi, "CONTENT")
-    assert dong[-1]["tên"] == "A | B | C", "dấu | trong ô phải escape rồi đọc lại nguyên vẹn"
+    _, row = M.read_table(moi, "CONTENT")
+    assert row[-1]["tên"] == "A | B | C", "dấu | trong ô phải escape rồi đọc lại nguyên vẹn"
     # THAN có sẵn 1 dòng, thêm 1 thành 2. Nếu dấu | bị hiểu là vách cột thì dòng mới sẽ vỡ
     # thành nhiều ô và con số này lệch.
-    assert len(dong) == 2, "ô có | không được tách thành nhiều cột"
-    assert set(dong[-1]) == {"content_id", "tên", "status"}, "không được đẻ thêm cột"
+    assert len(row) == 2, "ô có | không được tách thành nhiều cột"
+    assert set(row[-1]) == {"content_id", "tên", "status"}, "không được đẻ thêm cột"
 
 
 def test_thieu_marker_thi_no_loi_chu_khong_ghi_bua():
@@ -103,8 +103,8 @@ def test_ghi_nguyen_tu_khong_de_lai_file_tam(tmp_path):
 
 def test_bang_rong_van_doc_duoc_cot():
     than = "<!-- T:BEGIN -->\n| a | b |\n|---|---|\n<!-- T:END -->\n"
-    cot, dong = M.read_table(than, "T")
-    assert cot == ["a", "b"] and dong == []
+    col, row = M.read_table(than, "T")
+    assert col == ["a", "b"] and row == []
     moi = M.upsert_row(than, "T", "a", {"a": "1", "b": "2"})
     assert M.read_table(moi, "T")[1] == [{"a": "1", "b": "2"}]
 
@@ -116,9 +116,9 @@ def test_khoa_la_thi_NEM_LOI_chu_khong_nuot_im_lang():
         M.upsert_row(body, "T", "id", {"id": "a", "chua_co": "v"})
 
     ra = M.upsert_row(body, "T", "id", {"id": "a", "chua_co": "v"}, them_cot=True)
-    cot, dong = M.read_table(ra, "T")
-    assert cot == ["id", "x", "chua_co"]
-    assert dong[0] == {"id": "a", "x": "1", "chua_co": "v"}
+    col, row = M.read_table(ra, "T")
+    assert col == ["id", "x", "chua_co"]
+    assert row[0] == {"id": "a", "x": "1", "chua_co": "v"}
 
 
 def test_chi_cap_nhat_thi_KHONG_de_dong_ma():

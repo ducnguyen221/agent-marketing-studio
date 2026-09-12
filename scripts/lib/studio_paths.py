@@ -29,11 +29,11 @@ def root(station=None) -> Path:
                 or Path.home() / ".marketing").expanduser()
 
 
-def _no_duong(p: str, goc: Path) -> Path:
+def _no_duong(p: str, src: Path) -> Path:
     """Mở rộng ~ và ${BIEN}; đường tương đối tính theo thư mục chứa CHANNELS.md."""
     p = os.path.expandvars(str(p)).strip()
     q = Path(p).expanduser()
-    return q if q.is_absolute() else (goc / q).resolve()
+    return q if q.is_absolute() else (src / q).resolve()
 
 
 def channels(station=None) -> list[dict]:
@@ -41,15 +41,15 @@ def channels(station=None) -> list[dict]:
 
     Không có CHANNELS.md -> trả [] (STATION rỗng là trạng thái hợp lệ, không phải lỗi).
     """
-    goc = root(station)
-    so = goc / SO_KENH
+    src = root(station)
+    so = src / SO_KENH
     if not so.is_file():
         return []
     fm, _ = md_io.read_fm(so)
     ra = []
     for c in (fm.get("channels") or []):
         c = dict(c)
-        c["dir"] = _no_duong(c.get("path", ""), goc)
+        c["dir"] = _no_duong(c.get("path", ""), src)
         ra.append(c)
     return ra
 

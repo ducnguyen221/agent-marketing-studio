@@ -42,10 +42,10 @@
 ## 2. Bốn lệnh
 
 ```bash
-run.ps1 -Buoc dung-bai     # B0        → Cổng 1
+run.ps1 -Buoc create-post     # B0        → Cổng 1
 run.ps1 -Buoc soan         # B1·B2·B3·B4 → Cổng 2
-run.ps1 -Buoc dung-trang   # B5·B6·B8  → Cổng 3
-run.ps1 -Buoc phat-hanh    # B7·B9·B10
+run.ps1 -Buoc build-page   # B5·B6·B8  → Cổng 3
+run.ps1 -Buoc release    # B7·B9·B10
 ```
 
 **Mỗi lượt gọi làm ĐÚNG MỘT bước rồi dừng.** Script điều phối gộp đã bị gỡ vì nó *nuốt cổng
@@ -91,10 +91,10 @@ Repo này **không phụ thuộc** CLI hay agent nào. Khai lệnh của bạn t
 
 ```yaml
 runtime:
-  writer_cmd: '<lệnh của bạn> --bai "{bai}"'
+  writer_cmd: '<lệnh của bạn> --post "{post}"'
 ```
 
-Chỗ thay được: `{bai}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch.
+Chỗ thay được: `{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch.
 
 | | |
 |---|---|
@@ -115,7 +115,7 @@ Không có nút "Sửa lại". Thay vào đó: **trả lời thẳng vào tin c�
 nhận xét tự do. Không cần nhớ mã bài, không cần đúng cú pháp.
 
 ```
-Đức ─ trả lời tin của NEN-001 ─→ logs/tg-phan-hoi.json (giữ ĐỦ mọi lần)
+Đức ─ trả lời tin của NEN-001 ─→ logs/feedback.json (giữ ĐỦ mọi lần)
                                         ↓
                             <bài>/phan-hoi.md  (khối có rào ```…```)
                                         ↓
@@ -139,7 +139,7 @@ Ba luật ở đây, mỗi luật chặn một cách hỏng:
 | Cổng 2 | **5** | Đọc 10 bài trong một tin là không đọc gì cả |
 | Cổng 3 | gộp thoải mái | Chỉ là mở link xem có vỡ không |
 
-Đổi bằng `--lo N`, hoặc khai `runtime.approval_lo`. Muốn làm hết một lượt thì `--lo 0`.
+Đổi bằng `--batch N`, hoặc khai `runtime.approval_lo`. Muốn làm hết một lượt thì `--batch 0`.
 
 ## 9. Hai chế độ tự trị
 
@@ -154,6 +154,6 @@ chỉ người sửa được `channel.yml`. Cả ba đều có test và đã ki
 |---|---|---|
 | Coi khuôn mẫu là "đã viết" | Khuôn dài 3.701 ký tự — mọi ngưỡng đếm ký tự đều thua. Bài rỗng đi tới bước đăng | Kiểm neo + không còn `{{…}}` + độ dài |
 | `--dry-run` gây tác dụng thật | Lệnh thử mà gửi tin thật thì không ai dám dùng để thử | `dry_run` chặn mở cổng |
-| Bước hỏng vẫn `exit 0` | Task Scheduler đọc mã thoát rồi báo ✅ cho lượt không làm gì | `ma_thoat()` suy từ kết quả |
+| Bước hỏng vẫn `exit 0` | Task Scheduler đọc mã thoát rồi báo ✅ cho lượt không làm gì | `exit_code()` suy từ kết quả |
 | Bộ viết chạy êm mà file trống | Chỉ tin mã thoát thì bài rỗng lọt qua | Kiểm lại `content.md` sau khi viết |
 | Comment YAML trong frontmatter | `md_io.write_fm` dump lại YAML ⇒ **comment không sống sót** lần ghi đầu tiên | Tài liệu để ở THÂN BÀI, không ở frontmatter |

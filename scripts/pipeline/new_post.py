@@ -138,7 +138,7 @@ def _tim_campaign(chi_dinh: str, station=None) -> Path:
                             f"hoặc id có trong một kênh của CHANNELS.md")
 
 
-def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
+def _bulk(a, campaign_dir: Path, fm_cam: dict) -> int:
     """Tạo cả loạt bài từ TSV. Đọc trước TOÀN BỘ file và kiểm hết trước khi tạo bất kỳ thư
     mục nào: nửa loạt thành công nửa loạt lỗi là trạng thái khó dọn nhất."""
     dong_tsv = []
@@ -153,7 +153,7 @@ def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
         dong_tsv.append((o[0], o[1], o[2], o[3] if len(o) > 3 else ""))
 
     prefix = fm_cam.get("id_prefix", "")
-    _, dong_co = md_io.read_table(md_io.read_fm(cam_dir / "campaign.md")[1], "CONTENT")
+    _, dong_co = md_io.read_table(md_io.read_fm(campaign_dir / "campaign.md")[1], "CONTENT")
     da_co = {d.get("content_id") for d in dong_co}
     loi = []
     for cid, slug, _t, _g in dong_tsv:
@@ -161,13 +161,13 @@ def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
             loi.append(f"{cid} không khớp id_prefix {prefix!r}")
         if not re.fullmatch(r"[a-z0-9-]+", slug):
             loi.append(f"slug {slug!r} phải a-z0-9-")
-        if (cam_dir / f"{cid}_{slug}").exists():
+        if (campaign_dir / f"{cid}_{slug}").exists():
             loi.append(f"{cid}_{slug} đã có — không ghi đè")
         # Cổng trùng ĐẢO CHIỀU ở chế độ ĐIỀN: ở đó dòng có sẵn là điều kiện CẦN, còn
-        # dòng thiếu mới là lỗi. Không đảo thì `--bulk --dien-vao-dong` chết ngay bài đầu.
-        if a.dien_vao_dong:
+        # dòng thiếu mới là lỗi. Không đảo thì `--bulk --fill-row` chết ngay bài đầu.
+        if a.fill_row:
             if cid not in da_co:
-                loi.append(f"{cid} chưa có trong bảng Content — `--dien-vao-dong` chỉ để "
+                loi.append(f"{cid} chưa có trong bảng Content — `--fill-row` chỉ để "
                            f"dựng thư mục cho dòng ĐÃ lên lịch")
         elif cid in da_co:
             loi.append(f"{cid} đã có trong bảng Content — không ghi đè dòng cũ")
@@ -179,16 +179,16 @@ def _bulk(a, cam_dir: Path, fm_cam: dict) -> int:
         return 2
 
     if a.dry_run:
-        print(f"  [dry-run] sẽ tạo {len(dong_tsv)} bài trong {cam_dir}")
+        print(f"  [dry-run] sẽ tạo {len(dong_tsv)} bài trong {campaign_dir}")
         return 0
 
-    for cid, slug, tieu_de, goc in dong_tsv:
+    for cid, slug, tieu_de, src in dong_tsv:
         con = argparse.Namespace(**vars(a))
         con.bulk, con.id, con.slug, con.title = None, cid, slug, tieu_de
-        con.angle = goc or a.angle
+        con.angle = src or a.angle
         rc = main([x for x in _lai_argv(con)])
         if rc != 0:
-            sys.stderr.write(f"dừng ở {cid} (đã tạo {dong_tsv.index((cid, slug, tieu_de, goc))} bài)\n")
+            sys.stderr.write(f"dừng ở {cid} (đã tạo {dong_tsv.index((cid, slug, tieu_de, src))} bài)\n")
             return rc
     print(f"  đã tạo {len(dong_tsv)} bài. Agent viết bài: đọc campaign.md + brand.md "
           f"của kênh + research.md của TỪNG bài trước khi viết.")
@@ -199,11 +199,11 @@ def _lai_argv(n) -> list[str]:
     """Dựng lại argv cho một bài — đi qua đúng main() để không có hai đường tạo bài."""
     v = ["--campaign", n.campaign, "--id", n.id, "--slug", n.slug, "--title", n.title,
          "--funnel", n.funnel, "--priority", n.priority, "--audio", n.audio,
-         "--video", n.video, "--short", n.short, "--bo-qua-cong"]
+         "--video", n.video, "--short", n.short, "--skip-gate"]
     # Chế độ ĐIỀN phải đi theo xuống từng bài, nếu không `--bulk` sẽ đâm vào cổng trùng
     # ở bài đầu tiên và không tạo được gì — đúng lỗi UAT 10/09 bắt được.
-    if getattr(n, "dien_vao_dong", False):
-        v.append("--dien-vao-dong")
+    if getattr(n, "fill_row", False):
+        v.append("--fill-row")
     for c, x in (("--pillar", n.pillar), ("--angle", n.angle), ("--schedule", n.schedule),
                  ("--station", n.station)):
         if x:
@@ -227,11 +227,11 @@ def main(argv=None) -> int:
     ap.add_argument("--video", default="yes", choices=["yes", "no"])
     ap.add_argument("--short", default="no", choices=["yes", "no"])
     ap.add_argument("--station", default=None)
-    ap.add_argument("--dien-vao-dong", action="store_true",
+    ap.add_argument("--fill-row", action="store_true",
                     help="dòng đã CÓ trong bảng Content — chỉ dựng thư mục và "
                          "điền cột `folder`, KHÔNG đụng status/g1/g2. Cho chiến "
                          "dịch lập lịch trước rồi dựng thư mục sau.")
-    ap.add_argument("--bo-qua-cong", action="store_true",
+    ap.add_argument("--skip-gate", action="store_true",
                     help="bỏ chặn campaign.md chưa đủ thông tin (biết mình làm gì)")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
@@ -243,12 +243,12 @@ def main(argv=None) -> int:
         sys.stderr.write(f"--slug phải a-z0-9-: {a.slug!r}\n")
         return 2
     try:
-        cam_dir = _tim_campaign(a.campaign, a.station)
+        campaign_dir = _tim_campaign(a.campaign, a.station)
     except FileNotFoundError as e:
         sys.stderr.write(f"{e}\n")
         return 2
 
-    fm_cam, body_cam = md_io.read_fm(cam_dir / "campaign.md")
+    fm_cam, body_cam = md_io.read_fm(campaign_dir / "campaign.md")
 
     # pillars của kênh: phép thử đúng cho content_pillar. Đọc được thì dùng; không đọc
     # được (kênh lạ, file hỏng) thì lùi về so với mẫu — cổng không được TẮT vì thiếu dữ liệu.
@@ -256,7 +256,7 @@ def main(argv=None) -> int:
     try:
         import yaml
         for c in SP.channels(a.station):
-            if (c["dir"] / "channel.yml").is_file() and cam_dir.is_relative_to(c["dir"]):
+            if (c["dir"] / "channel.yml").is_file() and campaign_dir.is_relative_to(c["dir"]):
                 cy = yaml.safe_load((c["dir"] / "channel.yml").read_text(encoding="utf-8")) or {}
                 pillars = cy.get("pillars")
                 platforms = [x.get("channel") for x in (cy.get("platforms") or [])
@@ -265,17 +265,17 @@ def main(argv=None) -> int:
     except Exception as e:      # noqa: BLE001
         # KHÔNG fail-open. Trước bản vá này đọc lỗi thì lùi về so-với-mẫu, nên một pillar tuỳ ý
         # lọt qua và `check_tree` chỉ bắt SAU khi bài đã tạo. Cổng đã có đường vòng tường minh
-        # (`--bo-qua-cong`) nên không cần cửa sau im lặng.
-        if not a.bo_qua_cong:
+        # (`--skip-gate`) nên không cần cửa sau im lặng.
+        if not a.skip_gate:
             sys.stderr.write(chr(10).join([
                 f"đọc channel.yml của kênh không được: {e}",
-                "Cổng trụ nội dung cần file đó. Sửa nó, hoặc --bo-qua-cong nếu biết mình làm gì.",
+                "Cổng trụ nội dung cần file đó. Sửa nó, hoặc --skip-gate nếu biết mình làm gì.",
                 ""]))
             return 2
         pillars = platforms = None
 
     thieu = _campaign_da_du(fm_cam, pillars, platforms)
-    if thieu and not a.bo_qua_cong:
+    if thieu and not a.skip_gate:
         sys.stderr.write("\n".join([
             "campaign.md CHƯA ĐỦ THÔNG TIN — chưa tạo bài được.",
             "Thiếu: " + ", ".join(thieu),
@@ -285,12 +285,12 @@ def main(argv=None) -> int:
             "  · Mục 1-3      — bối cảnh, đối tượng, thông điệp (bản dài)",
             "  · Mục 4        — trụ nội dung và CÁI KHÔNG LÀM",
             "",
-            "Biết mình đang làm gì thì --bo-qua-cong bỏ chặn này.",
+            "Biết mình đang làm gì thì --skip-gate bỏ chặn này.",
             ""]))
         return 2
 
     if a.bulk:
-        return _bulk(a, cam_dir, fm_cam)
+        return _bulk(a, campaign_dir, fm_cam)
 
     prefix = fm_cam.get("id_prefix", "")
     if prefix and not a.id.startswith(prefix + "-"):
@@ -302,26 +302,26 @@ def main(argv=None) -> int:
     # `proposed` với ô g1 rỗng: MÁY XOÁ quyết định của NGƯỜI ở Cổng 1, và không báo gì.
     _, dong_co = md_io.read_table(body_cam, "CONTENT")
     dong_cu = next((d for d in dong_co if d.get("content_id") == a.id), None)
-    if a.dien_vao_dong:
+    if a.fill_row:
         # Chế độ ĐIỀN: dòng phải CÓ SẴN. Không có nghĩa là gọi nhầm chế độ — dựng thư
         # mục cho một bài không nằm trong lịch là đẻ ra bài mồ côi mà sổ không biết.
         if dong_cu is None:
             sys.stderr.write(
-                f"{a.id} chưa có trong bảng Content của {cam_dir.name} — dừng.\n"
-                f"`--dien-vao-dong` chỉ để dựng thư mục cho dòng ĐÃ lên lịch; bỏ cờ đó "
+                f"{a.id} chưa có trong bảng Content của {campaign_dir.name} — dừng.\n"
+                f"`--fill-row` chỉ để dựng thư mục cho dòng ĐÃ lên lịch; bỏ cờ đó "
                 f"nếu muốn tạo bài mới.\n")
             return 2
         if (dong_cu.get("folder") or "").strip():
             sys.stderr.write(f"{a.id} đã có thư mục {dong_cu['folder']} — dừng.\n")
             return 2
     elif dong_cu is not None:
-        sys.stderr.write(f"{a.id} đã có trong bảng Content của {cam_dir.name} — dừng.\n"
+        sys.stderr.write(f"{a.id} đã có trong bảng Content của {campaign_dir.name} — dừng.\n"
                          f"Đổi --id, hoặc sửa thẳng dòng đó trong campaign.md.\n")
         return 2
 
-    dich = cam_dir / f"{a.id}_{a.slug}"
-    if dich.exists():
-        sys.stderr.write(f"đã có {dich} — dừng, không ghi đè\n")
+    dest = campaign_dir / f"{a.id}_{a.slug}"
+    if dest.exists():
+        sys.stderr.write(f"đã có {dest} — dừng, không ghi đè\n")
         return 2
     # Kiểm bảng NHẬN ĐƯỢC dòng trước khi tạo thư mục. Trước bản vá này thứ tự ngược lại: tạo
     # thư mục + 3 file rồi mới `upsert_row`; bảng thiếu cột (campaign.md cũ, hoặc sửa tay) là
@@ -330,16 +330,16 @@ def main(argv=None) -> int:
     thieu_cot = [c for c in COT if cot_co and c not in cot_co]
     if thieu_cot:
         sys.stderr.write(
-            f"bảng Content của {cam_dir.name} thiếu cột {thieu_cot} — chưa tạo gì cả.\n"
+            f"bảng Content của {campaign_dir.name} thiếu cột {thieu_cot} — chưa tạo gì cả.\n"
             f"Thêm cột vào bảng (giữa marker CONTENT) rồi chạy lại; mẫu đủ cột ở "
             f"templates/station/_channel/_campaign/campaign.md.\n")
         return 2
 
     if a.dry_run:
-        print(f"  [dry-run] sẽ tạo {dich} và thêm dòng vào {cam_dir / 'campaign.md'}")
+        print(f"  [dry-run] sẽ tạo {dest} và thêm dòng vào {campaign_dir / 'campaign.md'}")
         return 0
 
-    PP.tao_thu_muc(dich)
+    PP.make_dirs(dest)
 
     # meta.json — định danh máy đọc. Giữ đúng hình dạng đang chạy.
     cat = {"powerbi": "bi", "fabric": "de", "ai-agent": "ai", "career": "strategy"}
@@ -350,7 +350,7 @@ def main(argv=None) -> int:
         "pillar": pillar, "category": cat.get(pillar, "ai"),
         "angle": a.angle, "schedule_date": a.schedule,
         "hashtags": [],
-    }, (dich / "meta.json").open("w", encoding="utf-8", newline="\n"),
+    }, (dest / "meta.json").open("w", encoding="utf-8", newline="\n"),
         ensure_ascii=False, indent=2)
 
     # prompt.txt — prompt sinh ra CHÍNH bài này (research.md rồi content.md).
@@ -363,40 +363,40 @@ def main(argv=None) -> int:
     # `.txt` chứ không `.md`: prompt đọc thô rồi bơm thẳng vào model, không qua bộ dựng
     # markdown nào.
     if (TPL_BAI / "prompt.txt").is_file():
-        shutil.copy2(TPL_BAI / "prompt.txt", dich / "prompt.txt")
+        shutil.copy2(TPL_BAI / "prompt.txt", dest / "prompt.txt")
 
     # research.md — frontmatter mang brief chi tiết
-    shutil.copy2(TPL_BAI / "research.md", PP.p(dich, "research"))
-    fm_r, body_r = md_io.read_fm(PP.p(dich, "research"))
+    shutil.copy2(TPL_BAI / "research.md", PP.p(dest, "research"))
+    fm_r, body_r = md_io.read_fm(PP.p(dest, "research"))
     fm_r.update({"content_id": a.id, "campaign_id": fm_cam.get("id", ""),
                  "audio": a.audio, "video": a.video, "short": a.short})
     body_r = body_r.replace("# research.md — XXX-001 · Tên bài",
                             f"# research.md — {a.id} · {a.title}")
-    md_io.write_fm(PP.p(dich, "research"), fm_r, body_r)
+    md_io.write_fm(PP.p(dest, "research"), fm_r, body_r)
 
     # content.md
-    shutil.copy2(TPL_BAI / "content.md", PP.p(dich, "content"))
-    fm_c, body_c = md_io.read_fm(PP.p(dich, "content"))
+    shutil.copy2(TPL_BAI / "content.md", PP.p(dest, "content"))
+    fm_c, body_c = md_io.read_fm(PP.p(dest, "content"))
     fm_c.update({"content_id": a.id, "campaign_id": fm_cam.get("id", ""),
                  "content_name": a.title})
-    md_io.write_fm(PP.p(dich, "content"), fm_c, body_c)
+    md_io.write_fm(PP.p(dest, "content"), fm_c, body_c)
 
     # dòng trong bảng Content — status=proposed, g1 TRỐNG (Cổng 1 là của người)
     # Chế độ ĐIỀN chỉ ghi ĐÚNG cột `folder`. Ghi thêm bất cứ gì ở đây là ghi đè lên thứ
     # người đã điền — mà `status`/`g1`/`g2` chính là dấu vết hai cổng duyệt. Đó là toàn bộ
     # lý do cổng trùng tồn tại; chế độ mới không được mở lại lỗ đó.
-    if a.dien_vao_dong:
-        moi = {"content_id": a.id, "folder": f"./{dich.name}/"}
+    if a.fill_row:
+        moi = {"content_id": a.id, "folder": f"./{dest.name}/"}
     else:
         moi = {"content_id": a.id, "content_name": a.title, "pillar": pillar,
                "angle": a.angle, "funnel": a.funnel, "priority": a.priority,
                "status": "proposed", "g1": "", "g2": "",
-               "schedule": a.schedule, "published": "", "folder": f"./{dich.name}/"}
+               "schedule": a.schedule, "published": "", "folder": f"./{dest.name}/"}
     body_cam = md_io.upsert_row(body_cam, "CONTENT", "content_id", moi, COT)
-    md_io.write_fm(cam_dir / "campaign.md", fm_cam, body_cam)
+    md_io.write_fm(campaign_dir / "campaign.md", fm_cam, body_cam)
 
-    print(f"  bài  : {dich}")
-    print(f"  sổ   : {cam_dir / 'campaign.md'} (bảng Content, status=proposed)")
+    print(f"  bài  : {dest}")
+    print(f"  sổ   : {campaign_dir / 'campaign.md'} (bảng Content, status=proposed)")
     print(f"  ⚠️ Cổng 1 là của NGƯỜI: điền status=approved và ngày vào ô g1 rồi mới viết bài.")
     return 0
 

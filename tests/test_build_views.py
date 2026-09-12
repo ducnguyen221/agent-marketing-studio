@@ -76,9 +76,9 @@ def test_du_lieu_nhung_khop_markdown(station):
     dl = json.loads(re.search(r"var DL=(\{.*?\});",
                               (C / "campaign.html").read_text(encoding="utf-8"), re.S).group(1)
                     .replace("\\u003c", "<").replace("\\u003e", ">").replace("\\u0026", "&"))
-    assert dl["cot"] == COT
-    assert [d["content_id"] for d in dl["dong"]] == ["AST-001", "AST-002"]
-    assert dl["dong"][0]["content_name"] == "Bài một, có dấu phẩy"
+    assert dl["col"] == COT
+    assert [d["content_id"] for d in dl["row"]] == ["AST-001", "AST-002"]
+    assert dl["row"][0]["content_name"] == "Bài một, có dấu phẩy"
 
 
 def test_URL_thanh_nut_bam_duoc(station):
@@ -188,9 +188,9 @@ def test_kenh_NGOAI_tram_van_bam_duoc(tmp_path):
     t = (S / "index.html").read_text(encoding="utf-8")
     m = re.search(r'href="([^"]*campaign\.html)"', t)
     assert m, "không có link tới campaign.html"
-    dich = (S / m.group(1)).resolve() if not Path(m.group(1)).is_absolute() \
+    dest = (S / m.group(1)).resolve() if not Path(m.group(1)).is_absolute() \
         else Path(m.group(1))
-    assert dich.is_file() or (C / "campaign.html").samefile(dich), \
+    assert dest.is_file() or (C / "campaign.html").samefile(dest), \
         f"link {m.group(1)!r} không trỏ tới file có thật — bấm vào là 404"
 
 
@@ -200,8 +200,8 @@ def test_kenh_NGOAI_tram_van_bam_duoc(tmp_path):
 
 def _cam_vi_du():
     import studio_paths as SP
-    goc = ROOT / "examples"
-    for k in SP.channels(goc):
+    src = ROOT / "examples"
+    for k in SP.channels(src):
         for c in sorted(k["dir"].iterdir()):
             if (c / "campaign.md").is_file():
                 return c
@@ -211,44 +211,44 @@ def _cam_vi_du():
 def test_tien_do_xep_theo_THU_TU_duong_ong(tmp_path):
     """Người cần thấy bài tắc ở đâu trên đường, không cần bảng chữ cái.
 
-    Test này CỐ Ý dựng hai bài rơi vào `cho-G1` và `cham-cong`: theo đường ống thì `cho-G1`
-    đứng trước, theo bảng chữ cái thì `cham-cong` đứng trước. Dùng dữ liệu của ví dụ thì
+    Test này CỐ Ý dựng hai bài rơi vào `await-G1` và `check-gates`: theo đường ống thì `await-G1`
+    đứng trước, theo bảng chữ cái thì `check-gates` đứng trước. Dùng dữ liệu của ví dụ thì
     mọi bài nằm chung một bước, và phép so sánh đúng kể cả khi code sắp bằng `sorted` —
     tức là test xanh mà không đo gì.
     """
     than = "Câu chuyện đời thường mở bài. " * 60
-    bai = tmp_path / "B-002_hai"
-    bai.mkdir()
+    post = tmp_path / "B-002_hai"
+    post.mkdir()
     than_bai = "## post:blog_article" + CHAM + CHAM + "# Bài" + CHAM + CHAM + than
-    (bai / "content.md").write_text(than_bai, encoding="utf-8", newline=CHAM)
-    dong = [{"content_id": "B-001", "g1": "", "folder": "./B-001_mot"},
+    (post / "content.md").write_text(than_bai, encoding="utf-8", newline=CHAM)
+    row = [{"content_id": "B-001", "g1": "", "folder": "./B-001_mot"},
             {"content_id": "B-002", "g1": "2026-09-01", "folder": "./B-002_hai"}]
 
-    td = BV._tien_do(tmp_path, dong)
-    assert list(td["theo_buoc"]) == ["cho-G1", "cham-cong"], td["theo_buoc"]
+    td = BV._progress(tmp_path, row)
+    assert list(td["by_step"]) == ["await-G1", "check-gates"], td["by_step"]
 
 
 def test_bai_cho_cong_KE_DUONG_DAN_TUONG_DOI():
     """Tuyệt đối thì gãy khi chép cây thư mục đi nơi khác; trang mở bằng file:// cạnh bài."""
-    cam = _cam_vi_du()
-    td = BV.doc_campaign(cam)["tien_do"]
+    campaign = _cam_vi_du()
+    td = BV.read_campaign(campaign)["tien_do"]
     co_file = False
-    for ds in td["cho_cong"].values():
+    for ds in td["waiting_at"].values():
         for h in ds:
             for p in h["file"].values():
                 assert not Path(p).is_absolute(), p
-                assert (cam / p).is_file(), f"kê file không có thật: {p}"
+                assert (campaign / p).is_file(), f"kê file không có thật: {p}"
                 co_file = True
-    assert co_file or not td["cho_cong"], "có bài chờ cổng mà không kê được file nào"
+    assert co_file or not td["waiting_at"], "có bài chờ cổng mà không kê được file nào"
 
 
 def test_mot_dong_LOI_khong_lam_sap_ca_trang():
     """Trang ĐỌC không được sập vì một dòng hỏng — người mất luôn cả bản tiến độ."""
-    import pipeline_state as TT
-    goc = TT.buoc_ke
+    import pipeline_state as PS
+    src = PS.next_step
     try:
-        TT.buoc_ke = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("dòng hỏng"))
-        td = BV._tien_do(_cam_vi_du(), [{"content_id": "X-001", "folder": ""}])
+        PS.next_step = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("dòng hỏng"))
+        td = BV._progress(_cam_vi_du(), [{"content_id": "X-001", "folder": ""}])
     finally:
-        TT.buoc_ke = goc
+        PS.next_step = src
     assert td["khac"] == {"?": ["X-001"]}
