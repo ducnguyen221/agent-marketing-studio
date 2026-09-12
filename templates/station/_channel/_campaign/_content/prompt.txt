@@ -49,6 +49,23 @@ cho từng kênh ở bước này — bước sau mới xuất ra `youtube/`, `f
 - Giữ nguyên tên các khối `## post:` có sẵn trong file. Kênh nào không đăng thì để khối
   trống, ĐỪNG xoá — xoá đi thì lần sau không ai biết là có kênh đó.
 
+BỐN SỐ ĐO CỦA KHỐI `## post:blog_article` — cổng chấm đo đúng bốn thứ này, đo bằng máy:
+
+1. ĐỘ DÀI 2.500–4.000 từ. Dưới 2.500 là đỏ. Đây là số đo hay trượt nhất; viết đủ ý rồi
+   vẫn thiếu chữ thì thêm ví dụ và phản ví dụ, đừng thêm chữ đệm.
+2. TRÍCH 3–7 NGUỒN NGOÀI **NGAY TRONG THÂN BÀI**, dạng link markdown đầy đủ
+   `[chữ neo](https://…)`. Ba điều kiện, thiếu một là đỏ:
+   · phải là tên miền NGOÀI, link nội bộ sang bài khác của kênh KHÔNG được tính;
+   · mỗi link phải trùng tên miền với một nguồn đã ghi ở `key_sources` của research.md —
+     cổng đối chiếu hai bên, nên link không có trong research.md bị tính là "nguồn lạc";
+   · liệt kê nguồn ở research.md rồi mà không trích vào thân bài thì cổng vẫn đếm 0.
+     Nghiên cứu xong mà người đọc không thấy nguồn đâu thì bài vẫn là bài nói suông.
+3. ÍT NHẤT MỘT KHỐI CHÍNH KIẾN viết ĐÚNG dạng trích dẫn, dòng đầu bắt đầu bằng
+   `> **Góc nhìn:**`, và cả khối dài từ 40 từ. Một H2 tên "góc nhìn" KHÔNG thay được:
+   cổng tìm đúng chuỗi đó ở đầu dòng trích dẫn.
+4. KHÔNG CÒN `{{...}}` trong phần bài viết. Riêng `{{BLOG_URL}}` và `{{YOUTUBE_URL}}`
+   trong comment Facebook và mô tả YouTube thì GIỮ NGUYÊN — bước đăng mới điền được.
+
 --------------------------------------------------------------------------------
 BA ĐIỀU KHÔNG BAO GIỜ
 --------------------------------------------------------------------------------

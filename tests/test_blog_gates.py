@@ -37,7 +37,7 @@ def _theo_ma(result):
 
 @pytest.fixture(scope="module")
 def do():
-    return _theo_ma(G.run_cmd(BAI_DO, HOME))
+    return _theo_ma(G.run_cmd(BAI_DO, HOME, stage="release"))
 
 
 def test_fixture_do_ton_tai():
@@ -144,7 +144,7 @@ def bai_xanh(tmp_path):
 
 
 def test_bai_hop_le_khong_bi_keu_oan(bai_xanh):
-    result = G.run_cmd(bai_xanh, HOME)
+    result = G.run_cmd(bai_xanh, HOME, stage="release")
     do_ra = [(r["id"], r["name"], r["measured"], r["rule"])
              for r in result["gates"] if r["status"] == "fail"]
     assert do_ra == [], f"cổng kêu oan trên bài hợp lệ: {do_ra}"
@@ -153,7 +153,7 @@ def test_bai_hop_le_khong_bi_keu_oan(bai_xanh):
 # ------------------------------------------------------------------ 3. thiếu ≠ xanh
 
 def test_thieu_dau_vao_khong_duoc_bao_xanh(tmp_path):
-    result = G.run_cmd(tmp_path, HOME)
+    result = G.run_cmd(tmp_path, HOME, stage="release")
     theo = _theo_ma(result)
     assert theo["G01"]["status"] == "missing"
     assert theo["G18"]["status"] == "missing"
@@ -168,17 +168,17 @@ def test_g23_bat_placeholder_con_sot(bai_xanh):
     youtube_desc.txt mang nguyên {{BLOG_URL}} vẫn qua sạch — đo được trên bài thật 04/09.
     Với quy trình đăng TAY thì đây là lỗ chết người: người dán nguyên văn lên YouTube.
     """
-    assert _theo_ma(G.run_cmd(bai_xanh, HOME))["G23"]["status"] == "pass"
+    assert _theo_ma(G.run_cmd(bai_xanh, HOME, stage="release"))["G23"]["status"] == "pass"
 
     (PP.p(bai_xanh, "yt_desc")).write_text("Bản đầy đủ: {{BLOG_URL}}", encoding="utf-8")
-    r = _theo_ma(G.run_cmd(bai_xanh, HOME))["G23"]
+    r = _theo_ma(G.run_cmd(bai_xanh, HOME, stage="release"))["G23"]
     assert r["status"] == "fail" and r["level"] == G.CHAN
     assert "description.txt" in r["note"] and "{{BLOG_URL}}" in r["note"], \
         "cổng phải chỉ rõ placeholder nào ở file nào, không chỉ nói 'có placeholder'"
 
 
 def test_thu_muc_rong_van_bao_thieu_G23(tmp_path):
-    assert _theo_ma(G.run_cmd(tmp_path, HOME))["G23"]["status"] == "missing"
+    assert _theo_ma(G.run_cmd(tmp_path, HOME, stage="release"))["G23"]["status"] == "missing"
 
 
 # ------------------------------------------------------------------ 4. miễn trừ G21
@@ -223,7 +223,7 @@ def test_mien_tru_mot_ten_khong_mo_duong_cho_ten_khac(tmp_path):
     d.mkdir()
     PP.make_dirs(d)
     (PP.p(d, "blog")).write_text("Bài nhắc codex và nhắc cả omnivoice.", encoding="utf-8")
-    theo = _theo_ma(G.run_cmd(d, HOME, allow={"codex": "chủ đề bài"}))
+    theo = _theo_ma(G.run_cmd(d, HOME, allow={"codex": "chủ đề bài"}, stage="release"))
     assert theo["G21"]["status"] == "fail", "omnivoice không được miễn trừ nên vẫn phải chặn"
     assert "omnivoice" in theo["G21"]["note"]
 
@@ -241,7 +241,7 @@ def test_g17_bat_dang_dict_du_dem_dung_8(tmp_path):
     PP.make_dirs(d)
     (PP.p(d, "scenes")).write_text(
         json.dumps({"scenes": [{"kind": "concept"} for _ in range(8)]}), encoding="utf-8")
-    r = _theo_ma(G.run_cmd(d, HOME))["G17"]
+    r = _theo_ma(G.run_cmd(d, HOME, stage="release"))["G17"]
     assert r["status"] == "fail", "đủ 8 phần tử nhưng sai dạng thì renderer vẫn vỡ"
     assert "mảng" in r["rule"]
 
@@ -258,3 +258,66 @@ def test_cli_ghi_gates_json_va_exit_khac_0(tmp_path):
     assert G.main([str(d), "--home-domain", HOME, "--json-only"]) == 1
     write = json.loads((d / "gates.json").read_text(encoding="utf-8"))
     assert write["total"] == 23 and write["verdict"] == "fail"
+
+
+# ── Phân bước: cổng của bước sau KHÔNG được chặn bước soạn ──────────────────
+# Đo thật 12/09/2026: chấm trọn 23 cổng ngay sau khi soạn thì bài không bao giờ xanh
+# được, và 3 bài kẹt ở `fix-gates` suốt một ngày vì bị chặn bởi đúng những cổng mà bước
+# soạn không có cách nào làm cho xanh.
+
+def _theo_ma_stage(bai, stage):
+    return {r["id"]: r for r in G.run_cmd(bai, HOME, stage=stage)["gates"]}
+
+
+def test_cong_cua_buoc_SAU_bao_missing_chu_khong_bao_do(tmp_path):
+    theo = _theo_ma_stage(BAI_DO, "write")
+    for ma in ("G14", "G19", "G20"):
+        assert theo[ma]["status"] == "missing", f"{ma} chặn ở bước soạn: {theo[ma]}"
+        assert "chưa tới lượt" in theo[ma]["note"], theo[ma]["note"]
+
+
+def test_cung_bai_do_o_buoc_SAU_thi_cong_do_QUAY_LAI_chan():
+    """Hạ xuống `missing` là HOÃN, không phải tha. Tới bước của nó thì nó lại chặn."""
+    som, muon = _theo_ma_stage(BAI_DO, "write"), _theo_ma_stage(BAI_DO, "release")
+    assert som["G19"]["status"] == "missing"
+    assert muon["G19"]["status"] == "fail" and muon["G19"]["level"] == "block"
+
+
+def test_phan_buoc_KHONG_dung_toi_cong_cua_chinh_buoc_soan():
+    """G01/G05/G06 là lỗi THẬT của bước soạn — phân bước không được làm chúng biến mất."""
+    theo = _theo_ma_stage(BAI_DO, "write")
+    for ma in ("G01", "G05", "G06"):
+        assert theo[ma]["status"] in ("pass", "fail"), f"{ma} bị hoãn nhầm: {theo[ma]}"
+
+
+def test_hai_placeholder_cua_buoc_DANG_khong_lam_G23_do(tmp_path, bai_xanh):
+    """G23 và G14 từng chặn nhau: điền link thì chưa có link, để chỗ giữ thì G23 đỏ."""
+    (bai_xanh / "facebook").mkdir(exist_ok=True)
+    fb = bai_xanh / "facebook" / "comment.txt"
+    fb.write_text("Bài đầy đủ: {{BLOG_URL}}\nVideo: {{YOUTUBE_URL}}\n",
+                  encoding="utf-8", newline="\n")
+    assert _theo_ma_stage(bai_xanh, "write")["G23"]["status"] == "pass"
+
+    fb.write_text("Bài: {{BLOG_URL}}\nTác giả: {{TEN_TAC_GIA}}\n",
+                  encoding="utf-8", newline="\n")
+    r = _theo_ma_stage(bai_xanh, "write")["G23"]
+    assert r["status"] == "fail", "placeholder KHÁC vẫn phải bị bắt"
+    assert "TEN_TAC_GIA" in r["note"] and "BLOG_URL" not in r["note"]
+
+
+def test_gates_json_ghi_lai_da_cham_o_BUOC_nao():
+    """Đọc `gates.json` mà không biết nó chấm ở mốc nào thì con số vô nghĩa."""
+    assert G.run_cmd(BAI_DO, HOME, stage="write")["stage"] == "write"
+
+
+def test_mien_placeholder_la_HOAN_theo_buoc_khong_phai_THA(bai_xanh):
+    """Từ bước `publish` trở đi, `{{BLOG_URL}}` phải biến mất — bài học 04/09/2026.
+
+    Hôm đó `youtube/description.txt` mang nguyên `{{BLOG_URL}}` lọt qua cổng, và với quy
+    trình đăng TAY thì người dán nguyên văn chuỗi đó lên YouTube.
+    """
+    (PP.p(bai_xanh, "yt_desc")).write_text("Bản đầy đủ: {{BLOG_URL}}", encoding="utf-8")
+    assert _theo_ma_stage(bai_xanh, "write")["G23"]["status"] == "pass"
+    for stage in ("publish", "release"):
+        r = _theo_ma_stage(bai_xanh, stage)["G23"]
+        assert r["status"] == "fail" and r["level"] == G.CHAN, f"{stage}: {r}"

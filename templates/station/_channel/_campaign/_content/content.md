@@ -62,6 +62,15 @@ content_name: "Tên làm việc của content"
 > Bài blog đầy đủ. Sapo in đậm → 5–10 H2 → callout → câu chốt dạng "không phải X mà là Y".
 > SEO: primary keyword ở title, H1, 100 từ đầu và kết luận; internal link ≥2.
 > Viết markdown trực tiếp, không bọc code-fence.
+>
+> BỐN SỐ ĐO CỔNG CHẤM BẰNG MÁY — trượt cái nào là bài không đi tiếp được:
+> 1. 2.500–4.000 từ.
+> 2. 3–7 link NGOÀI ngay trong thân bài, dạng `[chữ neo](https://…)`. Link nội bộ sang
+>    bài khác của kênh KHÔNG tính. Mỗi link phải trùng tên miền với một nguồn ở
+>    `key_sources` của research.md, nếu không nó bị tính là "nguồn lạc".
+> 3. ≥1 khối `> **Góc nhìn:**` dài ≥40 từ. Một H2 tên "góc nhìn" KHÔNG thay được.
+> 4. Không còn `{{...}}` trong bài. Riêng `{{BLOG_URL}}`/`{{YOUTUBE_URL}}` ở comment
+>    Facebook và mô tả YouTube thì GIỮ — bước đăng mới điền được.
 
 # {{Tiêu đề H1 — có primary keyword}}
 
@@ -86,6 +95,10 @@ content_name: "Tên làm việc của content"
 ## {{H2 — góc nhìn thẳng}}
 
 {{Chính kiến rõ: tốt cho ai, khó cho ai. Không "tuỳ nhu cầu".}}
+
+> **Góc nhìn:** {{Chính kiến của tác giả, ≥40 từ. Nói rõ mình nghĩ gì và vì sao, kể cả
+> phần mình không chắc. Đây là khối cổng G06 tìm — phải bắt đầu đúng bằng
+> `> **Góc nhìn:**` ở đầu dòng trích dẫn, không phải một H2 cùng tên.}}
 
 ## Kết luận
 

@@ -44,6 +44,25 @@ import post_paths as PP  # noqa: E402
 
 CHAN, CANH_BAO = "block", "warn"
 
+# ── Cổng nào thuộc BƯỚC nào ─────────────────────────────────────────────────
+# Chấm trọn 23 cổng ngay sau khi soạn thì bài KHÔNG BAO GIỜ xanh được: bốn cổng dưới đây
+# đo ảnh, trang HTML, sổ đăng bài và LINK THẬT — thứ chỉ có sau khi dựng trang và phát
+# hành. Đo thật 12/09/2026: 3 bài kẹt ở `fix-gates` từ hôm trước vì bị chặn bởi đúng
+# những cổng mà bước soạn không có cách nào làm cho xanh.
+#
+# Cổng chưa tới lượt phải báo `missing`, KHÔNG phải `fail` — cơ chế đó đã có sẵn cho
+# G15–G18, chỉ là bốn cổng kia chưa được gắn bước.
+GIAI_DOAN = ["write", "assets", "publish", "release"]
+PLACEHOLDER_BUOC_DANG = {"{{BLOG_URL}}", "{{YOUTUBE_URL}}"}
+
+CONG_THUOC_BUOC = {
+    "G14": "release",   # comment đầu phải có link web + YouTube → chỉ có sau khi đăng
+    "G15": "assets", "G16": "assets", "G17": "assets",   # podcast · video · scene
+    "G18": "publish",   # thẻ og: đọc atlas.html → do bước dựng trang sinh
+    "G19": "assets",    # ảnh infographic + sidecar prompt
+    "G20": "publish",   # summary/key-term trong publish.json → bước đăng ghi
+}
+
 _URL = re.compile(r"https?://[^\s)>\]\"']+", re.I)
 # URL TRẦN: Facebook tự biến "ducnguyen.vn/atlas/x" hay "www.abc.com" thành link, nên
 # về mặt luật "thân bài 0 URL" chúng cũng là URL. Bản đầu chỉ bắt có scheme https:// nên
@@ -101,10 +120,25 @@ def _thoi_luong(p: Path) -> float | None:
 class SoKetQua:
     """Sổ ghi kết quả. Mỗi dòng tự mang đủ: đo được gì, luật là gì, đạt hay không."""
 
-    def __init__(self):
+    def __init__(self, stage: str = "write"):
         self.rows: list[dict] = []
+        self.stage = stage if stage in GIAI_DOAN else "write"
+
+    def _chua_toi_luot(self, job_id: str) -> str:
+        """Cổng này thuộc bước nào, và bước đó đã chạy chưa. Trả tên bước nếu CHƯA."""
+        thuoc = CONG_THUOC_BUOC.get(job_id, "write")
+        return thuoc if GIAI_DOAN.index(thuoc) > GIAI_DOAN.index(self.stage) else ""
 
     def do(self, job_id, name, gia_tri, luat, dat, level=CHAN, note=""):
+        sau = self._chua_toi_luot(job_id)
+        if not dat and sau:
+            # Không chặn bằng thứ bước hiện tại không tạo ra được. Vẫn ghi lại số đo để
+            # người đọc thấy nó đang ở đâu, chỉ là không tính là đỏ.
+            self.rows.append({"id": job_id, "name": name, "measured": gia_tri, "rule": luat,
+                              "status": "missing", "level": "",
+                              "note": f"chưa tới lượt — cổng của bước `{sau}`, "
+                                      f"đang chấm ở bước `{self.stage}`"})
+            return
         self.rows.append({"id": job_id, "name": name, "measured": gia_tri, "rule": luat,
                           "status": "pass" if dat else "fail",
                           "level": "" if dat else level, "note": note})
@@ -115,7 +149,7 @@ class SoKetQua:
 
 
 def run_cmd(folder: Path, home_domain: str, kind: str = "full",
-         allow: dict[str, str] | None = None) -> dict:
+         allow: dict[str, str] | None = None, stage: str = "write") -> dict:
     """`allow` = {needle: lý do} — MIỄN TRỪ CÓ GHI LÝ DO cho G21.
 
     Vì sao cần: danh sách needle của G21 so khớp chuỗi thô, nên nó không phân biệt được
@@ -130,7 +164,7 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
     """
     allow = {k.lower(): v for k, v in (allow or {}).items()}
     d = folder
-    s = SoKetQua()
+    s = SoKetQua(stage)
 
     # ---------------------------------------------------------------- blog.md
     blog = _doc(PP.p(d, "blog"))
@@ -381,8 +415,17 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
         # "mọi {{...}} đã được thay bằng link thật". Vòng 1 chỉ nhìn placeholder GIÁN TIẾP
         # qua G14 ở comment, nên youtube_desc.txt và fb_desc.txt mang nguyên {{BLOG_URL}}
         # vẫn qua sạch — đo được ngày 04/09 trên chính bài này.
+        # `{{BLOG_URL}}` và `{{YOUTUBE_URL}}` là CHỖ GIỮ hợp lệ cho tới bước đăng: hai
+        # link đó chưa tồn tại lúc soạn. Không miễn ở bước soạn thì G23 và G14 chặn nhau —
+        # điền link thì chưa có link, để chỗ giữ thì G23 đỏ. Không bài nào qua được cả hai.
+        #
+        # NHƯNG miễn theo BƯỚC, không miễn hẳn. Từ bước `publish` trở đi chúng phải biến
+        # mất, và đó là bài học 04/09/2026: `youtube/description.txt` mang nguyên
+        # `{{BLOG_URL}}` lọt qua cổng, người đăng tay dán nguyên văn lên YouTube.
+        mien_ph = (PLACEHOLDER_BUOC_DANG
+                   if GIAI_DOAN.index(s.stage) < GIAI_DOAN.index("publish") else set())
         ph = [f"{name}:{m}" for name, t in cong_khai.items()
-              for m in re.findall(r"\{\{[^}\n]*\}\}", t)]
+              for m in re.findall(r"\{\{[^}\n]*\}\}", t) if m not in mien_ph]
         s.do("G23", "Placeholder {{...}} trong file công khai", len(ph), "= 0", not ph,
              note="; ".join(ph[:6]))
 
@@ -395,6 +438,7 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
     fail_block = [r for r in s.rows if r["status"] == "fail" and r["level"] == CHAN]
     return {
         "folder": str(d),
+        "stage": s.stage,
         "waived": allow,
         "total": len(s.rows),
         "pass": sum(1 for r in s.rows if r["status"] == "pass"),
@@ -406,6 +450,36 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
     }
 
 
+def _in_vi_sao_bi_chan(result: dict) -> None:
+    """Nói RÕ vì sao bài không đi tiếp được, và ai sửa được cái đó.
+
+    Bảng 23 dòng ở trên là số đo thô. Người đọc phải tự lọc ra dòng nào đang chặn, dòng
+    nào chỉ cảnh báo, dòng nào chưa tới lượt — và đó đúng là chỗ đã hiểu nhầm suốt một
+    ngày: bảy cổng báo đỏ trong khi chỉ ba cổng thật sự thuộc bước đang chạy.
+    """
+    chan = [r for r in result["gates"] if r["status"] == "fail" and r["level"] == CHAN]
+    hoan = [r for r in result["gates"]
+            if r["status"] == "missing" and "chưa tới lượt" in (r["note"] or "")]
+
+    if not chan:
+        sys.stdout.write(f"\n  ✔ KHÔNG cổng nào chặn ở bước `{result['stage']}`.\n")
+    else:
+        sys.stdout.write(f"\n  ⛔ BỊ CHẶN bởi {len(chan)} cổng của chính bước "
+                         f"`{result['stage']}` — sửa được bằng cách viết lại:\n")
+        for r in chan:
+            sys.stdout.write(f"     {r['id']} {r['name']}\n"
+                             f"        đo được : {r['measured']}\n"
+                             f"        luật    : {r['rule']}\n")
+            if r["note"]:
+                sys.stdout.write(f"        cụ thể  : {r['note'][:160]}\n")
+
+    if hoan:
+        sys.stdout.write(f"\n  ⏳ HOÃN {len(hoan)} cổng của bước sau, KHÔNG tính là đỏ: "
+                         + ", ".join(r["id"] for r in hoan) + "\n"
+                         "     (ảnh · trang web · link thật · sổ đăng bài — bước soạn "
+                         "không tạo ra được nên không chặn ở đây)\n")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="23 cổng đếm được cho một bài blog.")
     ap.add_argument("folder", help="thư mục bài (chứa blog.md, fb_post.txt...)")
@@ -413,6 +487,9 @@ def main(argv=None) -> int:
                     help="domain nhà, để loại khỏi phép đếm nguồn ngoài")
     ap.add_argument("--kind", choices=["full", "short"], default="full")
     ap.add_argument("--json-only", action="store_true", help="chỉ in JSON, không in bảng")
+    ap.add_argument("--stage", choices=GIAI_DOAN, default="write",
+                    help="đang chấm ở BƯỚC nào. Cổng của bước sau báo `missing`, "
+                         "không chặn — mặc định `write`")
     ap.add_argument("--allow", action="append", default=[], metavar="TÊN=LÝ DO",
                     help="miễn trừ G21 cho một tên, BẮT BUỘC kèm lý do. Lặp lại được. "
                          "Miễn trừ vẫn được in ra báo cáo và ghi vào gates.json.")
@@ -436,7 +513,7 @@ def main(argv=None) -> int:
                 "và nó sẽ được sao chép sang bài tiếp theo mà không ai xét lại.\n")
             return 2
         allow[name.strip()] = reason.strip()
-    result = run_cmd(d, home, a.kind, allow)
+    result = run_cmd(d, home, a.kind, allow, a.stage)
     PP.p(d, "gates").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n",
                                 encoding="utf-8", newline="\n")
 
@@ -450,8 +527,10 @@ def main(argv=None) -> int:
             sys.stdout.write(f"{label[r['status']]}{r['id']} {r['name']:<36} "
                              f"= {str(r['measured']):<13} luật {r['rule']}{level}{gc}\n")
         sys.stdout.write(f"\n  {result['pass']} xanh · {result['fail_block']} đỏ-chặn · "
-                         f"{result['fail_warn']} đỏ-cảnh-báo · {result['missing']} thiếu "
-                         f"(trên {result['total']} cổng)\n  -> gates.json\n")
+                         f"{result['fail_warn']} đỏ-cảnh-báo · {result['missing']} hoãn/thiếu "
+                         f"(trên {result['total']} cổng, chấm ở bước `{result['stage']}`)"
+                         f"\n  -> gates.json\n")
+        _in_vi_sao_bi_chan(result)
     return 1 if result["verdict"] == "fail" else 0
 
 
