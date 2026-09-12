@@ -1,6 +1,6 @@
 ---
 schema: campaigns/1
-channel: vi-du-studio
+channel: example-studio
 updated: '2026-09-05'
 ---
 # Sổ chiến dịch — Ví dụ · Xưởng nội dung

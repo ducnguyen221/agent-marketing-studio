@@ -28,11 +28,11 @@
      dịch vừa sinh ra đã đỏ ở `check_tree.py` trước khi người dùng kịp viết chữ nào.
    - `.ps1` sinh ra **bắt buộc có BOM UTF-8**: PowerShell 5.1 đọc `.ps1` không BOM sẽ
      parse-fail **im lặng** — scheduled task "chạy" mà không làm gì.
-   - `tests/test_docs_khong_troi.py` bắt mọi đường dẫn `templates/…` trong tài liệu; đổi cây
+   - `tests/test_docs_drift.py` bắt mọi đường dẫn `templates/…` trong tài liệu; đổi cây
      mà quên tài liệu là test đỏ ngay.
    - **Khuôn phải trung tính.** Chưng cất một script đang chạy về `templates/` thì mọi thứ
      thuộc nhận diện — tên kênh, tác giả, tên miền, email, id pixel — phải thành khoá cấu
-     hình. `tests/test_dename.py::test_TEMPLATE_khong_mang_nhan_dien_that` quét cả cây và
+     hình. `tests/test_no_identity_leak.py::test_TEMPLATE_khong_mang_nhan_dien_that` quét cả cây và
      đỏ ngay; chi tiết bộ khoá ở `templates/README.md`.
 
 ## 2. Quy Trình Git & Pull Request

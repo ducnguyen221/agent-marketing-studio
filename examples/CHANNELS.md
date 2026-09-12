@@ -2,9 +2,9 @@
 schema: channels/1
 updated: '2026-09-04'
 channels:
-- id: vi-du-studio
+- id: example-studio
   label: Ví dụ · Xưởng nội dung
-  path: ./vi-du-studio
+  path: ./example-studio
   status: active
   note: ''
 ---

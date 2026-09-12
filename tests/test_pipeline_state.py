@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`scripts/lib/tinh_trang.py` — bước kế tiếp SUY RA từ sự thật, không từ sổ riêng.
+"""`scripts/lib/pipeline_state.py` — bước kế tiếp SUY RA từ sự thật, không từ sổ riêng.
 
 Mỗi test chốt MỘT nấc của đường ống. Nếu một nấc bị nhảy cóc thì agent nối lại việc sẽ
 chạy sai bước — ví dụ đem đi đăng một bài chưa ai chấm cổng.
@@ -12,7 +12,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-import tinh_trang as TT  # noqa: E402
+import pipeline_state as TT  # noqa: E402
 
 FM = """---
 schema: campaign/1

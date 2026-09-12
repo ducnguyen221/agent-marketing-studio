@@ -88,8 +88,8 @@ def _chay_gia(cam, *, url="https://x.vn/atlas/content/ai/bai-mot", dung_html=Tru
 
 # ── đường chạy bình thường ──────────────────────────────────────────────────
 
-def test_dung_trang_ghi_URL_that_vao_cot_web(tmp_path):
-    """Cột `web` là thứ `tinh_trang` đọc để biết bài đã lên trang chưa.
+def test_build_page_ghi_URL_that_vao_cot_web(tmp_path):
+    """Cột `web` là thứ `pipeline_state` đọc để biết bài đã lên trang chưa.
 
     Không ghi vào đó thì bước sau tưởng chưa đăng và sẽ đăng lại — mỗi lượt một lần nữa.
     """
@@ -153,7 +153,7 @@ def test_CO_khai_audio_cmd_thi_chay_va_NHUNG_vao_trang(tmp_path):
 
 # ── fail-closed ─────────────────────────────────────────────────────────────
 
-def test_dung_trang_KHONG_ra_html_thi_la_HONG_du_ma_thoat_0(tmp_path):
+def test_build_page_KHONG_ra_html_thi_la_HONG_du_ma_thoat_0(tmp_path):
     """Mã thoát 0 không đủ để tính là xong — luật đã có của repo, áp cả ở đây.
 
     Bộ dựng chạy êm mà không ra file thì đăng lên sẽ là một trang rỗng.

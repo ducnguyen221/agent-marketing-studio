@@ -72,7 +72,7 @@ kênh, tagline, tác giả, tên miền, id Meta Pixel — phải đến từ c�
 nhận diện của người khác — và không có dòng lỗi nào báo. Cùng lý do, khối Meta Pixel chỉ
 sinh ra khi kênh tự khai `fb_pixel_id`.
 
-Cổng `tests/test_dename.py::test_TEMPLATE_khong_mang_nhan_dien_that` quét cả cây khuôn và
+Cổng `tests/test_no_identity_leak.py::test_TEMPLATE_khong_mang_nhan_dien_that` quét cả cây khuôn và
 đỏ ngay khi một tên miền, email, tên người hay id pixel thật lọt vào.
 
 ## Bốn khuôn còn lại ở gốc

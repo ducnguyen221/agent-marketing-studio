@@ -6,7 +6,7 @@
 # Nội dung thật (bài, ảnh, số liệu) sống ở đây, KHÔNG vào repo engine.
 # Chỉ ghi TÊN biến môi trường của secret, không bao giờ ghi giá trị.
 schema: channel/1
-id: vi-du-studio
+id: example-studio
 label: "Ví dụ · Xưởng nội dung"
 created: 2026-09-04
 purpose: "Kể cách một xưởng nội dung chạy bằng agent hoạt động, cho người làm data"

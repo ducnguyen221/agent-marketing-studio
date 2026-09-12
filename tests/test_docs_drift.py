@@ -9,7 +9,7 @@ và agent đọc trúng dòng nào thì theo dòng đó.
 Cổng này quét toàn cây git-tracked tìm những chuỗi CHỈ CÓ THỂ đến từ mô hình đã bỏ.
 Nó không thay người đọc — nó chỉ đảm bảo cái đã bỏ thì không quay lại một cách im lặng.
 
-So khớp bằng CHUỖI THẲNG, không regex — cùng lý do với test_dename: regex nuốt escape và
+So khớp bằng CHUỖI THẲNG, không regex — cùng lý do với test_no_identity_leak: regex nuốt escape và
 cho âm tính giả.
 """
 import subprocess
@@ -30,7 +30,7 @@ CAM = {
 }
 
 # Nơi được phép nhắc tên cũ: chỗ GIẢI THÍCH lịch sử, và chính file này.
-MIEN_TRU = ("tests/test_docs_khong_troi.py", "fixtures/baseline/")
+MIEN_TRU = ("tests/test_docs_drift.py", "fixtures/baseline/")
 
 NHI_PHAN = {".png", ".jpg", ".jpeg", ".mp3", ".mp4", ".xlsx", ".ico", ".woff", ".woff2"}
 

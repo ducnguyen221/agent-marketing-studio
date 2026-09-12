@@ -1,7 +1,7 @@
 ---
 schema: campaign/1
 id: CMP-2609-gioi-thieu
-channel: vi-du-studio
+channel: example-studio
 id_prefix: GTX
 name: Giới thiệu xưởng nội dung
 status: active

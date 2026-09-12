@@ -244,7 +244,7 @@ def test_bai_cho_cong_KE_DUONG_DAN_TUONG_DOI():
 
 def test_mot_dong_LOI_khong_lam_sap_ca_trang():
     """Trang ĐỌC không được sập vì một dòng hỏng — người mất luôn cả bản tiến độ."""
-    import tinh_trang as TT
+    import pipeline_state as TT
     goc = TT.buoc_ke
     try:
         TT.buoc_ke = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("dòng hỏng"))

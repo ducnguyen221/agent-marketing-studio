@@ -5,12 +5,12 @@
 ## Nó KHÔNG làm gì
 
 Nó **không** giữ trạng thái duyệt của riêng nó, và từ 12/09/2026 nó cũng **không tự ghi
-cổng** nữa. Mọi phép ghi nằm ở `cong_duyet.py` — kho cổng dùng chung:
+cổng** nữa. Mọi phép ghi nằm ở `approval_gate.py` — kho cổng dùng chung:
 
 ```
   approve_bus.py  (Telegram, tuỳ chọn) ─┐
-                                        ├─► cong_duyet.mo_cong() ─► campaign.md · publish.json
-  cong_duyet.py   (trong phiên, MẶC ĐỊNH)┘
+                                        ├─► approval_gate.mo_cong() ─► campaign.md · publish.json
+  approval_gate.py   (trong phiên, MẶC ĐỊNH)┘
 ```
 
 Vì sao tách: trước đó script này là **con đường DUY NHẤT** ghi được `g1` và `g3`, nên
@@ -70,16 +70,16 @@ sys.stderr.reconfigure(encoding="utf-8")
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 sys.path.insert(0, str(_LIB))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import hang_cho as HC  # noqa: E402
+import work_queue as HC  # noqa: E402
 import md_io  # noqa: E402
-import so_su_kien as SO  # noqa: E402
+import event_log as SO  # noqa: E402
 import telegram_io  # noqa: E402
-import cong_duyet as CD  # noqa: E402
+import approval_gate as CD  # noqa: E402
 
 # File này là MẶT TIỀN Telegram, không phải kho cổng. Mọi phép ghi cổng nằm ở
-# `cong_duyet.py` và mặt tiền trong phiên gọi vào đúng chỗ đó. Tách 12/09/2026 vì trước
+# `approval_gate.py` và mặt tiền trong phiên gọi vào đúng chỗ đó. Tách 12/09/2026 vì trước
 # đó Telegram là con đường DUY NHẤT ghi được `g1`/`g3` — tức là nó không phải tuỳ chọn.
-# Re-export để lời gọi cũ và test cũ không gãy; nơi định nghĩa thật là `cong_duyet`.
+# Re-export để lời gọi cũ và test cũ không gãy; nơi định nghĩa thật là `approval_gate`.
 cho_cong = CD.cho_cong
 doc_phan_hoi = CD.doc_phan_hoi
 TEN_PHAN_HOI = CD.TEN_PHAN_HOI

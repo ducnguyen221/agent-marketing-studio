@@ -76,7 +76,7 @@ def ghi(cam: Path, viec: str, *, bai: str | None = None, boi: str = "",
     except OSError as e:
         # In ra stderr chứ không ném: xem docstring.
         import sys
-        sys.stderr.write(f"so_su_kien: không ghi được sổ ({e}) — việc chính vẫn tiếp tục.\n")
+        sys.stderr.write(f"event_log: không ghi được sổ ({e}) — việc chính vẫn tiếp tục.\n")
 
 
 def doc(cam: Path, *, bai: str | None = None, n: int = 20) -> list[dict]:

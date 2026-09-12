@@ -2,7 +2,7 @@
   "schema": "publish/2",
   "post_id": "GTX-001",
   "campaign_id": "CMP-2609-gioi-thieu",
-  "channel_id": "vi-du-studio",
+  "channel_id": "example-studio",
   "slug": "vi-sao-agent-can-cong-cua-nguoi",
   "title": "Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người",
   "posts": [

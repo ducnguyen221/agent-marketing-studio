@@ -26,10 +26,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
 import approve_bus as AB     # noqa: E402
-import cong_duyet as CD     # noqa: E402
+import approval_gate as CD     # noqa: E402
 import campaign_step as CS   # noqa: E402
 import md_io                 # noqa: E402
-import tinh_trang as TT      # noqa: E402
+import pipeline_state as TT      # noqa: E402
 
 MAU_CAMPAIGN = ROOT / "templates" / "station" / "_channel" / "_campaign" / "campaign.md"
 

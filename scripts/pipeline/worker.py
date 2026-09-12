@@ -23,7 +23,7 @@ Hàng rỗng thì thoát **ngay và êm** — đó là đường chạy bình th
 
 ## Thợ KHÔNG bao giờ tự mở cổng duyệt
 
-`tinh_trang.CAN_NGUOI` đánh dấu `cho-G1` và `cho-G2`. Gặp hai bước đó thợ **trả việc về và
+`pipeline_state.CAN_NGUOI` đánh dấu `cho-G1` và `cho-G2`. Gặp hai bước đó thợ **trả việc về và
 dừng**. Agent tự duyệt bài của chính nó là mất sạch ý nghĩa của cổng.
 """
 from __future__ import annotations
@@ -39,11 +39,11 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 sys.path.insert(0, str(_LIB))
-import bai_noi_dung            # noqa: E402
-import hang_cho as HC          # noqa: E402
+import post_content            # noqa: E402
+import work_queue as HC          # noqa: E402
 import md_io                   # noqa: E402
-import so_su_kien as SO        # noqa: E402
-import tinh_trang as TT        # noqa: E402
+import event_log as SO        # noqa: E402
+import pipeline_state as TT        # noqa: E402
 
 # Bước nào chạy bằng lệnh nào. `sua_lai` cũng chạy `soan` — bước đó tự đọc `phan-hoi.md`.
 LENH = {
@@ -58,7 +58,7 @@ TRAN_VIET_LAI = 3      # bài bị trả lại quá ngần này lần thì dừn
 
 
 def loi(m: str) -> None:
-    sys.stderr.write(f"tho_viec: {m}\n")
+    sys.stderr.write(f"worker: {m}\n")
 
 
 def _so_lan_viet(cam: Path, cid: str, dong: dict) -> int:
@@ -127,7 +127,7 @@ def _da_ra_artefact(buoc: str, bai: Path) -> bool:
     if buoc == "cham-cong":
         return (bai / "gates.json").is_file()
     if buoc in ("soan", "sua-loi-cong"):
-        return bai_noi_dung.da_viet(bai)
+        return post_content.da_viet(bai)
     if buoc == "dung-trang":
         # Trang đã dựng ra file thì bước đã làm được việc. URL có ghi được vào bảng hay
         # không là chuyện của `web_publish`, và nó tự fail-closed ở đó.

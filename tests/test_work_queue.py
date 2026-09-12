@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`scripts/lib/hang_cho.py` — hàng chờ dùng thư mục làm trạng thái.
+"""`scripts/lib/work_queue.py` — hàng chờ dùng thư mục làm trạng thái.
 
 Hàng chờ là thứ đứng giữa "người bấm nút" và "agent chạy 10 phút". Hỏng ở đây thì hoặc
 việc rơi mất (người bấm rồi chẳng thấy gì), hoặc việc chạy hai lần (hai agent cùng viết
@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-import hang_cho as HC  # noqa: E402
+import work_queue as HC  # noqa: E402
 
 
 def _cam(tmp_path):
@@ -51,7 +51,7 @@ def test_hang_rong_tra_ve_None(tmp_path):
     assert HC.nhat(_cam(tmp_path)) is None
 
 
-def test_viec_da_nhat_KHONG_con_trong_hang_cho(tmp_path):
+def test_viec_da_nhat_KHONG_con_trong_work_queue(tmp_path):
     cam = _cam(tmp_path)
     HC.them(cam, "soan", bai="T-001")
     HC.nhat(cam)

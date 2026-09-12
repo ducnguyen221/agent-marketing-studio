@@ -137,5 +137,5 @@ def test_cot_pipeline_step_noi_bai_dang_TAC_o_dau(cam):
     assert h[-1] == "pipeline_step", "cột phải nằm CUỐI — chèn giữa là biểu mẫu cũ lệch cột"
     d = dict(zip(h, [c.value for c in w["Content"][2]]))
     assert d["pipeline_step"], "cột có mà bỏ trống thì thà đừng thêm"
-    import tinh_trang as TT
+    import pipeline_state as TT
     assert d["pipeline_step"] in TT.THU_TU + ["?"], d["pipeline_step"]

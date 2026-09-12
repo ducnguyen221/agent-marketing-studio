@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`scripts/pipeline/tho_viec.py` — thợ nhặt việc và gọi agent.
+"""`scripts/pipeline/worker.py` — thợ nhặt việc và gọi agent.
 
 Thợ là chỗ DUY NHẤT trong hệ tự khởi động một agent mà không có người bấm nút. Hỏng ở đây
 thì hoặc agent tự duyệt bài của chính nó (mất sạch ý nghĩa cổng), hoặc nhiều agent cùng
@@ -12,9 +12,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
-import hang_cho as HC      # noqa: E402
-import so_su_kien as SO    # noqa: E402
-import tho_viec as TV      # noqa: E402
+import work_queue as HC      # noqa: E402
+import event_log as SO    # noqa: E402
+import worker as TV      # noqa: E402
 
 FM = """---
 schema: campaign/1
@@ -157,7 +157,7 @@ def test_MOT_AGENT_MOT_LUC(tmp_path):
 
 # ── hỏng và trần ────────────────────────────────────────────────────────────
 
-def test_buoc_hong_thi_viec_quay_lai_hang_cho(tmp_path):
+def test_buoc_hong_thi_viec_quay_lai_work_queue(tmp_path):
     cam = _cam(tmp_path)
     _bai(cam, viet_that=False)
     HC.them(cam, "tiep", bai="T-001")

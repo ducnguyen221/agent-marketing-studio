@@ -1,4 +1,4 @@
-﻿# run-tho-viec.ps1 — THỢ: nhặt MỘT việc khỏi hàng chờ, làm, rồi thoát.
+﻿# run-worker.ps1 — THỢ: nhặt MỘT việc khỏi hàng chờ, làm, rồi thoát.
 #
 # ## Vì sao một việc rồi thoát, không phải vòng lặp
 #
@@ -25,11 +25,11 @@ $env:PYTHONIOENCODING = 'utf-8'
 $env:PYTHONUTF8 = '1'
 
 if (-not (Test-Path (Join-Path $Campaign 'campaign.md'))) {
-  Write-Host ("run-tho-viec: " + $Campaign + " khong phai thu muc chien dich.")
+  Write-Host ("run-worker: " + $Campaign + " khong phai thu muc chien dich.")
   exit 2
 }
 
-$py = Join-Path $PSScriptRoot (Join-Path '..' (Join-Path 'pipeline' 'tho_viec.py'))
+$py = Join-Path $PSScriptRoot (Join-Path '..' (Join-Path 'pipeline' 'worker.py'))
 
 # Ghi log ra file: task chay `-WindowStyle Hidden` nen moi thu in ra la BIEN MAT.
 $logDir = Join-Path $Campaign 'logs'

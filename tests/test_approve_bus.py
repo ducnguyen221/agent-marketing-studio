@@ -960,11 +960,11 @@ def test_tra_loi_vao_bai_bang_chu_thuong_van_la_nhan_xet(tmp_path):
 # --------------------------------------------------------------------------------------
 
 def _hc():
-    import hang_cho
-    return hang_cho
+    import work_queue
+    return work_queue
 
 
-def test_DUYET_sinh_ra_VIEC_trong_hang_cho(tmp_path):
+def test_DUYET_sinh_ra_VIEC_trong_work_queue(tmp_path):
     """Duyệt xong mà không gì chạy tiếp thì cổng chỉ là cái nút trang trí.
 
     Trước 12/09/2026 poller ghi cột `g1` rồi DỪNG — không task nào chạy bước kế, nên bài
@@ -997,13 +997,13 @@ def test_PHAN_HOI_sinh_ra_VIEC_viet_lai(tmp_path):
 
 def test_moi_quyet_dinh_deu_VAO_SO_SU_KIEN(tmp_path):
     """Sổ sự kiện là thứ duy nhất trả lời được *vì sao* bài tới trạng thái hiện tại."""
-    import so_su_kien
+    import event_log
     cam = _cam(tmp_path)
     AB.gui_cong(cam, "g1", bot=BotGia())
     tok = list(_token_dang_cho(cam))[0]
     AB.nhan(cam, bot=BotGia(hang_doi=[_bam_nut(f"ok:{tok}")]))
 
-    ds = so_su_kien.doc(cam)
+    ds = event_log.doc(cam)
     assert any(x["viec"] == "g1_duyet" for x in ds), [x["viec"] for x in ds]
 
 

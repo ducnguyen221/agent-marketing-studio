@@ -30,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
-import tinh_trang as TT  # noqa: E402
+import pipeline_state as TT  # noqa: E402
 
 try:
     import openpyxl

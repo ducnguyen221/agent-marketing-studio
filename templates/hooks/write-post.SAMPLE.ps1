@@ -1,4 +1,4 @@
-﻿# viet-bai.MAU.ps1 — script MẪU cho `runtime.writer_cmd`. CHÉP VỀ TRẠM RỒI SỬA.
+﻿# write-post.SAMPLE.ps1 — script MẪU cho `runtime.writer_cmd`. CHÉP VỀ TRẠM RỒI SỬA.
 #
 # ## Vì sao đây chỉ là MẪU
 #

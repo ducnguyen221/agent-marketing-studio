@@ -20,7 +20,7 @@ examples/                          ← STATION (trạm)
 ├── CHANNELS.md                    ← sổ kênh: kênh nào ở đâu. Kênh KHÔNG bắt buộc nằm
 │                                     trong trạm; đây là chỗ duy nhất được trỏ ra ngoài.
 ├── index.html                      ← bản đọc TOÀN CẢNH, bấm đúp là mở (build_views.py)
-└── vi-du-studio/                  ← MỘT KÊNH: một giọng, một tập người đọc
+└── example-studio/                  ← MỘT KÊNH: một giọng, một tập người đọc
     ├── channel.yml                ← nền tảng nào, trụ nội dung nào, KPI mặc định
     ├── brand.md                   ← giọng, tác phong, chính kiến — file phẳng, không thư mục
     ├── continuity.json            ← sổ bài đã đăng, để B0 khỏi chọn trùng đề tài
@@ -68,7 +68,7 @@ cho xanh. Một lý do được ghi lại tốt hơn nhiều.
 
 ```bash
 python scripts/pipeline/blog_gates.py \
-  examples/vi-du-studio/CMP-2609-gioi-thieu/GTX-001_vi-sao-agent-can-cong-cua-nguoi \
+  examples/example-studio/CMP-2609-gioi-thieu/GTX-001_vi-sao-agent-can-cong-cua-nguoi \
   --home-domain example.vn
 ```
 
@@ -90,9 +90,9 @@ python scripts/pipeline/export_excel.py --station ./examples
 
 # tách content.md ra các file đem đăng
 python scripts/pipeline/gen_article.py \
-  --content-md examples/vi-du-studio/CMP-2609-gioi-thieu/GTX-001_.../content.md \
-  --meta       examples/vi-du-studio/CMP-2609-gioi-thieu/GTX-001_.../meta.json \
-  --out-dir    examples/vi-du-studio/CMP-2609-gioi-thieu/GTX-001_...
+  --content-md examples/example-studio/CMP-2609-gioi-thieu/GTX-001_.../content.md \
+  --meta       examples/example-studio/CMP-2609-gioi-thieu/GTX-001_.../meta.json \
+  --out-dir    examples/example-studio/CMP-2609-gioi-thieu/GTX-001_...
 ```
 
 `check_tree` sẽ báo **2 nhắc**: GTX-002 và GTX-003 chưa có `publish.json`. Đúng — hai bài

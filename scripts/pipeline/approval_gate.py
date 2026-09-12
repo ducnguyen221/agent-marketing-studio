@@ -14,8 +14,8 @@ Nên tách làm hai tầng:
 ```
         mặt tiền                       kho cổng                  chỗ ở thật
   approve_bus.py  (Telegram) ─┐
-                              ├─► cong_duyet.mo_cong() ─► campaign.md · publish.json
-  cong_duyet.py   (trong phiên)┘
+                              ├─► approval_gate.mo_cong() ─► campaign.md · publish.json
+  approval_gate.py   (trong phiên)┘
 ```
 
 Hai mặt tiền NGANG HÀNG. Cái nào cũng ghi vào đúng một chỗ, đúng một cách, cùng để lại
@@ -46,9 +46,9 @@ Gộp hai thứ vào đây thì một trong hai đường sẽ làm việc hai l
 ## Lệnh (dùng trong phiên, không cần Telegram)
 
 ```
-cong_duyet.py <chiến dịch> cho     --cong g1|g2|g3 [--json]
-cong_duyet.py <chiến dịch> mo      --cong g1|g2|g3 --bai A,B --boi "Đức" --nguyen-van "..."
-cong_duyet.py <chiến dịch> tu-choi --cong g1|g2|g3 --bai A   --boi "Đức" --nguyen-van "..."
+approval_gate.py <chiến dịch> cho     --cong g1|g2|g3 [--json]
+approval_gate.py <chiến dịch> mo      --cong g1|g2|g3 --bai A,B --boi "Đức" --nguyen-van "..."
+approval_gate.py <chiến dịch> tu-choi --cong g1|g2|g3 --bai A   --boi "Đức" --nguyen-van "..."
 ```
 
 `cho` in kèm **đường dẫn file để mở** — đó là thứ người cần để duyệt thật thay vì gật bừa.
@@ -67,9 +67,9 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "lib"))
-import bai_noi_dung  # noqa: E402
+import post_content  # noqa: E402
 import md_io  # noqa: E402
-import so_su_kien as SO  # noqa: E402
+import event_log as SO  # noqa: E402
 
 CONG = ("g1", "g2", "g3")
 
@@ -80,7 +80,7 @@ TEN_PHAN_HOI = "tg-phan-hoi.json"
 
 
 def loi(m: str) -> None:
-    sys.stderr.write(f"cong_duyet: {m}\n")
+    sys.stderr.write(f"approval_gate: {m}\n")
 
 
 # ── Bảng Content ────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ def da_viet_bai(cam: Path, dong: dict) -> bool:
     f = (dong.get("folder") or "").strip()
     if not f:
         return False
-    return bai_noi_dung.da_viet(Path(cam) / f.lstrip("./"))
+    return post_content.da_viet(Path(cam) / f.lstrip("./"))
 
 
 def vi_sao_chua_duoc_hoi(cam: Path, dong: dict) -> str:

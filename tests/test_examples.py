@@ -15,7 +15,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 VD = ROOT / "examples"
-KENH = VD / "vi-du-studio"
+KENH = VD / "example-studio"
 CAM = KENH / "CMP-2609-gioi-thieu"
 BAI = CAM / "GTX-001_vi-sao-agent-can-cong-cua-nguoi"
 

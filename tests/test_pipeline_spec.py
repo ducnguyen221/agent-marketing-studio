@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Cổng canh: `knowledge/data_model/duong_ong.yaml` phải KHỚP với code đang chạy.
+"""Cổng canh: `knowledge/data_model/pipeline.yaml` phải KHỚP với code đang chạy.
 
-Đường ống được mô tả ở bốn chỗ — thứ tự trạng thái (`tinh_trang.THU_TU`), bước nào chạy
-lệnh nào (`tho_viec.LENH`), ba cổng (`cong_duyet.CONG`), và văn xuôi trong tài liệu. Bốn
+Đường ống được mô tả ở bốn chỗ — thứ tự trạng thái (`pipeline_state.THU_TU`), bước nào chạy
+lệnh nào (`worker.LENH`), ba cổng (`approval_gate.CONG`), và văn xuôi trong tài liệu. Bốn
 chỗ thì sớm muộn chúng nói khác nhau, và agent đọc trúng chỗ nào thì theo chỗ đó.
 
 Cổng này không thay người đọc. Nó chỉ đảm bảo bản mô tả và bản thi hành **không lệch nhau
-trong im lặng** — đúng lớp lỗi mà `test_docs_khong_troi` canh cho văn xuôi.
+trong im lặng** — đúng lớp lỗi mà `test_docs_drift` canh cho văn xuôi.
 
 Tài liệu đi TRƯỚC code là cách hỏng đã có tên trong sổ này: khai một khoá mà engine lặng
 lẽ bỏ qua, và không gì báo.
@@ -21,11 +21,11 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
-import cong_duyet as CD  # noqa: E402
-import tho_viec as TV  # noqa: E402
-import tinh_trang as TT  # noqa: E402
+import approval_gate as CD  # noqa: E402
+import worker as TV  # noqa: E402
+import pipeline_state as TT  # noqa: E402
 
-DD = ROOT / "knowledge" / "data_model" / "duong_ong.yaml"
+DD = ROOT / "knowledge" / "data_model" / "pipeline.yaml"
 SPEC = yaml.safe_load(DD.read_text(encoding="utf-8"))
 
 
@@ -33,12 +33,12 @@ def test_file_ton_tai_va_doc_duoc():
     assert SPEC and SPEC.get("schema") == "duong_ong/1"
 
 
-def test_thu_tu_buoc_KHOP_tinh_trang():
+def test_thu_tu_buoc_KHOP_pipeline_state():
     """Sai thứ tự là agent đoán sai bước kế tiếp, và nó đoán rất tự tin."""
     assert [b["ma"] for b in SPEC["buoc"]] == TT.THU_TU
 
 
-def test_buoc_can_nguoi_KHOP_tinh_trang():
+def test_buoc_can_nguoi_KHOP_pipeline_state():
     trong_yaml = {b["ma"] for b in SPEC["buoc"] if b["loai"] == "cong"}
     assert trong_yaml == TT.CAN_NGUOI
 
@@ -53,14 +53,14 @@ def test_moi_buoc_cong_deu_tro_toi_mot_cong_co_that():
             assert b["cong"] in SPEC["cong"], b["ma"]
 
 
-def test_lenh_cua_tung_buoc_KHOP_tho_viec():
+def test_lenh_cua_tung_buoc_KHOP_worker():
     """Thợ tra bảng này để biết chạy gì. Mô tả sai thì người sửa nhầm chỗ."""
     trong_yaml = {b["ma"]: b["lenh"] for b in SPEC["buoc"]
                   if b["loai"] == "buoc" and b.get("lenh")}
     assert trong_yaml == TV.LENH
 
 
-def test_tran_lap_KHOP_tho_viec():
+def test_tran_lap_KHOP_worker():
     tran = [b.get("tran_lap") for b in SPEC["buoc"] if b["ma"] == "sua-loi-cong"][0]
     assert tran == TV.TRAN_VIET_LAI
 
@@ -83,7 +83,7 @@ def test_hai_che_do_chay_deu_duoc_mo_ta_du():
 
 # ── Tài liệu hứa lệnh nào thì lệnh đó phải có thật ──────────────────────────
 
-DOC = ROOT / "knowledge" / "toolchains" / "QUY_TRINH_TRONG_PHIEN.md"
+DOC = ROOT / "knowledge" / "toolchains" / "IN_SESSION_PIPELINE.md"
 
 
 RE_KHOI = re.compile(r"```\n(.*?)```", re.S)

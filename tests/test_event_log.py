@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`scripts/lib/so_su_kien.py` — sổ sự kiện chỉ-nối-thêm.
+"""`scripts/lib/event_log.py` — sổ sự kiện chỉ-nối-thêm.
 
 Mỗi test dưới đây chặn một cách hỏng đã có thật trong dự án này, hoặc một cách hỏng mà
 hình dạng "gộp trạng thái + lịch sử vào một YAML" chắc chắn sẽ mở ra.
@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
-import so_su_kien as SO  # noqa: E402
+import event_log as SO  # noqa: E402
 
 
 def _cam(tmp_path):

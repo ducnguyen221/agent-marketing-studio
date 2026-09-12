@@ -34,7 +34,7 @@ nguyên dấu `\`, và dấu `;` trong cấu hình không thành lệnh thứ ha
 
 ## Cách dùng
 
-1. Chép `viet-bai.MAU.ps1` sang **trạm** của bạn (cạnh `channel.yml`), đổi tên bỏ chữ `MAU`.
+1. Chép `write-post.SAMPLE.ps1` sang **trạm** của bạn (cạnh `channel.yml`), đổi tên bỏ chữ `MAU`.
 2. Sửa đúng một dòng: chỗ gọi CLI. Phần còn lại là hợp đồng, đừng đổi.
 3. Khai vào `campaign.md`:
 

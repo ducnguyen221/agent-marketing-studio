@@ -3,7 +3,7 @@
 > Tài liệu **cấp HỆ THỐNG** — trả lời: *tin nhắn của người đi vào máy bằng đường nào, ai
 > nghe, ai làm, và khi đứt thì nối lại ra sao.*
 >
-> Ba tài liệu anh em: [`QUY_TRINH_CHIEN_DICH.md`](QUY_TRINH_CHIEN_DICH.md) (thứ tự bước và
+> Ba tài liệu anh em: [`CAMPAIGN_PIPELINE.md`](CAMPAIGN_PIPELINE.md) (thứ tự bước và
 > cổng) · [`APPROVAL_BUS.md`](APPROVAL_BUS.md) (cơ chế cổng) · file này (**vòng đời tiến
 > trình và tính bền**).
 
@@ -242,10 +242,10 @@ rồi, phải < 180) · `cho_g1`/`cho_g2` (bài nào đang chờ cổng nào).
 
 | Mảnh | File | Vì sao có nó |
 |---|---|---|
-| Sổ sự kiện | `lib/so_su_kien.py` → `logs/su-kien.jsonl` | Trả lời *vì sao* bài tới trạng thái đó. Chỉ nối thêm nên không có cuộc đua |
-| Trạng thái suy ra | `lib/tinh_trang.py` → `tinh-trang` | Agent nối lại việc tốn **~350 token** thay vì 9.555 |
-| Hàng chờ | `lib/hang_cho.py` → `logs/viec/` | Poller ghi việc rồi đi tiếp; không bao giờ tự chạy bước nặng |
-| Thợ | `pipeline/tho_viec.py` | Nhặt MỘT việc, gọi agent, rồi thoát |
+| Sổ sự kiện | `lib/event_log.py` → `logs/su-kien.jsonl` | Trả lời *vì sao* bài tới trạng thái đó. Chỉ nối thêm nên không có cuộc đua |
+| Trạng thái suy ra | `lib/pipeline_state.py` → `tinh-trang` | Agent nối lại việc tốn **~350 token** thay vì 9.555 |
+| Hàng chờ | `lib/work_queue.py` → `logs/viec/` | Poller ghi việc rồi đi tiếp; không bao giờ tự chạy bước nặng |
+| Thợ | `pipeline/worker.py` | Nhặt MỘT việc, gọi agent, rồi thoát |
 
 **Ba luật đã trả giá để có, đừng gỡ:**
 
@@ -273,7 +273,7 @@ Ba hook cho phần phụ thuộc máy, cùng luật với `writer_cmd`: `audio_c
 có web vẫn chạy trót lọt.
 
 ⚠️ `dang` là **tên cũ** của `dung-trang`. Bản cũ không ghi URL ngược vào bảng nên
-`tinh_trang` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần nữa. Nay nó uỷ
+`pipeline_state` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần nữa. Nay nó uỷ
 quyền cho `dung-trang`; lệnh cũ vẫn chạy và được luôn phần ghi URL.
 
 ## 7. Bảng tra nhanh khi có sự cố

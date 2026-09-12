@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`scripts/pipeline/cong_duyet.py` — kho cổng dùng chung + mặt tiền TRONG PHIÊN.
+"""`scripts/pipeline/approval_gate.py` — kho cổng dùng chung + mặt tiền TRONG PHIÊN.
 
 Trước 12/09/2026 chỉ Telegram ghi được `g1` và `g3`. Nghĩa là cách làm việc MẶC ĐỊNH —
 người ngồi cùng agent trong một phiên, mở file trên máy rồi gật — không có đường ghi cổng
@@ -21,9 +21,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
-import cong_duyet as CD  # noqa: E402
-import hang_cho as HC  # noqa: E402
-import so_su_kien as SO  # noqa: E402
+import approval_gate as CD  # noqa: E402
+import work_queue as HC  # noqa: E402
+import event_log as SO  # noqa: E402
 
 FM = """---
 schema: campaign/1

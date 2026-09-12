@@ -52,12 +52,12 @@ sys.stderr.reconfigure(encoding="utf-8")
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "lib"))
 sys.path.insert(0, str(_HERE))
-import bai_noi_dung  # noqa: E402
-import tinh_trang as TT  # noqa: E402
+import post_content  # noqa: E402
+import pipeline_state as TT  # noqa: E402
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import approve_bus as AB  # noqa: E402
-import cong_duyet as CD  # noqa: E402
+import approval_gate as CD  # noqa: E402
 
 TRUOC_MAC_DINH = 7
 
@@ -201,16 +201,16 @@ def buoc_dung_bai(cam: Path, *, bot, truoc: int | None = None,
 
 # ── Bước 2: soạn ────────────────────────────────────────────────────────────
 
-TOI_THIEU_BLOG = bai_noi_dung.TOI_THIEU_BLOG   # giữ tên cũ, nguồn ở lib
+TOI_THIEU_BLOG = post_content.TOI_THIEU_BLOG   # giữ tên cũ, nguồn ở lib
 
 
 def _da_viet(bai: Path) -> bool:
-    """Uỷ quyền cho `lib/bai_noi_dung.da_viet` — luật DÙNG CHUNG với cổng duyệt G2.
+    """Uỷ quyền cho `lib/post_content.da_viet` — luật DÙNG CHUNG với cổng duyệt G2.
 
     Giữ lại tên riêng ở đây vì đã có nhiều chỗ gọi; thân bài thì không còn ở đây nữa. Hai
     bản chép tay sẽ trôi khỏi nhau, và cổng duyệt phải hỏi đúng câu mà bước soạn đang hỏi.
     """
-    return bai_noi_dung.da_viet(bai)
+    return post_content.da_viet(bai)
 
 
 def tach_lenh(lenh: str) -> list[str]:
@@ -359,7 +359,7 @@ def buoc_dang(cam: Path, *, bot, uat=False, dry_run=False, chay=None,
     """⚠️ TÊN CŨ — nay uỷ quyền cho `dung-trang`. Giữ lại để lệnh cũ không gãy.
 
     Bản cũ chỉ bọc `web_publish.py` và **không ghi URL ngược vào bảng Content**. Thiếu đúng
-    chỗ đó nên `tinh_trang` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần
+    chỗ đó nên `pipeline_state` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần
     nữa. `dung-trang` làm đủ: dựng tiếng (nếu khai), dựng trang, đăng, rồi GHI URL.
 
     Hai bước làm gần giống nhau là chỗ sinh nhầm lẫn, nên gộp về một. Ai đang gọi
@@ -480,7 +480,7 @@ def bai_cho_phat_hanh(cam: Path) -> list[dict]:
         if (d.get("published") or "").strip():
             continue
         # Cổng 3 bật bằng cách KHAI CỘT. Bảng cũ không khai thì không có cổng này —
-        # cùng luật với `tinh_trang.buoc_ke`, và hai chỗ phải nói giống nhau.
+        # cùng luật với `pipeline_state.buoc_ke`, và hai chỗ phải nói giống nhau.
         if "g3" in d and not (d.get("g3") or "").strip():
             continue
         if not (d.get("folder") or "").strip():

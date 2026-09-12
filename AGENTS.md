@@ -14,7 +14,7 @@ canonical: true
 > **Chiến dịch dài kỳ chạy TRONG PHIÊN là mặc định** — agent đi trọn đường ống, dừng ở
 > mỗi cổng hỏi người ngay tại chỗ và kê đường dẫn file để người mở kiểm. Telegram là mặt
 > tiền thứ hai của cùng kho cổng, dùng khi người không ngồi trước máy. Hợp đồng đầy đủ:
-> [`knowledge/toolchains/QUY_TRINH_TRONG_PHIEN.md`](knowledge/toolchains/QUY_TRINH_TRONG_PHIEN.md).
+> [`knowledge/toolchains/IN_SESSION_PIPELINE.md`](knowledge/toolchains/IN_SESSION_PIPELINE.md).
 
 ---
 
@@ -31,7 +31,7 @@ canonical: true
   - Thay đổi cấu trúc bảng tính hoặc thêm trường dữ liệu mới vào Data Model.
 - **Never (Tuyệt đối cấm):**
   - Tự ý đánh dấu đã duyệt ở bất kỳ cổng nào (1, 2 hoặc 3).
-  - Ghi cổng mà không chép được NGUYÊN VĂN câu duyệt của người — `cong_duyet.py` từ chối chạy.
+  - Ghi cổng mà không chép được NGUYÊN VĂN câu duyệt của người — `approval_gate.py` từ chối chạy.
   - Tự ý xuất bản (Publish) ra môi trường live khi chưa có lệnh tường minh.
   - Đọc, lưu trữ hoặc in ra các API token, private keys, thông tin cá nhân khách hàng (PII).
   - Điền `0` thay cho các ô chưa có dữ liệu (ô rỗng là một giá trị hợp lệ).

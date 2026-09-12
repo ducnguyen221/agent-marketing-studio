@@ -1,6 +1,6 @@
 ---
 schema: brand/1
-channel: vi-du-studio
+channel: example-studio
 label: "Ví dụ · Xưởng nội dung"
 tagline: "Xưởng nội dung chạy bằng agent, kể lại đúng như nó chạy"
 tagline_short: "Xưởng nội dung chạy bằng agent"

@@ -7,26 +7,26 @@
 Agent ngồi cùng người trong một phiên không cần biết mười trạng thái và năm lệnh con. Nó
 gọi đúng một lệnh, và lệnh này:
 
-1. suy bước kế tiếp của từng bài (`tinh_trang`),
+1. suy bước kế tiếp của từng bài (`pipeline_state`),
 2. chạy tới khi đụng **cổng người**,
 3. **DỪNG** và trả về đúng thứ agent cần đọc cho người nghe: bài nào, chờ cổng nào, câu hỏi
    là gì, và **mở file nào để trả lời được câu hỏi đó**.
 
 Nó **không bao giờ tự mở cổng**. Mở cổng cần câu nói của người, và câu đó phải đi qua
-`cong_duyet.mo_cong(--nguyen-van ...)`.
+`approval_gate.mo_cong(--nguyen-van ...)`.
 
-## Khác gì `tho_viec.py`
+## Khác gì `worker.py`
 
 Cùng chạy một đường ống, khác chủ:
 
-| | `tho_viec.py` | `chay_quy_trinh.py` |
+| | `worker.py` | `run_pipeline.py` |
 |---|---|---|
 | ai gọi | scheduled task, chạy nền | **agent, trong phiên** |
 | lấy việc từ | hàng chờ (`logs/viec/`) | người chỉ định, hoặc suy từ bảng |
 | mỗi lượt | đúng MỘT việc rồi thoát | chạy tới khi đụng cổng |
 | tới cổng thì | trả việc về, báo Telegram | **in ra cho agent hỏi người ngay** |
 
-Hai đường dùng chung mọi thứ bên dưới — cùng `campaign_step`, cùng `tinh_trang`, cùng kho
+Hai đường dùng chung mọi thứ bên dưới — cùng `campaign_step`, cùng `pipeline_state`, cùng kho
 cổng. Chạy đường nào cũng để lại cùng một dấu vết.
 
 ## Hai chế độ
@@ -39,8 +39,8 @@ cổng. Chạy đường nào cũng để lại cùng một dấu vết.
 ## Lệnh
 
 ```
-chay_quy_trinh.py <chiến dịch> tinh-hinh [--json]
-chay_quy_trinh.py <chiến dịch> chay [--che-do tung-bai|theo-giai-doan]
+run_pipeline.py <chiến dịch> tinh-hinh [--json]
+run_pipeline.py <chiến dịch> chay [--che-do tung-bai|theo-giai-doan]
                                     [--bai A,B | --so-bai N] [--toi-buoc <bước>]
                                     [--json] [--dry-run]
 ```
@@ -60,15 +60,15 @@ sys.stderr.reconfigure(encoding="utf-8")
 _HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(_HERE.parent / "lib"))
 sys.path.insert(0, str(_HERE))
-import cong_duyet as CD  # noqa: E402
-import tho_viec as TV  # noqa: E402
-import tinh_trang as TT  # noqa: E402
+import approval_gate as CD  # noqa: E402
+import worker as TV  # noqa: E402
+import pipeline_state as TT  # noqa: E402
 
 CHE_DO = ("tung-bai", "theo-giai-doan")
 SO_BAI_MAC_DINH = 5
 
 # Trần an toàn cho MỘT lượt gọi. Không phải giới hạn nghiệp vụ — nó chặn ca vòng lặp: một
-# bước báo xong mà `tinh_trang` vẫn suy ra đúng bước đó thì hai bên quay tít cho tới hết
+# bước báo xong mà `pipeline_state` vẫn suy ra đúng bước đó thì hai bên quay tít cho tới hết
 # quota. Trần nhỏ hơn số bước của đường ống là hụt, nên lấy gấp đôi.
 TRAN_BUOC_MOI_BAI = 2 * len(TT.THU_TU)
 
@@ -78,7 +78,7 @@ KHONG_CO_ARTEFACT = {"dung-bai"}
 
 
 def loi(m: str) -> None:
-    sys.stderr.write(f"chay_quy_trinh: {m}\n")
+    sys.stderr.write(f"run_pipeline: {m}\n")
 
 
 # ── Đọc tình hình ───────────────────────────────────────────────────────────
@@ -138,7 +138,7 @@ def chon_bai(cam: Path, *, bai: list[str] | None, so_bai: int | None) -> list[st
 def _chay_mot_buoc(cam: Path, cid: str, buoc: str, *, chay) -> dict:
     """Chạy một bước cho một bài và kết luận theo ARTEFACT, không theo mã thoát.
 
-    Cùng luật với `tho_viec._da_ra_artefact`: `blog_gates` trả mã 1 khi cổng đỏ và `soan`
+    Cùng luật với `worker._da_ra_artefact`: `blog_gates` trả mã 1 khi cổng đỏ và `soan`
     trả khác 0 khi bài chưa đạt — cả hai ĐÃ LÀM XONG VIỆC. Đọc mã thoát rồi kết luận hỏng
     thì đúng những bài cần đi tiếp lại bị làm lại rồi vứt đi.
     """
@@ -290,9 +290,9 @@ def _in_ket_qua(kq: dict) -> None:
                 print(f"      {nhan:<16} {p}")
             if h.get("web"):
                 print(f"      {'bản thật':<16} {h['web']}")
-        print(f"\n  Duyệt:   cong_duyet.py <chiến dịch> mo --cong {cong} "
+        print(f"\n  Duyệt:   approval_gate.py <chiến dịch> mo --cong {cong} "
               f"--bai <mã> --boi \"<tên>\" --nguyen-van \"<câu người nói>\"")
-        print(f"  Từ chối: cong_duyet.py <chiến dịch> tu-choi --cong {cong} "
+        print(f"  Từ chối: approval_gate.py <chiến dịch> tu-choi --cong {cong} "
               f"--bai <mã> --boi \"<tên>\" --nguyen-van \"<nhận xét>\"\n")
     if kq["xong_han"]:
         print(f"✅ xong hẳn: {', '.join(kq['xong_han'])}")

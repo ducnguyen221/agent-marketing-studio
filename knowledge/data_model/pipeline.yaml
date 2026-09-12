@@ -1,12 +1,12 @@
 # Đường ống chiến dịch — BẢN MÔ TẢ MÁY ĐỌC ĐƯỢC
 #
-# Vì sao có file này: đường ống đang được mô tả ở BỐN chỗ — `tinh_trang.THU_TU` (thứ tự),
-# `tho_viec.LENH` (bước nào chạy lệnh nào), `cong_duyet.CONG` (ba cổng), và văn xuôi trong
+# Vì sao có file này: đường ống đang được mô tả ở BỐN chỗ — `pipeline_state.THU_TU` (thứ tự),
+# `worker.LENH` (bước nào chạy lệnh nào), `approval_gate.CONG` (ba cổng), và văn xuôi trong
 # tài liệu. Bốn chỗ thì sớm muộn chúng nói khác nhau, và agent đọc trúng chỗ nào thì theo
 # chỗ đó.
 #
 # File này là bản mô tả để NGƯỜI và AGENT đọc; code vẫn là nơi thi hành. Chúng không được
-# phép lệch nhau, và `tests/test_duong_ong_khop.py` là cổng canh: đổi code mà quên đổi đây
+# phép lệch nhau, và `tests/test_pipeline_spec.py` là cổng canh: đổi code mà quên đổi đây
 # (hoặc ngược lại) thì test đỏ.
 #
 # ⚠️ Đây KHÔNG phải file cấu hình — sửa nó không đổi hành vi của bất kỳ script nào.
@@ -15,8 +15,8 @@ schema: duong_ong/1
 cap_nhat: '2026-09-12'
 
 # ── Ba cổng người ───────────────────────────────────────────────────────────
-# Mở cổng luôn đi qua `cong_duyet.mo_cong()`, bất kể mặt tiền nào. Hai mặt tiền ngang hàng:
-#   · trong phiên (MẶC ĐỊNH) — `cong_duyet.py`
+# Mở cổng luôn đi qua `approval_gate.mo_cong()`, bất kể mặt tiền nào. Hai mặt tiền ngang hàng:
+#   · trong phiên (MẶC ĐỊNH) — `approval_gate.py`
 #   · Telegram   (TUỲ CHỌN) — `approve_bus.py`
 cong:
   g1:
@@ -141,7 +141,7 @@ bao_cao_moi_buoc:
 noi_giu_trang_thai:
   bang_content: campaign.md giữa hai mốc CONTENT:BEGIN / CONTENT:END — bảng ĐIỀU PHỐI
   publish_json: <thư mục bài>/publish.json — dấu vết duyệt Cổng 2 và link từng kênh
-  so_su_kien: logs/su-kien.jsonl — chỉ nối thêm, trả lời "vì sao bài tới trạng thái này"
-  hang_cho: logs/viec/{cho,dang-lam,xong,hong}/ — thư mục LÀ trạng thái
+  event_log: logs/su-kien.jsonl — chỉ nối thêm, trả lời "vì sao bài tới trạng thái này"
+  work_queue: logs/viec/{cho,dang-lam,xong,hong}/ — thư mục LÀ trạng thái
   phan_hoi: logs/tg-phan-hoi.json — nhận xét của người, vòng viết lại đọc chỗ này
   khong_phai_nguon: chiến dịch cũ còn file .xlsx — đó là BẢN XUẤT, không phải nguồn

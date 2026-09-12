@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`scripts/pipeline/chay_quy_trinh.py` — điều phối đường ống TRONG PHIÊN.
+"""`scripts/pipeline/run_pipeline.py` — điều phối đường ống TRONG PHIÊN.
 
 Đây là lối vào một cửa cho agent ngồi cùng người. Bốn thứ file này canh:
 
@@ -20,8 +20,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
-import chay_quy_trinh as Q  # noqa: E402
-import cong_duyet as CD  # noqa: E402
+import run_pipeline as Q  # noqa: E402
+import approval_gate as CD  # noqa: E402
 
 FM = """---
 schema: campaign/1

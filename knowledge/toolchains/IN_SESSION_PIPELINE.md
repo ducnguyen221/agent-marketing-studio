@@ -5,11 +5,11 @@
 >
 > **Telegram là TUỲ CHỌN**, dùng khi người không ngồi trước máy. Nó là mặt tiền thứ hai của
 > đúng cùng một kho cổng, không phải một quy trình khác. Xem
-> [`TELEGRAM_LAM_TRUNG_GIAN.md`](TELEGRAM_LAM_TRUNG_GIAN.md).
+> [`TELEGRAM_BRIDGE.md`](TELEGRAM_BRIDGE.md).
 >
 > Bản mô tả máy đọc được của mọi thứ dưới đây:
-> [`../data_model/duong_ong.yaml`](../data_model/duong_ong.yaml). Đổi một bên mà quên bên kia
-> thì `tests/test_duong_ong_khop.py` đỏ.
+> [`../data_model/pipeline.yaml`](../data_model/pipeline.yaml). Đổi một bên mà quên bên kia
+> thì `tests/test_pipeline_spec.py` đỏ.
 
 ## 1. Một hình vẽ
 
@@ -31,7 +31,7 @@ Ba cổng là của **người**. Sáu bước còn lại agent chạy được 
 ### Bước 0 — nhìn tình hình trước khi động vào gì
 
 ```
-python scripts/pipeline/chay_quy_trinh.py <chiến dịch> tinh-hinh
+python scripts/pipeline/run_pipeline.py <chiến dịch> tinh-hinh
 ```
 
 Trả về bài nào đang ở bước nào, xếp theo đúng thứ tự đường ống. **Đọc cái này trước** thay
@@ -52,7 +52,7 @@ làm hết (`--so-bai 0`). Mặc định 5 nếu người không nói gì.
 ### Bước 2 — chạy tới cổng gần nhất
 
 ```
-python scripts/pipeline/chay_quy_trinh.py <chiến dịch> chay \
+python scripts/pipeline/run_pipeline.py <chiến dịch> chay \
        --che-do theo-giai-doan --so-bai 5
 ```
 
@@ -71,7 +71,7 @@ và cổng thành con dấu cao su:
 5. nếu đã tới cổng — **câu hỏi cần người trả lời**, và **danh sách file phải đọc** trước khi
    trả lời
 
-`chay_quy_trinh.py` in sẵn mục 5 dưới dạng bảng file. Agent chép lại vào câu trả lời của
+`run_pipeline.py` in sẵn mục 5 dưới dạng bảng file. Agent chép lại vào câu trả lời của
 mình, không bắt người tự đi lục thư mục.
 
 ### Bước 4 — người trả lời, agent GHI LẠI
@@ -80,10 +80,10 @@ Người nói "ok, duyệt bài 004 và 005" hay "bài 004 mở bài dài quá, 
 kho cổng, **chép nguyên văn câu người vừa nói**:
 
 ```
-python scripts/pipeline/cong_duyet.py <chiến dịch> mo --cong g2 \
+python scripts/pipeline/approval_gate.py <chiến dịch> mo --cong g2 \
        --bai NEN-004,NEN-005 --boi "Đức" --nguyen-van "ok, duyệt bài 004 và 005"
 
-python scripts/pipeline/cong_duyet.py <chiến dịch> tu-choi --cong g2 \
+python scripts/pipeline/approval_gate.py <chiến dịch> tu-choi --cong g2 \
        --bai NEN-004 --boi "Đức" --nguyen-van "mở bài dài quá, cắt bớt"
 ```
 
@@ -122,7 +122,7 @@ này, và chiến dịch cũ chạy y như trước.
   bài cần sửa thì không ai sửa.
 - Chiều ngược lại: bộ viết chạy êm, mã 0, mà `content.md` vẫn là khuôn trống.
 
-Cách chữa cho cả hai: **hỏi artefact** mà bước đó phải sinh ra. `chay_quy_trinh.py` đã làm
+Cách chữa cho cả hai: **hỏi artefact** mà bước đó phải sinh ra. `run_pipeline.py` đã làm
 sẵn; agent gọi tay từng lệnh con thì phải tự nhớ.
 
 ### Việc theo BÀI, đừng để bước quét cả chiến dịch
@@ -137,7 +137,7 @@ kéo hàng giờ.
 Ba trường hợp, không phải mặc định:
 
 1. **Người không ngồi trước máy** mà vẫn muốn duyệt.
-2. **Chạy theo lịch** — thợ `tho_viec.py` chạy nền, tới cổng thì phải báo ai đó.
+2. **Chạy theo lịch** — thợ `worker.py` chạy nền, tới cổng thì phải báo ai đó.
 3. **Người chủ động xin** — "gửi lên Telegram cho tôi duyệt".
 
 Trong phiên, agent **có thể đề nghị** gửi Telegram nếu thấy người sắp rời máy, nhưng mặc
@@ -148,7 +148,7 @@ lại cùng một dấu vết và không bao giờ lệch nhau.
 
 | Muốn gì | Mở cái gì |
 |---|---|
-| Nhìn nhanh trong phiên | `chay_quy_trinh.py <cd> tinh-hinh` |
+| Nhìn nhanh trong phiên | `run_pipeline.py <cd> tinh-hinh` |
 | Trang đọc, bấm đúp là mở | `campaign.html` — mục *Tiến độ đường ống* và *Đang chờ mình quyết*, có link mở thẳng từng file |
 | Bảng để lọc / xoay / gửi người khác | `export_excel.py --campaign <cd>` — cột `pipeline_step` nói bài tắc ở đâu |
 | Vì sao bài tới trạng thái này | `logs/su-kien.jsonl` |
@@ -159,7 +159,7 @@ Sinh lại trang đọc: `python scripts/pipeline/build_views.py --campaign <cd>
 
 - **Không tự mở cổng.** Kể cả khi chắc chắn người sẽ đồng ý.
 - **Không bịa `--nguyen-van`.** Câu đó phải là câu người thật sự đã nói.
-- **Không sửa tay bảng Content** để đánh dấu duyệt. Đi qua `cong_duyet.py` để còn dấu vết
+- **Không sửa tay bảng Content** để đánh dấu duyệt. Đi qua `approval_gate.py` để còn dấu vết
   trong sổ sự kiện và để giữ tính idempotent.
 - **Không đọc `.xlsx` làm nguồn.** Nó là bản xuất một chiều; nguồn là `campaign.md`.
 - **Không báo "đã đăng" khi kênh hỏng.** Báo phát hành trong khi chưa là cách hỏng tệ nhất —

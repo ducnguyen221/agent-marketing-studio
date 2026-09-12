@@ -36,7 +36,7 @@ Quy tắc format FB chung:
 - **Thân bài KHÔNG chứa URL nào** — link đi vào comment đầu tiên. (Dòng cũ ở đây nói
   ngược lại và sống sót qua đợt đổi luật 04/09 vì nằm ở mục *format* chứ không ở mục
   *Facebook*. Một file mang hai luật trái nhau là cách luật cũ hồi sinh — nay có
-  `tests/test_docs_khong_troi.py` chặn.)
+  `tests/test_docs_drift.py` chặn.)
 - **KHÔNG markdown** — FB render `**`, `#heading`, `_` literal. Nhấn mạnh bằng **Unicode bold**
   (script tự convert tiêu đề phụ), ngắt section bằng `———————`.
 - **Emoji:** nhóm đầu mỗi phần (🧠🚀🪄🎯💡⚠️) + emoji-số cho bước (1️⃣2️⃣3️⃣); action 👉😄🔥 rải 1–2/đoạn.

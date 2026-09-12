@@ -180,7 +180,7 @@ def test_ten_cu_dang_van_chay_duoc_va_GHI_URL(tmp_path):
     """`dang` là tên cũ. Lệnh cũ không được gãy, và phải được luôn phần ghi URL.
 
     Bản cũ chỉ bọc `web_publish` và KHÔNG ghi URL ngược vào bảng — thiếu đúng chỗ đó nên
-    `tinh_trang` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần nữa.
+    `pipeline_state` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần nữa.
     """
     cam = _cam(tmp_path)
     s = (cam / "campaign.md").read_text(encoding="utf-8")

@@ -28,7 +28,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import bai_noi_dung
+import post_content
 import md_io
 
 # Thứ tự đường ống. Dùng để sắp xếp báo cáo, và để thợ biết bước nào đi trước bước nào.
@@ -54,7 +54,7 @@ def buoc_ke(cam: Path, d: dict) -> str:
     if not bai or not bai.is_dir():
         return "dung-bai"
 
-    if not bai_noi_dung.da_viet(bai):
+    if not post_content.da_viet(bai):
         return "soan"
 
     g = bai / "gates.json"

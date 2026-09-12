@@ -34,7 +34,7 @@ Bốn prompt bơm thẳng vào model, **không qua bộ dựng markdown**: `topi
 Chúng cố ý để trống danh tính bằng `{{AUTHOR}}` / `{{CHANNEL}}` — repo là public, prompt mở
 đầu bằng một cái tên thật thì ai clone về cũng viết bằng danh tính người khác. Nguồn điền
 là `brand.md` của kênh. Hai cổng giữ điều này: `test_prompt_MAU_khong_khoa_vao_mot_nguoi`
-và `test_prompt_MAU_co_du_cho_trong_va_co_dan_cach_dien` trong `tests/test_dename.py`.
+và `test_prompt_MAU_co_du_cho_trong_va_co_dan_cach_dien` trong `tests/test_no_identity_leak.py`.
 
 ## 5. Hooks (`hooks/`) — mới ở mức THIẾT KẾ
 `HOOKS_DESIGN.md` mô tả hook dự kiến. **Chưa có hook nào chạy**; hai cổng duyệt hiện được giữ bằng luật trong `AGENTS.md`, không phải bằng máy. Điều kiện để thi hành ghi trong chính file đó.

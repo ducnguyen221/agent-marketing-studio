@@ -27,7 +27,7 @@
 | **Thêm giọng văn thương hiệu mới** | `output_styles/README.md` | `output_styles/compa-class-blog.md` (file mẫu) |
 | **Sửa đổi trường dữ liệu** | `knowledge/data_model/DATA_MODEL.md` | `templates/station/_channel/_campaign/campaign.md` · `scripts/pipeline/export_excel.py` (bộ cột bản xuất) |
 | **Dựng trạm nội dung mới** | `install.ps1` | `examples/README.md` (trạm mẫu đã điền) · `README.md` §3 |
-| **Xem một trạm đã điền trông thế nào** | `examples/README.md` | `examples/vi-du-studio/` |
+| **Xem một trạm đã điền trông thế nào** | `examples/README.md` | `examples/example-studio/` |
 | **Kiểm cây liên kết / tìm bài mồ côi** | `scripts/pipeline/check_tree.py` | `workflows/00_WORKFLOW_INDEX.md` |
 | **Dựng chiến dịch CHẠY THEO LỊCH** (bản tin, series tự động) | `knowledge/toolchains/NEWS_PIPELINE.md` | `templates/README.md` · `scripts/pipeline/campaign_cfg.py` (bản chụp cấu hình) |
 | **Sửa nguồn cấu hình của một runner** | `knowledge/toolchains/NEWS_PIPELINE.md` §"Trước khi đổi nguồn cấu hình" | `scripts/pipeline/campaign_cfg.py` · `tests/test_campaign_cfg.py` |
@@ -54,22 +54,22 @@
 | Dựng HTML tự chứa để xem trước bài | `scripts/pipeline/build_blog_html.py` |
 | Xem toàn cảnh chiến dịch / mọi bài | `scripts/pipeline/build_views.py` (mở `index.html` bằng cách bấm đúp) |
 | Một campaign hoàn chỉnh trông thế nào | `content/KPIM/02_campaigns/01_Tobi_Posts/` |
-| **CHẠY CHIẾN DỊCH TRONG PHIÊN — quy trình MẶC ĐỊNH** (agent chạy trọn đường ống, dừng ở 3 cổng hỏi người ngay; agent phải trả về gì mỗi bước) | `knowledge/toolchains/QUY_TRINH_TRONG_PHIEN.md` |
-| **Bản mô tả đường ống MÁY ĐỌC ĐƯỢC** (10 trạng thái · 3 cổng · lệnh · artefact · 2 chế độ chạy) | `knowledge/data_model/duong_ong.yaml` |
-| **Thứ tự các bước và CỔNG DUYỆT nằm ở đâu** (4 lệnh, 3 cổng — đọc TRƯỚC hai dòng dưới) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` |
-| **Telegram làm TRUNG GIAN người ↔ agent** (vòng đời tiến trình · chuyện "50 giây" · vỡ vòng thì nối lại) | `knowledge/toolchains/TELEGRAM_LAM_TRUNG_GIAN.md` |
+| **CHẠY CHIẾN DỊCH TRONG PHIÊN — quy trình MẶC ĐỊNH** (agent chạy trọn đường ống, dừng ở 3 cổng hỏi người ngay; agent phải trả về gì mỗi bước) | `knowledge/toolchains/IN_SESSION_PIPELINE.md` |
+| **Bản mô tả đường ống MÁY ĐỌC ĐƯỢC** (10 trạng thái · 3 cổng · lệnh · artefact · 2 chế độ chạy) | `knowledge/data_model/pipeline.yaml` |
+| **Thứ tự các bước và CỔNG DUYỆT nằm ở đâu** (4 lệnh, 3 cổng — đọc TRƯỚC hai dòng dưới) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` |
+| **Telegram làm TRUNG GIAN người ↔ agent** (vòng đời tiến trình · chuyện "50 giây" · vỡ vòng thì nối lại) | `knowledge/toolchains/TELEGRAM_BRIDGE.md` |
 | **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
-| **Điều phối cả đường ống trong phiên** (chạy tới cổng rồi dừng, kê file cho người mở) | `scripts/pipeline/chay_quy_trinh.py` |
-| **Mở / từ chối cổng KHÔNG cần Telegram** (kho cổng dùng chung của mọi mặt tiền) | `scripts/pipeline/cong_duyet.py` |
+| **Điều phối cả đường ống trong phiên** (chạy tới cổng rồi dừng, kê file cho người mở) | `scripts/pipeline/run_pipeline.py` |
+| **Mở / từ chối cổng KHÔNG cần Telegram** (kho cổng dùng chung của mọi mặt tiền) | `scripts/pipeline/approval_gate.py` |
 | Chạy MỘT bước của chiến dịch dài kỳ (`dung-bai`/`soan`/`dung-trang`/`phat-hanh`) | `scripts/pipeline/campaign_step.py` |
-| **Nối kênh ngoài của BẠN** (`audio_cmd`/`youtube_cmd`/`facebook_cmd` — không khoá CLI nào) | `knowledge/toolchains/TELEGRAM_LAM_TRUNG_GIAN.md` §6b |
-| **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/QUY_TRINH_CHIEN_DICH.md` §6 |
+| **Nối kênh ngoài của BẠN** (`audio_cmd`/`youtube_cmd`/`facebook_cmd` — không khoá CLI nào) | `knowledge/toolchains/TELEGRAM_BRIDGE.md` §6b |
+| **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` §6 |
 | Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
 | **Bài nào đang ở bước nào** (suy ra, ~350 token thay vì nạp cả campaign.md) | `campaign_step.py <cam> tinh-trang [--chi-tiet]` |
-| **Vì sao bài tới trạng thái đó** (sổ sự kiện chỉ-nối-thêm) | `logs/su-kien.jsonl` · `scripts/lib/so_su_kien.py` |
-| **Hàng chờ việc** (thư mục là trạng thái, `rename` là phép giành lượt) | `logs/viec/{cho,dang-lam,xong,hong}/` · `scripts/lib/hang_cho.py` |
-| **Thợ tự gọi agent sau khi duyệt** (một việc mỗi lượt, một agent một lúc) | `scripts/pipeline/tho_viec.py` · `scripts/runners/run-tho-viec.ps1` |
+| **Vì sao bài tới trạng thái đó** (sổ sự kiện chỉ-nối-thêm) | `logs/su-kien.jsonl` · `scripts/lib/event_log.py` |
+| **Hàng chờ việc** (thư mục là trạng thái, `rename` là phép giành lượt) | `logs/viec/{cho,dang-lam,xong,hong}/` · `scripts/lib/work_queue.py` |
+| **Thợ tự gọi agent sau khi duyệt** (một việc mỗi lượt, một agent một lúc) | `scripts/pipeline/worker.py` · `scripts/runners/run-worker.ps1` |
 | Đăng bài lên web (đích khai bằng cấu hình, không khoá cứng) | `scripts/pipeline/web_publish.py` |
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |
 | **Chấm một bài bằng 23 cổng đếm được** | `scripts/pipeline/blog_gates.py <thư mục bài>` |

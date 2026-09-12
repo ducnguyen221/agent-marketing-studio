@@ -8,7 +8,7 @@ và `r.stderr` về `None`, test nổ `TypeError` ở chỗ chẳng liên quan g
 
 Đây KHÔNG phải cách vá lỗi encoding của script: mỗi entrypoint đã tự
 `sys.stderr.reconfigure(encoding="utf-8")`. File này chỉ khiến bộ test **giống máy sạch
-hơn**, và có một test riêng (`test_khong_phu_thuoc_env_utf8`) khẳng định script chạy đúng
+hơn**, và có một test riêng (`test_no_env_dependency_utf8`) khẳng định script chạy đúng
 NGAY CẢ KHI biến môi trường bị gỡ sạch.
 
 Đã trả giá một lần: bộ test xanh suốt vì phiên làm việc export `PYTHONIOENCODING=utf-8`

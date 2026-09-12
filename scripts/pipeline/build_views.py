@@ -37,8 +37,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
-import tinh_trang as TT  # noqa: E402
-import cong_duyet as CD  # noqa: E402
+import pipeline_state as TT  # noqa: E402
+import approval_gate as CD  # noqa: E402
 
 # Nhãn tiếng Việt cho cột. Cột nào không có ở đây thì in nguyên tên khoá — thêm cột mới
 # vào bảng không được làm vỡ trang.
@@ -255,7 +255,7 @@ def _bang(cot: list, dong: list, id_bang: str) -> str:
 
 # ══════════════════════════════════════════════════════════════════ campaign.html
 
-# Nhãn cho mười trạng thái của đường ống. Nguồn thứ tự là `tinh_trang.THU_TU`, ở đây chỉ
+# Nhãn cho mười trạng thái của đường ống. Nguồn thứ tự là `pipeline_state.THU_TU`, ở đây chỉ
 # dịch sang tiếng người — thiếu nhãn thì in nguyên mã bước, không được làm vỡ trang.
 NHAN_BUOC = {
     "cho-G1": "Chờ Cổng 1 · duyệt đề tài",
