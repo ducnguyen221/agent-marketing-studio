@@ -34,8 +34,11 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
+import tinh_trang as TT  # noqa: E402
+import cong_duyet as CD  # noqa: E402
 
 # Nhãn tiếng Việt cho cột. Cột nào không có ở đây thì in nguyên tên khoá — thêm cột mới
 # vào bảng không được làm vỡ trang.
@@ -65,11 +68,43 @@ def _js(o) -> str:
 
 # ══════════════════════════════════════════════════════════════════ đọc dữ liệu
 
+def _tien_do(cam_dir: Path, dong: list) -> dict:
+    """Bài nào đang ở bước nào, và bài đang chờ cổng thì MỞ FILE NÀO để duyệt.
+
+    Trang này là chỗ người xem tiến độ mà không phải gõ lệnh. Nếu nó chỉ nói "T-001 chờ
+    Cổng 2" mà không kèm đường dẫn bài thì người vẫn phải đi lục thư mục — và cổng lại
+    thành con dấu cao su, đúng chỗ đã dính 11/09/2026.
+
+    Đường dẫn để TƯƠNG ĐỐI so với thư mục chiến dịch: trang mở bằng `file://` cạnh
+    `campaign.md`, nên tương đối là bấm được, còn tuyệt đối thì gãy khi ai đó chép cây
+    thư mục đi nơi khác.
+    """
+    theo_buoc: dict[str, list[str]] = {}
+    cho_cong: dict[str, list[dict]] = {}
+    for d in dong:
+        try:
+            b = TT.buoc_ke(cam_dir, d)
+        except Exception:                      # noqa: BLE001 — trang đọc KHÔNG được sập
+            b = "?"                            # vì một dòng lỗi; báo "?" rồi đi tiếp
+        theo_buoc.setdefault(b, []).append(d.get("content_id", ""))
+        if b in TT.CAN_NGUOI:
+            h = CD.ho_so_bai(cam_dir, d)
+            cho_cong.setdefault(b.replace("cho-G", "g"), []).append({
+                "content_id": h["content_id"], "content_name": h["content_name"],
+                "web": h["web"],
+                "file": {k: os.path.relpath(v, cam_dir).replace(os.sep, "/")
+                         for k, v in h["file"].items()}})
+    return {"theo_buoc": {b: theo_buoc[b] for b in TT.THU_TU if b in theo_buoc},
+            "khac": {b: v for b, v in theo_buoc.items() if b not in TT.THU_TU},
+            "cho_cong": cho_cong}
+
+
 def doc_campaign(cam_dir: Path) -> dict:
     """Một chiến dịch → dict thuần, không dính Path (để nhúng JSON được)."""
     fm, body = md_io.read_fm(cam_dir / "campaign.md")
     cot, dong = md_io.read_table(body, "CONTENT")
     return {
+        "tien_do": _tien_do(cam_dir, dong),
         "id": fm.get("id", cam_dir.name), "name": fm.get("name", ""),
         "dir": cam_dir.name, "status": fm.get("status", ""),
         "brief": fm.get("brief", "") or fm.get("key_message", ""),
@@ -108,6 +143,9 @@ h1{font-size:24px;margin:0 0 4px}h2{font-size:17px;margin:30px 0 10px}
 .luoi{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0}
 .so{font-size:26px;font-weight:600}
 .cuon{overflow-x:auto;border:1px solid var(--vien);border-radius:10px;background:var(--the)}
+tr.cho td{background:color-mix(in srgb,var(--cho) 14%,transparent)}
+.so-nho{font-weight:600;text-align:right;width:5em}
+ul.ds{margin:8px 0 0;padding-left:18px}ul.ds li{margin:6px 0}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--vien);white-space:nowrap}
 th{position:sticky;top:0;background:var(--the);font-weight:600;font-size:12.5px;
@@ -217,6 +255,56 @@ def _bang(cot: list, dong: list, id_bang: str) -> str:
 
 # ══════════════════════════════════════════════════════════════════ campaign.html
 
+# Nhãn cho mười trạng thái của đường ống. Nguồn thứ tự là `tinh_trang.THU_TU`, ở đây chỉ
+# dịch sang tiếng người — thiếu nhãn thì in nguyên mã bước, không được làm vỡ trang.
+NHAN_BUOC = {
+    "cho-G1": "Chờ Cổng 1 · duyệt đề tài",
+    "dung-bai": "Dựng thư mục bài",
+    "soan": "Đang chờ soạn",
+    "cham-cong": "Chờ chấm 23 cổng",
+    "sua-loi-cong": "Cổng đỏ · chờ viết lại",
+    "cho-G2": "Chờ Cổng 2 · duyệt trước khi đăng",
+    "dung-trang": "Chờ dựng trang + đăng web",
+    "cho-G3": "Chờ Cổng 3 · duyệt bản thật",
+    "phat-hanh": "Chờ phát hành kênh ngoài",
+    "xong": "Xong hẳn",
+}
+NHAN_CONG = {"g1": "Cổng 1 — duyệt đề tài",
+             "g2": "Cổng 2 — duyệt trước khi đăng",
+             "g3": "Cổng 3 — duyệt BẢN THẬT trên web"}
+
+
+def _html_tien_do(td: dict) -> str:
+    """Khối 'bài đang ở đâu' + 'ai đang chờ mình quyết', kèm link mở file."""
+    hang = []
+    for b, ds in list(td["theo_buoc"].items()) + list(td.get("khac", {}).items()):
+        nhan = NHAN_BUOC.get(b, b)
+        cho = ' class="cho"' if b in ("cho-G1", "cho-G2", "cho-G3") else ""
+        hang.append(f'<tr{cho}><td>{_e(nhan)}</td><td class="so-nho">{len(ds)}</td>'
+                    f'<td class="mo nho">{_e(", ".join(ds[:14]))}'
+                    f'{" …" if len(ds) > 14 else ""}</td></tr>')
+    bang = ('<div class="cuon"><table><thead><tr><th>Bước</th><th>Số bài</th>'
+            '<th>Bài</th></tr></thead><tbody>' + "".join(hang) + "</tbody></table></div>")
+
+    khoi = []
+    for cong, ds in td.get("cho_cong", {}).items():
+        muc = []
+        for h in ds:
+            lk = " · ".join(f'<a href="./{_e(p)}">{_e(nhan)}</a>'
+                            for nhan, p in h["file"].items())
+            if h.get("web"):
+                lk += (" · " if lk else "") + f'<a href="{_e(h["web"])}">bản thật</a>'
+            muc.append(f'<li><b>{_e(h["content_id"])}</b> — {_e(h["content_name"])}'
+                       + (f'<div class="nho">{lk}</div>' if lk
+                          else '<div class="nho mo">chưa có file nào để mở</div>')
+                       + "</li>")
+        khoi.append(f'<div class="the"><b>{_e(NHAN_CONG.get(cong, cong))}</b>'
+                    f'<ul class="ds">{"".join(muc)}</ul></div>')
+    if not khoi:
+        khoi = ['<div class="the mo">Không bài nào đang chờ người quyết.</div>']
+    return bang + '<h2>Đang chờ mình quyết</h2>' + "".join(khoi)
+
+
 def html_campaign(c: dict) -> str:
     fm = c["fm"]
     bo_qua = {"schema", "id", "name", "status"}
@@ -238,6 +326,9 @@ def html_campaign(c: dict) -> str:
 
 <h2>Brief</h2>
 <div class="the"><dl class="kv">{kv or '<dt class="mo">chưa điền</dt><dd></dd>'}</dl></div>
+
+<h2>Tiến độ đường ống</h2>
+{_html_tien_do(c['tien_do'])}
 
 <h2>Danh sách bài</h2>
 <div class="thanh">

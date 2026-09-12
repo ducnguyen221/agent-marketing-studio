@@ -123,3 +123,19 @@ def test_xuat_lai_KHONG_dung_vao_markdown(cam):
     EX.xuat(cam)
     assert (cam / "campaign.md").read_text(encoding="utf-8") == truoc
     assert not list(cam.glob("*.tmp")), "file tạm phải được đổi tên, không để lại"
+
+
+def test_cot_pipeline_step_noi_bai_dang_TAC_o_dau(cam):
+    """Bản xuất phải nói bài đang ở BƯỚC nào, không chỉ nói đã đăng hay chưa.
+
+    Người mở Excel là để làm báo cáo tiến độ. `status=published` trả lời được "xong chưa"
+    nhưng không trả lời được "tắc ở đâu" — mà đó mới là câu người hỏi khi 90 bài chạy song
+    song. Cột này SUY RA từ artefact, không phải một ô người gõ tay.
+    """
+    w = _mo(EX.xuat(cam))
+    h = [c.value for c in w["Content"][1]]
+    assert h[-1] == "pipeline_step", "cột phải nằm CUỐI — chèn giữa là biểu mẫu cũ lệch cột"
+    d = dict(zip(h, [c.value for c in w["Content"][2]]))
+    assert d["pipeline_step"], "cột có mà bỏ trống thì thà đừng thêm"
+    import tinh_trang as TT
+    assert d["pipeline_step"] in TT.THU_TU + ["?"], d["pipeline_step"]

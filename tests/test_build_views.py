@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+CHAM = chr(10)
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
@@ -190,3 +192,63 @@ def test_kenh_NGOAI_tram_van_bam_duoc(tmp_path):
         else Path(m.group(1))
     assert dich.is_file() or (C / "campaign.html").samefile(dich), \
         f"link {m.group(1)!r} không trỏ tới file có thật — bấm vào là 404"
+
+
+# ── Tiến độ đường ống (thêm 12/09/2026) ─────────────────────────────────────
+# Trang này là chỗ người xem tiến độ mà không phải gõ lệnh. Ba thứ dưới đây là thứ khiến
+# nó dùng được thay vì chỉ đẹp; thiếu cái nào thì người lại phải đi lục thư mục.
+
+def _cam_vi_du():
+    import studio_paths as SP
+    goc = ROOT / "examples"
+    for k in SP.channels(goc):
+        for c in sorted(k["dir"].iterdir()):
+            if (c / "campaign.md").is_file():
+                return c
+    raise AssertionError("ví dụ không có chiến dịch nào")
+
+
+def test_tien_do_xep_theo_THU_TU_duong_ong(tmp_path):
+    """Người cần thấy bài tắc ở đâu trên đường, không cần bảng chữ cái.
+
+    Test này CỐ Ý dựng hai bài rơi vào `cho-G1` và `cham-cong`: theo đường ống thì `cho-G1`
+    đứng trước, theo bảng chữ cái thì `cham-cong` đứng trước. Dùng dữ liệu của ví dụ thì
+    mọi bài nằm chung một bước, và phép so sánh đúng kể cả khi code sắp bằng `sorted` —
+    tức là test xanh mà không đo gì.
+    """
+    than = "Câu chuyện đời thường mở bài. " * 60
+    bai = tmp_path / "B-002_hai"
+    bai.mkdir()
+    than_bai = "## post:blog_article" + CHAM + CHAM + "# Bài" + CHAM + CHAM + than
+    (bai / "content.md").write_text(than_bai, encoding="utf-8", newline=CHAM)
+    dong = [{"content_id": "B-001", "g1": "", "folder": "./B-001_mot"},
+            {"content_id": "B-002", "g1": "2026-09-01", "folder": "./B-002_hai"}]
+
+    td = BV._tien_do(tmp_path, dong)
+    assert list(td["theo_buoc"]) == ["cho-G1", "cham-cong"], td["theo_buoc"]
+
+
+def test_bai_cho_cong_KE_DUONG_DAN_TUONG_DOI():
+    """Tuyệt đối thì gãy khi chép cây thư mục đi nơi khác; trang mở bằng file:// cạnh bài."""
+    cam = _cam_vi_du()
+    td = BV.doc_campaign(cam)["tien_do"]
+    co_file = False
+    for ds in td["cho_cong"].values():
+        for h in ds:
+            for p in h["file"].values():
+                assert not Path(p).is_absolute(), p
+                assert (cam / p).is_file(), f"kê file không có thật: {p}"
+                co_file = True
+    assert co_file or not td["cho_cong"], "có bài chờ cổng mà không kê được file nào"
+
+
+def test_mot_dong_LOI_khong_lam_sap_ca_trang():
+    """Trang ĐỌC không được sập vì một dòng hỏng — người mất luôn cả bản tiến độ."""
+    import tinh_trang as TT
+    goc = TT.buoc_ke
+    try:
+        TT.buoc_ke = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("dòng hỏng"))
+        td = BV._tien_do(_cam_vi_du(), [{"content_id": "X-001", "folder": ""}])
+    finally:
+        TT.buoc_ke = goc
+    assert td["khac"] == {"?": ["X-001"]}

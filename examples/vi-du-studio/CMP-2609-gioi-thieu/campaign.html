@@ -18,6 +18,9 @@ h1{font-size:24px;margin:0 0 4px}h2{font-size:17px;margin:30px 0 10px}
 .luoi{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0}
 .so{font-size:26px;font-weight:600}
 .cuon{overflow-x:auto;border:1px solid var(--vien);border-radius:10px;background:var(--the)}
+tr.cho td{background:color-mix(in srgb,var(--cho) 14%,transparent)}
+.so-nho{font-weight:600;text-align:right;width:5em}
+ul.ds{margin:8px 0 0;padding-left:18px}ul.ds li{margin:6px 0}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--vien);white-space:nowrap}
 th{position:sticky;top:0;background:var(--the);font-weight:600;font-size:12.5px;
@@ -59,6 +62,9 @@ footer{margin-top:44px;color:var(--mo);font-size:12.5px;border-top:1px solid var
 <h2>Brief</h2>
 <div class="the"><dl class="kv"><dt>channel</dt><dd>vi-du-studio</dd><dt>id_prefix</dt><dd>GTX</dd><dt>owner</dt><dd>Người phụ trách (ví dụ)</dd><dt>created</dt><dd>2026-09-04</dd><dt>business_problem</dt><dd>Người làm data thấy &#x27;agent viết nội dung&#x27; là trò vui, không phải quy trình sản xuất — nên không ai dám giao việc thật cho nó</dd><dt>campaign_goal</dt><dd>50 người clone repo và chạy được bài đầu tiên tới lúc đăng, trong 30 ngày</dd><dt>description</dt><dd>Ba bài kể vì sao một xưởng nội dung chạy bằng agent cần cổng duyệt của người, chứ không cần thêm mô hình mạnh hơn</dd><dt>content_pillar</dt><dd>ai-agent</dd><dt>target_audience</dt><dd>Người làm data/BI ở doanh nghiệp Việt, 2-8 năm, đã dùng AI lẻ tẻ nhưng chưa đưa vào quy trình</dd><dt>audience_pain_points</dt><dd>Bài do AI viết nghe trôi chảy mà rỗng; sửa lại còn lâu hơn tự viết; không biết chỗ nào được phép để máy tự quyết</dd><dt>key_message</dt><dd>Cái làm nội dung dùng được không phải mô hình mạnh hơn, mà là chỗ NGƯỜI đặt tay vào</dd><dt>proof_points</dt><dd>23 cổng kiểm chạy bằng số trên bài thật; 120 test; một bài đã đăng đủ 3 kênh có URL kiểm được</dd><dt>brand_voice_rules</dt><dd>Câu ngắn, số có nguồn, nói thẳng khi thứ gì chưa dùng được</dd><dt>channels</dt><dd>web_blog, youtube, facebook</dd><dt>primary_cta</dt><dd>traffic</dd><dt>campaign_offer</dt><dd>Repo MIT, clone là chạy</dd><dt>num_posts_planned</dt><dd>3</dd><dt>cadence</dt><dd>weekly</dd><dt>schedule_start</dt><dd>2026-09-07</dd><dt>schedule_end</dt><dd>2026-09-28</dd></dl></div>
 
+<h2>Tiến độ đường ống</h2>
+<div class="cuon"><table><thead><tr><th>Bước</th><th>Số bài</th><th>Bài</th></tr></thead><tbody><tr class="cho"><td>Chờ Cổng 1 · duyệt đề tài</td><td class="so-nho">1</td><td class="mo nho">GTX-003</td></tr><tr><td>Đang chờ soạn</td><td class="so-nho">1</td><td class="mo nho">GTX-002</td></tr><tr><td>Cổng đỏ · chờ viết lại</td><td class="so-nho">1</td><td class="mo nho">GTX-001</td></tr></tbody></table></div><h2>Đang chờ mình quyết</h2><div class="the"><b>Cổng 1 — duyệt đề tài</b><ul class="ds"><li><b>GTX-003</b> — Chúng tôi bỏ Excel làm nguồn sự thật — và đây là cái đã sai trước đó<div class="nho"><a href="./GTX-003_vi-sao-bo-excel-lam-nguon/content.md">bài</a> · <a href="./GTX-003_vi-sao-bo-excel-lam-nguon/research.md">nghiên cứu</a></div></li></ul></div>
+
 <h2>Danh sách bài</h2>
 <div class="thanh">
   <input type="search" id="q" placeholder="Tìm trong bảng…">
@@ -69,7 +75,7 @@ footer{margin-top:44px;color:var(--mo);font-size:12.5px;border-top:1px solid var
 </div>
 <div class="cuon"><table id="bang"><thead><tr><th>Mã</th><th>Tên bài</th><th>Trụ</th><th>Góc</th><th>Phễu</th><th>Ưu tiên</th><th>Trạng thái</th><th>Cổng 1</th><th>Cổng 2</th><th>Lịch</th><th>Đã đăng</th><th>Thư mục</th><th>Web</th><th>YouTube</th><th>Facebook</th></tr></thead><tbody><tr data-tt="published"><td>GTX-001</td><td class="ten">Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người</td><td>ai-agent</td><td>opinion</td><td>awareness</td><td>medium</td><td><span class="chip dang">đã đăng</span></td><td>2026-09-05</td><td>2026-09-05</td><td>2026-09-07</td><td>2026-09-05</td><td class="nho"><a href="./GTX-001_vi-sao-agent-can-cong-cua-nguoi/">./GTX-001_vi-sao-agent-can-cong-cua-nguoi/</a></td><td><a href="https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html" target="_blank" rel="noopener">mở ↗</a></td><td><a href="https://youtu.be/EXAMPLE0001" target="_blank" rel="noopener">mở ↗</a></td><td><a href="https://www.facebook.com/000000000000000/posts/111111111111111" target="_blank" rel="noopener">mở ↗</a></td></tr><tr data-tt="approved"><td>GTX-002</td><td class="ten">Kiểm bài bằng số, không bằng cảm giác: 23 cổng làm gì</td><td>ai-agent</td><td>explainer</td><td>awareness</td><td>medium</td><td><span class="chip cho">đã duyệt</span></td><td>2026-09-05</td><td class="mo">—</td><td>2026-09-14</td><td class="mo">—</td><td class="nho"><a href="./GTX-002_kiem-bang-so-khong-phai-bang-cam-giac/">./GTX-002_kiem-bang-so-khong-phai-bang-cam-giac/</a></td><td class="mo">—</td><td class="mo">—</td><td class="mo">—</td></tr><tr data-tt="proposed"><td>GTX-003</td><td class="ten">Chúng tôi bỏ Excel làm nguồn sự thật — và đây là cái đã sai trước đó</td><td>ai-agent</td><td>case_study</td><td>awareness</td><td>medium</td><td><span class="chip ">đề xuất</span></td><td class="mo">—</td><td class="mo">—</td><td>2026-09-21</td><td class="mo">—</td><td class="nho"><a href="./GTX-003_vi-sao-bo-excel-lam-nguon/">./GTX-003_vi-sao-bo-excel-lam-nguon/</a></td><td class="mo">—</td><td class="mo">—</td><td class="mo">—</td></tr></tbody></table></div>
 
-<footer>Sinh bởi <code>build_views.py</code> lúc 05/09/2026 07:18 —
+<footer>Sinh bởi <code>build_views.py</code> lúc 12/09/2026 10:31 —
 bản ĐỌC. Nguồn duy nhất là các file <code>.md</code>; sửa ở đó rồi sinh lại.</footer>
 </div>
 <script>

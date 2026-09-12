@@ -30,6 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
+import tinh_trang as TT  # noqa: E402
 
 try:
     import openpyxl
@@ -44,7 +45,13 @@ COT_CONTENT = ["content_id", "content_name", "content_pillar", "funnel_stage",
                "core_brief", "key_sources", "target_keyword", "creative_direction",
                "constraints", "content_relationship", "audio", "video", "short",
                "status", "approved_date", "schedule_date", "published_date",
-               "folder_path", "notes"]
+               "folder_path", "notes",
+               # Cột SUY RA, không có trong Markdown: bài đang đứng ở bước nào của đường
+               # ống. Thêm 12/09/2026 vì bản xuất trước đó nói được bài đã đăng chưa mà
+               # không nói bài đang TẮC ở đâu — người mở Excel để làm báo cáo tiến độ thì
+               # đúng cột họ cần lại thiếu. Để cuối bảng: chèn giữa là mọi biểu mẫu cũ
+               # trỏ nhầm cột.
+               "pipeline_step"]
 COT_POST = ["post_id", "content_id", "channel", "post_format", "post_role", "post_content",
             "quality_check", "agent_status", "review_status", "review_feedback",
             "post_status", "publish_plan", "publish_status", "publish_link",
@@ -94,6 +101,10 @@ def _dong_content(cam_dir: Path, dong_md: list) -> list[dict]:
                 v = fm.get(fm_k)
                 if v not in (None, "", []):
                     o[xl_k] = ", ".join(v) if isinstance(v, list) else str(v)
+        try:
+            o["pipeline_step"] = TT.buoc_ke(cam_dir, d)
+        except Exception:                      # noqa: BLE001 — một dòng hỏng không được
+            o["pipeline_step"] = "?"           # làm hỏng cả bản xuất
         ra.append(o)
     return ra
 
