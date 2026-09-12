@@ -68,6 +68,7 @@ step:
     does: nghiên cứu và viết — research.md, content.md, tách kênh sang atlas/ facebook/ youtube/
     artefact: content.md có chữ thật
     hook: runtime.writer_cmd
+    skills: runtime.writer_skills   # khai ở campaign.md; engine thay vào chỗ `{skills}`
 
   - id: check-gates
     kind: step
@@ -81,6 +82,8 @@ step:
     cmd: [write]              # cùng lệnh với `soan`; bước tự đọc phản hồi của người
     does: viết lại theo cổng đỏ và theo nhận xét
     artefact: content.md có chữ thật
+    hook: runtime.writer_cmd
+    skills: runtime.writer_skills
     max_rewrites: 3               # quá số này thì dừng, hỏi người
 
   - id: await-G2

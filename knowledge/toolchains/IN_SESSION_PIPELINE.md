@@ -131,6 +131,30 @@ Chạy nền (không dùng trong phiên): `scripts/runners/run-worker.ps1` cho t
 ⚠️ Bốn hook đều **không khoá CLI nào**: không khai thì bước đó bỏ qua chứ không phải lỗi.
 Khai ở khối `runtime:` của `campaign.md`, và chỗ điền là `{post}` (đường dẫn thư mục bài).
 
+### Bước nào nạp SKILL nào
+
+| Bước | Khai ở đâu | Chỗ điền | Đang khai gì |
+|---|---|---|---|
+| `write` · `fix-gates` | `campaign.md` → `runtime.writer_skills` | `{skills}` trong `writer_cmd` | tuỳ chiến dịch |
+
+**Vì sao khai ở `campaign.md` chứ không nằm trong script của trạm.** Giọng văn và chân
+dung độc giả là của KÊNH, không phải của repo, nên repo public không được đoán hộ. Nhưng
+để nó nằm im trong một file `.ps1` thì cũng sai: khi đó **không ai nhìn ra bài này được
+viết dưới ảnh hưởng của skill nào** — mà đó đúng là câu người duyệt cần trả lời ở Cổng 2.
+Khai ở `campaign.md` thì nó nằm cạnh brief, đọc một chỗ là thấy.
+
+Engine chỉ **thay chỗ** `{skills}` bằng danh sách đã khai, cách nhau bằng dấu phẩy. Nạp
+thế nào là việc của script trạm; repo không ép ai dùng harness nào.
+
+```yaml
+runtime:
+  writer_cmd: powershell -File "…\write-post.ps1" -Post "{post}" -Skills "{skills}"
+  writer_skills:
+    - kpim-skills:blog-writing      # giọng tác giả + chân dung độc giả
+```
+
+Không khai `writer_skills` thì `{skills}` thành chuỗi rỗng và bộ viết chạy như cũ.
+
 ## 3. Ba cổng hỏi gì, và mở file nào để trả lời
 
 | Cổng | Câu hỏi | Người cần mở |

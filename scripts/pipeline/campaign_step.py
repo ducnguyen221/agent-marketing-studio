@@ -282,7 +282,17 @@ def step_write(campaign: Path, *, bot, hom_nay: date | None = None, dry_run=Fals
     run_cmd = run_cmd or (lambda cmd, **kw: subprocess.run(
         cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", **kw))
     fm_cam, _, _ = _doc(campaign)
-    writer = ((fm_cam.get("runtime") or {}).get("writer_cmd") or "").strip()
+    rt_cam = fm_cam.get("runtime") or {}
+    writer = (rt_cam.get("writer_cmd") or "").strip()
+    # Skill nạp cho bộ viết — KHAI Ở TRẠM, không chôn trong script của trạm.
+    #
+    # Vì sao khai ở đây: giọng văn và chân dung độc giả là của KÊNH, không phải của repo.
+    # Repo public không được đoán người clone về dùng bộ skill nào. Nhưng cũng không được
+    # để nó nằm im trong một file `.ps1` ở trạm, vì khi đó không ai nhìn ra bài này viết
+    # dưới ảnh hưởng của skill nào — mà đó chính là câu người duyệt cần trả lời.
+    #
+    # Engine chỉ THAY CHỖ; quyết định nạp thế nào là của script trạm.
+    skills = ",".join(rt_cam.get("writer_skills") or [])
     ds = posts_to_write(campaign)
     if only_post:
         ds = [d for d in ds if d.get("content_id") == only_post]
@@ -307,7 +317,8 @@ def step_write(campaign: Path, *, bot, hom_nay: date | None = None, dry_run=Fals
             if dry_run:
                 to_write.append(d["content_id"])
                 continue
-            cmd = [x.format(post=str(post), cid=d["content_id"], campaign=str(campaign))
+            cmd = [x.format(post=str(post), cid=d["content_id"], campaign=str(campaign),
+                            skills=skills)
                    for x in split_command(writer)]
             r = run_cmd(cmd)
             if r.returncode != 0:

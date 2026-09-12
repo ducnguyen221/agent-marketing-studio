@@ -290,13 +290,18 @@ def test_dry_run_KHONG_duoc_gui_telegram(tmp_path):
 # `runtime.writer_cmd` để người dùng tự khai lệnh của họ. Không khai thì bước `soan` báo
 # "chờ người viết" — fail-closed, không đoán.
 
-def _cam_writer(tmp_path, writer_cmd=None, rows=None, autonomy="suggest"):
+def _cam_writer(tmp_path, writer_cmd=None, rows=None, autonomy="suggest",
+                writer_skills=None):
     campaign = _cam(tmp_path, rows or [_row("T-001", "Bài một", "2026-09-15",
                                        g1="2026-09-14", folder="./T-001_bai")],
                autonomy=autonomy)
-    if writer_cmd:
+    if writer_cmd or writer_skills:
         fm, than = md_io.read_fm(campaign / "campaign.md")
-        fm.setdefault("runtime", {})["writer_cmd"] = writer_cmd
+        rt = fm.setdefault("runtime", {})
+        if writer_cmd:
+            rt["writer_cmd"] = writer_cmd
+        if writer_skills:
+            rt["writer_skills"] = writer_skills
         md_io.write_fm(campaign / "campaign.md", fm, than)
     (campaign / "T-001_bai").mkdir(exist_ok=True)
     (campaign / "T-001_bai" / "content.md").write_text(
@@ -405,3 +410,35 @@ def test_tach_lenh_KHONG_nuot_dau_gach_cheo_windows():
 def test_tach_lenh_giu_duong_dan_co_khoang_trang():
     cmd = CS.split_command(r'python "D:\Chuong Trinh\x\y.py" {post}')
     assert cmd[1] == r"D:\Chuong Trinh\x\y.py", cmd
+
+
+# ── Skill nạp cho bộ viết: KHAI Ở TRẠM, hiện ra được ────────────────────────
+
+def test_writer_skills_duoc_thay_vao_cho_dien(tmp_path):
+    """`{skills}` phải được thay bằng danh sách khai ở `campaign.md`.
+
+    Khai skill ở campaign.md thay vì chôn trong script của trạm là để NGƯỜI DUYỆT nhìn ra
+    bài này viết dưới ảnh hưởng của skill nào. Chỗ điền không hoạt động thì cả cơ chế đó
+    chỉ là một dòng tài liệu không ai thi hành.
+    """
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(
+        tmp_path,
+        writer_cmd=f'python -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+                   f'sys.argv[2],encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
+                   f'"{ra}" "{{skills}}"',
+        writer_skills=["kpim-skills:blog-writing", "x:y"])
+    CS.step_write(campaign, bot=BotGia())
+    assert ra.read_text(encoding="utf-8") == "kpim-skills:blog-writing,x:y"
+
+
+def test_khong_khai_skills_thi_cho_dien_thanh_RONG(tmp_path):
+    """Không khai thì chỗ điền thành rỗng, bộ viết chạy như cũ — cùng luật với mọi hook."""
+    ra = tmp_path / "goi2.txt"
+    campaign = _cam_writer(
+        tmp_path,
+        writer_cmd=f'python -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+                   f'chr(91)+sys.argv[2]+chr(93),encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
+                   f'"{ra}" "{{skills}}"')
+    CS.step_write(campaign, bot=BotGia())
+    assert ra.read_text(encoding="utf-8") == "[]"

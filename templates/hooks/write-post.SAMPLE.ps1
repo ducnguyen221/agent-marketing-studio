@@ -11,11 +11,13 @@
 #
 #   runtime:
 #     writer_cmd: 'powershell -NoProfile -ExecutionPolicy Bypass -File
-#                  D:\tram\<kênh>\write-post.ps1 -Post "{post}"'
+#                  D:\tram\<kênh>\write-post.ps1 -Post "{post}" -Skills "{skills}"'
 #
 # ## HỢP ĐỒNG — hai vế, không hơn
 #
 # Vào : `-Post <thư mục bài>` — trong đó có sẵn
+#       `-Skills "<a,b>"` — danh sách skill KHAI Ở `campaign.md` (`runtime.writer_skills`);
+#       engine thay vào chỗ `{skills}`. Rỗng thì bỏ qua, không phải lỗi.
 #         meta.json · research.md · content.md (khung) · prompt.txt
 #         phan-hoi.md  ← CHỈ có khi người duyệt đã gửi nhận xét
 # Ra  : điền đầy `content.md` theo đúng các neo `## post:`
