@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
 import approve_bus as AB     # noqa: E402
+import cong_duyet as CD     # noqa: E402
 import campaign_step as CS   # noqa: E402
 import md_io                 # noqa: E402
 import tinh_trang as TT      # noqa: E402
@@ -159,14 +160,16 @@ def test_UAT_tron_duong_ong_6_buoc_3_cong(tram, monkeypatch):
     assert b2.da_file, "Cổng 2 không gửi bài ⇒ mời duyệt thứ không nhìn thấy được"
     tok = list(json.loads((cam / "logs" / "tg-approve.json")
                           .read_text(encoding="utf-8"))["cho"])[0]
-    monkeypatch.setattr(AB, "_ghi_g2", lambda c, ids, boi, gc: list(ids))
+    # Vá ở KHO CỔNG chứ không ở mặt tiền: từ 12/09 mọi mặt tiền đi chung một chỗ ghi,
+    # vá mặt tiền thì đường Telegram sạch mà đường trong phiên vẫn gọi hàng thật.
+    monkeypatch.setattr(CD, "ghi_g2", lambda c, ids, boi, gc: list(ids))
     b2.lay_cap_nhat = lambda **kw: [{  # noqa: E731
         "update_id": 2,
         "callback_query": {"id": "cq2", "data": f"ok:{tok}",
                            "message": {"message_id": 2, "chat": {"id": 1}},
                            "from": {"id": 1}}}]
     AB.nhan(cam, bot=b2)
-    # `_ghi_g2` thật ghi vào publish.json; UAT này đo ĐƯỜNG ỐNG nên ghi thẳng cột.
+    # `ghi_g2` thật ghi vào publish.json; UAT này đo ĐƯỜNG ỐNG nên ghi thẳng cột.
     fm, t = md_io.read_fm(cam / "campaign.md")
     t = md_io.upsert_row(t, "CONTENT", "content_id",
                          {"content_id": "U-001", "g2": "2026-09-12"}, chi_cap_nhat=True)

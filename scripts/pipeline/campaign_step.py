@@ -57,6 +57,7 @@ import tinh_trang as TT  # noqa: E402
 import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import approve_bus as AB  # noqa: E402
+import cong_duyet as CD  # noqa: E402
 
 TRUOC_MAC_DINH = 7
 
@@ -150,8 +151,9 @@ def mo_cong(cam: Path, cong: str, cids: list[str], *, bot, hom_nay: date | None 
         return {"cong": cong, "muc": muc, "so_bai": 0}
     if muc == "full":
         bay_gio = datetime.combine(hom_nay, datetime.min.time()).astimezone()
-        xong = AB._ap_dung(cam, cong, cids, boi="tự động (autonomy=full)",
-                           ghi_chu="autonomy=full — không có cổng người", bay_gio=bay_gio)
+        xong = CD.mo_cong(cam, cong, cids, boi="tự động (autonomy=full)",
+                          nguyen_van="autonomy=full — không có cổng người",
+                          qua="autonomy", bay_gio=bay_gio)
         return {"cong": cong, "muc": muc, "tu_duyet": xong}
     # Hỏi ĐÚNG những bài bước này vừa xử lý. Để `gui_cong` tự truy vấn thì nó hỏi cả nhóm
     # đang chờ, trong khi nhánh `full` ngay trên chỉ duyệt `cids` — hai chế độ lệch nhau.

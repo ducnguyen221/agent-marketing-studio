@@ -4,12 +4,18 @@
 
 ## Nó KHÔNG làm gì
 
-Nó **không** giữ trạng thái duyệt của riêng nó. Cổng duyệt đã có chỗ ở từ trước:
+Nó **không** giữ trạng thái duyệt của riêng nó, và từ 12/09/2026 nó cũng **không tự ghi
+cổng** nữa. Mọi phép ghi nằm ở `cong_duyet.py` — kho cổng dùng chung:
 
-| Cổng | Chỗ ở thật | Ai ghi |
-|---|---|---|
-| **g1** — duyệt đề tài | cột `g1` + `status` trong bảng Content của `campaign.md` | script này, qua `md_io` |
-| **g2** — duyệt trước khi đăng | `publish.json → posts[].review` | `register_publish.py approve` |
+```
+  approve_bus.py  (Telegram, tuỳ chọn) ─┐
+                                        ├─► cong_duyet.mo_cong() ─► campaign.md · publish.json
+  cong_duyet.py   (trong phiên, MẶC ĐỊNH)┘
+```
+
+Vì sao tách: trước đó script này là **con đường DUY NHẤT** ghi được `g1` và `g3`, nên
+Telegram không phải tuỳ chọn mà là điều kiện cần — không có điện thoại thì chiến dịch
+đứng. Mà cách làm việc mặc định lại là người ngồi cùng agent trong một phiên.
 
 Đẻ ra kho thứ hai nghĩa là hai nguồn sự thật, và sớm muộn chúng nói khác nhau. File trạng
 thái duy nhất ở đây (`logs/tg-approve.json`) chỉ giữ hai thứ **của riêng Telegram**: con
@@ -53,7 +59,6 @@ import json
 import os
 import re
 import secrets
-import subprocess
 import sys
 import time
 from datetime import datetime, timedelta
@@ -64,11 +69,24 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 _LIB = Path(__file__).resolve().parents[1] / "lib"
 sys.path.insert(0, str(_LIB))
-import bai_noi_dung  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hang_cho as HC  # noqa: E402
-import so_su_kien as SO  # noqa: E402
 import md_io  # noqa: E402
+import so_su_kien as SO  # noqa: E402
 import telegram_io  # noqa: E402
+import cong_duyet as CD  # noqa: E402
+
+# File này là MẶT TIỀN Telegram, không phải kho cổng. Mọi phép ghi cổng nằm ở
+# `cong_duyet.py` và mặt tiền trong phiên gọi vào đúng chỗ đó. Tách 12/09/2026 vì trước
+# đó Telegram là con đường DUY NHẤT ghi được `g1`/`g3` — tức là nó không phải tuỳ chọn.
+# Re-export để lời gọi cũ và test cũ không gãy; nơi định nghĩa thật là `cong_duyet`.
+cho_cong = CD.cho_cong
+doc_phan_hoi = CD.doc_phan_hoi
+TEN_PHAN_HOI = CD.TEN_PHAN_HOI
+_doc_bang = CD.doc_bang
+_da_viet_bai = CD.da_viet_bai
+_vi_sao_chua_duoc_hoi = CD.vi_sao_chua_duoc_hoi
+_ghi_phan_hoi = CD.ghi_phan_hoi
 
 HAN_GIO = 48                      # token sống bao lâu
 LO_MAC_DINH = 10
@@ -123,9 +141,6 @@ def _ghi_state(cam: Path, d: dict) -> None:
     md_io.ghi_nguyen_tu(_p_state(cam), json.dumps(d, ensure_ascii=False, indent=2) + "\n")
 
 
-TEN_PHAN_HOI = "tg-phan-hoi.json"
-
-
 def _tra_tin_bai(cam: Path, cid: str) -> int | None:
     """`message_id` của tin đã gửi cho bài này — để tra ngược khi người TRẢ LỜI vào nó."""
     return (_doc_state(cam).get("tin_bai") or {}).get(cid)
@@ -136,36 +151,6 @@ def _bai_cua_tin(cam: Path, message_id: int) -> str | None:
         if mid == message_id:
             return cid
     return None
-
-
-def doc_phan_hoi(cam: Path, cid: str) -> list[dict]:
-    """Mọi phản hồi của người cho một bài, theo thứ tự thời gian.
-
-    GIỮ ĐỦ, không ghi đè: vòng viết lại có thể lặp, và ghi đè lần trước là mất dấu vết vì
-    sao bài thành ra như thế. Sáu tháng sau đọc lại còn hiểu được.
-    """
-    p = cam / "logs" / TEN_PHAN_HOI
-    if not p.is_file():
-        return []
-    try:
-        return (json.loads(p.read_text(encoding="utf-8")) or {}).get(cid, [])
-    except json.JSONDecodeError:
-        loi(f"{p} hỏng — coi như chưa có phản hồi nào.")
-        return []
-
-
-def _ghi_phan_hoi(cam: Path, cid: str, noi_dung: str) -> None:
-    p = cam / "logs" / TEN_PHAN_HOI
-    d = {}
-    if p.is_file():
-        try:
-            d = json.loads(p.read_text(encoding="utf-8")) or {}
-        except json.JSONDecodeError:
-            pass
-    d.setdefault(cid, []).append(
-        {"luc": datetime.now().astimezone().isoformat(), "noi_dung": noi_dung})
-    p.parent.mkdir(parents=True, exist_ok=True)
-    md_io.ghi_nguyen_tu(p, json.dumps(d, ensure_ascii=False, indent=2) + "\n")
 
 
 def _hoa_giai_state(cam: Path, da_tieu: set[str], offset_moi: int | None) -> None:
@@ -195,12 +180,6 @@ def _hoa_giai_state(cam: Path, da_tieu: set[str], offset_moi: int | None) -> Non
 
 # ── Bảng Content ────────────────────────────────────────────────────────────
 
-def _doc_bang(cam: Path):
-    fm, than = md_io.read_fm(cam / "campaign.md")
-    cot, dong = md_io.read_table(than, "CONTENT")
-    return fm, than, cot, dong
-
-
 def _trich(bai: Path, so_chu: int = 600) -> str:
     """Mấy dòng đầu của phần blog — để người duyệt liếc trên điện thoại là nắm được bài.
 
@@ -220,111 +199,6 @@ def _trich(bai: Path, so_chu: int = 600) -> str:
     than = re.sub(r"<!--.*?-->", "", than, flags=re.S)
     than = "\n".join(x for x in (d.strip() for d in than.splitlines()) if x)
     return than[:so_chu] + ("…" if len(than) > so_chu else "")
-
-
-def _vi_sao_chua_duoc_hoi(cam: Path, dong: dict) -> str:
-    """Lý do bài này CHƯA được phép đem ra hỏi ở Cổng 2. Chuỗi rỗng = được hỏi.
-
-    FAIL-CLOSED ba nhánh (Đức chốt 11/09/2026):
-      · chưa viết          — không có gì để đọc
-      · chưa chấm cổng nào — KHÔNG ĐO ĐƯỢC nghĩa là *chưa biết*, không phải *đã qua*
-      · máy chấm ĐỎ        — máy đã nói không thì đừng đem hỏi người
-
-    Vì sao nhánh giữa quan trọng ngang nhánh cuối: `content.md` đầy đủ **không** chứng minh
-    bài đã qua kiểm. Ca thật NEN-002 — gọi thẳng bộ viết, nhảy cóc bước chấm B4, file bài
-    trông hoàn hảo mà chưa một cổng nào chạy.
-
-    Trả LÝ DO chứ không trả bool: bỏ qua im lặng thì người vận hành không biết vì sao bài
-    của mình không bao giờ tới cổng.
-    """
-    if not _da_viet_bai(cam, dong):
-        return "CHƯA VIẾT"
-
-    f = (dong.get("folder") or "").strip()
-    p = Path(cam) / f.lstrip("./") / "gates.json"
-    if not p.is_file():
-        return "CHƯA CHẤM cổng nào (thiếu gates.json) — chạy blog_gates.py trước"
-    try:
-        g = json.loads(p.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return "gates.json HỎNG — coi như chưa chấm"
-
-    if (g.get("ket_luan") or "").lower() == "do":
-        do = [c.get("ma", "?") for c in (g.get("cong") or [])
-              if c.get("trang_thai") == "do" and c.get("muc") != "canh_bao"]
-        return (f"máy chấm ĐỎ ({g.get('do_chan', '?')} cổng chặn"
-                + (f": {', '.join(do[:8])}" if do else "") + ")")
-    return ""
-
-
-def _da_viet_bai(cam: Path, dong: dict) -> bool:
-    """Bài của DÒNG này đã có chữ thật chưa. Không khai `folder` = chưa viết (fail-closed)."""
-    f = (dong.get("folder") or "").strip()
-    if not f:
-        return False
-    return bai_noi_dung.da_viet(Path(cam) / f.lstrip("./"))
-
-
-def cho_cong(cam: Path, cong: str) -> list[dict]:
-    """Bài đang chờ đúng cổng đó. g1: chưa có g1. g2: có g1, chưa có g2."""
-    _, _, _, dong = _doc_bang(cam)
-    if cong == "g1":
-        return [d for d in dong if not (d.get("g1") or "").strip()]
-    if cong == "g3":
-        # Cổng 3 duyệt BẢN THẬT: phải đã lên web mới có gì để xem. Và chỉ hỏi khi bảng
-        # CÓ KHAI cột `g3` — bảng cũ không khai thì không có cổng này.
-        return [d for d in dong
-                if "g3" in d and (d.get("web") or "").strip()
-                and not (d.get("g3") or "").strip()]
-    return [d for d in dong
-            if (d.get("g1") or "").strip() and not (d.get("g2") or "").strip()]
-
-
-def _ghi_g1(cam: Path, cids: list[str], ngay: str) -> list[str]:
-    """Ghi cột g1 + status. IDEMPOTENT: bài đã có g1 thì bỏ qua, không ghi đè."""
-    fm, than, _, dong = _doc_bang(cam)
-    hien = {d["content_id"]: d for d in dong}
-    xong = []
-    for cid in cids:
-        d = hien.get(cid)
-        if d is None:
-            loi(f"{cid}: không có trong bảng Content — bỏ qua.")
-            continue
-        if (d.get("g1") or "").strip():
-            continue                       # đã duyệt rồi, không ghi lại
-        than = md_io.upsert_row(than, "CONTENT", "content_id",
-                                {"content_id": cid, "g1": ngay, "status": "approved"},
-                                chi_cap_nhat=True)
-        xong.append(cid)
-    if xong:
-        md_io.write_fm(cam / "campaign.md", fm, than)
-    return xong
-
-
-def _ghi_g2(cam: Path, cids: list[str], boi: str, ghi_chu: str) -> list[str]:
-    """Gọi ĐÚNG `register_publish approve` — giữ nguyên dấu vết duyệt đang có."""
-    _, _, _, dong = _doc_bang(cam)
-    hien = {d["content_id"]: d for d in dong}
-    rp = Path(__file__).resolve().parent / "register_publish.py"
-    xong = []
-    for cid in cids:
-        d = hien.get(cid)
-        if d is None:
-            loi(f"{cid}: không có trong bảng Content — bỏ qua.")
-            continue
-        thu_muc = (d.get("folder") or "").strip().lstrip("./")
-        bai = cam / thu_muc
-        if not bai.is_dir():
-            loi(f"{cid}: không thấy thư mục bài {bai} — bỏ qua.")
-            continue
-        r = subprocess.run(
-            [sys.executable, str(rp), str(bai), "approve", "--by", boi, "--note", ghi_chu],
-            capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if r.returncode != 0:
-            loi(f"{cid}: register_publish approve thất bại — {r.stdout}{r.stderr}")
-            continue
-        xong.append(cid)
-    return xong
 
 
 # ── Gửi ─────────────────────────────────────────────────────────────────────
@@ -481,34 +355,15 @@ def _don_token_qua_han(st: dict, bay_gio: datetime) -> None:
 
 
 def _ap_dung(cam: Path, cong: str, cids: list[str], *, boi: str, ghi_chu: str,
-             bay_gio: datetime) -> list[str]:
-    if cong == "g1":
-        return _ghi_g1(cam, cids, bay_gio.date().isoformat())
-    if cong == "g3":
-        return _ghi_cot(cam, cids, "g3", bay_gio.date().isoformat())
-    return _ghi_g2(cam, cids, boi, ghi_chu)
+             bay_gio: datetime, qua: str = "Telegram") -> list[str]:
+    """Đường ghi cổng của MẶT TIỀN TELEGRAM — mỏng, chỉ uỷ quyền cho kho cổng.
 
-
-def _ghi_cot(cam: Path, cids: list[str], cot: str, gia_tri: str) -> list[str]:
-    """Ghi một cột ngày duyệt. IDEMPOTENT: đã có thì bỏ qua, không ghi đè."""
-    fm, than, _, dong = _doc_bang(cam)
-    hien = {d["content_id"]: d for d in dong}
-    xong = []
-    for cid in cids:
-        d = hien.get(cid)
-        if d is None:
-            loi(f"{cid}: không có trong bảng Content — bỏ qua.")
-            continue
-        if (d.get(cot) or "").strip():
-            continue
-        than = md_io.upsert_row(than, "CONTENT", "content_id",
-                                {"content_id": cid, cot: gia_tri}, chi_cap_nhat=True)
-        xong.append(cid)
-    if xong:
-        md_io.write_fm(cam / "campaign.md", fm, than)
-    return xong
-
-
+    Giữ lại hàm này thay vì gọi thẳng `CD.mo_cong` vì nó là ĐƯỜNG NỐI có ý nghĩa riêng:
+    token chỉ được tiêu khi nó chạy xong (xem `_xu_ly_mot`), nên test bơm lỗi vào đúng
+    đây để chứng minh cú bấm không rơi. Bỏ nó đi là mất chỗ bơm lỗi.
+    """
+    return CD.mo_cong(cam, cong, cids, boi=boi, nguyen_van=ghi_chu,
+                      qua=qua, bay_gio=bay_gio)
 
 
 def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
@@ -548,9 +403,9 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
             kq.setdefault("_da_tieu", set()).add(tok)
             kq["duyet"] += xong
             for c in xong:
-                # Nút bấm và lệnh chữ phải dẫn tới CÙNG một chỗ. Vá một đường mà quên
-                # đường kia là đúng kiểu lỗi "chạy thử thì được, người dùng thật thì không".
-                SO.ghi(cam, f"{y['cong']}_duyet", bai=c, boi="Đức (Telegram)", qua="nút")
+                # Sổ sự kiện do `CD.mo_cong` ghi — một chỗ cho MỌI mặt tiền. Ở đây chỉ còn
+                # việc riêng của Telegram: xếp việc cho thợ chạy nền. Agent trong phiên
+                # KHÔNG xếp việc vì nó chạy bước kế tiếp ngay.
                 HC.them(cam, "tiep", bai=c, nguon=f"{y['cong']}_duyet")
             _bao_nhan(bot.tra_loi_nut, cq["id"], f"Đã duyệt {len(xong)} bài.")
             _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
@@ -558,8 +413,8 @@ def _xu_ly_mot(u: dict, *, cam: Path, st: dict, kq: dict, bot,
         else:
             kq.setdefault("_da_tieu", set()).add(tok)   # từ chối cũng là đã xử lý xong
             kq["tu_choi"] += cids
-            for c in cids:
-                SO.ghi(cam, f"{y['cong']}_tu_choi", bai=c, boi="Đức (Telegram)", qua="nút")
+            CD.tu_choi(cam, y["cong"], cids, boi="Đức (Telegram)",
+                       nguyen_van="từ chối bằng nút — không kèm lý do", qua="nút")
             _bao_nhan(bot.tra_loi_nut, cq["id"], "Đã từ chối.")
             _bao_nhan(bot.sua_tin, cq["message"]["message_id"],
                         f"❌ Đã từ chối: {', '.join(cids)}")
@@ -649,15 +504,14 @@ def _thi_hanh_lenh(cam: Path, cid: str, lenh: str, ly_do: str, *, bot, kq,
         for c in xong:
             # Xếp việc rồi ĐI TIẾP NGAY. Poller không được chạy bước nặng: nó đang giữ
             # khoá đọc Telegram, dừng lại 10 phút là cổng duyệt điếc 10 phút.
-            SO.ghi(cam, f"{cong}_duyet", bai=c, boi="Đức (Telegram)", ghi_chu=ly_do)
             HC.them(cam, "tiep", bai=c, nguon=f"{cong}_duyet")
         _bao_nhan(bot.gui, f"✅ {cid}: đã duyệt." if xong else f"⚠️ {cid}: không ghi được (xem log).")
     else:
         kq["tu_choi"].append(cid)
-        SO.ghi(cam, f"{cong}_tu_choi", bai=cid, boi="Đức (Telegram)", ly_do=ly_do)
+        CD.tu_choi(cam, cong, [cid], boi="Đức (Telegram)",
+                   nguyen_van=ly_do or "từ chối qua Telegram — không kèm lý do", qua="chữ")
         if ly_do:
             # Có lý do thì đó là chỉ dẫn sửa -> đưa vào vòng viết lại.
-            _ghi_phan_hoi(cam, cid, ly_do)
             HC.them(cam, "tiep", bai=cid, nguon=f"{cong}_tu_choi")
         _bao_nhan(bot.gui, f"❌ {cid}: đã ghi từ chối. {ly_do}")
     kq["xu_ly"] += 1
