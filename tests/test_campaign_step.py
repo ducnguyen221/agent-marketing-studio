@@ -442,3 +442,80 @@ def test_khong_khai_skills_thi_cho_dien_thanh_RONG(tmp_path):
                    f'"{ra}" "{{skills}}"')
     CS.step_write(campaign, bot=BotGia())
     assert ra.read_text(encoding="utf-8") == "[]"
+
+
+# ── Cổng đỏ phải kích hoạt viết lại (đổi 12/09/2026) ────────────────────────
+
+def _gates_do(post, *, chan=("G05",), verdict="fail"):
+    import json as _j
+    (post / "gates.json").write_text(_j.dumps({
+        "stage": "write", "verdict": verdict,
+        "gates": [{"id": m, "name": f"Cổng {m}", "measured": 0, "rule": ">=3",
+                   "status": "fail", "level": "block", "note": ""} for m in chan]},
+        ensure_ascii=False), encoding="utf-8", newline="\n")
+
+
+def _bai_da_viet(post):
+    post.mkdir(exist_ok=True)
+    (post / "content.md").write_text(
+        "## post:blog_article\n\n# T\n\n" + ("Một đoạn nội dung thật. " * 300),
+        encoding="utf-8", newline="\n")
+
+
+def test_CONG_DO_kich_hoat_viet_lai(tmp_path):
+    """Đo thật 11–12/09: bản đầu chỉ viết lại khi có nhận xét MỚI của người.
+
+    Bước `fix-gates` gọi bộ viết, bộ viết thấy "bài đã viết, không có nhận xét mới" rồi
+    trả về thành công mà không sửa gì. Ba bài kẹt đúng chỗ đó hai ngày, và đường ống
+    không có cách nào tự chữa một bài cổng chấm đỏ.
+    """
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(
+        tmp_path,
+        writer_cmd=f'python -c "import pathlib;pathlib.Path(r\'{ra}\').write_text(chr(120))"')
+    post = campaign / "T-001_bai"
+    _bai_da_viet(post)
+    _gates_do(post)
+
+    CS.step_write(campaign, bot=BotGia())
+    assert ra.exists(), "cổng đỏ mà bộ viết không được gọi — bài kẹt vĩnh viễn"
+
+
+def test_cong_do_ghi_ra_FILE_cho_bo_viet_doc(tmp_path):
+    """Bộ viết phải biết SỬA GÌ. Bảo nó viết lại mà không nói đỏ ở đâu là bảo nó đoán."""
+    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    post = campaign / "T-001_bai"
+    _bai_da_viet(post)
+    _gates_do(post, chan=("G05", "G06"))
+
+    CS.step_write(campaign, bot=BotGia())
+    t = (post / "cong-do.md").read_text(encoding="utf-8")
+    assert "G05" in t and "G06" in t and "luật" in t
+
+
+def test_cham_TRAN_thi_DUNG_viet_lai_va_noi_ro(tmp_path):
+    """Vòng viết lại phải có trần. Mỗi vòng đốt một lượt agent thật."""
+    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    post = campaign / "T-001_bai"
+    _bai_da_viet(post)
+    for i in range(CS.MAX_REWRITES):
+        _gates_do(post, chan=(f"G0{i+1}",))       # mỗi vòng một chữ ký khác
+        can, vi_sao = CS._needs_rewrite(post, 0, CS._dump_gate_report(post))
+        assert can, f"vòng {i+1} phải được viết lại: {vi_sao}"
+        CS._mark_written(post, 0, CS._dump_gate_report(post), vi_cong=True)
+
+    _gates_do(post, chan=("G09",))
+    can, vi_sao = CS._needs_rewrite(post, 0, CS._dump_gate_report(post))
+    assert not can and "dung" in vi_sao, vi_sao
+
+
+def test_cham_LAI_ra_KET_QUA_CU_thi_KHONG_viet_lai(tmp_path):
+    """Chấm lại mà không đổi gì thì không phải cớ để đốt thêm một lượt agent."""
+    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    post = campaign / "T-001_bai"
+    _bai_da_viet(post)
+    _gates_do(post)
+    chu_ky = CS._dump_gate_report(post)
+    CS._mark_written(post, 0, chu_ky, vi_cong=True)
+    can, _ = CS._needs_rewrite(post, 0, CS._dump_gate_report(post))
+    assert not can, "cùng một kết quả chấm mà vẫn viết lại — quay tít"

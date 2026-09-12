@@ -55,11 +55,14 @@ sys.path.insert(0, str(_HERE))
 import post_content  # noqa: E402
 import pipeline_state as PS  # noqa: E402
 import md_io  # noqa: E402
+import post_paths as PP  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import approve_bus as AB  # noqa: E402
 import approval_gate as AG  # noqa: E402
 
 DEFAULT_LOOKAHEAD = 7
+NL_ = chr(10)
+MAX_REWRITES = 3   # viết lại quá ngần này lần vì cổng đỏ thì dừng, hỏi người
 
 
 def loi(m: str) -> None:
@@ -252,22 +255,84 @@ def _ghi_phan_hoi_ra_file(campaign: Path, post: Path, cid: str) -> int:
     return len(ph)
 
 
-def _needs_rewrite(post: Path, so_phan_hoi: int) -> bool:
-    """Bài đã viết nhưng có nhận xét MỚI thì phải viết lại."""
+def _dump_gate_report(post: Path) -> str:
+    """Dua danh sach CONG DO toi bo viet qua file `cong-do.md`. Tra CHU KY cua lan cham.
+
+    Vi sao can file rieng chu khong nhet vao `phan-hoi.md`: file kia la **chu cua nguoi**
+    va bo viet duoc dan coi no la noi dung trich dan, khong phai chi thi. Tron bao cao may
+    vao do la lam mo dung ranh gioi ay.
+
+    Chu ky = ket luan + danh sach ma cong chan. No tra loi cau "lan cham nay co gi KHAC
+    lan bo viet da sua theo chua" ma khong phai so moc thoi gian — so mtime thi mot lan
+    cham lai khong doi gi cung kich hoat viet lai.
+    """
+    gp = PP.p(post, "gates")
+    try:
+        g = json.loads(gp.read_text(encoding="utf-8")) if gp.is_file() else None
+    except json.JSONDecodeError:
+        g = None
+    if not g or (g.get("verdict") or "") != "fail":
+        return ""
+    chan = [c for c in (g.get("gates") or [])
+            if c.get("status") == "fail" and c.get("level") == "block"]
+    if not chan:
+        return ""
+    than = ["# Cổng chấm ĐỎ — phải sửa đúng những chỗ này", "",
+            "> Đây là SỐ ĐO của máy, không phải nhận xét của người.",
+            f"> Chấm ở bước `{g.get('stage', '?')}`. Sửa {len(chan)} chỗ, đừng viết lại cả bài.",
+            ""]
+    for c in chan:
+        than += [f"## {c['id']} — {c['name']}", "",
+                 f"- đo được: `{c['measured']}`",
+                 f"- luật: `{c['rule']}`"]
+        if c.get("note"):
+            than += [f"- cụ thể: {c['note']}"]
+        than += [""]
+    md_io.write_atomic(post / "cong-do.md", NL_.join(than))
+    return f"{g.get('verdict')}:" + ",".join(sorted(c["id"] for c in chan))
+
+
+def _da_ghi(post: Path) -> dict:
     p = post / ".write-count.json"
-    da_ap = 0
-    if p.is_file():
-        try:
-            da_ap = int(json.loads(p.read_text(encoding="utf-8")).get("phan_hoi_da_ap", 0))
-        except (json.JSONDecodeError, ValueError):
-            da_ap = 0
-    return so_phan_hoi > da_ap
+    if not p.is_file():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8")) or {}
+    except json.JSONDecodeError:
+        return {}
 
 
-def _mark_written(post: Path, so_phan_hoi: int) -> None:
+def _needs_rewrite(post: Path, so_phan_hoi: int, chu_ky_cong: str = "") -> tuple[bool, str]:
+    """Co phai viet lai khong, va VI SAO. Hai nguon kich hoat, khong phai mot.
+
+    DA TRA GIA 11-12/09/2026: ban dau chi kich hoat khi co nhan xet MOI cua nguoi. Nghia
+    la buoc `fix-gates` goi bo viet, bo viet thay "bai da viet, khong co nhan xet moi" roi
+    tra ve thanh cong ma khong sua gi. Trang thai dung nguyen o `fix-gates`, va duong ong
+    **khong co cach nao tu chua mot bai cong cham do**. Ba bai ket dung cho do hai ngay.
+    """
+    d = _da_ghi(post)
+    try:
+        da_ap = int(d.get("phan_hoi_da_ap", 0))
+    except (TypeError, ValueError):
+        da_ap = 0
+    if so_phan_hoi > da_ap:
+        return True, "nhan xet moi cua nguoi"
+    if chu_ky_cong and chu_ky_cong != (d.get("chu_ky_cong") or ""):
+        attempts_gate = int(d.get("so_lan_vi_cong") or 0)
+        if attempts_gate >= MAX_REWRITES:
+            return False, f"da viet lai {attempts_gate} lan vi cong do — dung, can nguoi xem"
+        return True, "cong cham do"
+    return False, ""
+
+
+def _mark_written(post: Path, so_phan_hoi: int, chu_ky_cong: str = "",
+                  vi_cong: bool = False) -> None:
+    d = _da_ghi(post)
     md_io.write_atomic(post / ".write-count.json", json.dumps(
         {"phan_hoi_da_ap": so_phan_hoi,
-         "at": datetime.now().astimezone().isoformat()}, ensure_ascii=False, indent=2) + "\n")
+         "chu_ky_cong": chu_ky_cong or (d.get("chu_ky_cong") or ""),
+         "so_lan_vi_cong": int(d.get("so_lan_vi_cong") or 0) + (1 if vi_cong else 0),
+         "at": datetime.now().astimezone().isoformat()}, ensure_ascii=False, indent=2) + NL_)
 
 
 def step_write(campaign: Path, *, bot, hom_nay: date | None = None, dry_run=False,
@@ -308,7 +373,11 @@ def step_write(campaign: Path, *, bot, hom_nay: date | None = None, dry_run=Fals
         # Nhận xét của người -> file cho bộ viết đọc. Làm TRƯỚC khi gọi bộ viết.
         so_ph = _ghi_phan_hoi_ra_file(campaign, post, d["content_id"])
 
-        if not _da_viet(post) or _needs_rewrite(post, so_ph):
+        # Hai nguon kich hoat viet lai: nhan xet cua NGUOI, va CONG CHAM DO.
+        # Thieu nguon thu hai thi duong ong khong tu chua duoc bai nao — da tra gia.
+        chu_ky = _dump_gate_report(post)
+        can_viet, vi_sao_viet = _needs_rewrite(post, so_ph, chu_ky)
+        if not _da_viet(post) or can_viet:
             if not writer:
                 # KHÔNG có bộ viết: nói thẳng. Repo public không được phụ thuộc cứng vào
                 # `claude` hay agent nào — người dùng tự khai `runtime.writer_cmd`.
@@ -330,7 +399,8 @@ def step_write(campaign: Path, *, bot, hom_nay: date | None = None, dry_run=Fals
                 failed.append({"id": d["content_id"],
                              "why": "writer_cmd chạy xong nhưng content.md vẫn chưa có bài"})
                 continue
-            _mark_written(post, so_ph)
+            _mark_written(post, so_ph, chu_ky,
+                          vi_cong=vi_sao_viet == "cong cham do")
         if dry_run:
             done.append(d["content_id"])
             continue
