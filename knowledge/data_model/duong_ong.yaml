@@ -1,0 +1,147 @@
+# Đường ống chiến dịch — BẢN MÔ TẢ MÁY ĐỌC ĐƯỢC
+#
+# Vì sao có file này: đường ống đang được mô tả ở BỐN chỗ — `tinh_trang.THU_TU` (thứ tự),
+# `tho_viec.LENH` (bước nào chạy lệnh nào), `cong_duyet.CONG` (ba cổng), và văn xuôi trong
+# tài liệu. Bốn chỗ thì sớm muộn chúng nói khác nhau, và agent đọc trúng chỗ nào thì theo
+# chỗ đó.
+#
+# File này là bản mô tả để NGƯỜI và AGENT đọc; code vẫn là nơi thi hành. Chúng không được
+# phép lệch nhau, và `tests/test_duong_ong_khop.py` là cổng canh: đổi code mà quên đổi đây
+# (hoặc ngược lại) thì test đỏ.
+#
+# ⚠️ Đây KHÔNG phải file cấu hình — sửa nó không đổi hành vi của bất kỳ script nào.
+
+schema: duong_ong/1
+cap_nhat: '2026-09-12'
+
+# ── Ba cổng người ───────────────────────────────────────────────────────────
+# Mở cổng luôn đi qua `cong_duyet.mo_cong()`, bất kể mặt tiền nào. Hai mặt tiền ngang hàng:
+#   · trong phiên (MẶC ĐỊNH) — `cong_duyet.py`
+#   · Telegram   (TUỲ CHỌN) — `approve_bus.py`
+cong:
+  g1:
+    ten: Cổng 1 — duyệt đề tài
+    hoi_gi: Có làm bài này không, tiêu đề và góc nhìn đã đúng chưa
+    ghi_vao: cột `g1` + `status=approved` trong bảng Content của campaign.md
+    file_can_mo: []          # chưa viết gì, chỉ có dòng trong bảng
+    truoc_do: (chưa có bước nào)
+    sau_do: dung-bai
+  g2:
+    ten: Cổng 2 — duyệt trước khi đăng
+    hoi_gi: Bài này đăng được chưa, hay cần sửa gì
+    ghi_vao: publish.json → posts[].review (+ ô `g2` mirror trong bảng)
+    file_can_mo: [content.md, gates.json, research.md]
+    truoc_do: cham-cong
+    sau_do: dung-trang
+    chan_truoc_khi_hoi:      # fail-closed — không đem ra hỏi khi còn một trong ba
+      - chưa viết
+      - chưa chấm cổng nào (thiếu gates.json)
+      - máy chấm ĐỎ
+  g3:
+    ten: Cổng 3 — duyệt BẢN THẬT trên web
+    hoi_gi: Mở link, xem bằng mắt, rồi mới cho phát ra kênh ngoài
+    ghi_vao: cột `g3` trong bảng Content
+    file_can_mo: [atlas/atlas.html]
+    kem_link: cột `web` — cổng này PHẢI chở link thật, gửi mã bài thì không có gì để mở
+    truoc_do: dung-trang
+    sau_do: phat-hanh
+    bat_bang: khai cột `g3` trong bảng Content. Bảng không có cột đó thì không có cổng này.
+
+# ── Mười trạng thái, theo đúng thứ tự ───────────────────────────────────────
+# `loai: cong`  = dừng, chờ người.  `loai: buoc` = máy/agent chạy được.
+# `lenh`        = lệnh `campaign_step.py <cam> <lenh> --bai <mã>` mà thợ gọi.
+# `artefact`    = thứ bước đó PHẢI sinh ra. Xong hay chưa hỏi cái này, KHÔNG hỏi mã thoát.
+buoc:
+  - ma: cho-G1
+    loai: cong
+    cong: g1
+
+  - ma: dung-bai
+    loai: buoc
+    lenh: null                # chạy cho cả chiến dịch, không theo từng bài
+    viec: tạo thư mục bài + meta.json + publish.json + khung content.md
+    artefact: thư mục bài tồn tại
+
+  - ma: soan
+    loai: buoc
+    lenh: [soan]
+    viec: nghiên cứu và viết — research.md, content.md, tách kênh sang atlas/ facebook/ youtube/
+    artefact: content.md có chữ thật
+    hook: runtime.writer_cmd
+
+  - ma: cham-cong
+    loai: buoc
+    lenh: ['__cham_cong__']   # gọi thẳng blog_gates.py, không qua campaign_step
+    viec: chấm 23 cổng đếm được
+    artefact: gates.json
+    canh_bao: blog_gates trả mã 1 khi kết luận ĐỎ — đó là KẾT QUẢ, không phải sự cố
+
+  - ma: sua-loi-cong
+    loai: buoc
+    lenh: [soan]              # cùng lệnh với `soan`; bước tự đọc phản hồi của người
+    viec: viết lại theo cổng đỏ và theo nhận xét
+    artefact: content.md có chữ thật
+    tran_lap: 3               # quá số này thì dừng, hỏi người
+
+  - ma: cho-G2
+    loai: cong
+    cong: g2
+
+  - ma: dung-trang
+    loai: buoc
+    lenh: [dung-trang]
+    viec: dựng atlas.html (+ audio nếu khai hook) rồi đăng web, ghi URL ngược vào cột `web`
+    artefact: atlas/atlas.html
+    hook: runtime.audio_cmd
+    fail_closed:
+      - dựng xong mà không ra atlas.html thì KHÔNG đem đi đăng
+      - đăng xong mà không trả URL thì KHÔNG ghi cột web
+
+  - ma: cho-G3
+    loai: cong
+    cong: g3
+
+  - ma: phat-hanh
+    loai: buoc
+    lenh: [phat-hanh]
+    viec: đăng YouTube và Facebook qua hook, ghi URL ngược vào bảng
+    artefact: cột youtube hoặc facebook có URL
+    hook: [runtime.youtube_cmd, runtime.facebook_cmd]
+    fail_closed:
+      - kênh nào hỏng thì KHÔNG đánh dấu bài đã phát hành
+
+  - ma: xong
+    loai: ket
+
+# ── Hai chế độ chạy ─────────────────────────────────────────────────────────
+# Người chọn, không phải agent tự quyết. Cả hai đều đi qua đúng ba cổng trên.
+che_do_chay:
+  tung_bai:
+    ten: Từng bài, đi trọn đường ống
+    dung_khi: bài quan trọng, hoặc đang dò xem quy trình chạy đúng chưa
+    cach: chạy `--bai <mã>` cho một bài, dừng ở mỗi cổng và hỏi người ngay
+    nguoi_thay_gi: một bài mỗi lần, kèm đường dẫn file để mở
+  theo_giai_doan:
+    ten: Cả lô, duyệt theo từng cổng
+    dung_khi: chạy đều nhiều bài, muốn ít lần bị ngắt
+    cach: chạy cùng một bước cho N bài, gom lại rồi hỏi người MỘT LẦN ở cổng
+    nguoi_thay_gi: danh sách bài kèm đường dẫn file của từng bài
+    so_bai_mac_dinh: 5        # người đổi được, kể cả "làm hết"
+
+# ── Agent phải trả về gì sau mỗi bước ───────────────────────────────────────
+# Bỏ mục nào trong đây thì người mất khả năng kiểm, và cổng thành con dấu cao su.
+bao_cao_moi_buoc:
+  - bước vừa chạy và bài nào
+  - artefact sinh ra, kèm ĐƯỜNG DẪN ĐẦY ĐỦ để mở ngay
+  - kết quả chấm cổng nếu bước đó có chấm (xanh mấy, đỏ mấy, đỏ ở đâu)
+  - bước kế tiếp mà `tinh-trang` suy ra
+  - nếu tới cổng — câu hỏi cần người trả lời, và danh sách file phải đọc trước khi trả lời
+
+# ── Nơi giữ trạng thái ──────────────────────────────────────────────────────
+noi_giu_trang_thai:
+  bang_content: campaign.md giữa hai mốc CONTENT:BEGIN / CONTENT:END — bảng ĐIỀU PHỐI
+  publish_json: <thư mục bài>/publish.json — dấu vết duyệt Cổng 2 và link từng kênh
+  so_su_kien: logs/su-kien.jsonl — chỉ nối thêm, trả lời "vì sao bài tới trạng thái này"
+  hang_cho: logs/viec/{cho,dang-lam,xong,hong}/ — thư mục LÀ trạng thái
+  phan_hoi: logs/tg-phan-hoi.json — nhận xét của người, vòng viết lại đọc chỗ này
+  khong_phai_nguon: chiến dịch cũ còn file .xlsx — đó là BẢN XUẤT, không phải nguồn
