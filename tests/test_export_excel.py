@@ -139,3 +139,21 @@ def test_cot_pipeline_step_noi_bai_dang_TAC_o_dau(campaign):
     assert d["pipeline_step"], "cột có mà bỏ trống thì thà đừng thêm"
     import pipeline_state as PS
     assert d["pipeline_step"] in PS.ORDER + ["?"], d["pipeline_step"]
+
+
+def test_khoa_frontmatter_dang_LIST_khong_lam_chet_ban_xuat(campaign):
+    """`runtime.writer_skills` là list. openpyxl chỉ nhận kiểu vô hướng.
+
+    ĐÃ TRẢ GIÁ 12/09/2026: nhánh dict-lồng quên phép dẹt, nên ngày thêm khoá đó vào
+    `campaign.md` thì cả bản xuất Excel chết bằng `ValueError`, và người dùng mất luôn
+    đường xuất báo cáo vì một khoá cấu hình chẳng liên quan.
+    """
+    fm, than = M.read_fm(campaign / "campaign.md")
+    fm.setdefault("runtime", {})["writer_skills"] = ["a:b", "c:d"]
+    fm["danh_sach_phang"] = ["x", "y"]
+    M.write_fm(campaign / "campaign.md", fm, than)
+
+    w = _mo(EX.xuat(campaign))
+    o = {r[0]: r[1] for r in w["Campaign"].iter_rows(min_row=2, values_only=True) if r[0]}
+    assert o["runtime.writer_skills"] == "a:b, c:d"
+    assert o["danh_sach_phang"] == "x, y"

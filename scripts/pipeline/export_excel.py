@@ -191,12 +191,23 @@ def xuat(campaign_dir: Path, out: Path | None = None) -> Path:
         ws.cell(1, c).fill = XANH
     # Dict lồng (kpi_target…) trải thành từng dòng `kpi_target.blog`. Nhét cả object vào
     # một ô thì openpyxl từ chối, mà có nhét được cũng không ai lọc được.
+    def _o_excel(v):
+        """openpyxl chỉ nhận kiểu vô hướng. List phải dẹt thành chuỗi TRƯỚC khi ghi.
+
+        ĐÃ TRẢ GIÁ 12/09/2026: nhánh dict-lồng bên dưới quên phép dẹt này, nên ngày thêm
+        `runtime.writer_skills` (một list) thì cả bản xuất Excel chết bằng `ValueError`.
+        Nhánh ngoài đã dẹt đúng từ đầu — lỗi là ở chỗ chép thiếu, không ở chỗ thiếu ý.
+        """
+        if isinstance(v, (list, tuple)):
+            return ", ".join(map(str, v))
+        return "" if v is None else v
+
     for k, v in fm.items():
         if isinstance(v, dict):
             for k2, v2 in v.items():
-                ws.append([f"{k}.{k2}", v2 if v2 is not None else "", ""])
+                ws.append([f"{k}.{k2}", _o_excel(v2), ""])
         else:
-            ws.append([k, ", ".join(map(str, v)) if isinstance(v, list) else v, ""])
+            ws.append([k, _o_excel(v), ""])
     ws.append(["", "", ""])
     # Đường dẫn TƯƠNG ĐỐI (kênh/chiến_dịch/campaign.md). Đường tuyệt đối mang theo tên
     # người dùng và tên máy — file .xlsx này được gửi đi và có bản nằm trong repo công khai.
