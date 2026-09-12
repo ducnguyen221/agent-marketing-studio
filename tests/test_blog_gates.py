@@ -30,7 +30,7 @@ HOME = "ducnguyen.vn"
 
 
 def _theo_ma(result):
-    return {r["job_id"]: r for r in result["gate"]}
+    return {r["id"]: r for r in result["gates"]}
 
 
 # ------------------------------------------------------------------ 1. fixture đỏ
@@ -86,7 +86,7 @@ def test_khong_suy_dien_hau_qua(do):
     """Luật phát ngôn: cổng chỉ nói cái nó ĐO ĐƯỢC."""
     campaign = ["reach", "bóp", "thuật toán", "sẽ bị", "chất lượng kém", "bài dở"]
     for job_id, r in do.items():
-        van_ban = f"{r['gate']} {r['note']}".lower()
+        van_ban = f"{r['name']} {r['note']}".lower()
         for tu in campaign:
             assert tu not in van_ban, f"{job_id} suy diễn hậu quả thay vì báo số đo: {r}"
 
@@ -145,8 +145,8 @@ def bai_xanh(tmp_path):
 
 def test_bai_hop_le_khong_bi_keu_oan(bai_xanh):
     result = G.run_cmd(bai_xanh, HOME)
-    do_ra = [(r["job_id"], r["gate"], r["measured"], r["rule"])
-             for r in result["gate"] if r["status"] == "fail"]
+    do_ra = [(r["id"], r["name"], r["measured"], r["rule"])
+             for r in result["gates"] if r["status"] == "fail"]
     assert do_ra == [], f"cổng kêu oan trên bài hợp lệ: {do_ra}"
 
 

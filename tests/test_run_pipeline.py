@@ -230,3 +230,36 @@ def test_tinh_hinh_xep_theo_THU_TU_duong_ong(tmp_path):
     assert t["total"] == 3
     assert list(t["by_step"]) == ["await-G1", "write"], t["by_step"]
     assert t["by_step"]["await-G1"] == ["T-003"]
+
+
+def test_buoc_bao_XONG_ma_khong_TIEN_thi_DUNG_ngay(tmp_path):
+    """Đo thật 12/09/2026: một lượt `by-stage` chạy `fix-gates` 20 vòng cho 5 bài.
+
+    Mỗi vòng báo ✔ mà không bài nào nhúc nhích. Bộ viết hỏng lặng lẽ, `content.md` cũ vẫn
+    còn, nên phép hỏi artefact ("bài có chữ chưa") vẫn đúng và vòng lặp cứ thế quay. Trần
+    `MAX_STEPS_PER_POST` có chặn vòng vô hạn, nhưng vẫn cho đốt 20 lượt agent.
+
+    Phép kiểm đúng ở vòng lặp là: chạy xong rồi mà `next_step` VẪN là bước vừa chạy thì kẹt.
+    """
+    campaign = _cam(tmp_path)
+    post = _thu_muc(campaign, "T-001")
+    post.mkdir(exist_ok=True)
+    # Bài đã có chữ và đã chấm ĐỎ ⇒ bước kế tiếp là `fix-gates`.
+    (post / "content.md").write_text(f"## post:blog_article\n\n# Bài\n\n{THAN}\n",
+                                     encoding="utf-8", newline="\n")
+    (post / "gates.json").write_text('{"verdict": "fail", "gates": []}',
+                                     encoding="utf-8", newline="\n")
+
+    goi = []
+
+    def viet_hong_lang_le(campaign_, cmd, cid):
+        """Bộ viết chạy êm, mã 0, mà KHÔNG đổi gì — đúng ca đã gặp."""
+        goi.append(cmd)
+        return True, ""
+
+    for mode in ("per-post", "by-stage"):
+        goi.clear()
+        result = RP.run(campaign, mode=mode, post=["T-001"], run_step=viet_hong_lang_le)
+        assert len(goi) == 1, f"{mode}: gọi bộ viết {len(goi)} lần cho một bước không tiến"
+        assert result["failed"], f"{mode}: kẹt mà không báo hỏng"
+        assert "không tiến" in result["failed"][0]["message"]

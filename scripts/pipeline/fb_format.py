@@ -24,7 +24,15 @@ import argparse
 import json
 import re
 import sys
+
+# Ép UTF-8 cho stdout/stderr. Máy sạch trên Windows mặc định cp1252, và bảng chấm
+# cổng in tiếng Việt — thiếu dòng này thì script CHẾT ngay ở lệnh in, sau khi đã làm
+# xong việc. Đo thật 12/09/2026: lỗi này làm bước `check-gates` hỏng và vòng chạy
+# quay tít vì artefact cũ vẫn còn nên không ai thấy bước đó chưa tiến.
 import unicodedata
+
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
 
 BOLD_UPPER = 0x1D400   # 𝐀
 BOLD_LOWER = 0x1D41A   # 𝐚

@@ -27,7 +27,15 @@ import os
 import re
 import subprocess
 import sys
+
+# Ép UTF-8 cho stdout/stderr. Máy sạch trên Windows mặc định cp1252, và bảng chấm
+# cổng in tiếng Việt — thiếu dòng này thì script CHẾT ngay ở lệnh in, sau khi đã làm
+# xong việc. Đo thật 12/09/2026: lỗi này làm bước `check-gates` hỏng và vòng chạy
+# quay tít vì artefact cũ vẫn còn nên không ai thấy bước đó chưa tiến.
 from pathlib import Path
+
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fb_format as FF  # noqa: E402
@@ -97,12 +105,12 @@ class SoKetQua:
         self.rows: list[dict] = []
 
     def do(self, job_id, name, gia_tri, luat, dat, level=CHAN, note=""):
-        self.rows.append({"job_id": job_id, "gate": name, "measured": gia_tri, "rule": luat,
+        self.rows.append({"id": job_id, "name": name, "measured": gia_tri, "rule": luat,
                           "status": "pass" if dat else "fail",
                           "level": "" if dat else level, "note": note})
 
     def thieu(self, job_id, name, why):
-        self.rows.append({"job_id": job_id, "gate": name, "measured": None, "rule": "—",
+        self.rows.append({"id": job_id, "name": name, "measured": None, "rule": "—",
                           "status": "missing", "level": "", "note": why})
 
 
@@ -394,7 +402,7 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
         "fail_warn": sum(1 for r in s.rows if r["status"] == "fail" and r["level"] == CANH_BAO),
         "missing": sum(1 for r in s.rows if r["status"] == "missing"),
         "verdict": "fail" if fail_block else "pass",
-        "gate": s.rows,
+        "gates": s.rows,
     }
 
 
@@ -436,10 +444,10 @@ def main(argv=None) -> int:
         sys.stdout.write(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
     else:
         label = {"pass": "OK  ", "fail": "DO  ", "missing": "--  "}
-        for r in result["gate"]:
+        for r in result["gates"]:
             level = f" [{r['level']}]" if r["level"] else ""
             gc = f"   {r['note']}" if r["note"] else ""
-            sys.stdout.write(f"{label[r['status']]}{r['job_id']} {r['gate']:<36} "
+            sys.stdout.write(f"{label[r['status']]}{r['id']} {r['name']:<36} "
                              f"= {str(r['measured']):<13} luật {r['rule']}{level}{gc}\n")
         sys.stdout.write(f"\n  {result['pass']} xanh · {result['fail_block']} đỏ-chặn · "
                          f"{result['fail_warn']} đỏ-cảnh-báo · {result['missing']} thiếu "

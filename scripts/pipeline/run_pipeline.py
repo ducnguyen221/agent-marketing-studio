@@ -214,13 +214,37 @@ def run(campaign: Path, *, mode: str = "per-post", post: list[str] | None = None
                 r = _run_one_step(campaign, cid, b, run=run_step)
                 result["ran"].append(r)
                 da_lam = True
-                if not r["done"]:
-                    result["failed"].append(r)
-                    ds = [x for x in ds if x != cid]     # bài hỏng thì thôi đẩy tiếp
+                if not r["done"] or _stuck(campaign, cid, b, result):
+                    if not r["done"]:
+                        result["failed"].append(r)
+                    ds = [x for x in ds if x != cid]     # hỏng hoặc kẹt thì thôi đẩy tiếp
             if not da_lam:
                 break
     result["overview"] = overview(campaign)
     return result
+
+
+def _stuck(campaign: Path, cid: str, step: str, result: dict) -> bool:
+    """Chạy xong bước mà `next_step` vẫn trả về CHÍNH BƯỚC ĐÓ = kẹt. Dừng ngay.
+
+    ĐÃ TRẢ GIÁ 12/09/2026 — một lượt `by-stage` cho 5 bài chạy `fix-gates` **20 vòng**,
+    mỗi vòng báo ✔, mà không bài nào nhúc nhích: bộ viết hỏng lặng lẽ, `content.md` cũ
+    vẫn còn nên phép hỏi artefact ("bài có chữ chưa") vẫn đúng, và vòng lặp cứ thế quay.
+
+    Hỏi artefact là ĐÚNG cho câu "bước có làm ra gì không", nhưng SAI cho câu "bước có
+    tiến được không" khi artefact đã tồn tại từ trước. Ở vòng lặp thì phải hỏi câu thứ hai.
+
+    Trần `MAX_STEPS_PER_POST` không thay được phép kiểm này: nó chặn vòng vô hạn, nhưng
+    vẫn cho đốt 20 lượt agent trước khi chịu dừng.
+    """
+    if PS.next_step(campaign, _rows_by_id(campaign).get(cid) or {}) != step:
+        return False
+    result["failed"].append({
+        "post": cid, "step": step, "done": False,
+        "message": f"bước `{step}` báo xong nhưng trạng thái không tiến — dừng ở đây. "
+                   "Xem log của bước đó; artefact cũ còn nguyên nên phép hỏi artefact "
+                   "không phát hiện được."})
+    return True
 
 
 def _mark_waiting(campaign: Path, cid: str, gate: str, result: dict) -> None:
@@ -245,6 +269,8 @@ def _advance_post(campaign: Path, cid: str, result: dict, *, until: str | None, 
         result["ran"].append(r)
         if not r["done"]:
             result["failed"].append(r)
+            return
+        if _stuck(campaign, cid, b, result):
             return
     result["failed"].append({"post": cid, "step": "?",
                        "message": f"quá {MAX_STEPS_PER_POST} bước mà chưa tới cổng — "
