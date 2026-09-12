@@ -121,7 +121,7 @@ def _doi_ten_su_kien(dong: list[str]) -> tuple[list[str], int]:
     return ra, dem
 
 
-def ten_su_kien(campaign: Path, *, that: bool) -> list[str]:
+def event_names(campaign: Path, *, that: bool) -> list[str]:
     """Đổi tên sự kiện trong sổ ĐÃ di trú khoá. Tách riêng để chạy lại được nhiều lần."""
     p = campaign / "logs" / "events.jsonl"
     if not p.is_file():
@@ -138,7 +138,7 @@ def ten_su_kien(campaign: Path, *, that: bool) -> list[str]:
     return ra
 
 
-def so_su_kien(campaign: Path, *, that: bool) -> list[str]:
+def event_log_file(campaign: Path, *, that: bool) -> list[str]:
     cu, moi = campaign / "logs" / "su-kien.jsonl", campaign / "logs" / "events.jsonl"
     if not cu.is_file():
         return []
@@ -160,7 +160,7 @@ def so_su_kien(campaign: Path, *, that: bool) -> list[str]:
     return ra
 
 
-def hang_cho(campaign: Path, *, that: bool) -> list[str]:
+def job_queue(campaign: Path, *, that: bool) -> list[str]:
     cu, moi = campaign / "logs" / "viec", campaign / "logs" / "jobs"
     if not cu.is_dir():
         return []
@@ -210,7 +210,7 @@ def gates(campaign: Path, *, that: bool) -> list[str]:
     return ra
 
 
-def file_le(campaign: Path, *, that: bool) -> list[str]:
+def misc_files(campaign: Path, *, that: bool) -> list[str]:
     ra = []
     cap = [(campaign / "logs" / "tg-phan-hoi.json", campaign / "logs" / "feedback.json")]
     cap += [(p, p.parent / ".write-count.json")
@@ -252,7 +252,7 @@ def tg_state(campaign: Path, *, that: bool) -> list[str]:
 
 def di_tru(campaign: Path, *, that: bool) -> list[str]:
     ra = []
-    for ham in (so_su_kien, ten_su_kien, hang_cho, gates, file_le, tg_state):
+    for ham in (event_log_file, event_names, job_queue, gates, misc_files, tg_state):
         ra += ham(campaign, that=that)
     return ra
 
