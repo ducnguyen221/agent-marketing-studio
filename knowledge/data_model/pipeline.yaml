@@ -107,11 +107,14 @@ step:
   - id: release
     kind: step
     cmd: [release]
-    does: đăng YouTube và Facebook qua hook, ghi URL ngược vào bảng
+    does: đăng hoặc HẸN GIỜ YouTube và Facebook qua hook, ghi URL ngược vào bảng
     artefact: cột youtube hoặc facebook có URL
     hook: [runtime.youtube_cmd, runtime.facebook_cmd]
     fail_closed:
       - kênh nào hỏng thì KHÔNG đánh dấu bài đã phát hành
+      - bài hẹn ở tương lai KHÔNG đi qua hook không nhận ô ngày
+      - kênh đã có link thì KHÔNG gọi lại
+    after: fb_publish.py --attach-pending chạy theo lịch, gắn comment cho bài Facebook đã phát
 
   - id: done
     kind: end

@@ -29,6 +29,56 @@ create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 
 `{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch · `{web}` URL bài đã lên
 trang (chỉ có ở `youtube_cmd` và `facebook_cmd`).
 
+Riêng bước `release` có thêm bốn ô:
+
+| Ô | Giá trị | Dùng cho |
+|---|---|---|
+| `{schedule}` | ngày hẹn `YYYY-MM-DD` từ cột `schedule` | ghi log, đặt tên |
+| `{publish_at}` | mốc hẹn RFC3339 UTC | YouTube `publishAt` |
+| `{publish_ts}` | mốc hẹn unix giây | Facebook `scheduled_publish_time` |
+| `{youtube_url}` | link YouTube vừa đăng ở cùng lượt, rỗng nếu không có | comment Facebook |
+
+Giờ trong ngày lấy từ `runtime.publish_time` (mặc định `09:00`, giờ máy trạm).
+
+## Đăng hẹn giờ trên nền tảng
+
+**Bài hẹn ở tương lai chỉ đi qua hook có nhắc tới ô ngày.** Hook không nhận `{schedule}`,
+`{publish_at}` hay `{publish_ts}` thì chỉ biết đăng ngay. Bước `release` từ chối gọi nó cho
+bài chưa tới ngày, vì không nền tảng nào có nút thu hồi.
+
+**Facebook hẹn giờ là HAI PHA**, vì Facebook không cho comment vào bài chưa phát mà comment
+là chỗ duy nhất chứa link về blog:
+
+1. `release` gọi `fb_publish.py --publish-at "{publish_ts}"`: bài được hẹn, chữ comment được
+   chốt vào `facebook/fb-state.json`.
+2. Một lượt chạy theo lịch gọi `fb_publish.py --attach-pending <thư mục chiến dịch>`: bài
+   nào Facebook đã phát thì gắn comment. Chạy lại bao nhiêu lần cũng không comment trùng.
+
+**Thiếu pha hai thì bài hẹn lên sóng mà không có link.** Nó phải là task theo lịch của trạm,
+chạy mỗi giờ là đủ, qua `notify-run.ps1` để có báo cáo khi hỏng.
+
+Ví dụ khai ở trạm, đường dẫn token lấy từ kho secret của máy:
+
+```yaml
+runtime:
+  publish_time: "09:00"
+  facebook_cmd: 'python D:\repo\scripts\pipeline\fb_publish.py
+                 --config <HOME>\.secret\<tài-khoản>\facebook_config.json
+                 --post "{post}" --message-file "{post}\facebook\post.txt"
+                 --comment-file "{post}\facebook\comment.txt"
+                 --image "{post}\facebook\infographic.png"
+                 --publish-at "{publish_ts}"
+                 --fill "BLOG_URL={web}" --fill "YOUTUBE_URL={youtube_url}"'
+```
+
+`--fill` với giá trị rỗng **bỏ nguyên dòng** chứa chỗ trống đó, và in ra dòng nào đã bỏ.
+Chiến dịch chưa có video vẫn đăng được mà không để lại dòng YouTube chết.
+
+**Không đăng trùng ở cả hai tầng.** `release` ghi link từng kênh vào bảng ngay khi có, nên
+YouTube lên mà Facebook hỏng thì lượt sau không tải lại video. `fb_publish.py` ghi
+`fb-state.json` ngay khi Facebook nhận bài, nên tiến trình chết giữa chừng thì lượt sau chỉ
+in lại link.
+
 Lệnh được tách bằng `shlex(posix=False)` và chạy **không qua shell**: đường dẫn Windows giữ
 nguyên dấu `\`, và dấu `;` trong cấu hình không thành lệnh thứ hai.
 

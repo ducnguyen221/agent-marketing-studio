@@ -9,8 +9,9 @@ thì nó chỉ gắn vào Reel. Mẫu ở đây là mẫu thứ tư và là mẫ
     thân bài 0 URL  +  một ảnh infographic  →  comment đầu tiên chứa link
 
 Hai ràng buộc đến từ chính Facebook, không phải từ ta:
-· Bài HẸN GIỜ thì CHƯA TỒN TẠI để comment. Muốn có comment thì phải đăng NGAY, hoặc
-  phải có một lượt chạy thứ hai sau giờ publish. Script này chỉ làm nhánh đăng ngay.
+· Bài HẸN GIỜ thì CHƯA TỒN TẠI để comment. Nên đăng hẹn giờ là HAI PHA: `--publish-at`
+  hẹn bài và ghi `fb-state.json`, rồi `--attach-pending` chạy theo lịch gắn comment sau
+  khi Facebook đã phát. Thiếu pha hai thì bài hẹn lên sóng mà không có link.
 · Comment cần scope `pages_manage_engagement`. Thiếu là Graph trả lỗi — và script này
   DỪNG LỚN TIẾNG chứ không nuốt, vì một bài không link trong thân mà cũng không link ở
   comment là bài mồ côi: người đọc không có đường nào về bài viết.
@@ -47,22 +48,129 @@ def _cfg(path: str) -> dict:
     return c
 
 
-def dang_anh(cfg: dict, message: str, image_path: str) -> tuple[str, str]:
-    """Đăng ảnh kèm caption. Trả về (photo_id, post_id).
+# Graph đòi mốc hẹn ở tương lai ít nhất 10 phút. Chừa thêm một phút cho trễ mạng: mốc sát
+# hơn thế thì đăng NGAY, vì nó vốn đã gần như đúng giờ.
+SAN_HEN_GIO = 11 * 60
+# Quá giờ hẹn chừng này mà Facebook vẫn chưa phát thì không còn là "chờ" nữa.
+QUA_HAN = 2 * 3600
+# Một file trạng thái cho MỖI bài, nằm cạnh comment.txt. Nó là thứ duy nhất chống đăng
+# trùng: có file = bài đã lên Facebook hoặc đã hẹn, chạy lại chỉ in lại link.
+TRANG_THAI = "fb-state.json"
+
+
+def dang_anh(cfg: dict, message: str, image_path: str,
+             publish_ts: int | None = None) -> tuple[str, str]:
+    """Đăng ảnh kèm caption. Trả về (photo_id, post_id). `post_id` rỗng nếu Graph không trả.
 
     Dùng /{page_id}/photos chứ không phải /feed: /feed chỉ nhận link hoặc chữ, muốn ảnh
     hiện to trên feed thì phải đi đường photos. Nó trả về CẢ photo_id lẫn post_id —
     comment phải gắn vào **post_id**, gắn vào photo_id thì comment nằm ở chỗ khác.
+
+    `publish_ts` có giá trị = HẸN GIỜ: ảnh lên ở trạng thái chưa phát và Facebook tự phát
+    đúng mốc. Bài hẹn chưa tồn tại trên feed nên chưa gắn comment được — đó là việc của
+    `attach_pending` sau giờ phát.
     """
+    data = {"message": message, "access_token": cfg["page_token"]}
+    if publish_ts:
+        data["published"] = "false"
+        data["scheduled_publish_time"] = str(publish_ts)
+    else:
+        data["published"] = "true"
     with open(image_path, "rb") as f:
         r = requests.post(f"{GRAPH}/{cfg['page_id']}/photos",
-                          data={"message": message, "published": "true",
-                                "access_token": cfg["page_token"]},
-                          files={"source": f}, timeout=180)
+                          data=data, files={"source": f}, timeout=180)
     if not r.ok:
         raise SystemExit(f"Đăng ảnh thất bại: {r.status_code} {str(r.json())[:400]}")
     j = r.json()
-    return j.get("id", ""), j.get("post_id", "") or j.get("id", "")
+    return j.get("id", ""), j.get("post_id", "")
+
+
+def da_len_song(cfg: dict, post_id: str) -> tuple[bool, str]:
+    """(đã phát chưa, permalink). Hỏi thẳng Facebook, không suy từ đồng hồ máy mình."""
+    r = requests.get(f"{GRAPH}/{post_id}",
+                     params={"fields": "is_published,permalink_url",
+                             "access_token": cfg["page_token"]}, timeout=60)
+    if not r.ok:
+        raise SystemExit(f"Không đọc được trạng thái bài {post_id}: "
+                         f"{r.status_code} {str(r.json())[:300]}")
+    j = r.json()
+    return bool(j.get("is_published")), (j.get("permalink_url")
+                                         or f"https://www.facebook.com/{post_id}")
+
+
+def dien_cho_trong(text: str, gia_tri: dict) -> tuple[str, list[str]]:
+    """Thay `{{KHOA}}` bằng giá trị. Khoá có giá trị RỖNG thì bỏ nguyên dòng chứa nó.
+
+    Comment mẫu có cả dòng blog lẫn dòng YouTube. Chiến dịch chưa có video mà giữ dòng
+    `{{YOUTUBE_URL}}` thì hoặc bị cổng chặn vì còn chỗ trống, hoặc người đọc gặp một dòng
+    chết. Bỏ dòng là đúng, nhưng trả về dòng nào đã bỏ để in ra — không bỏ im lặng.
+    """
+    bo, ra = [], []
+    for dong in text.splitlines(keepends=True):
+        if any(not v and ("{{" + k + "}}") in dong for k, v in gia_tri.items()):
+            bo.append(dong.strip())
+            continue
+        for k, v in gia_tri.items():
+            dong = dong.replace("{{" + k + "}}", v)
+        ra.append(dong)
+    return "".join(ra), bo
+
+
+def _ghi_json(path: Path, d: dict) -> None:
+    tam = path.with_name(path.name + ".tmp")
+    tam.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
+    os.replace(tam, path)
+
+
+def _dong_ket_qua(d: dict) -> str:
+    """Dòng JSON mà `campaign_step.step_release` đọc. Thiếu `url` là nó coi như hỏng."""
+    return json.dumps({"url": d.get("permalink") or f"https://www.facebook.com/{d['post_id']}",
+                       "post_id": d["post_id"], "scheduled": bool(d.get("scheduled")),
+                       "publish_at": d.get("publish_at", ""),
+                       "comment_id": d.get("comment_id", "")}, ensure_ascii=False)
+
+
+def attach_pending(cfg: dict, goc: Path, *, now: float | None = None,
+                   doc_song=None, gui_comment=None) -> list[dict]:
+    """Pha hai của đăng hẹn giờ: gắn comment đầu cho bài đã tới giờ phát mà chưa có comment.
+
+    Chạy lại bao nhiêu lần cũng được. Bài đã có `comment_id` thì bỏ qua, bài chưa tới giờ
+    thì chờ. PHẢI có một lượt chạy theo lịch gọi hàm này: thiếu nó thì bài hẹn lên sóng mà
+    không có đường về blog.
+
+    Không kiểm lại Cổng 2 hay mức tự trị: bài đã NẰM TRÊN Facebook. Chặn comment lúc này
+    không rút được bài, chỉ biến nó thành bài mồ côi. Chữ của comment đã chốt từ lúc hẹn và
+    lưu trong file trạng thái, nên sửa `comment.txt` sau khi duyệt cũng không lọt ra ngoài.
+    """
+    now = time.time() if now is None else now
+    doc_song = doc_song or (lambda pid: da_len_song(cfg, pid))
+    gui_comment = gui_comment or (lambda pid, msg: dang_comment(cfg, pid, msg))
+    ra = []
+    for f in sorted(Path(goc).rglob(TRANG_THAI)):
+        d = json.loads(f.read_text(encoding="utf-8"))
+        kq = {"file": str(f), "post_id": d.get("post_id", "")}
+        if d.get("comment_id"):
+            kq["status"] = "done"
+        elif now < float(d.get("publish_ts") or 0):
+            kq["status"] = "waiting"
+        else:
+            tre = now - float(d.get("publish_ts") or 0)
+            try:
+                song, link = doc_song(d["post_id"])
+                if not song:
+                    kq["status"] = "overdue" if tre > QUA_HAN else "waiting"
+                    kq["reason"] = f"quá giờ hẹn {int(tre // 60)} phút mà Facebook chưa phát"
+                else:
+                    d["comment_id"] = gui_comment(d["post_id"], d["comment"])
+                    d["permalink"] = link
+                    _ghi_json(f, d)
+                    kq.update(status="attached", comment_id=d["comment_id"], url=link)
+            except SystemExit as e:
+                # Một bài hỏng không được giữ chân các bài sau: mỗi giờ trễ là thêm người
+                # đọc thấy bài không có link.
+                kq.update(status="failed", reason=str(e))
+        ra.append(kq)
+    return ra
 
 
 def dang_comment(cfg: dict, object_id: str, message: str) -> str:
@@ -171,20 +279,55 @@ def _cong_2(post: Path, message_file: str, comment_file: str) -> tuple[bool, str
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Đăng post + ảnh, rồi comment đầu chứa link.")
     ap.add_argument("--config", required=True, help="facebook_config.json (page_id + page_token)")
-    ap.add_argument("--message-file", required=True, help="thân bài — KHÔNG được chứa URL")
-    ap.add_argument("--image", required=True, help="ảnh infographic đính kèm")
-    ap.add_argument("--comment-file", required=True, help="comment đầu — PHẢI có ít nhất 1 URL")
+    ap.add_argument("--message-file", help="thân bài — KHÔNG được chứa URL")
+    ap.add_argument("--image", help="ảnh infographic đính kèm")
+    ap.add_argument("--comment-file", help="comment đầu — PHẢI có ít nhất 1 URL")
     ap.add_argument("--dry-run", action="store_true", help="kiểm hết nhưng không gọi Graph")
     ap.add_argument("--post", help="thư mục bài — nguồn của cổng tự trị VÀ cổng 2. Bắt buộc khi đăng thật.")
     ap.add_argument("--station", default=None,
                     help="trạm chứa CHANNELS.md (mặc định: như studio_paths)")
+    ap.add_argument("--publish-at", default="",
+                    help="mốc hẹn, unix giây. Rỗng hoặc sát hơn 11 phút = đăng ngay")
+    ap.add_argument("--fill", action="append", default=[], metavar="KHOA=GIA_TRI",
+                    help="thay {{KHOA}} trong thân bài và comment; giá trị rỗng = bỏ dòng đó")
+    ap.add_argument("--attach-pending", metavar="THU_MUC",
+                    help="PHA HAI: gắn comment cho mọi bài hẹn giờ đã phát trong thư mục này")
     a = ap.parse_args(argv)
 
-    for p in (a.config, a.message_file, a.image, a.comment_file):
+    if a.attach_pending:
+        ket = attach_pending(_cfg(a.config), Path(a.attach_pending))
+        for kq in ket:
+            print(json.dumps(kq, ensure_ascii=False))
+        hong = [k for k in ket if k["status"] in ("failed", "overdue")]
+        for k in hong:
+            sys.stderr.write(f"BÀI {k['post_id']} ĐANG KHÔNG CÓ LINK: {k.get('reason')}\n")
+        return 1 if hong else 0
+
+    for ten, p in (("--config", a.config), ("--message-file", a.message_file),
+                   ("--image", a.image), ("--comment-file", a.comment_file)):
+        if not p:
+            raise SystemExit(f"thiếu {ten}")
         if not os.path.isfile(p):
             raise SystemExit(f"không thấy file: {p}")
 
-    msg, cmt = _doc(a.message_file), _doc(a.comment_file)
+    gia_tri = {}
+    for kv in a.fill:
+        if "=" not in kv:
+            raise SystemExit(f"--fill {kv!r} sai dạng, cần KHOA=GIA_TRI")
+        k, v = kv.split("=", 1)
+        gia_tri[k.strip()] = v.strip()
+    msg, bo_than = dien_cho_trong(_doc(a.message_file), gia_tri)
+    cmt, bo_cmt = dien_cho_trong(_doc(a.comment_file), gia_tri)
+    for dong in bo_than + bo_cmt:
+        print(f"  bỏ dòng  : {dong}  (chỗ trống không có giá trị)")
+
+    hen = None
+    if a.publish_at.strip():
+        try:
+            ts = int(a.publish_at.strip())
+        except ValueError:
+            raise SystemExit(f"--publish-at {a.publish_at!r} không phải unix giây")
+        hen = ts if ts > time.time() + SAN_HEN_GIO else None
 
     # --- cổng TRƯỚC khi gọi Graph -------------------------------------------------
     trong_than = _URL.findall(msg)
@@ -202,9 +345,23 @@ def main(argv=None) -> int:
     print(f"  thân bài : {len(msg)} ký tự, 0 URL")
     print(f"  ảnh      : {os.path.basename(a.image)} ({os.path.getsize(a.image) / 1024:.0f} KB)")
     print(f"  comment  : {len(_URL.findall(cmt))} URL")
+    print(f"  lịch     : {time.strftime('%Y-%m-%d %H:%M', time.localtime(hen)) if hen else 'đăng ngay'}")
 
     if a.dry_run:
         print("  [dry-run] mọi cổng đã qua, KHÔNG gọi Graph.")
+        return 0
+
+    # --- ĐÃ ĐĂNG RỒI thì không đăng lại ---------------------------------------------
+    # Đặt TRƯỚC hai cổng người: bước này không gọi Graph, chỉ in lại link. Nếu để sau, một
+    # kênh vừa bị hạ mức tự trị sẽ làm lượt chạy lại báo hỏng cho một bài ĐANG nằm trên
+    # Facebook, và đường ống sẽ không bao giờ ghi nhận nó.
+    state_file = Path(a.comment_file).resolve().parent / TRANG_THAI
+    if state_file.is_file():
+        d = json.loads(state_file.read_text(encoding="utf-8"))
+        print(f"  đã có    : {state_file} — KHÔNG đăng lại")
+        if not d.get("comment_id"):
+            print("  [chú ý]  bài chưa có comment; --attach-pending sẽ gắn sau giờ phát")
+        print(_dong_ket_qua(d))
         return 0
 
     # --- CỔNG 2: bài NÀY đã được người duyệt chưa -------------------------------
@@ -244,15 +401,38 @@ def main(argv=None) -> int:
             ""]))
         return 4
 
-    photo_id, post_id = dang_anh(cfg, msg, a.image)
+    photo_id, post_id = dang_anh(cfg, msg, a.image, hen)
+    if not post_id:
+        if hen:
+            # Không có post_id thì pha hai không biết gắn comment vào đâu. Ảnh đã hẹn trên
+            # Facebook rồi, nên phải nói to kèm photo_id để người vào xử lý tay.
+            raise SystemExit(f"Facebook đã nhận ảnh hẹn giờ (photo_id={photo_id}) nhưng KHÔNG "
+                             f"trả post_id — không gắn comment tự động được. Vào Meta Business "
+                             f"Suite xử lý tay trước giờ phát.")
+        post_id = photo_id
     print(f"  FB_PHOTO_ID={photo_id}")
     print(f"  FB_POST_ID={post_id}")
 
-    # Comment NGAY. Càng để lâu càng nhiều người thấy bài chưa có đường về.
-    time.sleep(2)
-    cmt_id = dang_comment(cfg, post_id, cmt)
-    print(f"  FB_COMMENT_ID={cmt_id}")
-    print(f"  FB_PERMALINK=https://www.facebook.com/{post_id}")
+    # Ghi trạng thái NGAY sau khi Facebook nhận bài, TRƯỚC comment. Comment mà hỏng thì
+    # lượt chạy lại vẫn thấy file này và không đăng trùng; pha hai gắn comment sau.
+    d = {"post_id": post_id, "photo_id": photo_id, "scheduled": bool(hen),
+         "publish_ts": hen or int(time.time()),
+         "publish_at": time.strftime("%Y-%m-%dT%H:%M:%S%z",
+                                     time.localtime(hen or time.time())),
+         "comment": cmt, "comment_id": "", "permalink": ""}
+    _ghi_json(state_file, d)
+
+    if hen:
+        print(f"  FB_SCHEDULED={d['publish_at']} — comment gắn sau giờ phát bằng --attach-pending")
+    else:
+        # Comment NGAY. Càng để lâu càng nhiều người thấy bài chưa có đường về.
+        time.sleep(2)
+        d["comment_id"] = dang_comment(cfg, post_id, cmt)
+        d["permalink"] = f"https://www.facebook.com/{post_id}"
+        _ghi_json(state_file, d)
+        print(f"  FB_COMMENT_ID={d['comment_id']}")
+        print(f"  FB_PERMALINK={d['permalink']}")
+    print(_dong_ket_qua(d))
     return 0
 
 

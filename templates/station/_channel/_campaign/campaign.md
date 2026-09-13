@@ -77,12 +77,16 @@ runtime:
   #     ⚠️ Mã thoát 0 KHÔNG đủ để tính là xong — hệ còn kiểm content.md có chữ thật không.
   #
   # audio_cmd:    '<lệnh của bạn> --post "{post}"'      # → atlas/audio.mp3, TUỲ CHỌN
-  # youtube_cmd:  '<lệnh của bạn> --post "{post}"'      # in JSON có khoá `url`, TUỲ CHỌN
-  # facebook_cmd: '<lệnh của bạn> --post "{post}" --web "{web}"'   # in JSON `url`, TUỲ CHỌN
+  # youtube_cmd:  '<lệnh của bạn> --post "{post}" --publish-at "{publish_at}"'   # JSON `url`
+  # facebook_cmd: '<lệnh của bạn> --post "{post}" --publish-at "{publish_ts}"'   # JSON `url`
+  # publish_time: "09:00"      # giờ phát trong ngày hẹn, giờ máy trạm
   #
   # Ba hook cuối KHÔNG khai thì BỎ QUA, không phải lỗi — chiến dịch chỉ có web + ảnh +
   # post vẫn chạy trót lọt. Repo có sẵn `scripts/pipeline/fb_publish.py` làm bản tham
   # chiếu để trỏ `facebook_cmd` vào.
+  # ⚠️ Bài hẹn ở tương lai chỉ đi qua hook có ô {schedule}/{publish_at}/{publish_ts}.
+  #    Facebook hẹn giờ cần thêm task theo lịch `fb_publish.py --attach-pending` để gắn
+  #    comment chứa link sau giờ phát. Chi tiết: templates/hooks/README.md.
   #
   # Xem `templates/hooks/` để lấy script mẫu chép về sửa.
   #

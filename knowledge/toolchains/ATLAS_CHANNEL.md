@@ -122,9 +122,9 @@ trạng thái khó dọn nhất.
 | 🔒 **Cổng 2** | | 👤 | `Post.review_status=approved` | | **agent không tự đặt** |
 | **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh tóm tắt** (`templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`) | `youtube/thumbnail.png` · `atlas/audio.mp3` · `youtube/video.mp4` · `facebook/infographic.png` + `.prompt.txt` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
 | **B6** Dựng trang | ⑤ | ⚙️ | `build_blog_html.py` | `atlas/atlas.html` | **≥6 thẻ `og:`** |
-| **B7** Đăng YouTube | ⑥ | ⚙️ | upload + `publishAt` giờ vàng | `youtube_url` | GET 200 |
+| **B7** Đăng YouTube | ⑥ | ⚙️ | upload + `publishAt` = ô `{publish_at}` của `release` (ngày cột `schedule`, giờ `runtime.publish_time`) | `youtube_url` | GET 200 |
 | **B8** Đăng web | ⑥ | ⚙️ | chép 3 file vào `atlas/content/<cat>/` (trang **nhúng video B7**) → `generate-manifest.js` → `git add` **đích danh từng path** → push | `blog_url` | **GET `blog_url` = 200 TRƯỚC khi ghi sổ** |
-| **B9** Đăng Facebook | ⑥ | ⚙️ | ⑨a post + `facebook/infographic.png`, **thân bài không link nào** → `fb_post_id`; ⑨b **comment ngay** bằng `facebook/comment.txt` → `fb_comment_id` | `fb_post_id` · `fb_permalink` · `fb_comment_id` | URL trong thân post = **0** · `fb_comment_id` khác rỗng · comment cách post **≤60 giây** |
+| **B9** Đăng Facebook | ⑥ | ⚙️ | ⑨a post + `facebook/infographic.png`, **thân bài không link nào** → `fb_post_id`; ⑨b **comment** bằng `facebook/comment.txt` → `fb_comment_id`: đăng ngay thì comment liền; **hẹn giờ** (`--publish-at`) thì task theo lịch `--attach-pending` comment sau khi Facebook phát | `fb_post_id` · `fb_permalink` · `fb_comment_id` · `facebook/fb-state.json` | URL trong thân post = **0** · `fb_comment_id` khác rỗng · đăng ngay: comment cách post **≤60 giây** · hẹn giờ: quá giờ phát **2 giờ** chưa có comment là báo động |
 | **B10** Ghi sổ & đo | ⑥→⑦ | ⚙️ | `register_publish set` ghi `publish.json` · `continuity.json` ở gốc kênh · **URL THẬT vào 3 cột `web`/`youtube`/`facebook` của bảng Content trong `campaign.md`** (idempotent theo `post_id`) **ngay khi có URL** | `publish.json` | `summary` ≤60 từ · `key_terms_explained` ≥3 |
 
 ### Vì sao verify HTTP 200 trước khi ghi sổ

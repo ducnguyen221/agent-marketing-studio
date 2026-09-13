@@ -43,7 +43,7 @@ import re
 import subprocess
 import sys
 import unicodedata
-from datetime import date, datetime
+from datetime import date, datetime, time as gio_trong_ngay, timezone
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -587,6 +587,56 @@ def step_build_page(campaign: Path, *, bot, dry_run=False, run_cmd=None,
     return {"step": "build-page", "xu_ly": len(done), "post": done, "failed": failed}
 
 
+GIO_DANG_MAC_DINH = "09:00"
+
+# Ba ô này là đường DUY NHẤT để hook biết bài định đăng ngày nào. Lệnh nào không nhắc
+# tới ô nào trong đây thì nó KHÔNG có cách nào hẹn giờ, và `step_release` sẽ không gọi
+# nó cho một bài có lịch ở tương lai — xem `_khong_the_hen_gio`.
+O_NGAY = ("{schedule}", "{publish_at}", "{publish_ts}")
+
+
+def publish_moment(schedule: str, gio_dang: str = GIO_DANG_MAC_DINH) -> tuple[str, str]:
+    """(RFC3339 UTC, unix giây) của mốc hẹn đăng. Hai chuỗi rỗng nếu bài không có lịch.
+
+    Hai định dạng vì hai nền tảng đòi hai kiểu: YouTube `publishAt` ăn RFC3339 UTC, còn
+    Graph `scheduled_publish_time` ăn số giây. Tính ở đây một lần rồi truyền xuống, chứ
+    để mỗi hook tự đổi ngày ra giờ là mở hai chỗ cho hai kết quả lệch nhau.
+
+    `schedule` là ngày theo giờ ĐỊA PHƯƠNG của máy trạm — đó là múi giờ người vận hành
+    nghĩ bằng. Đổi sang UTC ở ngay đây, không đẩy việc đó cho hook.
+    """
+    lich = (schedule or "").strip()
+    if not lich:
+        return "", ""
+    n = date.fromisoformat(lich)                 # ValueError = lịch rác, để nó nổ
+    hh, mm = (int(x) for x in str(gio_dang).strip().split(":"))
+    moc = datetime.combine(n, gio_trong_ngay(hh, mm)).astimezone()
+    return (moc.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            str(int(moc.timestamp())))
+
+
+def _khong_the_hen_gio(lenh_tho: str, schedule: str, hom_nay: date) -> str:
+    """Lý do KHÔNG được gọi hook này, hoặc chuỗi rỗng nếu gọi được.
+
+    Một lệnh không nhắc tới ô ngày nào thì đăng NGAY là hành vi duy nhất nó biết làm.
+    Gọi nó cho bài hẹn tuần sau là đăng sớm cả tuần — hỏng ở đây không có nút thu hồi,
+    nên chặn trước còn hơn để nền tảng phát đi rồi mới biết.
+    """
+    lich = (schedule or "").strip()
+    if not lich:
+        return ""                                 # không có lịch = đăng ngay, như cũ
+    try:
+        n = date.fromisoformat(lich)
+    except ValueError:
+        return f"lịch {lich!r} không đọc được — không đoán ngày đăng"
+    if n <= hom_nay:
+        return ""
+    if any(o in lenh_tho for o in O_NGAY):
+        return ""
+    return (f"bài hẹn {lich} (còn {(n - hom_nay).days} ngày) mà lệnh không nhận ô ngày nào "
+            f"trong {', '.join(O_NGAY)} — gọi bây giờ là đăng sớm")
+
+
 def posts_to_release(campaign: Path) -> list[dict]:
     """Đã lên web, đã qua Cổng 3 (nếu bảng có khai), chưa phát hành."""
     _, _, row = _doc(campaign)
@@ -607,7 +657,7 @@ def posts_to_release(campaign: Path) -> list[dict]:
 
 
 def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
-                   only_post: str | None = None) -> dict:
+                   only_post: str | None = None, hom_nay: date | None = None) -> dict:
     """B7 YouTube · B9 Facebook · B10 ghi sổ. Bước CUỐI, đẩy bài ra nền tảng ngoài.
 
     ## Kênh ngoài đều là HOOK, không cái nào khoá cứng
@@ -617,6 +667,23 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
     Repo có sẵn `fb_publish.py` làm bản tham chiếu; trạm trỏ hook vào đó là xong.
 
     Lệnh phải in ra **một dòng JSON có khoá `url`**. Không có URL = không biết bài nằm đâu.
+
+    ## Ô thay thế trong lệnh
+
+    `{post}` thư mục bài · `{cid}` mã bài · `{web}` link blog · `{youtube_url}` link YouTube
+    vừa đăng ở lượt này (YouTube chạy trước Facebook) · `{schedule}` ngày hẹn `YYYY-MM-DD` ·
+    `{publish_at}` mốc hẹn RFC3339 UTC cho YouTube · `{publish_ts}` mốc hẹn unix giây cho
+    Facebook. Giờ trong ngày lấy từ `runtime.publish_time`, mặc định 09:00 giờ máy trạm.
+
+    ## Bài hẹn ở tương lai chỉ đi qua lệnh BIẾT NGÀY
+
+    Lệnh không nhắc tới ô ngày nào thì chỉ biết đăng ngay. Gọi nó cho bài tuần sau là đăng
+    sớm cả tuần, và không nền tảng nào có nút thu hồi — nên bước này từ chối gọi.
+
+    ## Mỗi kênh ghi link NGAY khi có
+
+    YouTube lên mà Facebook hỏng thì link YouTube vẫn vào bảng, và lượt sau bỏ qua YouTube.
+    Không thế thì mỗi lần chạy lại là thêm một video trùng.
 
     ## Chiến dịch CHỈ CÓ WEB vẫn phát hành được
 
@@ -636,6 +703,14 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
     channel = [(c, (rt.get(f"{c}_cmd") or "").strip())
             for c in ("youtube", "facebook")]
     channel = [(c, l) for c, l in channel if l]
+    gio_dang = str(rt.get("publish_time") or GIO_DANG_MAC_DINH).strip()
+    try:
+        publish_moment("2000-01-01", gio_dang)
+    except ValueError:
+        return {"step": "release", "xu_ly": 0, "post": [],
+                "failed": [{"post": "*", "reason":
+                            f"runtime.publish_time = {gio_dang!r} không đọc được (cần HH:MM)"}]}
+    hom_nay = hom_nay or date.today()
 
     ds = posts_to_release(campaign)
     if only_post:
@@ -652,10 +727,30 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
             done.append(cid)
             continue
 
+        lich = (d.get("schedule") or "").strip()
+        try:
+            publish_at, publish_ts = publish_moment(lich, gio_dang)
+        except ValueError:
+            failed.append({"post": cid, "reason": f"lịch {lich!r} không đọc được"})
+            continue
+
         link, loi_kenh = {}, []
         for name, lenh_tho in channel:
+            if (d.get(name) or "").strip():
+                # Kênh này đã lên ở lượt trước (kênh kia hỏng nên bài chưa xong). Gọi lại
+                # là tải thêm một video, đăng thêm một bài.
+                link[name] = d[name].strip()
+                continue
+            vi_sao = _khong_the_hen_gio(lenh_tho, lich, hom_nay)
+            if vi_sao:
+                loi_kenh.append(f"{name}: {vi_sao}")
+                continue
             cmd = [x.replace("{post}", str(post)).replace("{cid}", cid)
                     .replace("{web}", (d.get("web") or "").strip())
+                    .replace("{youtube_url}", link.get("youtube", ""))
+                    .replace("{schedule}", lich)
+                    .replace("{publish_at}", publish_at)
+                    .replace("{publish_ts}", publish_ts)
                     for x in split_command(lenh_tho)]
             r = run_cmd(cmd)
             url = ""
@@ -670,13 +765,25 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
                 loi_kenh.append(f"{name}: {(getattr(r, 'stderr', '') or 'không trả URL')[:120]}")
                 continue
             link[name] = url
+            # Ghi NGAY, trước khi thử kênh sau. Link nằm trong bộ nhớ mà kênh sau làm
+            # tiến trình chết thì lượt tới không biết kênh này đã lên.
+            fm, than, _ = _doc(campaign)
+            than = md_io.upsert_row(than, "CONTENT", "content_id",
+                                    {"content_id": cid, name: url}, chi_cap_nhat=True)
+            md_io.write_fm(campaign / "campaign.md", fm, than)
 
         if loi_kenh:
             failed.append({"post": cid, "reason": "; ".join(loi_kenh)})
             continue
 
         fm, than, _ = _doc(campaign)
-        o = {"content_id": cid, "published": date.today().isoformat()}
+        # Có kênh ngoài mà bài hẹn ở tương lai thì mọi hook đều đã nhận ô ngày (không thì
+        # `_khong_the_hen_gio` đã chặn), tức bài được HẸN chứ chưa phát. Ghi ngày hẹn, không
+        # ghi hôm nay: cột này trả lời "bài ra mắt ngày nào".
+        ngay = date.today().isoformat()
+        if channel and lich and date.fromisoformat(lich) > hom_nay:
+            ngay = lich
+        o = {"content_id": cid, "published": ngay}
         o.update(link)
         than = md_io.upsert_row(than, "CONTENT", "content_id", o, chi_cap_nhat=True)
         md_io.write_fm(campaign / "campaign.md", fm, than)
