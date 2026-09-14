@@ -2,7 +2,7 @@
 schema: content/1
 content_id: GTX-002
 campaign_id: CMP-2609-gioi-thieu
-content_name: 'Kiểm bài bằng số, không bằng cảm giác: 23 cổng làm gì'
+content_name: 'Kiểm bài bằng số, không bằng cảm giác: 24 cổng làm gì'
 ---
 # {{content_name}}
 

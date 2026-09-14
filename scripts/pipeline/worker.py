@@ -112,7 +112,7 @@ def _has_artefact(step: str, post: Path) -> bool:
     MÃ THOÁT KHÁC 0 KHÔNG ĐỦ ĐỂ TÍNH LÀ HỎNG. Hai bước trong đường ống trả mã khác 0 cho
     một KẾT QUẢ hợp lệ, không phải cho sự cố:
 
-      · `blog_gates.py` trả 1 khi kết luận ĐỎ — nhưng nó đã chấm xong 23 cổng và ghi
+      · `blog_gates.py` trả 1 khi kết luận ĐỎ — nhưng nó đã chấm xong 24 cổng và ghi
         `gates.json` tử tế.
       · `soan` trả khác 0 khi bài viết ra chưa qua cổng — nhưng bài ĐÃ ĐƯỢC VIẾT.
 
@@ -192,7 +192,7 @@ def run_one_job(campaign: Path, *, bot=None, run_cmd=_run_step) -> dict:
     # MÃ THOÁT KHÁC 0 KHÔNG ĐỦ ĐỂ TÍNH LÀ HỎNG — hỏi KẾT QUẢ THẬT.
     #
     # `blog_gates.py` trả mã 1 khi kết luận ĐỎ. Đó là một KẾT QUẢ, không phải sự cố: nó đã
-    # chấm xong 23 cổng và ghi `gates.json` tử tế. Đọc mã thoát rồi kết luận "hỏng" thì mọi
+    # chấm xong 24 cổng và ghi `gates.json` tử tế. Đọc mã thoát rồi kết luận "hỏng" thì mọi
     # bài ra đỏ sẽ bị chấm lại 3 lần rồi vứt vào `failed/`, và KHÔNG BAO GIỜ đi tiếp tới
     # `fix-gates` — tức đúng những bài cần sửa thì không ai sửa. (Bắt được 12/09/2026 khi
     # chạy thử thật trên NEN-002.)

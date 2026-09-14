@@ -13,7 +13,7 @@ Trước khi đụng bất cứ ô nào: đọc [`../knowledge/data_model/DATA_M
 
 ```
 ① new ─→ ② plan ─🔒cổng 1─→ ③ produce ─→ ④ selfqa ─🔒cổng 2─→ ⑤ render ─→ ⑥ publish ─→ ⑦ measure
-     bảng Content         content.md      23 cổng kiểm       audio/video    publish.json     actual_*
+     bảng Content         content.md      24 cổng kiểm       audio/video    publish.json     actual_*
       (proposed)          + posts[]        (MÁY tự kiểm)                    + URL vào bảng   + báo cáo .md
 ```
 
@@ -93,7 +93,7 @@ Mỗi phần tử `posts[]` phải có: `post_id`, `channel`, `post_format`, `po
 |---|---|
 | **Vai** | `qa-reviewer` (tuân thủ, chặn phát hành) · `content-editor` (hay/rõ, tư vấn) |
 | **Vào** | Post `agent_status = completed` |
-| **Làm** | Chạy `blog_gates.py` (23 cổng, kiểm bằng số) + `../.agents/checklists/QA_ASSET.md`: giọng đúng kênh · không lộ tên công cụ nội bộ · hashtag đúng giới hạn · không còn `[KIỂM CHỨNG]` mở · claim có trong `research.md` · Facebook không markdown literal |
+| **Làm** | Chạy `blog_gates.py` (24 cổng, kiểm bằng số) + `../.agents/checklists/QA_ASSET.md`: giọng đúng kênh · không lộ tên công cụ nội bộ · hashtag đúng giới hạn · không còn `[KIỂM CHỨNG]` mở · claim có trong `research.md` · Facebook không markdown literal |
 | **Ra** | `quality_check = passed` / `failed` + `agent_status = completed` / `blocked` (cả hai do `register_publish qa` đặt từ `gates.json`) |
 
 Trạng thái cổng có **ba** giá trị: xanh · đỏ · **thiếu**. Cổng không chạy được là *chưa biết*,

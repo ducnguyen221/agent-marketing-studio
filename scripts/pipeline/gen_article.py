@@ -61,6 +61,9 @@ _ANCHOR_TO_KEY = {
 # Nằm lồng bên trong khối facebook_post nên phải bắt riêng, nếu không nó bị nuốt vào
 # thân post và biến thành đúng cái lỗi "link trong thân bài" mà cổng G09 đang chặn.
 _COMMENT_RE = re.compile(r"^\s{0,3}(#{2,4})\s*comment_1\s*$", re.I)
+# Prompt tạo ảnh Facebook — cũng lồng trong khối facebook_post, cũng phải bắt riêng: lọt
+# vào thân post là cả trang prompt lên feed; lọt vào comment là prompt nằm dưới link.
+_IMAGE_PROMPT_RE = re.compile(r"^\s{0,3}(#{2,4})\s*image_prompt\s*$", re.I)
 
 # Marker phân mục của mẫu content (vd "<!-- BEGIN BLOG -->", "<!-- END FB_POST -->")
 # — KHÔNG được lọt vào file kênh (sẽ vào narration/HTML).
@@ -78,6 +81,7 @@ _OUT_FILES = {
     "blog": PP.LAYOUT["blog"],
     "fb_post": PP.LAYOUT["fb_post"],
     "fb_comment": PP.LAYOUT["fb_comment"],
+    "fb_image_prompt": PP.LAYOUT["fb_prompt"],
     "youtube_desc": PP.LAYOUT["yt_desc"],
 }
 # reel CHỈ sinh khi bài có short.mp4 — bài thường không dùng tới, sinh ra là rác và còn
@@ -141,15 +145,21 @@ def split_content(md_text, da_bo=None):
         # Thứ tự nhận dạng: neo "## post:x" -> "### comment_1" -> heading đánh số.
         job_id = _ANCHOR_RE.match(raw)
         mc = _COMMENT_RE.match(raw) if job_id is None else None
+        if job_id is None and mc is None:
+            mi = _IMAGE_PROMPT_RE.match(raw)
+            if mi is not None:
+                mc, key_con = mi, "fb_image_prompt"
+        else:
+            key_con = "fb_comment"
         m = _SECTION_RE.match(raw) if (job_id is None and mc is None) else None
         if job_id is not None:
             level = len(job_id.group(1))
             key = _ANCHOR_TO_KEY.get(job_id.group(2).lower())
         elif mc is not None:
-            # comment_1 lồng bên trong facebook_post: đóng khối cha rồi mở khối riêng,
-            # bất kể cấp heading, nên ép level về cấp của khối đang mở.
+            # comment_1 và image_prompt lồng bên trong facebook_post: đóng khối đang mở
+            # rồi mở khối riêng, bất kể cấp heading, nên ép level về cấp của khối đang mở.
             level = cur[1] if cur else len(mc.group(1))
-            key = "fb_comment"
+            key = key_con
         if m:
             level = len(m.group(1))
             num = int(m.group(2))

@@ -72,7 +72,7 @@
 | **Thợ tự gọi agent sau khi duyệt** (một việc mỗi lượt, một agent một lúc) | `scripts/pipeline/worker.py` · `scripts/runners/run-worker.ps1` |
 | Đăng bài lên web (đích khai bằng cấu hình, không khoá cứng) | `scripts/pipeline/web_publish.py` |
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |
-| **Chấm một bài bằng 23 cổng đếm được** | `scripts/pipeline/blog_gates.py <thư mục bài>` |
+| **Chấm một bài bằng 24 cổng đếm được** | `scripts/pipeline/blog_gates.py <thư mục bài>` |
 | **Số đo thật của bài đã đăng, để đặt ngưỡng** | `fixtures/baseline/blog_baseline.md` |
 | **Dựng ảnh infographic tóm tắt cả bài** (prompt mẫu + cổng kiểm chính tả) | `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` |
 | Nguồn chưng cất của kho tri thức (ghi công) | `knowledge/README.md` |

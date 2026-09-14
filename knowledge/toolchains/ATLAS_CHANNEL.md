@@ -21,7 +21,7 @@ AST-001_gpt6-astra/                  ← Content.folder_path — MỘT thư mụ
 ├─ content.md         B2 · nguồn DUY NHẤT của text mọi kênh
 ├─ podcast.txt        B5 · kịch bản đọc
 ├─ scenes.json        B5 · kịch bản cảnh (src phân giải theo thư mục CỦA scenes.json)
-├─ gates.json         B4 · nhật ký 23 cổng
+├─ gates.json         B4 · nhật ký 24 cổng
 ├─ publish.json       B10 · gộp result.json + continuity.json cũ
 │  # thư mục con = ĐEM ĐI ĐĂNG, theo KÊNH, đọc theo thứ tự đăng
 ├─ youtube/   video.mp4 · thumbnail.png · description.txt
@@ -117,10 +117,10 @@ trạng thái khó dọn nhất.
 | 🔒 **Cổng 1** | | 👤 | `Content.status=approved` + `approved_date` | | **agent không tự đặt** |
 | **B1** Nghiên cứu | ③ | 🤖 | WebSearch: định nghĩa từ nguồn chính chủ · **≥1 use-case doanh nghiệp THẬT có dẫn nguồn** · số liệu có ngày. Không tìm ra use-case → **dừng và báo**, đề xuất hoãn | `research.md`: mỗi nguồn 1 dòng `URL · tổ chức · ngày truy cập · trích 1 câu` | **3–7 nguồn**; `<3` thì DỪNG |
 | **B2** Viết | ③ | 🤖 | Điền `content.md` theo neo `## post:`. **Chính kiến tác giả đọc FAIL-CLOSED** — không đọc được thì DỪNG, không viết tiếp | `content.md` | số khối `## post:` = số dòng `Post` · ≥1 khối `> **Góc nhìn:**` |
-| **B3** Tách kênh | ③ | ⚙️ | `gen_article.py` tách **theo neo** | `atlas/blog.md` · `facebook/post.txt` · `facebook/comment.txt` · `youtube/description.txt` | mỗi file tồn tại và **>0 byte** |
-| **B4** Tự kiểm | ④ | ⚙️+🤖 | `blog_gates.py` + `fb_format.py --check` + `QA_ASSET.md` | `gates.json` | 23 cổng; đỏ-chặn → `quality_check=failed` |
+| **B3** Tách kênh | ③ | ⚙️ | `gen_article.py` tách **theo neo** | `atlas/blog.md` · `facebook/post.txt` · `facebook/comment.txt` · `facebook/infographic.prompt.txt` · `youtube/description.txt` | mỗi file tồn tại và **>0 byte** |
+| **B4** Tự kiểm | ④ | ⚙️+🤖 | `blog_gates.py` + `fb_format.py --check` + `QA_ASSET.md` | `gates.json` | 24 cổng; đỏ-chặn → `quality_check=failed` |
 | 🔒 **Cổng 2** | | 👤 | `Post.review_status=approved` | | **agent không tự đặt** |
-| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh tóm tắt** (`templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`) | `youtube/thumbnail.png` · `atlas/audio.mp3` · `youtube/video.mp4` · `facebook/infographic.png` + `.prompt.txt` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
+| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh Facebook**: `make_fb_image.py make` gửi `facebook/infographic.prompt.txt` cho Codex qua cầu A2A, rồi **người soát chữ** và ghi `make_fb_image.py verify` (`templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`) | `youtube/thumbnail.png` · `atlas/audio.mp3` · `youtube/video.mp4` · `facebook/infographic.png` + `.prompt.txt` + `.meta.json` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
 | **B6** Dựng trang | ⑤ | ⚙️ | `build_blog_html.py` | `atlas/atlas.html` | **≥6 thẻ `og:`** |
 | **B7** Đăng YouTube | ⑥ | ⚙️ | upload + `publishAt` = ô `{publish_at}` của `release` (ngày cột `schedule`, giờ `runtime.publish_time`) | `youtube_url` | GET 200 |
 | **B8** Đăng web | ⑥ | ⚙️ | chép 3 file vào `atlas/content/<cat>/` (trang **nhúng video B7**) → `generate-manifest.js` → `git add` **đích danh từng path** → push | `blog_url` | **GET `blog_url` = 200 TRƯỚC khi ghi sổ** |
@@ -183,7 +183,7 @@ export PYTHONIOENCODING=utf-8
 
 python scripts/pipeline/gen_article.py --content-md content.md --meta meta.json --out-dir .
 #   -> atlas/blog.md · facebook/post.txt · facebook/comment.txt · youtube/description.txt
-python scripts/pipeline/blog_gates.py .            # 23 cổng -> gates.json, exit!=0 khi đỏ
+python scripts/pipeline/blog_gates.py .            # 24 cổng -> gates.json, exit!=0 khi đỏ
 python scripts/pipeline/fb_format.py --check facebook/post.txt --comment facebook/comment.txt
 python scripts/pipeline/build_blog_html.py --blog-md atlas/blog.md --meta meta.json \n    --infographic youtube/thumbnail.png --summary-img '<slug>-1.jpg' \n    --youtube-url <link> --audio-src '<slug>.mp3' --out atlas/atlas.html
 ```

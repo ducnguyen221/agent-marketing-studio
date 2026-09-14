@@ -17,7 +17,7 @@ video: 'yes'
 short: 'no'
 notes: ''
 ---
-# research.md — GTX-002 · Kiểm bài bằng số, không bằng cảm giác: 23 cổng làm gì
+# research.md — GTX-002 · Kiểm bài bằng số, không bằng cảm giác: 24 cổng làm gì
 
 > **Frontmatter = brief.** Viết ở khâu ② (lập kế hoạch), người sửa cho tới khi qua Cổng 1.
 > **Thân bài = nghiên cứu.** Viết ở B1, và **đóng băng sau B1** — chỉ được *append* mục

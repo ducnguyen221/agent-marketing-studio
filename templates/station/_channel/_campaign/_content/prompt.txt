@@ -66,6 +66,14 @@ BỐN SỐ ĐO CỦA KHỐI `## post:blog_article` — cổng chấm đo đúng 
 4. KHÔNG CÒN `{{...}}` trong phần bài viết. Riêng `{{BLOG_URL}}` và `{{YOUTUBE_URL}}`
    trong comment Facebook và mô tả YouTube thì GIỮ NGUYÊN — bước đăng mới điền được.
 
+KHỐI `### image_prompt` TRONG `## post:facebook_post` — prompt tạo ảnh đính kèm bài
+Facebook. Nó được gửi NGUYÊN VĂN cho model sinh ảnh, nên viết nó như viết cho máy:
+
+5. Theo khung trong khối mẫu và `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`. Viết sẵn TỪNG
+   chuỗi chữ sẽ nằm trên ảnh, đúng dấu tiếng Việt. Con số trên ảnh phải có trong
+   research.md và đúng nghĩa. Không ghi đường dẫn lưu ảnh. Dài từ 600 ký tự, không còn
+   `{{...}}` — cổng G24 đo hai số này và trả bài về nếu thiếu.
+
 --------------------------------------------------------------------------------
 BA ĐIỀU KHÔNG BAO GIỜ
 --------------------------------------------------------------------------------

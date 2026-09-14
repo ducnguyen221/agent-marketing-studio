@@ -73,7 +73,7 @@ step:
   - id: check-gates
     kind: step
     cmd: ['__check_gates__']   # gọi thẳng blog_gates.py, không qua campaign_step
-    does: chấm 23 cổng đếm được
+    does: chấm 24 cổng đếm được
     artefact: gates.json
     warning: blog_gates trả mã 1 khi kết luận ĐỎ — đó là KẾT QUẢ, không phải sự cố
 

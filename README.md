@@ -24,7 +24,7 @@ Engine điều hành và tự động hóa chiến dịch marketing đa kênh to
   cấu hình — `channel.yml:brand` → `brand.json` (nếu còn) → `brand.md` → `campaign.md` — thành
   một bản chụp JSON cho PowerShell 5.1 đọc, **fail-closed**: thiếu khoá bắt buộc thì dừng chứ
   không trả về JSON dở dang. Chi tiết: [`knowledge/toolchains/NEWS_PIPELINE.md`](knowledge/toolchains/NEWS_PIPELINE.md).
-- **23 cổng kiểm bằng số, ba trạng thái:** xanh · đỏ · **thiếu**. Cổng không chạy được là
+- **24 cổng kiểm bằng số, ba trạng thái:** xanh · đỏ · **thiếu**. Cổng không chạy được là
   *chưa biết*, **không bao giờ** được tính là *đã qua*.
 
 ---

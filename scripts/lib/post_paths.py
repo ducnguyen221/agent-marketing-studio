@@ -27,7 +27,7 @@ LAYOUT = {
     "content":    "content.md",       # B2. Nguồn DUY NHẤT của text mọi kênh.
     "podcast":    "podcast.txt",      # B5, sinh sau Cổng 2 từ blog.md
     "scenes":     "scenes.json",      # B5
-    "gates":      "gates.json",       # B4, nhật ký 23 cổng
+    "gates":      "gates.json",       # B4, nhật ký 24 cổng
     "publish":    "publish.json",     # B10, gộp result.json + continuity.json cũ
 
     # --- youtube ---
@@ -44,7 +44,8 @@ LAYOUT = {
     "fb_post":    "facebook/post.txt",         # thân bài, 0 URL
     "fb_comment": "facebook/comment.txt",      # nơi DUY NHẤT chứa link
     "fb_image":   "facebook/infographic.png",  # đính post FB; dẫn xuất sang atlas <slug>-1.jpg
-    "fb_prompt":  "facebook/infographic.prompt.txt",
+    "fb_prompt":  "facebook/infographic.prompt.txt",  # B3 tách từ ### image_prompt
+    "fb_image_meta": "facebook/infographic.meta.json",  # B5 ai sinh, lúc nào, ai đã soát chữ
     "fb_reel":    "facebook/reel.txt",         # CHỈ khi bài có short.mp4
 }
 

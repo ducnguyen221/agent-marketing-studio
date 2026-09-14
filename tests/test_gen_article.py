@@ -113,3 +113,33 @@ def test_trich_dan_GIUA_bai_van_giu_nguyen():
                          "> 💡 callout giữa bài\n\nB\n")
     assert "💡 callout giữa bài" in ra["blog"]
     assert "hướng dẫn" not in ra["blog"]
+
+
+# ── prompt tạo ảnh Facebook ─────────────────────────────────────────────────
+
+def test_template_co_khoi_prompt_anh(theo_template):
+    assert "fb_image_prompt" in theo_template, "mẫu content.md mất khối ### image_prompt"
+
+
+def test_prompt_anh_KHONG_lot_vao_than_post_hay_comment():
+    """Khối lồng trong facebook_post: lọt vào thân là cả trang prompt lên feed."""
+    md = ("## post:facebook_post\n\nThân bài.\n\n### comment_1\n\nLink: {{BLOG_URL}}\n\n"
+          "### image_prompt\n\nVẽ một người thợ khoá.\n\n---\n\n## post:reel\n\nCap.\n")
+    ra = G.split_content(md)
+    assert ra["fb_post"].strip() == "Thân bài."
+    assert "thợ khoá" not in ra["fb_comment"], ra["fb_comment"]
+    assert ra["fb_image_prompt"].startswith("Vẽ một người thợ khoá.")
+
+
+def test_prompt_anh_dung_TRUOC_comment_van_tach_dung():
+    md = ("## post:facebook_post\n\nThân.\n\n### image_prompt\n\nVẽ cái cân.\n\n"
+          "### comment_1\n\nLink.\n")
+    ra = G.split_content(md)
+    assert ra["fb_post"].strip() == "Thân."
+    assert ra["fb_image_prompt"].strip() == "Vẽ cái cân."
+    assert ra["fb_comment"].strip() == "Link."
+
+
+def test_ghi_prompt_ra_dung_file(tmp_path):
+    ghi = G.write_outputs({"fb_image_prompt": "Vẽ cái cân."}, str(tmp_path))
+    assert Path(ghi["fb_image_prompt"]).as_posix().endswith("facebook/infographic.prompt.txt")

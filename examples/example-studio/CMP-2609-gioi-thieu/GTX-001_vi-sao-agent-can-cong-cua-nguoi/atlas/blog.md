@@ -8,7 +8,7 @@ Nó chỉ không đáng đăng — và không có cổng máy nào nói được
 
 ## Cổng tự động kiểm được cái gì
 
-Xưởng này có 23 cổng chạy bằng số: độ dài bài, số nguồn trong phần nghiên cứu, link còn
+Xưởng này có 24 cổng chạy bằng số: độ dài bài, số nguồn trong phần nghiên cứu, link còn
 sống hay đã chết, chữ mẫu còn sót lại, tên công cụ nội bộ lọt ra bản công khai. Mỗi cổng
 trả về một trong ba trạng thái: **xanh · đỏ · thiếu**.
 

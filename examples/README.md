@@ -52,7 +52,7 @@ Ba bài này được tạo **một lượt** bằng `new_post.py --bulk`, đún
 
 ## `gates.json` của bài ví dụ ĐANG ĐỎ — và đó là chủ ý
 
-Chạy 23 cổng trên GTX-001 ra **9 xanh · 7 đỏ-chặn · 3 cảnh báo · 4 thiếu**. Không phải lỗi:
+Chạy 24 cổng trên GTX-001 ra **9 xanh · 7 đỏ-chặn · 3 cảnh báo · 4 thiếu**. Không phải lỗi:
 bài ví dụ cố tình ngắn (~640 từ, luật là 2500–4000) và không có audio/video/ảnh. Giữ lại
 file này để bạn thấy **một báo cáo cổng trông như thế nào khi đỏ**, thay vì chỉ thấy lúc
 mọi thứ xanh.

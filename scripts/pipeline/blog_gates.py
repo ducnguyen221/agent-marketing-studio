@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""23 cổng đếm được cho một bài blog. Vào: thư mục bài. Ra: gates.json + JSON ra stdout.
+"""24 cổng đếm được cho một bài blog. Vào: thư mục bài. Ra: gates.json + JSON ra stdout.
 
 LUẬT PHÁT NGÔN — quan trọng hơn bản thân các con số:
 Cổng chỉ được nói **cái nó đo được**, không được suy ra hậu quả.
@@ -46,7 +46,7 @@ import post_paths as PP  # noqa: E402
 CHAN, CANH_BAO = "block", "warn"
 
 # ── Cổng nào thuộc BƯỚC nào ─────────────────────────────────────────────────
-# Chấm trọn 23 cổng ngay sau khi soạn thì bài KHÔNG BAO GIỜ xanh được: bốn cổng dưới đây
+# Chấm trọn 24 cổng ngay sau khi soạn thì bài KHÔNG BAO GIỜ xanh được: bốn cổng dưới đây
 # đo ảnh, trang HTML, sổ đăng bài và LINK THẬT — thứ chỉ có sau khi dựng trang và phát
 # hành. Đo thật 12/09/2026: 3 bài kẹt ở `fix-gates` từ hôm trước vì bị chặn bởi đúng
 # những cổng mà bước soạn không có cách nào làm cho xanh.
@@ -55,6 +55,10 @@ CHAN, CANH_BAO = "block", "warn"
 # G15–G18, chỉ là bốn cổng kia chưa được gắn bước.
 GIAI_DOAN = ["write", "assets", "publish", "release"]
 PLACEHOLDER_BUOC_DANG = {"{{BLOG_URL}}", "{{YOUTUBE_URL}}"}
+
+# Prompt ảnh ngắn hơn chừng này thì không đủ chỗ viết sẵn từng chuỗi chữ cho năm vùng của
+# khung infographic. `make_fb_image.py` đọc CÙNG hằng số này — hai nơi đo hai số là hai luật.
+PROMPT_ANH_TOI_THIEU = 600
 
 CONG_THUOC_BUOC = {
     "G14": "release",   # comment đầu phải có link web + YouTube → chỉ có sau khi đăng
@@ -425,6 +429,25 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
          du_lon and prompt_len >= 100,
          note="ảnh sinh bằng model KHÔNG tái lập - mất prompt là mất cách dựng lại")
 
+    # ---------------------------------------------------------------- prompt ảnh Facebook
+    # G19 đo ẢNH, nên nó thuộc bước `assets` và ở bước viết chỉ báo "chưa tới lượt". Nhưng
+    # prompt là việc CỦA NGƯỜI VIẾT: nếu chỉ G19 canh thì thiếu prompt không bao giờ làm bài
+    # đỏ ở bước viết, vòng viết lại không bao giờ được kích, và bước tạo ảnh đứng chờ một
+    # thứ không ai được giao. G24 kéo phần prompt về đúng bước sinh ra nó.
+    # Chỉ đo thứ máy đo được. Chữ tiếng Việt trên ẢNH đúng dấu hay không thì máy không đo
+    # được — việc đó là phép soát bằng mắt ghi vào infographic.meta.json.
+    if fb is None:
+        s.thieu("G24", "Prompt ảnh Facebook", f"không có {PP.LAYOUT['fb_post']} — bài không đăng Facebook")
+    else:
+        pr = (_doc(f_prompt) or "").strip()
+        ph_pr = re.findall(r"\{\{[^}\n]*\}\}", pr)
+        s.do("G24", "Prompt ảnh Facebook (khối ### image_prompt)",
+             f"{len(pr)} ký tự · {len(ph_pr)} chỗ trống",
+             f">={PROMPT_ANH_TOI_THIEU} ký tự và 0 {{{{...}}}}",
+             len(pr) >= PROMPT_ANH_TOI_THIEU and not ph_pr,
+             note=("không có " + PP.LAYOUT["fb_prompt"] + " — thiếu khối ### image_prompt trong content.md"
+                   if not pr else "; ".join(ph_pr[:4])))
+
     # ---------------------------------------------------------------- sổ continuity
     cont = _doc(PP.p(d, "publish"))
     if cont is None:
@@ -532,7 +555,7 @@ def _in_vi_sao_bi_chan(result: dict) -> None:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="23 cổng đếm được cho một bài blog.")
+    ap = argparse.ArgumentParser(description="24 cổng đếm được cho một bài blog.")
     ap.add_argument("folder", help="thư mục bài (chứa blog.md, fb_post.txt...)")
     ap.add_argument("--home-domain", default=None,
                     help="domain nhà, để loại khỏi phép đếm nguồn ngoài")

@@ -40,6 +40,11 @@ def post(tmp_path):
              "quality_check": "passed",
              "review": {"status": "approved", "approved_by": "Người duyệt", "note": "ok"},
              "publish": {}}]}, ensure_ascii=False), encoding="utf-8")
+    # Ảnh mẫu ĐÃ SOÁT CHỮ, gắn với đúng byte của nó — cổng soát chữ so sha256.
+    import hashlib as _h
+    (B / "anh.meta.json").write_text(json.dumps({"schema": "fb-image/1", "text_check": {
+        "status": "passed", "by": "Người soát", "quote": "chữ đúng dấu", "at": "2026-09-14T09:00:00",
+        "image_sha256": _h.sha256((B / "anh.png").read_bytes()).hexdigest()}}), encoding="utf-8")
     (tmp_path / "cfg.json").write_text(json.dumps({"page_id": "1", "page_token": "x"}),
                                        encoding="utf-8")
     return tmp_path, K, B

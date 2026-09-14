@@ -18,7 +18,7 @@ target_audience: Người làm data/BI ở doanh nghiệp Việt, 2-8 năm, đã
 audience_pain_points: Bài do AI viết nghe trôi chảy mà rỗng; sửa lại còn lâu hơn tự viết; không biết chỗ
   nào được phép để máy tự quyết
 key_message: Cái làm nội dung dùng được không phải mô hình mạnh hơn, mà là chỗ NGƯỜI đặt tay vào
-proof_points: 23 cổng kiểm chạy bằng số trên bài thật; 120 test; một bài đã đăng đủ 3 kênh có URL kiểm
+proof_points: 24 cổng kiểm chạy bằng số trên bài thật; 120 test; một bài đã đăng đủ 3 kênh có URL kiểm
   được
 brand_voice_rules: Câu ngắn, số có nguồn, nói thẳng khi thứ gì chưa dùng được
 channels:
@@ -103,7 +103,7 @@ dừng lại, trỏ sang đó.
 
 - **Thông điệp lõi**: cái làm nội dung dùng được không phải mô hình mạnh hơn, mà là chỗ
   NGƯỜI đặt tay vào.
-- **Bằng chứng được phép dùng**: 23 cổng kiểm chạy bằng số trên bài thật (xem `gates.json`);
+- **Bằng chứng được phép dùng**: 24 cổng kiểm chạy bằng số trên bài thật (xem `gates.json`);
   120 test của chính repo; một bài đã đăng đủ ba kênh, URL kiểm được.
 - **Claim bị cấm**: "tự động hoá 100%", "thay thế người viết", bất kỳ con số hiệu quả nào
   không đo được từ chính repo này.
@@ -119,7 +119,7 @@ dừng lại, trỏ sang đó.
 | Trụ | Tỷ trọng | Chủ đề bao gồm | Dành cho persona |
 |---|---|---|---|
 | Quy trình có cổng người | 50% | hai cổng duyệt, vì sao máy không tự đặt `approved` | Hà, BI lead |
-| Kiểm bằng số | 30% | 23 cổng, "thiếu" không bao giờ là "xanh" | Hà, BI lead |
+| Kiểm bằng số | 30% | 24 cổng, "thiếu" không bao giờ là "xanh" | Hà, BI lead |
 | Markdown là nguồn | 20% | vì sao bỏ Excel làm nguồn, Excel thành bản xuất | marketing một mình |
 
 
@@ -154,7 +154,7 @@ Giá trị hợp lệ của `content_pillar` khai ở `channel.yml:pillars` — 
 | content_id | content_name | pillar | angle | funnel | priority | status | g1 | g2 | schedule | published | folder | web | youtube | facebook |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | GTX-001 | Vì sao một xưởng nội dung chạy bằng agent vẫn cần cổng của người | ai-agent | opinion | awareness | medium | published | 2026-09-05 | 2026-09-05 | 2026-09-07 | 2026-09-05 | ./GTX-001_vi-sao-agent-can-cong-cua-nguoi/ | https://example.vn/blog/content/ai/vi-sao-agent-can-cong-cua-nguoi.html | https://youtu.be/EXAMPLE0001 | https://www.facebook.com/000000000000000/posts/111111111111111 |
-| GTX-002 | Kiểm bài bằng số, không bằng cảm giác: 23 cổng làm gì | ai-agent | explainer | awareness | medium | approved | 2026-09-05 |  | 2026-09-14 |  | ./GTX-002_kiem-bang-so-khong-phai-bang-cam-giac/ |  |  |  |
+| GTX-002 | Kiểm bài bằng số, không bằng cảm giác: 24 cổng làm gì | ai-agent | explainer | awareness | medium | approved | 2026-09-05 |  | 2026-09-14 |  | ./GTX-002_kiem-bang-so-khong-phai-bang-cam-giac/ |  |  |  |
 | GTX-003 | Chúng tôi bỏ Excel làm nguồn sự thật — và đây là cái đã sai trước đó | ai-agent | case_study | awareness | medium | proposed |  |  | 2026-09-21 |  | ./GTX-003_vi-sao-bo-excel-lam-nguon/ |  |  |  |
 <!-- CONTENT:END -->
 

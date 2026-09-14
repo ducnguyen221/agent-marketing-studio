@@ -19,7 +19,7 @@
        ├─ B1 nghiên cứu    ┐
        ├─ B2 viết          │ bộ viết (writer_cmd) chạy ở đây
        ├─ B3 tách kênh     │
-       ├─ B4 23 cổng chất  ┘
+       ├─ B4 24 cổng chất  ┘
        │
     ╔══╧══════╗
     ║ CỔNG 2  ║  duyệt NỘI DUNG — đọc bài trước khi tốn tiền dựng

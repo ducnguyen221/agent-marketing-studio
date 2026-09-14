@@ -50,6 +50,31 @@ def write_fm(path, fm: dict, body: str) -> None:
     write_atomic(path, txt)
 
 
+# Trên Windows, đổi tên đè lên một file VỪA ghi xong có lúc bị từ chối (WinError 5) vì
+# trình quét virus hoặc bộ lập chỉ mục đang mở nó trong khoảnh khắc. Đo được 14/09/2026:
+# ghi file trạng thái Facebook hai lần liền nhau thì lần hai hỏng. Hỏng đúng lúc đó là tệ
+# nhất — bài và comment đã lên, còn sổ không biết comment đã có, nên lượt sau comment lần
+# nữa. Thử lại ngắn là cách Windows cần; quá trần thì vẫn ném lỗi, không nuốt.
+_REPLACE_TRIES = 20
+_REPLACE_WAIT = 0.05
+# Buộc tên lúc import: test hay vá `time.sleep` thành hàm rỗng, và thử lại tức thì thì
+# chính cái chờ này mất tác dụng.
+_SLEEP = __import__("time").sleep
+
+
+def _replace_retry(src, dst, *, tries: int = _REPLACE_TRIES, wait: float = _REPLACE_WAIT,
+                   _sleep=None) -> None:
+    _sleep = _sleep or _SLEEP
+    for lan in range(tries):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if lan == tries - 1:
+                raise
+            _sleep(wait)
+
+
 def write_atomic(path, text: str) -> None:
     """Ghi một file bất kỳ, nguyên tử. Công khai vì build_views cũng cần:
     trang HTML ghi dở dang mà người vừa bấm mở là trang trắng."""
@@ -59,7 +84,7 @@ def write_atomic(path, text: str) -> None:
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
             f.write(text)
-        os.replace(tmp, p)          # đổi tên là nguyên tử trên cùng ổ đĩa
+        _replace_retry(tmp, p)      # đổi tên là nguyên tử trên cùng ổ đĩa
     except BaseException:
         try:
             os.unlink(tmp)

@@ -48,7 +48,7 @@ def test_fixture_do_ton_tai():
 def test_dung_tap_cong_bi_chan(do):
     chan = {job_id for job_id, r in do.items() if r["status"] == "fail" and r["level"] == G.CHAN}
     assert chan == {"G01", "G02", "G05", "G06", "G08", "G09", "G11",
-                    "G12", "G13", "G14", "G17", "G18", "G19", "G20"}
+                    "G12", "G13", "G14", "G17", "G18", "G19", "G20", "G24"}
 
 
 def test_dung_tap_cong_canh_bao(do):
@@ -142,7 +142,7 @@ def bai_xanh(tmp_path):
     _sig = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
     (PP.p(d, "fb_image")).write_bytes(
         _sig + bytes(4) + b"IHDR" + (1080).to_bytes(4, "big") + (1350).to_bytes(4, "big"))
-    (PP.p(d, "fb_prompt")).write_text("prompt đã dùng để sinh ảnh. " * 6,
+    (PP.p(d, "fb_prompt")).write_text("prompt đã dùng để sinh ảnh. " * 25,
                                           encoding="utf-8")
     # research.md phải CÓ, và host phải khớp mục Nguồn tham khảo — G05 đối chiếu hai bên.
     (PP.p(d, "research")).write_text(
@@ -168,7 +168,7 @@ def test_thieu_dau_vao_khong_duoc_bao_xanh(tmp_path):
     assert theo["G01"]["status"] == "missing"
     assert theo["G18"]["status"] == "missing"
     assert result["pass"] == 0, "thư mục rỗng mà có cổng xanh = cổng đang nói dối"
-    assert result["missing"] == 22
+    assert result["missing"] == 23
 
 
 def test_g23_bat_placeholder_con_sot(bai_xanh):
@@ -267,7 +267,7 @@ def test_cli_ghi_gates_json_va_exit_khac_0(tmp_path):
     shutil.copytree(BAI_DO, d)
     assert G.main([str(d), "--home-domain", HOME, "--json-only"]) == 1
     write = json.loads((d / "gates.json").read_text(encoding="utf-8"))
-    assert write["total"] == 23 and write["verdict"] == "fail"
+    assert write["total"] == 24 and write["verdict"] == "fail"
 
 
 # ── Phân bước: cổng của bước sau KHÔNG được chặn bước soạn ──────────────────
@@ -397,3 +397,31 @@ def test_G05_KHONG_dem_link_nam_trong_THAN_bai(bai_xanh):
     r = _theo_ma_stage(bai_xanh, "write")["G05"]
     assert r["status"] == "pass", f"link trong thân bị tính là nguồn: {r}"
     assert r["measured"] == "4 nguồn, 0 lạc", r["measured"]
+
+
+# ------------------------------------------------------------------ G24 prompt ảnh
+
+def test_G24_thieu_prompt_thi_DO_ngay_o_buoc_viet(bai_xanh):
+    """G19 đo ảnh nên ở bước viết chỉ báo 'chưa tới lượt'. Thiếu prompt phải đỏ NGAY,
+    nếu không vòng viết lại không bao giờ được kích và bước tạo ảnh chờ mãi."""
+    PP.p(bai_xanh, "fb_prompt").unlink()
+    r = _theo_ma_stage(bai_xanh, "write")["G24"]
+    assert r["status"] == "fail" and r["level"] == G.CHAN, r
+
+
+def test_G24_prompt_ngan_hoac_con_cho_trong_thi_do(bai_xanh):
+    PP.p(bai_xanh, "fb_prompt").write_text("Vẽ ảnh. " * 10, encoding="utf-8")
+    assert _theo_ma_stage(bai_xanh, "write")["G24"]["status"] == "fail"
+    PP.p(bai_xanh, "fb_prompt").write_text("Vẽ ảnh đúng dấu. " * 60 + "Tiêu đề: {{TIÊU ĐỀ}}",
+                                           encoding="utf-8")
+    r = _theo_ma_stage(bai_xanh, "write")["G24"]
+    assert r["status"] == "fail" and "{{TIÊU ĐỀ}}" in r["note"], r
+
+
+def test_G24_prompt_du_thi_xanh(bai_xanh):
+    assert _theo_ma_stage(bai_xanh, "write")["G24"]["status"] == "pass"
+
+
+def test_G24_bai_khong_dang_facebook_thi_khong_doi_prompt(bai_xanh):
+    PP.p(bai_xanh, "fb_post").unlink()
+    assert _theo_ma_stage(bai_xanh, "write")["G24"]["status"] == "missing"

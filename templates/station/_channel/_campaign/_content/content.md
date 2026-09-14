@@ -178,6 +178,47 @@ content_name: "Tên làm việc của content"
 
 🎬 Xem video: {{YOUTUBE_URL}}
 
+### image_prompt
+
+> Prompt tạo ẢNH đính kèm bài Facebook, gửi NGUYÊN VĂN cho model sinh ảnh. Tách ra
+> `facebook/infographic.prompt.txt` ở bước B3; cổng G24 đo nó ngay ở bước viết.
+> Khung và luật đầy đủ: `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` mục 1–3. Bốn điều máy
+> hoặc người sẽ kiểm:
+> - **Viết sẵn TỪNG chuỗi chữ sẽ nằm trên ảnh**, đúng chính tả, đúng dấu. Model không được
+>   tự nghĩ chữ — nó sẽ nghĩ, và nghĩ sai dấu.
+> - **Mọi con số trên ảnh phải có trong `research.md`**, đúng nghĩa chứ không chỉ đúng chữ.
+> - **KHÔNG ghi đường dẫn lưu ảnh.** Script tạo ảnh tự thêm; đường tự bịa sẽ đưa ảnh đi lạc.
+> - Dài **từ 600 ký tự** và **không còn `{{...}}`** — đó là hai số G24 đo.
+
+Nhiệm vụ: sinh MỘT ảnh infographic tiếng Việt, khổ ngang 1920x1080.
+
+QUAN TRỌNG NHẤT — CHỮ TIẾNG VIỆT PHẢI ĐÚNG DẤU TUYỆT ĐỐI. Chép NGUYÊN VĂN từng chuỗi
+dưới đây, không diễn đạt lại, không bỏ dấu, không thêm chữ nào ngoài danh sách.
+Nếu không vẽ nổi một chuỗi cho đúng dấu thì thà để trống chỗ đó còn hơn vẽ sai.
+
+PHONG CÁCH: {{phong cách + bảng màu, theo mục 2 của INFOGRAPHIC_PROMPT_TEMPLATE}}
+
+【VÙNG 1 — ĐẦU TRANG】
+Tiêu đề: {{≤55 ký tự}}
+Phụ đề: {{≤60 ký tự}}
+
+【VÙNG 2 — CỘT TRÁI, thẻ 1-2-3】
+{{mỗi thẻ: icon · tiêu đề · một dòng mô tả}}
+
+【VÙNG 3 — GIỮA, minh hoạ】
+{{người + thiết bị + luồng; KHÔNG chữ nhỏ trong cửa sổ giao diện}}
+
+【VÙNG 4 — CỘT PHẢI, thẻ 4-5-6】
+{{...}}
+
+【VÙNG 5 — DẢI DƯỚI】
+{{luồng hành động | ô cảnh báo}}
+
+【CHÂN TRANG】 {{thương hiệu}}
+
+TUYỆT ĐỐI KHÔNG: logo hãng, watermark, ảnh chụp người thật, chữ ngoài danh sách,
+chữ tiếng Anh trang trí.
+
 ---
 
 ## post:reel

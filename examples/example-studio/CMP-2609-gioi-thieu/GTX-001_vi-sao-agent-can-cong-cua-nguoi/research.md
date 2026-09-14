@@ -11,7 +11,7 @@ core_brief: 'Vấn đề: bài do agent viết nghe trôi chảy nhưng rỗng, 
   sinh chữ; (2) duyệt trước khi đăng là chỗ duy nhất còn sửa được rẻ; (3) cổng máy kiểm được hình thức,
   không kiểm được có đáng đăng hay không. Phản biện đã lường: ''cổng người làm chậm'' - đo bằng số bài
   phải gỡ sau khi đăng, không bằng số bài/tuần. CTA: clone repo, chạy một bài tới bước đăng.'
-key_sources: 'Chính repo này: hai cổng trong ATLAS_CHANNEL.md, bộ 23 cổng trong blog_gates.py, một bài
+key_sources: 'Chính repo này: hai cổng trong ATLAS_CHANNEL.md, bộ 24 cổng trong blog_gates.py, một bài
   đã đăng đủ ba kênh'
 target_keyword: quy trình nội dung với AI agent
 creative_direction: 'Đã cân nhắc ba hướng: (a) hướng dẫn từng bước - bị loại vì bài 1 mà đọc như tài liệu
@@ -46,7 +46,7 @@ chúng nhất quán về sự kiện chính. Không đủ, hoặc các nguồn m
 | # | URL | Tổ chức | Ngày xuất bản | Ngày truy cập | Mức đọc | Trích 1 câu |
 |---|---|---|---|---|---|---|
 | 1 | `knowledge/toolchains/ATLAS_CHANNEL.md` | repo này | 2026-09-04 | 2026-09-04 | toàn văn | "Cổng 1 là của NGƯỜI: agent không tự đặt `approved`." |
-| 2 | `scripts/pipeline/blog_gates.py` | repo này | 2026-09-04 | 2026-09-04 | toàn văn | "23 cổng; trạng thái `thiếu` không bao giờ được tính là `xanh`." |
+| 2 | `scripts/pipeline/blog_gates.py` | repo này | 2026-09-04 | 2026-09-04 | toàn văn | "24 cổng; trạng thái `thiếu` không bao giờ được tính là `xanh`." |
 | 3 | `scripts/pipeline/new_post.py` | repo này | 2026-09-04 | 2026-09-04 | toàn văn | "Bài sinh ra ở `proposed`; ô `g1` để trống cho tới khi người điền ngày." |
 
 > Ví dụ này lấy nguồn từ chính repo — mở file là kiểm được. Bài thật lấy nguồn ngoài, và
@@ -73,7 +73,7 @@ Hai nguồn lệch nhau thì **nêu cả hai và nói rõ là chúng lệch**, �
 - **"Cổng người làm chậm."** Đúng — và đó là điều được chọn. Phép đo phải là *số bài phải
   gỡ hoặc sửa sau khi đăng*, không phải *số bài mỗi tuần*. Repo này chưa có đủ mẫu để công
   bố con số đó, nên bài không được nêu con số nào.
-- **"Cổng máy đủ rồi."** Không. 23 cổng kiểm được độ dài, nguồn, link gãy, chữ mẫu còn sót,
+- **"Cổng máy đủ rồi."** Không. 24 cổng kiểm được độ dài, nguồn, link gãy, chữ mẫu còn sót,
   tên công cụ nội bộ lọt ra ngoài — không cổng nào trả lời được *bài này có đáng đăng không*.
 
 Để bài không thành bài quảng cáo. Ưu tiên phản biện đến từ chính người làm ra thứ đang bàn.

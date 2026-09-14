@@ -4,7 +4,7 @@
 |---|---|
 | **Vai trò chính** | `qa-reviewer` (kiểm tra tuân thủ & chặn lỗi) · `content-editor` (tư vấn chất lượng) |
 | **Đầu vào (Input)** | `publish.json → posts[]` có `agent_status = completed` |
-| **Công cụ (Tools)** | `scripts/pipeline/blog_gates.py` (23 cổng, kiểm bằng số) + [`.agents/checklists/QA_ASSET.md`](../.agents/checklists/QA_ASSET.md) |
+| **Công cụ (Tools)** | `scripts/pipeline/blog_gates.py` (24 cổng, kiểm bằng số) + [`.agents/checklists/QA_ASSET.md`](../.agents/checklists/QA_ASSET.md) |
 | **Đầu ra (Output)** | `gates.json` + `quality_check = passed` / `failed` trong `publish.json` |
 
 > **Ba trạng thái, không phải hai.** Mỗi cổng trả về xanh · đỏ · **thiếu**. "Thiếu" nghĩa là

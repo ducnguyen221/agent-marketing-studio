@@ -38,6 +38,11 @@ def post(tmp_path, monkeypatch):
              "quality_check": "passed",
              "review": {"status": "approved", "approved_by": "Người duyệt", "note": "ok"},
              "publish": {}}]}, ensure_ascii=False), encoding="utf-8")
+    # Ảnh mẫu ĐÃ SOÁT CHỮ, gắn với đúng byte của nó — cổng soát chữ so sha256.
+    import hashlib as _h
+    (B / "anh.meta.json").write_text(json.dumps({"schema": "fb-image/1", "text_check": {
+        "status": "passed", "by": "Người soát", "quote": "chữ đúng dấu", "at": "2026-09-14T09:00:00",
+        "image_sha256": _h.sha256((B / "anh.png").read_bytes()).hexdigest()}}), encoding="utf-8")
     (tmp_path / "cfg.json").write_text(json.dumps({"page_id": "1", "page_token": "x"}),
                                        encoding="utf-8")
 
@@ -216,3 +221,20 @@ def test_pha_hai_mot_bai_hong_KHONG_chan_bai_sau(post):
     kq = {k["post_id"]: k["status"] for k in
           FB.attach_pending({}, tmp, now=2000, doc_song=lambda p: (True, ""), gui_comment=gui)}
     assert kq == {"HONG": "failed", "TOT": "attached"}, kq
+
+
+# ── soát chữ trên ảnh ───────────────────────────────────────────────────────
+
+def test_anh_CHUA_soat_chu_thi_KHONG_dang(post, capsys):
+    tmp, B, goi = post
+    (B / "anh.meta.json").unlink()
+    assert FB.main(_argv(tmp, B)) == 4
+    assert goi["anh"] == [], "đã đăng ảnh chưa ai soát chữ"
+    assert "soát chữ" in capsys.readouterr().err
+
+
+def test_anh_bi_sua_SAU_khi_soat_thi_KHONG_dang(post):
+    tmp, B, goi = post
+    (B / "anh.png").write_bytes((B / "anh.png").read_bytes() + b"sua")
+    assert FB.main(_argv(tmp, B)) == 4
+    assert goi["anh"] == []

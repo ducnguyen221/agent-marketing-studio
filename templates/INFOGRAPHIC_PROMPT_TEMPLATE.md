@@ -53,12 +53,17 @@ Bố cục 5 vùng, đọc theo hình chữ Z:
 
 ## 3. Khung prompt — điền vào chỗ `{{...}}`
 
-Gửi qua cầu Codex (`ask-codex.cmd ask --origin human --access workspace --cwd <repo>`),
-yêu cầu dùng `image_gen` và lưu vào `.tmp/infographic.png`.
+Prompt này nằm trong `content.md`, khối `### image_prompt` bên trong `## post:facebook_post`.
+Bước B3 tách nó ra `facebook/infographic.prompt.txt`, cổng G24 đo nó ngay ở bước viết.
+
+**Không gọi cầu bằng tay.** `scripts/pipeline/make_fb_image.py make --post <bài>` bọc prompt
+trong lời dặn cho Codex, gửi qua cầu A2A (`--origin human --access workspace`, thư mục làm
+việc là repo này), kiểm file PNG ở đúng chỗ đã chỉ định rồi chuyển sang `facebook/infographic.png`.
+Vì script tự thêm đường lưu, **khung dưới đây không có dòng đường dẫn** — đường tự bịa sẽ đưa
+ảnh đi lạc.
 
 ```
-Nhiệm vụ: dùng image_gen sinh MỘT ảnh infographic tiếng Việt, khổ ngang 1920x1080,
-lưu vào: {{ĐƯỜNG DẪN TUYỆT ĐỐI}}
+Nhiệm vụ: sinh MỘT ảnh infographic tiếng Việt, khổ ngang 1920x1080.
 
 QUAN TRỌNG NHẤT — CHỮ TIẾNG VIỆT PHẢI ĐÚNG DẤU TUYỆT ĐỐI. Chép NGUYÊN VĂN từng chuỗi
 dưới đây, không diễn đạt lại, không bỏ dấu, không thêm chữ nào ngoài danh sách.
@@ -113,6 +118,9 @@ Model sinh ảnh **vẫn vỡ dấu tiếng Việt**. Các ảnh đã dựng tr�
    chính tả 5/5 nhưng **sai nghĩa**, và cổng chính tả không thấy gì cả. Chính tả và nghĩa
    là hai phép kiểm khác nhau.
 4. Sai một dấu, hoặc sai một chữ số → **sinh lại**, không "tạm chấp nhận".
+5. **Ghi kết quả soát** bằng `make_fb_image.py verify --post <bài> --by "<tên>" --quote "<câu
+   người soát nói>"`, thêm `--failed` nếu thấy sai. `fb_publish.py` từ chối đăng ảnh chưa soát,
+   và từ chối cả ảnh bị đổi sau khi soát: nó so sha256 của file với byte đã soát.
 
 **Sửa một dòng chữ thì không cần sinh lại cả ảnh.** Nếu nền quanh chữ là màu phẳng, vẽ đè
 bằng Pillow rẻ hơn nhiều và giữ nguyên bố cục đã duyệt (đo màu nền, nội suy theo cột để
@@ -120,8 +128,13 @@ giữ vignette, dùng đúng font/cỡ). Sinh lại là mất ảnh đã duyệt
 
 ## 5. Sidecar bắt buộc
 
-Lưu `facebook/infographic.prompt.txt` cạnh ảnh, ghi: prompt đã dùng · **nguyên văn mọi chuỗi chữ
-trên ảnh** · ngày kiểm chính tả và kết quả · mọi lần sửa sau đó và lý do.
+Hai file cạnh ảnh:
+
+- `facebook/infographic.prompt.txt` — prompt đã dùng, trong đó có **nguyên văn mọi chuỗi chữ
+  trên ảnh**. Tách từ `content.md`, không sửa tay.
+- `facebook/infographic.meta.json` — `make_fb_image.py` ghi: sinh lúc nào, mã lượt gọi cầu,
+  sha256 của prompt, kích thước, **kết quả soát chữ** (ai soát, câu người đó nói, lúc nào, sha256
+  của ảnh đã soát), và lịch sử các ảnh cũ khi sinh lại bằng `--force`.
 
 Model **không tái lập**: cùng prompt cho ra ảnh khác. Mất prompt là mất cách dựng lại, và
 **cấm sinh lại lúc đăng** — sinh lại nghĩa là bài đăng lên mang ảnh khác ảnh đã duyệt.

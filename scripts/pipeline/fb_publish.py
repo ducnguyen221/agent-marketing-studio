@@ -117,9 +117,11 @@ def dien_cho_trong(text: str, gia_tri: dict) -> tuple[str, list[str]]:
 
 
 def _ghi_json(path: Path, d: dict) -> None:
-    tam = path.with_name(path.name + ".tmp")
-    tam.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")
-    os.replace(tam, path)
+    # Qua hàm ghi chung: nguyên tử VÀ chịu được Windows giữ file trong khoảnh khắc. Ghi hỏng
+    # ở lần thứ hai (sau comment) là sổ không biết comment đã có, và pha hai comment lần nữa.
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+    import md_io
+    md_io.write_atomic(path, json.dumps(d, ensure_ascii=False, indent=2))
 
 
 def _dong_ket_qua(d: dict) -> str:
@@ -348,7 +350,11 @@ def main(argv=None) -> int:
     print(f"  lịch     : {time.strftime('%Y-%m-%d %H:%M', time.localtime(hen)) if hen else 'đăng ngay'}")
 
     if a.dry_run:
-        print("  [dry-run] mọi cổng đã qua, KHÔNG gọi Graph.")
+        import make_fb_image as MFI
+        ok_anh, why_anh = MFI.trang_thai_soat(Path(a.image))
+        print(f"  soát chữ : {'OK' if ok_anh else 'CHƯA'} — {why_anh}")
+        print("  [dry-run] cổng nội dung đã qua, KHÔNG gọi Graph. Đăng thật còn kiểm Cổng 2, "
+              "mức tự trị và soát chữ.")
         return 0
 
     # --- ĐÃ ĐĂNG RỒI thì không đăng lại ---------------------------------------------
@@ -400,6 +406,20 @@ def main(argv=None) -> int:
             "Chạy lại với --dry-run để chỉ kiểm mà không đăng.",
             ""]))
         return 4
+
+    # --- CỔNG SOÁT CHỮ TRÊN ẢNH ------------------------------------------------
+    # Model sinh ảnh vỡ dấu tiếng Việt, và máy không đo được dấu trên ảnh. Người đã soát
+    # đúng CÁC BYTE này chưa — so bằng sha256, nên sửa ảnh sau khi soát cũng bị chặn.
+    import make_fb_image as MFI
+    ok_anh, why_anh = MFI.trang_thai_soat(Path(a.image))
+    if not ok_anh:
+        sys.stderr.write(chr(10).join([
+            "", f"KHÔNG đăng thật — {why_anh}", "",
+            "Mở ảnh, phóng to từng vùng chữ, đối chiếu với prompt và research.md, rồi ghi:",
+            '  make_fb_image.py verify --post <bài> --by "<tên>" --quote "<câu người soát nói>"',
+            ""]))
+        return 4
+    print(f"  soát chữ : {why_anh}")
 
     photo_id, post_id = dang_anh(cfg, msg, a.image, hen)
     if not post_id:

@@ -261,7 +261,7 @@ STEP_LABELS = {
     "await-G1": "Chờ Cổng 1 · duyệt đề tài",
     "create-post": "Dựng thư mục bài",
     "write": "Đang chờ soạn",
-    "check-gates": "Chờ chấm 23 cổng",
+    "check-gates": "Chờ chấm 24 cổng",
     "fix-gates": "Cổng đỏ · chờ viết lại",
     "await-G2": "Chờ Cổng 2 · duyệt trước khi đăng",
     "build-page": "Chờ dựng trang + đăng web",

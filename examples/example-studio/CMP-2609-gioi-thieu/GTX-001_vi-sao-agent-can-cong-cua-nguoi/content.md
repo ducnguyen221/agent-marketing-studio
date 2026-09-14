@@ -41,7 +41,7 @@ content_name: Vì sao một xưởng nội dung chạy bằng agent vẫn cần 
 - **Brief lõi** (`core_brief`): bài do agent viết nghe trôi chảy nhưng rỗng, và không khâu nào
   chặn lại → cái thiếu không phải chất lượng sinh chữ mà là ĐIỂM DỪNG có người → cái làm nội
   dung dùng được là chỗ NGƯỜI đặt tay vào.
-- **Nguồn & bằng chứng** (`key_sources`): hai cổng trong `ATLAS_CHANNEL.md`; 23 cổng trong
+- **Nguồn & bằng chứng** (`key_sources`): hai cổng trong `ATLAS_CHANNEL.md`; 24 cổng trong
   `blog_gates.py`; một bài đã đăng đủ ba kênh. Đều kiểm được bằng cách mở file. *Giả định
   chưa kiểm: cổng người tiết kiệm bao nhiêu thời gian — không đưa vào bài.*
 - **Từ khoá chính** (`target_keyword`): quy trình nội dung với AI agent
@@ -82,7 +82,7 @@ Nó chỉ không đáng đăng — và không có cổng máy nào nói được
 
 ## Cổng tự động kiểm được cái gì
 
-Xưởng này có 23 cổng chạy bằng số: độ dài bài, số nguồn trong phần nghiên cứu, link còn
+Xưởng này có 24 cổng chạy bằng số: độ dài bài, số nguồn trong phần nghiên cứu, link còn
 sống hay đã chết, chữ mẫu còn sót lại, tên công cụ nội bộ lọt ra bản công khai. Mỗi cổng
 trả về một trong ba trạng thái: **xanh · đỏ · thiếu**.
 
@@ -139,7 +139,7 @@ tới bước đăng.
 Bài do AI viết nghe trôi chảy mà vẫn rỗng — và đi qua được mọi khâu kiểm tra tự động.
 Video này chỉ ra hai chỗ trong quy trình nội dung với AI agent mà máy không nên tự quyết.
 
-Mình dựng một xưởng nội dung chạy bằng agent với 23 cổng kiểm bằng số. Cổng bắt được link
+Mình dựng một xưởng nội dung chạy bằng agent với 24 cổng kiểm bằng số. Cổng bắt được link
 gãy, chữ mẫu còn sót, tên công cụ lọt ra ngoài. Không cổng nào trả lời được câu "bài này
 có đáng đăng không". Video đi qua đúng chỗ đó: vì sao chọn đề tài và duyệt trước khi đăng
 phải là quyết định của người, và cái giá phải trả khi bỏ hai cổng ấy.
@@ -165,7 +165,7 @@ phải là quyết định của người, và cái giá phải trả khi bỏ h
 > tiêu đề phụ dùng Unicode bold, ngắt bằng `———`, đoạn ngắn 2–4 câu.
 > **Thân bài KHÔNG chứa URL nào.** Mọi link đi vào khối `### comment_1` bên dưới.
 
-Một bài viết đi qua đủ 23 cổng kiểm tra tự động. Không link gãy, không thiếu nguồn,
+Một bài viết đi qua đủ 24 cổng kiểm tra tự động. Không link gãy, không thiếu nguồn,
 không sai độ dài. Và nó vẫn không nên đăng. 🚀
 
 ———————
