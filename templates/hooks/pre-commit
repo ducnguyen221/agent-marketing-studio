@@ -1,0 +1,13 @@
+#!/bin/sh
+# Hook pre-commit của chế độ cài `embedded` — KHUÔN, không phải bản chạy được.
+#
+# `init_station.py` thay hai chỗ điền rồi chép vào `<repo>/.git/hooks/pre-commit`:
+#   __PY__    đường dẫn Python mà bộ cài vừa tìm được
+#   __REPO__  gốc bản clone repo
+#
+# Vì sao cần hook trong khi `.gitignore` đã chặn: `.gitignore` là **thói quen**, hook là
+# **cổng**. Một `git add -f`, một dòng `.gitignore` bị sửa, hay một công cụ tự stage là đủ
+# để nội dung trạm và secret lọt vào một repo công khai — và lúc đó đã muộn.
+#
+# Bỏ qua một lần có chủ đích: `git commit --no-verify`, và tự chịu trách nhiệm.
+exec "__PY__" "__REPO__/scripts/pipeline/pre_commit_guard.py"

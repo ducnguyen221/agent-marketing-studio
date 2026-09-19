@@ -8,9 +8,31 @@ dò thư mục thì kênh ngoài STATION vô hình.
 
 Đi lên thì tìm bằng file mốc (`channel.yml`, `campaign.md`) chứ không đếm số cấp thư mục:
 đếm cấp là giả định người không bao giờ lồng thêm thư mục, mà giả định đó sai sớm muộn.
+
+## Hai chế độ cài (F17) — và vì sao thứ tự phân giải nằm ở ĐÂY, một chỗ duy nhất
+
+Trạm là một KHÁI NIỆM, không phải một đường dẫn cố định. Người dùng cài theo hai kiểu:
+
+    embedded   trạm = `<repo>/workspace/`, biến cấu hình ở `<repo>/.env` — "mở một folder
+               là thấy hết". MẶC ĐỊNH và là khuyến nghị cho người mới.
+    separate   trạm ngoài repo (mặc định `~/.marketing`), biến đặt ở cấp user, bí mật ở kho
+               secret của máy — cho người nhiều máy, hoặc repo public của chính họ.
+
+Lựa chọn ghi ở `<repo>/studio.local.json` (bị gitignore). Thứ tự phân giải trạm:
+
+    --station → MARKETING_STUDIO_DATA → studio.local.json → <repo>/workspace/ → ~/.marketing
+
+Biến môi trường đứng TRƯỚC `studio.local.json` là có chủ đích: máy nào đã đặt biến từ
+trước (máy chạy lịch thật) thì một file cấu hình lạc vào repo không được phép cướp trạm.
+
+Bí mật đi theo thứ tự riêng: biến môi trường → `<repo>/.env` (**chỉ** khi `mode=embedded`)
+→ kho secret của máy. Luật ba tầng không đổi: biến/`.env` giữ **đường dẫn**, file ngoài git
+giữ **giá trị**. Chế độ `separate` KHÔNG bao giờ tự nạp `.env` — ở đó repo có thể là repo
+public của chính người dùng, và tự nạp một file lạ trong repo là mở cửa cho nó.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -22,11 +44,167 @@ MOC_KENH = "channel.yml"
 MOC_CHIEN_DICH = "campaign.md"
 SO_KENH = "CHANNELS.md"
 
+# Hợp đồng F17 — tên file/thư mục dùng chung với `agent-voice-studio`, `agent-video-studio`.
+LOCAL_CONFIG = "studio.local.json"
+WORKSPACE = "workspace"
+MODES = ("embedded", "separate")
+
+
+class StudioPathsError(Exception):
+    """Cấu hình đường dẫn hỏng: phải SỬA rồi chạy lại, chạy lại nguyên trạng thì vẫn thế."""
+
+
+def repo_root() -> Path | None:
+    """Gốc bản clone repo: `$MARKETING_STUDIO_HOME` → thư mục chứa chính file này.
+
+    Trả `None` khi không xác định được (file lib bị chép đi nơi khác) — người gọi phải
+    xử lý, vì đoán bừa một gốc repo là đoán bừa luôn chỗ đặt trạm.
+    """
+    ung = []
+    bien = (os.environ.get("MARKETING_STUDIO_HOME") or "").strip()
+    if bien:
+        ung.append(Path(bien).expanduser())
+    ung.append(Path(__file__).resolve().parents[2])
+    for p in ung:
+        if (p / "scripts" / "lib").is_dir() and (p / "install.ps1").is_file():
+            return p.resolve()
+    return None
+
+
+def _doc_json(p: Path) -> dict:
+    """File không có ⇒ {}. JSON hỏng ⇒ LỖI có tên file — không nuốt, vì nuốt ở đây nghĩa là
+    lặng lẽ rơi về trạm mặc định và người dùng mất cả cây nội dung mà không biết vì sao."""
+    if not p.is_file():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        raise StudioPathsError(f"{p.name} hỏng ({p}): {e} — sửa tay hoặc xoá rồi chạy lại")
+    if not isinstance(data, dict):
+        raise StudioPathsError(f"{p.name} không phải object JSON ({p})")
+    return data
+
+
+def local_config(repo=None) -> dict:
+    """Nội dung `<repo>/studio.local.json` (lựa chọn chế độ cài); {} nếu chưa có."""
+    repo = Path(repo) if repo else repo_root()
+    return _doc_json(repo / LOCAL_CONFIG) if repo else {}
+
+
+def mode(repo=None) -> str | None:
+    """Chế độ cài đã chọn: `embedded` · `separate` · None (chưa chạy bộ cài)."""
+    m = (local_config(repo).get("mode") or "").strip()
+    return m if m in MODES else None
+
+
+def resolve_station(station=None) -> tuple[Path, str]:
+    """-> (gốc trạm, nguồn). Nguồn ∈ `--station` · MARKETING_STUDIO_DATA · studio.local.json
+    · workspace · default. Đọc lại MỖI LẦN gọi (không đóng băng lúc import)."""
+    if station:
+        return Path(station).expanduser().resolve(), "--station"
+    bien = (os.environ.get("MARKETING_STUDIO_DATA") or "").strip()
+    if bien:
+        return Path(bien).expanduser().resolve(), "MARKETING_STUDIO_DATA"
+    repo = repo_root()
+    if repo:
+        sp = str(local_config(repo).get("station_path") or "").strip()
+        if sp:
+            q = Path(sp).expanduser()
+            return (q if q.is_absolute() else (repo / q)).resolve(), LOCAL_CONFIG
+        ws = repo / WORKSPACE
+        if ws.is_dir():
+            return ws.resolve(), WORKSPACE
+    return (Path.home() / ".marketing").resolve(), "default"
+
 
 def root(station=None) -> Path:
-    """STATION: --station > $MARKETING_STUDIO_DATA > ~/.marketing."""
-    return Path(station or os.environ.get("MARKETING_STUDIO_DATA")
-                or Path.home() / ".marketing").expanduser()
+    """STATION theo thứ tự F17.3 (xem docstring module)."""
+    return resolve_station(station)[0]
+
+
+def workspace_dir(repo=None) -> Path | None:
+    """`<repo>/workspace/` — chỗ trạm nằm ở chế độ embedded (có tồn tại hay chưa thì tuỳ)."""
+    repo = Path(repo) if repo else repo_root()
+    return (repo / WORKSPACE) if repo else None
+
+
+# ── bí mật: biến môi trường → <repo>/.env (chỉ embedded) → kho secret của máy ──────────
+
+def env_file(repo=None) -> Path | None:
+    """`<repo>/.env` khi và CHỈ KHI chế độ là `embedded` và file có thật; không thì None."""
+    repo = Path(repo) if repo else repo_root()
+    if not repo or mode(repo) != "embedded":
+        return None
+    f = repo / ".env"
+    return f if f.is_file() else None
+
+
+def doc_env_file(repo=None) -> dict:
+    """Đọc `<repo>/.env` thành dict. Định dạng tối giản, CỐ Ý không hỗ trợ gì thêm:
+    `TEN=giá trị` mỗi dòng, bỏ qua dòng trống và dòng `#`, bỏ `export ` đầu dòng, gỡ một
+    lớp nháy bao ngoài. Không nội suy `$BIEN`, không nối dòng — mỗi tính năng thêm là một
+    cách nữa để một file text trở thành mã chạy được."""
+    f = env_file(repo)
+    if not f:
+        return {}
+    ra = {}
+    for dong in f.read_text(encoding="utf-8", errors="replace").splitlines():
+        d = dong.strip()
+        if not d or d.startswith("#") or "=" not in d:
+            continue
+        if d.startswith("export "):
+            d = d[len("export "):]
+        ten, _, gia = d.partition("=")
+        ten, gia = ten.strip(), gia.strip()
+        if len(gia) >= 2 and gia[0] == gia[-1] and gia[0] in "\"'":
+            gia = gia[1:-1]
+        if ten:
+            ra[ten] = gia
+    return ra
+
+
+def secret_env(name: str, repo=None) -> str | None:
+    """Giá trị của một biến hợp đồng: `os.environ` → `<repo>/.env` (chỉ embedded) → None.
+
+    Trả ĐƯỜNG DẪN hoặc cấu hình, không bao giờ là token: luật ba tầng của repo này nói
+    biến giữ đường dẫn, file ngoài git giữ giá trị (`knowledge/toolchains/SECRETS.md`).
+    """
+    gia = (os.environ.get(name) or "").strip()
+    if gia:
+        return gia
+    gia = (doc_env_file(repo).get(name) or "").strip()
+    return gia or None
+
+
+# ── hai trạm năng lực kia (hợp đồng ba trạm, §2.4a của kế hoạch) ───────────────────────
+
+def _tram_ngoai(ten_moi, ten_cu, khoa, len_mot_cap=False, repo=None) -> Path | None:
+    """Tên biến được truyền vào dưới dạng GIÁ TRỊ đã đọc, nhưng nơi gọi phải viết
+    `os.environ.get("TÊN")` bằng chữ literal — cổng `test_docs_drift` quét theo mẫu đó để
+    bắt mọi biến code đang đọc. Đọc qua một biến trung gian là biến mất khỏi cổng."""
+    v = (ten_moi or "").strip()
+    if v:
+        return Path(v).expanduser().resolve()
+    v = (ten_cu or "").strip()
+    if v:
+        p = Path(v).expanduser().resolve()
+        return p.parent if len_mot_cap else p
+    v = str(local_config(repo).get(khoa) or "").strip()
+    return Path(v).expanduser().resolve() if v else None
+
+
+def voice_station(repo=None) -> Path | None:
+    """Trạm giọng: `VOICE_STATION` → `OMNIVOICE_DIR` (tên CŨ = thư mục ENGINE, lùi một cấp)
+    → `studio.local.json: voice_station` → None (chưa cài `agent-voice-studio`)."""
+    return _tram_ngoai(os.environ.get("VOICE_STATION"), os.environ.get("OMNIVOICE_DIR"),
+                       "voice_station", len_mot_cap=True, repo=repo)
+
+
+def video_station(repo=None) -> Path | None:
+    """Trạm video: `VIDEO_STATION` → `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station`
+    → None (chưa cài `agent-video-studio`)."""
+    return _tram_ngoai(os.environ.get("VIDEO_STATION"), os.environ.get("VIDEO_ROOT"),
+                       "video_station", repo=repo)
 
 
 def _no_duong(p: str, src: Path) -> Path:

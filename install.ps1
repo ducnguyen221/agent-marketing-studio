@@ -19,8 +19,10 @@
     new_channel.py sẽ hỏi. Nó chỉ dựng trạm rỗng rồi chỉ đúng lệnh tiếp theo.
 
 .EXAMPLE
-    .\install.ps1
-    .\install.ps1 -Station "D:\noi-dung" -NonInteractive
+    .\install.ps1                              # hoi ban chon che do cai
+    .\install.ps1 -Yes                         # nhan khuyen nghi: embedded
+    .\install.ps1 -Station "D:/noi-dung"       # tram ngoai repo, khong hoi
+    .\install.ps1 -NonInteractive              # khong co ai tra loi -> embedded
 
 .NOTES
     File này phải giữ BOM UTF-8 để PowerShell 5.1 đọc đúng tiếng Việt.
@@ -29,6 +31,9 @@
 [CmdletBinding()]
 param(
     [string] $Station,
+    [ValidateSet('embedded', 'separate')]
+    [string] $Mode,
+    [switch] $Yes,
     [switch] $NonInteractive
 )
 
@@ -117,53 +122,30 @@ if ($thieu.Trim()) {
     Say "Phu thuoc: du"
 }
 
-# ── 2. Chỗ đặt trạm ──────────────────────────────────────────────────────────
-$macDinh = Join-Path $HOME ".marketing"
-if (-not $Station) {
-    if ($NonInteractive) {
-        $Station = $macDinh
-    } else {
-        Say ""
-        Say "Dat TRAM o dau? (noi dung cua ban song o day, khong vao git)" Cyan
-        Say ("  Enter = {0}" -f $macDinh)
-        $tra = Read-Host "  Duong dan"
-        if ([string]::IsNullOrWhiteSpace($tra)) { $Station = $macDinh } else { $Station = $tra }
-    }
-}
-$Station = [System.IO.Path]::GetFullPath($Station)
+# ── 2. Dựng trạm — mọi quyết định nằm ở init_station.py ──────────────────────
+# Vỏ này CỐ TÌNH không tự hỏi chỗ đặt trạm nữa: `install.sh` (macOS/Linux) phải hỏi y hệt,
+# và hai vỏ hỏi riêng thì sớm muộn chúng trôi khỏi nhau. Lõi Python là chỗ duy nhất biết
+# hai chế độ cài, biết nhận diện máy đã có trạm, và biết dừng khi không có ai trả lời.
+$init = Join-Path (Join-Path (Join-Path $RepoRoot 'scripts') 'pipeline') 'init_station.py'
+$doi = @()
+if ($Station) { $doi += @('--station', $Station) }
+if ($Mode) { $doi += @('--mode', $Mode) }
+# -NonInteractive = "không có ai ngồi đây": nhận khuyến nghị (embedded). Máy đã có trạm
+# ngoài thì lõi vẫn tự chọn separate và bỏ qua cờ này — đó là chủ đích (F17.2).
+if ($NonInteractive -or $Yes) { $doi += '--yes' }
 
-if (Test-Path (Join-Path $Station "CHANNELS.md")) {
+Say ""
+# Ha ErrorActionPreference quanh DUNG loi goi: init_station.py in moi log cho nguoi doc ra
+# stderr (hop dong ba tram giu stdout sach cho dong JSON). Duoi `Stop`, neu ai do chay
+# `install.ps1 2>&1 | …` thi PS 5.1 boc dong stderr DAU TIEN thanh NativeCommandError va
+# giet bo cai giua chung — khi do "cai hong" va "cai xong co log" trong y het nhau.
+$eapCu = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+& $py $init @doi
+$ma = $LASTEXITCODE
+$ErrorActionPreference = $eapCu
+if ($ma -ne 0) {
     Say ""
-    Say ("Da co tram o {0} - khong ghi de." -f $Station) Yellow
-} else {
-    New-Item -ItemType Directory -Force -Path $Station | Out-Null
-    Copy-Item (Join-Path $RepoRoot (Join-Path "templates" (Join-Path "station" "CHANNELS.md"))) (Join-Path $Station "CHANNELS.md")
-    Say ""
-    Say ("Tram    : {0}" -f $Station) Green
+    Say ("Bo cai dung o ma {0}. 2 = can sua cau hinh (hoac can ban chon che do); 3 = con thieu buoc cai." -f $ma) Yellow
 }
-
-# ── 3. Bước tiếp theo ────────────────────────────────────────────────────────
-# In ra lệnh THẬT, chạy dán được. Hướng dẫn mà phải sửa mới chạy là hướng dẫn hỏng.
-Say ""
-Say "Buoc tiep theo:" Cyan
-Say ""
-Say ("  # 1. Tao kenh dau tien (--path la BAT BUOC: cho luu la quyet dinh cua ban)")
-# Đường trong lệnh in bằng `/`: Python nhận `/` trên cả Windows lẫn macOS, còn `\` thì
-# macOS coi là một ký tự trong tên file. Python in đúng cái Find-Python vừa tìm ra; là
-# đường đầy đủ (vd .venv) thì phải có `&` mới chạy được trong PowerShell.
-if ($py -match '[\\/]') { $pyTen = '& "' + $py + '"' } else { $pyTen = $py }
-Say ("  {0} scripts/pipeline/new_channel.py --id ten-kenh --label ""Ten kenh"" ``" -f $pyTen)
-Say ("      --path ""{0}"" --station ""{1}""" -f (Join-Path $Station "ten-kenh"), $Station)
-Say ""
-Say ("  # 2. Tao chien dich")
-Say ("  {0} scripts/pipeline/new_campaign.py --channel ten-kenh --id CMP-2609-abc ``" -f $pyTen)
-Say ("      --name ""Ten chien dich"" --prefix ABC --station ""{0}""" -f $Station)
-Say ""
-Say ("  # 3. Dien du campaign.md, roi tao bai (buoc nay CHAN neu campaign.md con chu mau)")
-Say ("  {0} scripts/pipeline/new_post.py --campaign CMP-2609-abc --id ABC-001 ``" -f $pyTen)
-Say ("      --slug bai-dau-tien --title ""Tieu de"" --station ""{0}""" -f $Station)
-Say ""
-Say ("  # Xem truoc mot tram da dien san:")
-Say ("  {0} scripts/pipeline/check_tree.py --station ./examples" -f $pyTen)
-Say ("  (roi mo examples/index.html bang cach bam dup)")
-Say ""
+exit $ma

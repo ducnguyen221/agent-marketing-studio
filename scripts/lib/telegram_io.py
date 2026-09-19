@@ -37,10 +37,14 @@ from __future__ import annotations
 import json
 import secrets
 import os
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import studio_paths  # noqa: E402
 
 API = "https://api.telegram.org/bot{token}/{method}"
 
@@ -58,8 +62,13 @@ CAP_CALLBACK = 64
 
 
 def duong_dan_cau_hinh() -> Path:
-    """`TG_CONFIG` (chỉ ĐƯỜNG DẪN) → `~/.secret/telegram/config.json`."""
-    return Path(os.environ.get("TG_CONFIG")
+    """`TG_CONFIG` (chỉ ĐƯỜNG DẪN) → `~/.secret/telegram/config.json`.
+
+    `TG_CONFIG` đọc qua `studio_paths.secret_env`: biến môi trường trước, rồi `<repo>/.env`
+    **chỉ khi** máy cài ở chế độ `embedded` (F17). Vẫn chỉ là ĐƯỜNG DẪN — token không bao
+    giờ nằm trong biến hay trong `.env`, xem khối "Hợp đồng secret" ở đầu file.
+    """
+    return Path(studio_paths.secret_env("TG_CONFIG")
                 or Path.home() / ".secret" / "telegram" / "config.json")
 
 

@@ -5,10 +5,17 @@
 - Mọi token nằm trong **file** ở kho bí mật ngoài git (mặc định `~/.secret/<tài-khoản>/`). Biến
   môi trường chỉ giữ **đường dẫn** tới file đó, không giữ giá trị. Chi tiết:
   `knowledge/toolchains/SECRETS.md`.
-- **Trạm nội dung nằm ngoài git.** `brand.md` (hồ sơ cá nhân của tác giả) và `publish.json`
-  (link thật, ID bài) không bao giờ được commit lên repo công khai. `channel.yml` chỉ ghi
-  **TÊN biến môi trường** của secret, không bao giờ ghi giá trị.
-- Dự án chỉ cung cấp `.env.example` — danh mục TÊN biến, không có giá trị. `.env*` bị gitignore.
+- **Trạm nội dung không bao giờ vào git.** `brand.md` (hồ sơ cá nhân của tác giả) và
+  `publish.json` (link thật, ID bài) không được commit lên repo công khai. `channel.yml` chỉ
+  ghi **TÊN biến môi trường** của secret, không bao giờ ghi giá trị.
+  Chế độ cài `embedded` đặt trạm ở `<repo>/workspace/` cho tiện — và vì nó nằm trong repo,
+  nó có **ba** lớp rào, không phải một: `.gitignore` (`/workspace/`, `.env`, `.env.*`,
+  `studio.local.json`), hook `templates/hooks/pre-commit` (chặn cả `git add -f` và dòng thêm
+  mới trông giống token), và `scripts/pipeline/doctor.py` đo lại rằng hai lớp trên còn sống.
+- Dự án chỉ cung cấp `.env.example` — danh mục TÊN biến, không có giá trị. `.env*` bị
+  gitignore. Ở chế độ `embedded`, `<repo>/.env` **được script nạp** (`studio_paths.secret_env`)
+  nhưng vẫn chỉ giữ **đường dẫn** và cấu hình máy: token sống trong file JSON ngoài git mà
+  đường dẫn đó trỏ tới, không bao giờ trong `.env`.
 
 ## 2. Bảo Vệ Dữ Liệu Khách Hàng & Leads (PII)
 - Dữ liệu thu thập từ các chiến dịch (họ tên, email, số điện thoại người đăng ký) **không bao giờ được lưu trực tiếp vào repository**.

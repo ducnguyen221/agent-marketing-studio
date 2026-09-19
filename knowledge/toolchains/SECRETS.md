@@ -21,6 +21,18 @@
 Chữ **`PATH`** trong `YT_TOKEN_PATH` là cố ý: biến giữ *đường dẫn tới file*, không giữ nội
 dung. Nhờ vậy file vẫn mở ra đọc được — và thư viện Google vẫn ghi đè được khi làm mới token.
 
+### Tầng "biến" đặt ở đâu — hai chế độ cài
+
+| Chế độ cài | Đặt biến ở | `<repo>/.env` |
+|---|---|---|
+| `separate` (máy nhiều trạm, repo public của chính bạn) | cấp user: `setx` (Windows) · `EnvironmentVariables` trong plist launchd (macOS) | **không được nạp** — repo có thể là bản public của bạn, tự nạp một file lạ trong đó là mở cửa |
+| `embedded` (mặc định cho người mới) | `<repo>/.env` | **được nạp**, bởi `studio_paths.secret_env()`, và chỉ khi `studio.local.json: mode = embedded` |
+
+Biến môi trường thật luôn **thắng** `.env`. Và `.env` không phá luật ba tầng: nó nằm ở tầng
+**biến**, nên nó giữ *đường dẫn* và cấu hình máy — **không bao giờ** giữ token. Rào cho nó:
+`.gitignore` (`.env`, `.env.*`, trừ `.env.example`) + hook `templates/hooks/pre-commit` +
+`doctor.py` (kiểm cả hai còn sống, và kiểm quyền 600 trên POSIX).
+
 ---
 
 ## Thư mục bí mật
@@ -141,7 +153,10 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `FFMPEG_DIR` | `media_tools.py` — thư mục chứa `ffmpeg` + `ffprobe` | Windows: thư mục WinGet → PATH · macOS: PATH → `/opt/homebrew/bin`, `/usr/local/bin` |
 | `FFPROBE` | `media_tools.py` — đường `ffprobe` riêng | như `FFMPEG_DIR` |
 | `VIDEO_FONT` | `media_tools.py` — font `.ttf/.otf` khi Pillow tự vẽ chữ | Segoe/Arial (Windows) · Arial hệ thống (macOS) · DejaVu |
-| `OMNIVOICE_DIR` | `make_podcast.py` — thư mục cài OmniVoice | `<nhà>/.tts/omnivoice` |
+| `VOICE_STATION` | `studio_paths.voice_station()` — gốc trạm giọng (`agent-voice-studio`) | `OMNIVOICE_DIR` (tên cũ, lùi một cấp) → `studio.local.json: voice_station` → coi như chưa cài |
+| `OMNIVOICE_DIR` | `make_podcast.py` — thư mục ENGINE của trạm giọng; `studio_paths` đọc như tên cũ của `VOICE_STATION` | `<nhà>/.tts/omnivoice` |
+| `VIDEO_STATION` | `studio_paths.video_station()` — gốc trạm video (`agent-video-studio`) | `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station` → coi như chưa cài |
+| `VIDEO_ROOT` | tên CŨ của `VIDEO_STATION`, còn đọc được để không gãy máy đang chạy | — |
 | `OPCOS_CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | đường mặc định trong thư mục nhà |
 | `ATLAS_BASE_URL`, `ATLAS_SITE_NAME`, `ATLAS_AUTHOR` | `build_blog_html.py`, `blog_gates.py` — URL gốc, tên site, tác giả của trang blog | giá trị mặc định trong code |
 | `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |

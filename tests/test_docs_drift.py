@@ -249,7 +249,14 @@ def test_buoc_Step_trong_tai_lieu_NAM_TRONG_ValidateSet_cua_runner():
 # code mà không vào tài liệu thì người dựng máy mới không biết mà đặt — và script lặng lẽ
 # rơi về đường dò mặc định.
 
-_BIEN_PY = re.compile(r"""environ(?:\.get\(|\[)\s*["']([A-Z][A-Z0-9_]+)["']""")
+# Hai cách code đọc một biến, và cổng phải thấy CẢ HAI:
+#   os.environ.get("X")   — đọc thẳng
+#   secret_env("X")       — đọc qua studio_paths (biến → <repo>/.env khi mode=embedded, F17)
+# Bỏ sót vế thứ hai thì cổng mất răng trong im lặng: đổi một lời gọi từ vế một sang vế hai
+# là biến đó biến khỏi danh sách phải khai, mà không test nào đỏ. Đã xảy ra đúng thế với
+# `TG_CONFIG` khi `telegram_io` chuyển sang `secret_env` (P2-G1).
+_BIEN_PY = re.compile(
+    r"""(?:environ(?:\.get\(|\[)|secret_env\()\s*["']([A-Z][A-Z0-9_]+)["']""")
 _BIEN_PS = re.compile(r"\$env:([A-Z][A-Z0-9_]+)")
 # Biến của HỆ ĐIỀU HÀNH / của Python — không phải thứ người dùng tự đặt.
 BIEN_HE_THONG = {"LOCALAPPDATA", "PROGRAMFILES", "HOME", "USERPROFILE", "PATH",
