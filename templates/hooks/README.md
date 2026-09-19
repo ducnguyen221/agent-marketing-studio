@@ -26,8 +26,16 @@ create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 
 
 ## Chỗ thay được trong lệnh
 
-`{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch · `{web}` URL bài đã lên
-trang (chỉ có ở `youtube_cmd` và `facebook_cmd`).
+`{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch · `{channel}` thư mục
+kênh · `{station}` gốc trạm · `{skills}` skill khai ở `runtime.writer_skills` (chỉ
+`writer_cmd`) · `{web}` URL bài đã lên trang (chỉ có ở `youtube_cmd` và `facebook_cmd`).
+
+`{channel}` = đi lên từ chiến dịch tới `channel.yml`. `{station}` = đi lên tới `CHANNELS.md`,
+rồi `MARKETING_STUDIO_DATA`, rồi `~/.marketing` — cùng luật với `run.ps1`. Script đặt ở trạm
+thì trỏ qua hai ô này, **đừng ghi cứng đường của một máy**: chép trạm sang máy khác (hay sang
+macOS) là lệnh vẫn đúng. Ô không phân giải được (vd chiến dịch không nằm trong kênh nào) ⇒
+hook đó **hỏng có lý do**, không chạy với chuỗi rỗng. Ngoặc nhọn khác (`{khac}`, JSON) được
+giữ nguyên.
 
 Riêng bước `release` có thêm bốn ô:
 
@@ -91,7 +99,7 @@ nguyên dấu `\`, và dấu `;` trong cấu hình không thành lệnh thứ ha
 ```yaml
 runtime:
   writer_cmd: 'powershell -NoProfile -ExecutionPolicy Bypass -File
-               D:\tram\<kênh>\viet-bai.ps1 -Bai "{post}"'
+               "{channel}/write-post.ps1" -Post "{post}" -Skills "{skills}"'
 ```
 
 **Đừng sửa file mẫu tại chỗ trong repo.** Repo là bản chung; trạm là máy của bạn. Lẫn hai

@@ -149,7 +149,7 @@ thế nào là việc của script trạm; repo không ép ai dùng harness nào
 ```yaml
 runtime:
   approval_via: session             # MẶC ĐỊNH — hỏi thẳng trong phiên, không nhắn Telegram
-  writer_cmd: powershell -File "…\write-post.ps1" -Post "{post}" -Skills "{skills}"
+  writer_cmd: powershell -File "{channel}/write-post.ps1" -Post "{post}" -Skills "{skills}"
   writer_skills:
     - kpim-skills:blog-writing      # giọng tác giả + chân dung độc giả
 ```

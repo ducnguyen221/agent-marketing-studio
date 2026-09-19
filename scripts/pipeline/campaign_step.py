@@ -257,6 +257,48 @@ def split_command(cmd: str) -> list[str]:
     return [x.strip('"') for x in shlex.split(cmd, posix=False) if x.strip()]
 
 
+_O_HOOK = re.compile(r"\{(\w+)\}")
+
+
+def hook_argv(cmd: str, o: dict) -> list[str]:
+    """Tách lệnh hook (`split_command`) rồi thay các ô `{ten}` ĐÃ BIẾT, một lượt.
+
+    · Ô LẠ giữ nguyên. Trước đây `writer_cmd` đi qua `str.format`: một cặp ngoặc nhọn của
+      chính người dùng (`{khac}`, JSON) hay ô tài liệu có hứa mà code chưa biết (`{cam}`)
+      là KeyError — cả bước `soan` sập, không phải một bài hỏng.
+    · Thay MỘT lượt bằng regex: giá trị vừa thay mà chứa `{...}` không bị thay lần hai.
+    · Ô có trong lệnh mà giá trị là `None` (không phân giải được, vd `{channel}` khi chiến
+      dịch không nằm trong kênh nào) ⇒ ValueError nêu tên ô. Thay bằng chuỗi rỗng là
+      chạy một lệnh trỏ vào hư không mà không ai biết vì sao.
+    """
+    def thay(m):
+        k = m.group(1)
+        if k not in o:
+            return m.group(0)
+        if o[k] is None:
+            raise ValueError(f"không phân giải được ô {{{k}}} trong lệnh hook")
+        return str(o[k])
+    return [_O_HOOK.sub(thay, x) for x in split_command(cmd)]
+
+
+def _o_chung(campaign: Path, post: Path, cid: str) -> dict:
+    """Các ô dùng được ở MỌI hook.
+
+    `{channel}` = thư mục kênh (đi lên tới `channel.yml`). `{station}` = trạm: đi lên tới
+    `CHANNELS.md` như `run.ps1`, rồi `MARKETING_STUDIO_DATA`, rồi `~/.marketing`
+    (`studio_paths.root`). Hai ô này để lệnh trong `campaign.md` KHÔNG phải ghi cứng đường
+    của một máy — chép trạm sang máy khác là lệnh vẫn đúng.
+    """
+    try:
+        kenh = str(SP.channel_of(campaign / "campaign.md"))
+    except FileNotFoundError:
+        kenh = None
+    tram = next((q for q in [campaign.resolve(), *campaign.resolve().parents]
+                 if (q / SP.SO_KENH).is_file()), None) or SP.root()
+    return {"post": str(post), "cid": cid, "cam": str(campaign), "campaign": str(campaign),
+            "channel": kenh, "station": str(tram)}
+
+
 def _cong_chan(post: Path) -> tuple[list[dict], str, str]:
     """Đọc `gates.json`: danh sách cổng CHẶN, bước đã chấm, và CHỮ KÝ của lần chấm.
 
@@ -422,9 +464,12 @@ def step_write(campaign: Path, *, bot, hom_nay: date | None = None, dry_run=Fals
             if dry_run:
                 to_write.append(d["content_id"])
                 continue
-            cmd = [x.format(post=str(post), cid=d["content_id"], campaign=str(campaign),
-                            skills=skills)
-                   for x in split_command(writer)]
+            try:
+                cmd = hook_argv(writer, {**_o_chung(campaign, post, d["content_id"]),
+                                         "skills": skills})
+            except ValueError as e:
+                failed.append({"id": d["content_id"], "why": "writer_cmd", "detail": str(e)})
+                continue
             r = run_cmd(cmd)
             if r.returncode != 0:
                 failed.append({"id": d["content_id"], "why": "writer_cmd",
@@ -546,12 +591,16 @@ def step_build_page(campaign: Path, *, bot, dry_run=False, run_cmd=None,
         # B5 — tiếng (tuỳ chọn)
         co_audio = False
         if audio_cmd:
-            cmd = [x.replace("{post}", str(post)).replace("{cid}", cid)
-                    for x in split_command(audio_cmd)]
-            r = run_cmd(cmd)
-            co_audio = (post / "atlas" / "audio.mp3").is_file()
-            if getattr(r, "returncode", 1) != 0 and not co_audio:
-                loi(f"{cid}: dựng tiếng hỏng — vẫn dựng trang không có tiếng.")
+            try:
+                cmd = hook_argv(audio_cmd, _o_chung(campaign, post, cid))
+            except ValueError as e:
+                cmd = None
+                loi(f"{cid}: audio_cmd — {e} — vẫn dựng trang không có tiếng.")
+            if cmd:
+                r = run_cmd(cmd)
+                co_audio = (post / "atlas" / "audio.mp3").is_file()
+                if getattr(r, "returncode", 1) != 0 and not co_audio:
+                    loi(f"{cid}: dựng tiếng hỏng — vẫn dựng trang không có tiếng.")
 
         # B6 — dựng trang
         cmd = [sys.executable, str(src / "build_blog_html.py"),
@@ -745,13 +794,15 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
             if vi_sao:
                 loi_kenh.append(f"{name}: {vi_sao}")
                 continue
-            cmd = [x.replace("{post}", str(post)).replace("{cid}", cid)
-                    .replace("{web}", (d.get("web") or "").strip())
-                    .replace("{youtube_url}", link.get("youtube", ""))
-                    .replace("{schedule}", lich)
-                    .replace("{publish_at}", publish_at)
-                    .replace("{publish_ts}", publish_ts)
-                    for x in split_command(lenh_tho)]
+            try:
+                cmd = hook_argv(lenh_tho, {**_o_chung(campaign, post, cid),
+                                           "web": (d.get("web") or "").strip(),
+                                           "youtube_url": link.get("youtube", ""),
+                                           "schedule": lich, "publish_at": publish_at,
+                                           "publish_ts": publish_ts})
+            except ValueError as e:
+                loi_kenh.append(f"{name}: {e}")
+                continue
             r = run_cmd(cmd)
             url = ""
             for dong_ra in reversed((getattr(r, "stdout", "") or "").splitlines()):

@@ -94,7 +94,10 @@ runtime:
   writer_cmd: '<lệnh của bạn> --post "{post}"'
 ```
 
-Chỗ thay được: `{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch.
+Chỗ thay được: `{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch ·
+`{channel}` thư mục kênh · `{station}` gốc trạm · `{skills}` skill khai ở
+`runtime.writer_skills`. Script của trạm trỏ qua `{channel}`/`{station}` thay vì ghi cứng
+đường một máy (chi tiết: `templates/hooks/README.md`).
 
 | | |
 |---|---|

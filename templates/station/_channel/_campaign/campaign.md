@@ -68,9 +68,14 @@ runtime:
   #
   # ── BỐN HOOK — repo KHÔNG khoá CLI hay agent nào ──────────────────────────
   # Mỗi hook là một lệnh CỦA BẠN. Chỗ thay được: {post} thư mục bài · {cid} mã bài ·
-  # {cam} thư mục chiến dịch · {web} URL bài (chỉ ở hai hook cuối).
+  # {cam} thư mục chiến dịch · {channel} thư mục kênh · {station} gốc trạm ·
+  # {skills} (chỉ writer_cmd) · {web} URL bài (chỉ ở hai hook cuối).
+  # Script của trạm thì trỏ qua {channel}/{station}, ĐỪNG ghi cứng đường một máy:
+  # chép trạm sang máy khác (hay sang macOS) là lệnh vẫn đúng.
   #
   # writer_cmd:   '<lệnh của bạn> --post "{post}"'
+  #   vd:         'powershell -NoProfile -ExecutionPolicy Bypass -File
+  #                "{channel}/write-post.ps1" -Post "{post}" -Skills "{skills}"'
   #     Vào : thư mục bài (meta.json · research.md · content.md khung · prompt.txt ·
   #           phan-hoi.md nếu bị trả lại).  Ra: điền đầy content.md theo neo `## post:`.
   #     KHÔNG khai = bước `soan` báo *chờ người viết* và dừng. Fail-closed, không đoán.

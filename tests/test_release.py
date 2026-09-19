@@ -352,3 +352,13 @@ def test_bai_HEN_GIO_ghi_ngay_hen_chu_khong_ghi_hom_nay(tmp_path):
     r = CS.step_release(campaign, bot=None, run_cmd=c, hom_nay=TRUOC_LICH)
     assert r["xu_ly"] == 1, r
     assert _bang(campaign)["T-001"]["published"] == "2026-09-15"
+
+
+def test_youtube_cmd_thay_channel_va_station(tmp_path):
+    campaign = _cam(tmp_path, runtime_them='  youtube_cmd: \'len-yt "{channel}" "{station}"\'\n')
+    (tmp_path / "tram" / "CHANNELS.md").write_text("# Kênh\n", encoding="utf-8")
+    c = _chay_gia(**{"len-yt": {"url": "https://youtu.be/abc"}})
+    CS.step_release(campaign, bot=None, run_cmd=c, hom_nay=SAU_LICH)
+    assert c.goi, "không gọi youtube_cmd"
+    assert Path(c.goi[0][1]).resolve() == campaign.parent.resolve()
+    assert Path(c.goi[0][2]).resolve() == (tmp_path / "tram").resolve()

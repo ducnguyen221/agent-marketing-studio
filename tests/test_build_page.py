@@ -216,3 +216,14 @@ def test_chi_bai_gioi_han_dung_mot_bai(tmp_path):
     c = _chay_gia(campaign)
     result = CS.step_build_page(campaign, bot=None, run_cmd=c, only_post="T-999")
     assert result["xu_ly"] == 0 and c.goi == []
+
+
+def test_audio_cmd_thay_channel_va_cam(tmp_path):
+    """`{channel}`/`{station}`/`{cam}` dùng được ở MỌI hook, không riêng `writer_cmd`."""
+    campaign = _cam(tmp_path, runtime_them='  audio_cmd: \'lam-tieng "{channel}" "{cam}" {cid}\'\n')
+    c = _chay_gia(campaign)
+    CS.step_build_page(campaign, bot=None, run_cmd=c)
+    lenh = [x for x in c.goi if x and x[0] == "lam-tieng"]
+    assert lenh, c.goi
+    assert Path(lenh[0][1]).resolve() == campaign.parent.resolve()
+    assert Path(lenh[0][2]).resolve() == campaign.resolve() and lenh[0][3] == "T-001"

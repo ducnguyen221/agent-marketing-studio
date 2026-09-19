@@ -481,6 +481,80 @@ def test_khong_khai_skills_thi_cho_dien_thanh_RONG(tmp_path):
     assert ra.read_text(encoding="utf-8") == "[]"
 
 
+# ── Chỗ thay {channel} / {station} (P1 · D5) ───────────────────────────────
+#
+# Trước đây `writer_cmd` ở trạm phải ghi CỨNG đường tới script của kênh (vd ổ D: của máy
+# Windows). Chép trạm sang Mac là lệnh trỏ vào một đường không tồn tại. Hai ô này để lệnh
+# tự tìm đúng chỗ trên máy nào cũng được.
+
+def _ghi_argv(ra, n):
+    """Bộ viết giả: ghi argv[2..n+1] nối bằng `|` vào file `ra`."""
+    return (f'{_PY} -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+            f'chr(124).join(sys.argv[2:]),encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
+            f'"{ra}" ' + " ".join('"{' + o + '}"' for o in n))
+
+
+def test_writer_cmd_thay_channel_bang_thu_muc_kenh(tmp_path):
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["channel"]))
+    CS.step_write(campaign, bot=BotGia())
+    assert Path(ra.read_text(encoding="utf-8")).resolve() == campaign.parent.resolve()
+
+
+def test_writer_cmd_thay_station_bang_thu_muc_co_CHANNELS_md(tmp_path, monkeypatch):
+    """Đi lên tới `CHANNELS.md` — cùng luật với `run.ps1` — và THẮNG biến môi trường."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["station"]))
+    (tmp_path / "tram" / "CHANNELS.md").write_text("# Kênh\n", encoding="utf-8")
+    monkeypatch.setenv("MARKETING_STUDIO_DATA", str(tmp_path / "noi-khac"))
+    CS.step_write(campaign, bot=BotGia())
+    assert Path(ra.read_text(encoding="utf-8")).resolve() == (tmp_path / "tram").resolve()
+
+
+def test_station_khong_co_CHANNELS_md_thi_lui_ve_MARKETING_STUDIO_DATA(tmp_path, monkeypatch):
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["station"]))
+    monkeypatch.setenv("MARKETING_STUDIO_DATA", str(tmp_path / "tram-bien"))
+    CS.step_write(campaign, bot=BotGia())
+    assert Path(ra.read_text(encoding="utf-8")) == tmp_path / "tram-bien"
+
+
+def test_writer_cmd_nhan_ca_cam_lan_campaign(tmp_path):
+    """Tài liệu hứa `{cam}` từ đầu, còn code chỉ biết `{campaign}` — và vì code dùng
+    `str.format`, khai `{cam}` là bước `soan` NỔ KeyError chứ không chỉ thay sai."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["cam", "campaign"]))
+    CS.step_write(campaign, bot=BotGia())
+    a, b = ra.read_text(encoding="utf-8").split("|")
+    assert Path(a).resolve() == Path(b).resolve() == campaign.resolve()
+
+
+def test_o_la_trong_lenh_giu_nguyen_khong_no(tmp_path):
+    """Ngoặc nhọn thuộc về LỆNH của người dùng (vd `{khac}`, JSON) không phải việc của
+    engine. `str.format` ném KeyError ở đó và kéo sập cả bước."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["khac", "cid"]))
+    CS.step_write(campaign, bot=BotGia())
+    assert ra.read_text(encoding="utf-8") == "{khac}|T-001"
+
+
+def test_hook_argv_thay_mot_luot_khong_thay_long(tmp_path):
+    """Giá trị đã thay mà chứa `{...}` thì KHÔNG bị thay lần hai."""
+    assert CS.hook_argv('x "{post}" {cid}', {"post": "/a/{cid}", "cid": "T-1"}) == \
+        ["x", "/a/{cid}", "T-1"]
+
+
+def test_channel_khong_phan_giai_duoc_thi_bao_hong_ro_rang(tmp_path):
+    """Chiến dịch không nằm trong kênh nào: khai `{channel}` phải HỎNG có lý do, không
+    được thay bằng chuỗi rỗng rồi chạy một lệnh trỏ vào hư không."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["channel"]))
+    (campaign.parent / "channel.yml").unlink()
+    result = CS.step_write(campaign, bot=BotGia())
+    assert not ra.exists(), "không có kênh mà vẫn gọi bộ viết"
+    assert result["failed"] and "{channel}" in result["failed"][0]["detail"], result
+
+
 # ── Cổng đỏ phải kích hoạt viết lại (đổi 12/09/2026) ────────────────────────
 
 def _gates_do(post, *, chan=("G05",), verdict="fail"):
