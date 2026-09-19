@@ -21,6 +21,7 @@ Chuỗi cấm dựng từ mảnh (`chr(92)`, nối chuỗi) như `test_no_identi
 Quét cả `.ps1` CHƯA commit (không bị ignore): thêm một file mới phạm luật là đỏ ngay
 trong lượt test đầu tiên, không phải đợi tới lúc commit.
 """
+import os
 import re
 import shutil
 import subprocess
@@ -206,20 +207,44 @@ def test_moi_ps1_giu_BOM():
     assert not thieu, f"mất BOM UTF-8: {thieu}"
 
 
-PS = shutil.which("pwsh") or shutil.which("powershell")
+# ── Kiểm cú pháp bằng MỌI trình PowerShell có trên máy ───────────────────────
+# Bản cũ là `which("pwsh") or which("powershell")`: máy nào có pwsh 7 thì 5.1 không bao giờ
+# được hỏi. Trên `windows-latest` của CI pwsh 7 có sẵn ⇒ cú pháp chỉ 7 hiểu (`??`, `?:`,
+# `&&`, `-f` mới…) đi qua CI xanh rồi CHẾT CÂM ở Task Scheduler 5.1 — đúng loại hỏng cả pha
+# P1 sinh ra để chặn. Trình nào có mặt thì trình đó phải được hỏi, và mỗi trình là một test
+# riêng để đọc kết quả biết ngay bản nào từ chối.
+TRINH_PS = {ten: duong for ten, duong in
+            ((t, shutil.which(t)) for t in ("powershell", "pwsh")) if duong}
+PS = TRINH_PS.get("powershell") or TRINH_PS.get("pwsh")
 
 
-@pytest.mark.skipif(PS is None, reason="khong co PowerShell tren may nay")
-def test_moi_ps1_parse_duoc():
-    """Parser của CHÍNH trình PowerShell trên máy chạy test (5.1 Windows, pwsh 7 macOS)."""
+def test_Windows_phai_co_PowerShell_5_1_de_kiem():
+    """Windows nào cũng có `powershell` 5.1. Vắng nó = cổng 5.1 biến mất trong im lặng.
+
+    Lịch thật trên máy Windows chạy bằng ĐÚNG 5.1; kiểm bằng pwsh 7 thôi là kiểm một trình
+    khác với trình sẽ chạy.
+    """
+    if os.name != "nt":
+        pytest.skip("may khong phai Windows — 5.1 khong ton tai o day")
+    assert "powershell" in TRINH_PS, (
+        "khong thay `powershell` (5.1) tren PATH: cong kiem cu phap 5.1 dang khong chay")
+
+
+@pytest.mark.parametrize("ten", sorted(TRINH_PS) or [None])
+def test_moi_ps1_parse_duoc(ten):
+    """Parser của CHÍNH từng trình PowerShell có trên máy (5.1 Windows, pwsh 7 macOS/CI)."""
+    if ten is None:
+        # Không có trình nào: nói thành lời. Trên CI `conftest.pytest_configure` đã dừng cả
+        # lượt (MARKETING_STUDIO_REQUIRE_POWERSHELL=1), nên im lặng ở đây không thành xanh giả.
+        pytest.skip("khong co PowerShell tren may nay")
     ds = [str(p) for p in _ds_ps1_tracked()]
     lenh = ("$loi = @(); foreach ($f in $args) { $e = $null; "
             "[void][System.Management.Automation.Language.Parser]::ParseFile($f, [ref]$null, [ref]$e); "
             "foreach ($x in $e) { $loi += ($f + ':' + $x.Extent.StartLineNumber + ' ' + $x.Message) } }; "
             "$loi; exit $loi.Count")
-    r = subprocess.run([PS, "-NoProfile", "-Command", "& {" + lenh + "}", *ds],
+    r = subprocess.run([TRINH_PS[ten], "-NoProfile", "-Command", "& {" + lenh + "}", *ds],
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
-    assert r.returncode == 0, "PowerShell không parse được:\n" + r.stdout + r.stderr
+    assert r.returncode == 0, f"{ten} không parse được:\n" + r.stdout + r.stderr
 
 
 # ── Tự kiểm: cổng phải ĐỎ ĐÚNG LÝ DO ─────────────────────────────────────────
