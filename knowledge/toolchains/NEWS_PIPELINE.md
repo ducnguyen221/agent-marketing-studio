@@ -11,7 +11,7 @@
 
 | | Marketing | Chạy theo lịch |
 |---|---|---|
-| Ai khởi động | người | Windows Task Scheduler |
+| Ai khởi động | người | Task Scheduler (Windows) · launchd (macOS) |
 | Một Content là gì | một ý tưởng bài | **một số / một kỳ** |
 | Mã chiến dịch | `CMP-YYMM-slug` (có tháng) | **slug chức năng** (`daily-ai-news`) — sống vô thời hạn nên gắn tháng vào là nói dối |
 | File thêm | — | `run.ps1`, `prompt.txt`, khối `runtime:` trong `campaign.md` |
@@ -29,7 +29,7 @@ logs/config-<ngày>.json    BẢN CHỤP. Nhật ký, cấm sửa tay, sinh lạ
       │
       │  run.ps1 truyền qua  -Config
       ▼
-engine (~/.news/engine)    Không truyền -Config = chạy y như trước, đọc brand.json.
+engine (<trạm>/engine)     Không truyền -Config = chạy y như trước, đọc brand.json.
 ```
 
 **Vì sao có bước dịch:** máy này không có `powershell-yaml`, không có `ConvertFrom-Yaml`,
@@ -78,11 +78,32 @@ python scripts/pipeline/campaign_cfg.py --campaign <thư-mục>    # phải exit
 `run.ps1` **giống hệt nhau ở mọi chiến dịch** — mọi khác biệt nằm trong `campaign.md`.
 Chép nó sang chiến dịch mới là chạy được ngay.
 
-Scheduled task vẫn phải đi qua wrapper `notify-run.ps1` để có báo cáo Telegram:
+`run.ps1` tự tìm ba chỗ, in ra ở đầu log (`run.ps1: station=… engine=… repo=…`):
 
-```
+| | Thứ tự dò |
+|---|---|
+| Trạm | đi lên từ thư mục chiến dịch tới thư mục có `CHANNELS.md` → `MARKETING_STUDIO_DATA` → `~/.marketing` |
+| Engine | `<trạm>/engine` — tạm thời, chưa có thì lùi về engine cũ trong thư mục nhà và in cảnh báo (đường lùi sẽ gỡ khi engine dời xong) |
+| Repo | `MARKETING_STUDIO_HOME` → `~/Code/agent-marketing-studio` |
+
+Task theo lịch vẫn phải đi qua wrapper báo cáo để có tin Telegram (✅ kèm mọi link sản phẩm,
+❌ kèm bước hỏng). Mã thoát của wrapper = mã của `run.ps1`.
+
+```powershell
+# Windows — Task Scheduler (wrapper của máy, nằm ngoài repo)
 notify-run.ps1 -Title "<tên task>" -Script <đường-dẫn-run.ps1> -ScriptArgs ""
 ```
+
+```bash
+# macOS — launchd (wrapper trong repo)
+python3 <repo>/scripts/runners/notify_run.py --title "<tên task>" \
+    --composer-dir <trạm>/engine -- pwsh -NoProfile -File <chiến-dịch>/run.ps1
+```
+
+`--composer-dir` là tuỳ chọn (engine có `compose_report.py`/`triage.py` thì tin báo dễ đọc
+hơn); `--link-domains <miền>` thêm miền của trang blog vào danh sách link được trích. Token
+Telegram đọc từ file mà `TG_CONFIG` trỏ tới — xem
+[`SECRETS.md`](SECRETS.md).
 
 ---
 

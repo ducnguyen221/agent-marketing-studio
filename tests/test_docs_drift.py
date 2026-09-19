@@ -12,6 +12,7 @@ Nó không thay người đọc — nó chỉ đảm bảo cái đã bỏ thì k
 So khớp bằng CHUỖI THẲNG, không regex — cùng lý do với test_no_identity_leak: regex nuốt escape và
 cho âm tính giả.
 """
+import re
 import subprocess
 from pathlib import Path
 
@@ -27,10 +28,39 @@ CAM = {
     # KHÔNG cấm "tobi_excel.py": nó xuất hiện HỢP LỆ trong khối cảnh báo đầu hai file .ps1
     # (đang giải thích vì sao chúng chưa chạy được). Cấm một cái tên vì nó cũ là sai —
     # chỉ cấm thứ còn tự xưng là LUẬT HIỆN HÀNH.
+    "2 cổng duyệt": "đường ống có BA cổng (approval_gate.GATES); Cổng 3 bật khi bảng Content "
+                    "có cột g3",
+    "-Buoc ": "tham số của run-blog-campaign.ps1 là -Step (xem ValidateSet)",
+    "~/.news": "engine là <trạm>/engine; repo public không trỏ vào bố cục của một máy",
+    "~/.tts": "trạm giọng phân giải qua OMNIVOICE_DIR, không đường cứng",
+    "news-media": "thư mục media của engine cũ, không đi theo engine mới",
+    "soan ─": "bước `soan` đã đổi tên thành `write` (xem migrate_names.py)",
+    "`dang` là": "tên cũ của build-page nay là `publish` (campaign_step.STEPS)",
+    "TG_BOT_TOKEN=": "token Telegram CHỈ nằm trong file cấu hình; biến TG_CONFIG giữ đường dẫn",
+    "đọc từ .env": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
+    "đọc từ `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
+    "trong `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
+    "vào `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
+    "ở `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
+    "qua file `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
 }
 
 # Nơi được phép nhắc tên cũ: chỗ GIẢI THÍCH lịch sử, và chính file này.
 MIEN_TRU = ("tests/test_docs_drift.py", "fixtures/baseline/")
+
+# Miễn trừ RIÊNG từng chuỗi. Docstring của test kể lại lỗi đã trả giá bằng đúng tên bước lúc
+# đó — đó là lịch sử, không phải luật hiện hành.
+MIEN_TRU_RIENG = {
+    "soan ─": ("tests/",),
+    "`dang` là": ("tests/",),
+}
+
+# File LUẬT của repo (AGENTS.md) chỉ sửa khi người duyệt gật — agent không tự sửa. Chuỗi cũ
+# còn ở đó thì CHỜ, nhưng chờ có hạn: `test_file_luat_con_cho_duyet` là xfail STRICT, nên
+# ngày AGENTS.md được sửa nó thành XPASS và đỏ, buộc gỡ miễn trừ ở đây.
+CHO_DUYET_FILE_LUAT = {
+    "2 cổng duyệt": ("AGENTS.md",),
+}
 
 NHI_PHAN = {".png", ".jpg", ".jpeg", ".mp3", ".mp4", ".xlsx", ".ico", ".woff", ".woff2"}
 
@@ -55,12 +85,141 @@ def test_co_file_de_quet():
 
 @pytest.mark.parametrize("chuoi,why", list(CAM.items()))
 def test_chuoi_cua_mo_hinh_da_bo(chuoi, why):
+    bo_qua = MIEN_TRU_RIENG.get(chuoi, ()) + CHO_DUYET_FILE_LUAT.get(chuoi, ())
     dinh = []
     for name, text in FILES:
+        if bo_qua and name.startswith(bo_qua):
+            continue
         if chuoi in text:
             row = text[:text.index(chuoi)].count("\n") + 1
             dinh.append(f"{name}:{row}")
     assert not dinh, f"{chuoi!r} — {why}. Còn ở: {dinh[:10]}"
+
+
+@pytest.mark.xfail(strict=True, reason="AGENTS.md là file luật — chờ người duyệt sửa (C2)")
+@pytest.mark.parametrize("chuoi", list(CHO_DUYET_FILE_LUAT))
+def test_file_luat_con_cho_duyet(chuoi):
+    """Đỏ (xfail) khi file luật còn chuỗi cũ. Sửa xong file luật ⇒ XPASS ⇒ strict làm đỏ
+    cả lượt: gỡ chuỗi khỏi `CHO_DUYET_FILE_LUAT` để cổng chính canh luôn file đó."""
+    con = [n for n, t in FILES if n in CHO_DUYET_FILE_LUAT[chuoi] and chuoi in t]
+    assert not con, f"{chuoi!r} còn ở file luật {con}"
+
+
+# ── Lệnh trong tài liệu phải là lệnh CLI hiểu được ─────────────────────────
+# Đợt đổi tên 12/09/2026 sửa code (`soan`→`write`, `gui`/`nhan`→`send`/`receive`, `cho`→
+# `waiting`) mà bỏ sót tài liệu: người gõ theo tài liệu thì argparse báo "invalid choice".
+# `test_pipeline_spec` chỉ canh MỘT file; cổng này canh mọi tài liệu và docstring.
+
+CO_LENH_CON = ("approve_bus", "approval_gate", "campaign_step", "run_pipeline",
+               "register_publish", "make_fb_image")
+_LENH = re.compile(r"(`?)(?:scripts/pipeline/)?\b(" + "|".join(CO_LENH_CON) + r")(\.py)?"
+                   r"(?:[ \t]+<[^>\n]*>)?[ \t]+([a-z][a-z-]*)(?=[\s`|\\]|$)", re.M)
+_BUOC_RUNNER = re.compile(r"-Step[ \t]+([a-z][a-z-]*)")
+_DUOI_TAI_LIEU = (".md", ".yaml", ".yml", ".py", ".ps1")
+
+
+def _tai_lieu_va_docstring():
+    for name, text in FILES:
+        if name.startswith(("tests/", "examples/")) or not name.endswith(_DUOI_TAI_LIEU):
+            continue
+        if name == "scripts/pipeline/migrate_names.py":
+            continue          # bảng tra tên cũ → mới, phải chứa tên cũ
+        yield name, text
+
+
+def test_lenh_con_trong_tai_lieu_DEU_duoc_CLI_hieu():
+    thieu = []
+    for name, text in _tai_lieu_va_docstring():
+        for m in _LENH.finditer(text):
+            ve, script, py, tu = m.groups()
+            if not (ve or py):
+                continue      # văn xuôi / `import x as` — chỉ soi dạng lệnh trong mã
+            src = (ROOT / "scripts" / "pipeline" / f"{script}.py").read_text(encoding="utf-8")
+            if f'"{tu}"' not in src:
+                row = text[:m.start()].count("\n") + 1
+                thieu.append(f"{name}:{row} {script} {tu}")
+    assert not thieu, "tài liệu gọi lệnh con CLI không có:\n  " + "\n  ".join(thieu)
+
+
+def test_buoc_Step_trong_tai_lieu_NAM_TRONG_ValidateSet_cua_runner():
+    src = (ROOT / "scripts/runners/run-blog-campaign.ps1").read_text(encoding="utf-8")
+    m = re.search(r"ValidateSet\(([^)]*)\)", src)
+    assert m, "runner không còn ValidateSet"
+    cho_phep = {x.strip().strip("'\"") for x in m.group(1).split(",")}
+    sai = []
+    for name, text in _tai_lieu_va_docstring():
+        for b in _BUOC_RUNNER.finditer(text):
+            if b.group(1) not in cho_phep:
+                row = text[:b.start()].count("\n") + 1
+                sai.append(f"{name}:{row} -Step {b.group(1)}")
+    assert not sai, (f"runner chỉ nhận {sorted(cho_phep)}:\n  " + "\n  ".join(sai))
+
+
+# ── Biến môi trường: code đọc biến nào thì tài liệu phải khai biến đó ───────
+# Kế hoạch dời máy đòi "khai một chỗ". Biến mới (`CHROME_BIN`, `FFMPEG_DIR`…) sinh ra trong
+# code mà không vào tài liệu thì người dựng máy mới không biết mà đặt — và script lặng lẽ
+# rơi về đường dò mặc định.
+
+_BIEN_PY = re.compile(r"""environ(?:\.get\(|\[)\s*["']([A-Z][A-Z0-9_]+)["']""")
+_BIEN_PS = re.compile(r"\$env:([A-Z][A-Z0-9_]+)")
+# Biến của HỆ ĐIỀU HÀNH / của Python — không phải thứ người dùng tự đặt.
+BIEN_HE_THONG = {"LOCALAPPDATA", "PROGRAMFILES", "HOME", "USERPROFILE", "PATH",
+                 "PYTHONIOENCODING", "PYTHONUTF8", "TEMP", "TMP"}
+NOI_KHAI_BIEN = ("knowledge/toolchains/SECRETS.md", ".env.example")
+
+
+def _bien_code_doc():
+    bien = {}
+    for name, text in FILES:
+        if name.startswith("tests/") and name != "tests/conftest.py":
+            continue
+        mau = _BIEN_PY if name.endswith(".py") else _BIEN_PS if name.endswith(".ps1") else None
+        if mau is None:
+            continue
+        for m in mau.finditer(text):
+            if m.group(1) not in BIEN_HE_THONG:
+                bien.setdefault(m.group(1), name)
+    return bien
+
+
+def test_do_duoc_bien_moi_truong():
+    """Không bắt được biến nào thì cổng dưới luôn xanh mà không đo gì."""
+    bien = _bien_code_doc()
+    assert {"MARKETING_STUDIO_DATA", "CHROME_BIN", "TG_CONFIG"} <= set(bien), sorted(bien)
+
+
+@pytest.mark.parametrize("noi", NOI_KHAI_BIEN)
+def test_moi_bien_code_doc_DEU_duoc_khai(noi):
+    doc = (ROOT / noi).read_text(encoding="utf-8")
+    thieu = [f"{b} (đọc ở {f})" for b, f in sorted(_bien_code_doc().items())
+             if not re.search(rf"\b{b}\b", doc)]
+    assert not thieu, f"{noi} chưa khai biến code đang đọc:\n  " + "\n  ".join(thieu)
+
+
+def test_link_tuong_doi_trong_markdown_DEU_toi_file_co_that():
+    """`test_tai_lieu_KHONG_tro_vao_file_ma` chỉ soi đường dẫn tính từ gốc repo trong dấu
+    `…`. Link markdown `[..](../../x.md)` tính từ CHỖ FILE ĐỨNG — skill từng trỏ
+    `../../knowledge/DATA_MODEL.md` (thiếu một tầng `..` và sai thư mục) mà không gì báo."""
+    link = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")
+    chet = []
+    for name, text in FILES:
+        if not name.endswith(".md"):
+            continue
+        for m in link.finditer(text):
+            dich = m.group(1)
+            if re.match(r"^[a-z][a-z0-9+.-]*:", dich) or dich.startswith("<"):
+                continue      # URL ngoài, mailto, chỗ điền
+            if not ((ROOT / name).parent / dich).exists():
+                chet.append(f"{name} → {dich}")
+    assert not chet, "link markdown trỏ vào chỗ không có:\n  " + "\n  ".join(chet)
+
+
+def test_README_va_trang_chu_KHONG_chep_so_test():
+    """Số test đổi mỗi commit. Chép vào README (197) hay trang chủ (322) là sai ngay hôm sau."""
+    so = re.compile(r"\b\d{2,}\s+test\b")
+    sai = [n for n in ("README.md", "docs/index.html")
+           if so.search((ROOT / n).read_text(encoding="utf-8"))]
+    assert not sai, f"chép số test cứng vào: {sai} — nói cách chạy, đừng nói con số"
 
 
 def test_mot_file_khong_duoc_mang_hai_luat_link():

@@ -15,10 +15,11 @@ owner: "Người phụ trách"
 language: vi
 timezone: Asia/Ho_Chi_Minh
 
-# suggest = người duyệt cả hai cổng · auto_safe = agent tự làm phần an toàn · full
+# suggest = người duyệt Cổng 1 và 2 · auto_safe = agent tự làm phần an toàn · full
 #
 # ⚠️ Khoá này là CỔNG MÁY, không phải lời dặn. `campaign_step.py` và `fb_publish.py` đều
-# đọc nó; `full` là agent tự mở cả hai cổng và đăng thẳng ra ngoài.
+# đọc nó; `full` là agent tự mở Cổng 1 và 2 rồi đăng thẳng ra ngoài (Cổng 3, nếu bảng
+# Content có cột `g3`, vẫn chờ người).
 # · Giá trị lạ → coi như `suggest` (fail-closed): một khoá gõ sai không được thành quyền đăng.
 # · Chỉ NGƯỜI sửa file này. `campaign.md` KHÔNG đè được — nếu đè được thì một file chiến
 #   dịch tự khai `full` là tự cấp quyền cho chính nó.

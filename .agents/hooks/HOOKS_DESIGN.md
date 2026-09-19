@@ -1,8 +1,9 @@
 # Hooks — THIẾT KẾ, CHƯA THI HÀNH
 
 > **Trạng thái: chưa có hook nào chạy.** Thư mục này chỉ giữ *ý định thiết kế*. Không harness nào
-> (Claude Code / Codex / Antigravity) đọc file ở đây; hai cổng duyệt hiện được giữ **bằng luật
-> trong `AGENTS.md`** và bằng việc con người tự tay đặt giá trị trong Excel — không phải bằng máy.
+> (Claude Code / Codex / Antigravity) đọc file ở đây; các cổng duyệt hiện được giữ **bằng luật
+> trong `AGENTS.md`** và bằng việc con người tự đặt giá trị cổng trong `campaign.md` /
+> `publish.json` (qua `approval_gate.py`, đòi câu duyệt nguyên văn) — không phải bằng hook.
 
 ## Vì sao ghi rõ như vậy
 

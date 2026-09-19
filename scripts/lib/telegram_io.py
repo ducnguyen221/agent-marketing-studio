@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Transport Telegram — CHỖ DUY NHẤT gọi Bot API từ Python trong repo này.
 
-## Vì sao có file này trong khi máy đã có `notify-run.ps1`
+## Vì sao có file này trong khi máy Windows đã có `notify-run.ps1`
 
-`~/.news/engine/notify-run.ps1` là hạ tầng **CỦA MỘT CÁI MÁY** — nó bọc mọi scheduled task
-trên máy tác giả và nằm NGOÀI repo. Repo này là public: người clone về phải chạy được mà
-không có file đó.
+`notify-run.ps1` (wrapper Telegram của máy lịch Windows) là hạ tầng **CỦA MỘT CÁI MÁY** — nó
+bọc mọi scheduled task trên máy đó và nằm NGOÀI repo. Repo này là public: người clone về
+phải chạy được mà không có file đó. Bản tương đương TRONG repo là
+`scripts/runners/notify_run.py` (dùng với launchd trên macOS), và nó gửi tin qua chính file
+này.
 
-Nên hai bản là **CÓ CHỦ ĐÍCH**, không phải trùng lặp bỏ quên. Ai đọc tới đây và định "dọn
+Nên hai đường là **CÓ CHỦ ĐÍCH**, không phải trùng lặp bỏ quên. Ai đọc tới đây và định "dọn
 trùng lặp" bằng cách xoá một bên: đừng. Xoá bản Python là repo hết độc lập; sửa
 `notify-run.ps1` để gọi sang đây là đụng vào file mà hàng chục scheduled task đang phụ thuộc.
 Hai bản dùng CHUNG một hợp đồng secret (`~/.secret/<tài khoản>/config.json`) — đó mới là chỗ
@@ -47,7 +49,7 @@ API = "https://api.telegram.org/bot{token}/{method}"
 # 100s và 60s đều trả về sau **50,7s**. Nên 50 là trần thật; xin hơn chỉ tốn chữ.
 #
 # Hệ quả thiết kế: một lượt gọi phủ tối đa ~50s. Muốn phủ liên tục thì lặp NHIỀU lượt
-# trong một tiến trình (xem `approve_bus.py nhan --follow`), không phải xin timeout to hơn.
+# trong một tiến trình (xem `approve_bus.py receive --follow`), không phải xin timeout to hơn.
 LONG_POLL_MAX = 50
 
 # Telegram cắt cụt `callback_data` dài hơn 64 byte — và cắt IM LẶNG. Nút bấm vào không ăn,

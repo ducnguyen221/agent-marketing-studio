@@ -114,9 +114,9 @@ trạng thái khó dọn nhất.
 | Bước | Khâu | Ai | Việc | Ra | Kiểm bằng SỐ |
 |---|---|---|---|---|---|
 | **B0** Chọn đề tài | ② | 🤖→👤 | Đối chiếu sổ `continuity.json` ở gốc kênh (đọc CÓ LỌC theo slug, đừng nạp cả file): chưa trùng · nối được bài gần nhất cùng nhóm · **tìm được use-case thật, không thì HOÃN** · ghi lý do chọn | 1 dòng `Content` (`status=proposed`) | `slug` không trùng sổ · lý do chọn ≥1 câu |
-| 🔒 **Cổng 1** | | 👤 | `Content.status=approved` + `approved_date` | | **agent không tự đặt** |
+| 🔒 **Cổng 1** | | 👤 | bảng Content: `status=approved` + ngày ở ô `g1` | | **agent không tự đặt** |
 | **B1** Nghiên cứu | ③ | 🤖 | WebSearch: định nghĩa từ nguồn chính chủ · **≥1 use-case doanh nghiệp THẬT có dẫn nguồn** · số liệu có ngày. Không tìm ra use-case → **dừng và báo**, đề xuất hoãn | `research.md`: mỗi nguồn 1 dòng `URL · tổ chức · ngày truy cập · trích 1 câu` | **3–7 nguồn**; `<3` thì DỪNG |
-| **B2** Viết | ③ | 🤖 | Điền `content.md` theo neo `## post:`. **Chính kiến tác giả đọc FAIL-CLOSED** — không đọc được thì DỪNG, không viết tiếp | `content.md` | số khối `## post:` = số dòng `Post` · ≥1 khối `> **Góc nhìn:**` |
+| **B2** Viết | ③ | 🤖 | Điền `content.md` theo neo `## post:`. **Chính kiến tác giả đọc FAIL-CLOSED** — không đọc được thì DỪNG, không viết tiếp | `content.md` | số khối `## post:` = số dòng `Post` · ≥1 khối chính kiến (`> **Góc nhìn:**` hoặc mục `## …góc nhìn…`) ≥40 từ |
 | **B3** Tách kênh | ③ | ⚙️ | `gen_article.py` tách **theo neo** | `atlas/blog.md` · `facebook/post.txt` · `facebook/comment.txt` · `facebook/infographic.prompt.txt` · `youtube/description.txt` | mỗi file tồn tại và **>0 byte** |
 | **B4** Tự kiểm | ④ | ⚙️+🤖 | `blog_gates.py` + `fb_format.py --check` + `QA_ASSET.md` | `gates.json` | 24 cổng; đỏ-chặn → `quality_check=failed` |
 | 🔒 **Cổng 2** | | 👤 | `Post.review_status=approved` | | **agent không tự đặt** |
@@ -126,6 +126,11 @@ trạng thái khó dọn nhất.
 | **B8** Đăng web | ⑥ | ⚙️ | chép 3 file vào `atlas/content/<cat>/` (trang **nhúng video B7**) → `generate-manifest.js` → `git add` **đích danh từng path** → push | `blog_url` | **GET `blog_url` = 200 TRƯỚC khi ghi sổ** |
 | **B9** Đăng Facebook | ⑥ | ⚙️ | ⑨a post + `facebook/infographic.png`, **thân bài không link nào** → `fb_post_id`; ⑨b **comment** bằng `facebook/comment.txt` → `fb_comment_id`: đăng ngay thì comment liền; **hẹn giờ** (`--publish-at`) thì task theo lịch `--attach-pending` comment sau khi Facebook phát | `fb_post_id` · `fb_permalink` · `fb_comment_id` · `facebook/fb-state.json` | URL trong thân post = **0** · `fb_comment_id` khác rỗng · đăng ngay: comment cách post **≤60 giây** · hẹn giờ: quá giờ phát **2 giờ** chưa có comment là báo động |
 | **B10** Ghi sổ & đo | ⑥→⑦ | ⚙️ | `register_publish set` ghi `publish.json` · `continuity.json` ở gốc kênh · **URL THẬT vào 3 cột `web`/`youtube`/`facebook` của bảng Content trong `campaign.md`** (idempotent theo `post_id`) **ngay khi có URL** | `publish.json` | `summary` ≤60 từ · `key_terms_explained` ≥3 |
+
+**Cổng 3 — duyệt bản thật trên web** chỉ có khi bảng Content khai cột `g3`. Khi bật, chiến
+dịch chạy bằng `campaign_step.py` đi thứ tự khác bảng trên: B5·B6·B8 (web lên trước) →
+🔒 Cổng 3 → B7·B9·B10, rồi có video thì dựng lại B6+B8 để nhúng. Xem
+[`CAMPAIGN_PIPELINE.md`](CAMPAIGN_PIPELINE.md) §1 và §5.
 
 ### Vì sao verify HTTP 200 trước khi ghi sổ
 
@@ -192,7 +197,7 @@ python scripts/pipeline/build_blog_html.py --blog-md atlas/blog.md --meta meta.j
 `publish-tobi.ps1`) đã bỏ: chúng gộp dựng và đăng vào một lệnh, nên một bước hỏng là phải
 chạy lại từ đầu, và cổng duyệt của người bị nuốt vào giữa chuỗi.
 
-Nay mỗi bước một lệnh, chạy lại được từng bước, và hai cổng nằm rõ giữa các lệnh:
+Nay mỗi bước một lệnh, chạy lại được từng bước, và các cổng nằm rõ giữa các lệnh:
 
 ```bash
 python scripts/pipeline/register_publish.py <bài> init      # dựng khung posts[]

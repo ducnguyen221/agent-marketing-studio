@@ -7,7 +7,7 @@
 # notify-run.ps1.
 #
 # Ba bước RỜI, mỗi lượt chạy đúng một bước:
-#   create-post ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
+#   create-post ──[ Cổng 1 ]── write ──[ Cổng 2 ]── publish (= build-page)
 # Gộp lại là dựng lại đúng cái đã bị gỡ 04/09/2026 vì nuốt cổng duyệt của người.
 #
 #   .\run.ps1 -Step create-post              dựng bài tới hạn rồi xin duyệt Cổng 1

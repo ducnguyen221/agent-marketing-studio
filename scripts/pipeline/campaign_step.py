@@ -3,10 +3,11 @@
 """Chạy MỘT bước của chiến dịch blog. Không phải cả chuỗi — có chủ đích.
 
 ```
-create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+create-post ─[ Cổng 1 ]─ write ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
 ```
 
-`dang` là TÊN CŨ của `build-page`, giữ lại để lệnh cũ không gãy. Cổng 3 chỉ bật khi bảng
+`publish` là bí danh cũ của `build-page`, giữ lại để lệnh cũ không gãy (runner
+`run-blog-campaign.ps1 -Step publish` vẫn gọi nó). Cổng 3 chỉ bật khi bảng
 Content có khai cột `g3`.
 
 ## Vì sao các bước rời nhau
@@ -14,7 +15,7 @@ Content có khai cột `g3`.
 Script điều phối gộp đã bị gỡ 04/09/2026 vì nó *"gộp dựng và đăng vào một lệnh, nên một
 bước hỏng là phải chạy lại từ đầu, và cổng duyệt của người bị nuốt vào giữa chuỗi"*. Gộp
 lại dưới một cái tên khác là dựng lại đúng cái đã bỏ. Mỗi bước ở đây chạy lại được độc
-lập, và hai cổng nằm RÕ giữa các bước chứ không lẫn vào trong.
+lập, và các cổng nằm RÕ giữa các bước chứ không lẫn vào trong.
 
 ## Vì sao logic nằm ở Python còn runner chỉ là vỏ PowerShell
 
@@ -525,9 +526,9 @@ def step_publish(campaign: Path, *, bot, uat=False, dry_run=False, run_cmd=None,
     nữa. `build-page` làm đủ: dựng tiếng (nếu khai), dựng trang, đăng, rồi GHI URL.
 
     Hai bước làm gần giống nhau là chỗ sinh nhầm lẫn, nên gộp về một. Ai đang gọi
-    `-Buoc dang` vẫn chạy được, và được luôn phần ghi URL.
+    `-Step publish` vẫn chạy được, và được luôn phần ghi URL.
     """
-    loi("`dang` là tên cũ — đang chạy `build-page`. Đổi lệnh khi tiện.")
+    loi("`publish` là tên cũ — đang chạy `build-page`. Đổi lệnh khi tiện.")
     return step_build_page(campaign, bot=bot, dry_run=dry_run, run_cmd=run_cmd, only_post=only_post)
 
 

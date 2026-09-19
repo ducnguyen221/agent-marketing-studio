@@ -19,7 +19,7 @@ Luật vận hành canonical nằm ở [`../AGENTS.md`](../AGENTS.md); bản đ�
 | `growth-analyst.md` | Kéo `actual_*`, chốt báo cáo | ⑦ measure |
 
 ## 2. Kỹ Năng Thực Thi (`skills/`)
-- `campaign-pipeline` — điều hướng chu trình 7 khâu, 2 cổng.
+- `campaign-pipeline` — điều hướng chu trình 7 khâu, 3 cổng.
 - `content-production` — viết bài chuẩn hoá theo từng định dạng.
 - `hook-writer` — tạo hook theo ma trận phân khúc × động cơ × format.
 - `thread-writer` — tạo chuỗi bài viết liên kết.
@@ -37,7 +37,7 @@ là `brand.md` của kênh. Hai cổng giữ điều này: `test_prompt_MAU_khon
 và `test_prompt_MAU_co_du_cho_trong_va_co_dan_cach_dien` trong `tests/test_no_identity_leak.py`.
 
 ## 5. Hooks (`hooks/`) — mới ở mức THIẾT KẾ
-`HOOKS_DESIGN.md` mô tả hook dự kiến. **Chưa có hook nào chạy**; hai cổng duyệt hiện được giữ bằng luật trong `AGENTS.md`, không phải bằng máy. Điều kiện để thi hành ghi trong chính file đó.
+`HOOKS_DESIGN.md` mô tả hook dự kiến. **Chưa có hook nào chạy**; các cổng duyệt hiện được giữ bằng luật trong `AGENTS.md` và bằng kho cổng `approval_gate.py` (đòi câu duyệt nguyên văn của người), không phải bằng hook của harness. Điều kiện để thi hành ghi trong chính file đó.
 
 ## 6. Bản tóm tắt (`source/`)
 `core_governance.md`, `data_integrity.md` là bản **tóm tắt** để nạp nhanh. Nguồn canonical: `AGENTS.md` (luật) và `knowledge/data_model/DATA_MODEL.md` (quy ước dữ liệu). Mâu thuẫn thì nguồn canonical thắng — sửa ở đó trước, rồi mới sửa bản tóm tắt.

@@ -79,7 +79,7 @@ rò rỉ gì cũng bị dọn, và trạng thái "còn sống" được chứng 
                                                           ▼
                                           ┌──────────────────────────────────┐
                                           │ run-approve-poller.ps1           │
-                                          │  └ approve_bus.py nhan --follow│
+                                          │ └ approve_bus.py receive --follow│
                                           │                                  │
      duyệt / góp ý ──►  giữ 24h  ◄────────┤  getUpdates(offset, timeout=50)  │
                                  ────────►│  trả về NGAY khi có tin          │
@@ -215,7 +215,7 @@ chỉ là chạy lại, không phải khôi phục gì.
 |---|---|---|---|
 | Poller chết giữa chừng | không ai nghe Telegram | **có**, ≤60 giây | Task Scheduler dựng lại; `offset` trên đĩa nên không mất tin |
 | Máy tắt qua đêm | im lặng | **có**, khi bật máy | Telegram giữ update 24 giờ |
-| Máy tắt > 24 giờ | tin cũ mất | không | Gửi lại cổng: `approve_bus.py gui --gate g2` |
+| Máy tắt > 24 giờ | tin cũ mất | không | Gửi lại cổng: `approve_bus.py send --gate g2` |
 | Khoá mồ côi (chủ đã chết) | mọi lượt in `bo_qua_vi_lock` rồi thoát | **có**, sau 180 giây | Hết hạn tự bị cướp. Gấp thì xoá `logs/tg-poller.lock` |
 | Agent chết giữa bài | bài dở dang | **có** | Việc còn trong hàng chờ → thợ nhặt lại. `_da_viet` bắt bài rỗng nên không lọt |
 | Thợ chết giữa việc | việc treo | **có** | Việc chưa đánh dấu xong → lượt sau nhặt lại |
@@ -252,7 +252,7 @@ rồi, phải < 180) · `cho_g1`/`cho_g2` (bài nào đang chờ cổng nào).
 1. **Thợ không bao giờ đụng vào `await-G1`/`await-G2`.** Agent tự duyệt bài của chính nó là mất
    sạch ý nghĩa cổng. Chắn này có **hai lớp**, gỡ một lớp thì test vẫn xanh — phải gỡ cả hai
    mới thấy đỏ.
-2. **Hỏi ARTEFACT, đừng hỏi mã thoát.** `blog_gates` trả mã 1 khi cổng đỏ, `soan` trả khác 0
+2. **Hỏi ARTEFACT, đừng hỏi mã thoát.** `blog_gates` trả mã 1 khi cổng đỏ, `write` trả khác 0
    khi bài chưa đạt — cả hai **đã làm xong việc**. Tin mã thoát thì đúng những bài cần đi
    tiếp lại bị vứt vào `failed/`. (Đây là vế ngược của luật *"mã thoát 0 không đủ để tính là
    xong"* — cùng một nguyên tắc.)
@@ -263,7 +263,7 @@ rồi, phải < 180) · `cho_g1`/`cho_g2` (bài nào đang chờ cổng nào).
 **Đường ống nay ĐỦ 6 bước, 3 cổng** (12/09/2026):
 
 ```
-create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+create-post ─[ Cổng 1 ]─ write ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
 ```
 
 Cổng 3 **chỉ bật khi bảng Content có khai cột `g3`** — chiến dịch cũ chạy y như trước.
@@ -272,7 +272,7 @@ Ba hook cho phần phụ thuộc máy, cùng luật với `writer_cmd`: `audio_c
 `youtube_cmd`, `facebook_cmd`. Không khai thì bỏ qua, **không phải lỗi** — chiến dịch chỉ
 có web vẫn chạy trót lọt.
 
-⚠️ `dang` là **tên cũ** của `build-page`. Bản cũ không ghi URL ngược vào bảng nên
+⚠️ `publish` là **tên cũ** của `build-page`. Bản cũ không ghi URL ngược vào bảng nên
 `pipeline_state` không bao giờ biết bài đã lên trang, và lượt sau lại đăng lần nữa. Nay nó uỷ
 quyền cho `build-page`; lệnh cũ vẫn chạy và được luôn phần ghi URL.
 

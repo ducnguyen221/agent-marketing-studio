@@ -2,22 +2,24 @@
 name: campaign-pipeline
 description: >
   Vận hành pipeline một chiến dịch content end-to-end: 7 khâu new → plan → produce → selfqa →
-  render → publish → measure, Excel làm chủ trạng thái, 2 cổng duyệt của người. Dùng khi người
+  render → publish → measure, Markdown (campaign.md) làm chủ trạng thái, 3 cổng duyệt của người. Dùng khi người
   dùng nói "chạy chiến dịch", "tiếp tục campaign", "tới bước tiếp theo", "campaign này đang ở
   đâu", hoặc đưa một workbook chiến dịch.
 ---
 
 # Campaign Pipeline — hợp đồng 7 khâu
 
-> Mô hình dữ liệu đầy đủ: [`../../knowledge/DATA_MODEL.md`](../../knowledge/DATA_MODEL.md).
-> Thứ tự + điều kiện từng khâu: [`../../workflows/00_WORKFLOW_INDEX.md`](../../workflows/00_WORKFLOW_INDEX.md).
+> Mô hình dữ liệu đầy đủ: [`knowledge/data_model/DATA_MODEL.md`](../../../knowledge/data_model/DATA_MODEL.md).
+> Thứ tự + điều kiện từng khâu: [`workflows/00_WORKFLOW_INDEX.md`](../../../workflows/00_WORKFLOW_INDEX.md).
 > Skill này là bản rút gọn để chạy nhanh — có gì mâu thuẫn thì **hai file kia thắng**.
 
 ## Nguyên tắc lõi
 
-- **Excel làm chủ trạng thái.** Chỉ xử lý dòng đủ điều kiện vào của khâu. Không nhảy cóc.
-- **Hai cổng của người.** Cổng 1: `Content.status = approved` + `approved_date`.
-  Cổng 2: `Post.review_status = approved`. Agent **không tự đặt** ba giá trị này.
+- **Markdown làm chủ trạng thái** (`campaign.md` + `publish.json` của bài; Excel chỉ là bản
+  xuất một chiều). Chỉ xử lý dòng đủ điều kiện vào của khâu. Không nhảy cóc.
+- **Ba cổng của người.** Cổng 1: bảng Content `status = approved` + ngày ở ô `g1`.
+  Cổng 2: `posts[].review.status = approved`. Cổng 3 (chỉ khi bảng có cột `g3`): ngày ở ô
+  `g3` sau khi người xem bản thật trên web. Agent **không tự đặt** các giá trị này.
 - **Ghi tới đâu xác nhận tới đó.** Ghi xong đọc lại. Cuối lượt báo đã đổi gì ở sheet nào.
 - **Giá trị lạ → báo người**, không im lặng bỏ qua dòng.
 
@@ -75,7 +77,7 @@ Không xoá feedback cũ.
 
 ### ⑤ `render` — hình & tiếng
 **Vào:** Post `review_status = approved`, theo cờ `Content.audio/video/short`.
-**Làm:** theo [`../../knowledge/ASSET_TOOLCHAIN.md`](../../knowledge/ASSET_TOOLCHAIN.md) —
+**Làm:** theo [`knowledge/toolchains/ASSET_TOOLCHAIN.md`](../../../knowledge/toolchains/ASSET_TOOLCHAIN.md) —
 HyperFrames render, OmniVoice lồng tiếng. Cờ `no` thì không dựng. Short **luôn hỏi xác nhận**.
 **Ra:** file trong `folder_path`, `post_status = approved`.
 

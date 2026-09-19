@@ -36,7 +36,8 @@ hồ sơ campaign `.md` Mục 5 (playbook phân phối) · `channel.yml` của k
 - **Không đăng khi chưa qua cổng 2** (`posts[].review.status = approved`), khi `quality_check` chưa
   `passed`, hoặc khi còn `[KIỂM CHỨNG]` mở.
 - Đăng lỗi → `publish_status = failed`, ghi lỗi vào `notes`/log. **Không** đánh dấu `published`.
-- **Token đọc từ .env**, không bao giờ in ra log/chat.
+- **Token nằm trong file ở kho `~/.secret/`**, biến môi trường chỉ giữ ĐƯỜNG DẪN (tên biến khai
+  ở `channel.yml:secrets_env`). Không bao giờ in giá trị ra log/chat.
 - Facebook: Graph API chỉ đăng Page. Đăng **post + ảnh, thân bài 0 URL**, rồi **comment ngay**
   bằng `facebook/comment.txt` (link atlas + link video) — comment cách post ≤60 giây.
   Ghi cả `fb_post_id` lẫn `fb_comment_id`; thiếu `fb_comment_id` = bài chưa đăng xong.

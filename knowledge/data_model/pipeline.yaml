@@ -79,7 +79,7 @@ step:
 
   - id: fix-gates
     kind: step
-    cmd: [write]              # cùng lệnh với `soan`; bước tự đọc phản hồi của người
+    cmd: [write]              # cùng lệnh với bước `write`; bước tự đọc phản hồi của người
     does: viết lại theo cổng đỏ và theo nhận xét
     artefact: content.md có chữ thật
     hook: runtime.writer_cmd

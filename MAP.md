@@ -58,13 +58,13 @@
 | **Bản mô tả đường ống MÁY ĐỌC ĐƯỢC** (10 trạng thái · 3 cổng · lệnh · artefact · 2 chế độ chạy) | `knowledge/data_model/pipeline.yaml` |
 | **Thứ tự các bước và CỔNG DUYỆT nằm ở đâu** (4 lệnh, 3 cổng — đọc TRƯỚC hai dòng dưới) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` |
 | **Telegram làm TRUNG GIAN người ↔ agent** (vòng đời tiến trình · chuyện "50 giây" · vỡ vòng thì nối lại) | `knowledge/toolchains/TELEGRAM_BRIDGE.md` |
-| **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
+| **Một bài blog đi từ đâu tới đâu** (10 bước, 3 cổng duyệt — Cổng 3 khi bảng có cột `g3`) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
 | **Điều phối cả đường ống trong phiên** (chạy tới cổng rồi dừng, kê file cho người mở) | `scripts/pipeline/run_pipeline.py` |
 | **Mở / từ chối cổng KHÔNG cần Telegram** (kho cổng dùng chung của mọi mặt tiền) | `scripts/pipeline/approval_gate.py` |
-| Chạy MỘT bước của chiến dịch dài kỳ (`create-post`/`soan`/`build-page`/`release`) | `scripts/pipeline/campaign_step.py` |
+| Chạy MỘT bước của chiến dịch dài kỳ (`create-post`/`write`/`build-page`/`release`) | `scripts/pipeline/campaign_step.py` |
 | **Nối kênh ngoài của BẠN** (`audio_cmd`/`youtube_cmd`/`facebook_cmd` — không khoá CLI nào) | `knowledge/toolchains/TELEGRAM_BRIDGE.md` §6b |
-| **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` §6 |
+| **Nối bộ viết của BẠN vào bước `write`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` §6 |
 | Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
 | **Bài nào đang ở bước nào** (suy ra, ~350 token thay vì nạp cả campaign.md) | `campaign_step.py <cam> status [--detail]` |
 | **Vì sao bài tới trạng thái đó** (sổ sự kiện chỉ-nối-thêm) | `logs/events.jsonl` · `scripts/lib/event_log.py` |

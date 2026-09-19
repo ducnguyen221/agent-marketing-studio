@@ -6,4 +6,4 @@
 - [ ] Đã cập nhật tài liệu tương ứng nếu thay đổi Data Model / Workflow.
 - [ ] Không chứa token, secret hoặc dữ liệu nhạy cảm.
 - [ ] Định dạng markdown và mã nguồn tuân thủ tiêu chuẩn repo.
-- [ ] Đã kiểm tra tính tương thích với quy trình 7 khâu 2 cổng.
+- [ ] Đã kiểm tra tính tương thích với quy trình 7 khâu 3 cổng.

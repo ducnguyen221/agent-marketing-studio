@@ -41,12 +41,26 @@
 
 ## 2. Bốn lệnh
 
+Bước của `campaign_step.py` (lõi Python):
+
 ```bash
-run.ps1 -Buoc create-post     # B0        → Cổng 1
-run.ps1 -Buoc soan         # B1·B2·B3·B4 → Cổng 2
-run.ps1 -Buoc build-page   # B5·B6·B8  → Cổng 3
-run.ps1 -Buoc release    # B7·B9·B10
+python scripts/pipeline/campaign_step.py <chiến dịch> create-post   # B0          → Cổng 1
+python scripts/pipeline/campaign_step.py <chiến dịch> write         # B1·B2·B3·B4 → Cổng 2
+python scripts/pipeline/campaign_step.py <chiến dịch> build-page    # B5·B6·B8    → Cổng 3
+python scripts/pipeline/campaign_step.py <chiến dịch> release       # B7·B9·B10
 ```
+
+Chạy theo lịch thì qua `run.ps1` của chiến dịch (runner `run-blog-campaign.ps1`). Runner
+chỉ nhận ba giá trị `-Step`:
+
+```powershell
+./run.ps1 -Step create-post    # = create-post
+./run.ps1 -Step write          # = write
+./run.ps1 -Step publish        # = build-page (tên cũ, vẫn giữ)
+```
+
+`release` chưa có trong runner: chạy lệnh Python ở trên, hoặc khai một task riêng gọi thẳng
+`campaign_step.py`.
 
 **Mỗi lượt gọi làm ĐÚNG MỘT bước rồi dừng.** Script điều phối gộp đã bị gỡ vì nó *nuốt cổng
 duyệt của người vào giữa chuỗi*; gộp lại dưới tên khác là dựng lại đúng cái đã bỏ.
@@ -103,7 +117,7 @@ Chỗ thay được: `{post}` thư mục bài · `{cid}` mã bài · `{cam}` th�
 |---|---|
 | **Vào** | thư mục bài, đã có `meta.json` · `research.md` · `content.md` (khung) · `prompt.txt` · `phan-hoi.md` (nếu bị trả lại) |
 | **Ra** | điền đầy `content.md` theo neo `## post:` |
-| **Không khai** | `soan` báo *chờ người viết* — fail-closed, không đoán |
+| **Không khai** | `write` báo *chờ người viết* — fail-closed, không đoán |
 
 ⚠️ **Mã thoát 0 KHÔNG đủ để tính là xong.** Hệ còn kiểm `content.md` có bài thật không. Bộ
 viết chạy êm mà file vẫn trống thì vẫn bị tính là **hỏng** — đó là hình dạng hỏng nguy hiểm
@@ -118,11 +132,11 @@ Không có nút "Sửa lại". Thay vào đó: **trả lời thẳng vào tin c�
 nhận xét tự do. Không cần nhớ mã bài, không cần đúng cú pháp.
 
 ```
-Đức ─ trả lời tin của NEN-001 ─→ logs/feedback.json (giữ ĐỦ mọi lần)
-                                        ↓
-                            <bài>/phan-hoi.md  (khối có rào ```…```)
-                                        ↓
-                         bộ viết đọc, sửa bài, `soan` chạy lại
+Người duyệt ─ trả lời tin của NEN-001 ─→ logs/feedback.json (giữ ĐỦ mọi lần)
+                                              ↓
+                                  <bài>/phan-hoi.md  (khối có rào ```…```)
+                                              ↓
+                               bộ viết đọc, sửa bài, `write` chạy lại
 ```
 
 Ba luật ở đây, mỗi luật chặn một cách hỏng:

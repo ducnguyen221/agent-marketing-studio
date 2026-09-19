@@ -52,10 +52,11 @@ omnivoice-tts · synthesize_speech(text, output_path, instruct, language, speed)
 ```
 
 **Qua CLI:**
-```powershell
-cd $env:USERPROFILE\.tts\omnivoice   # nơi cài OmniVoice trên máy bạn
-.\.venv\Scripts\python.exe narrate_cli.py --text "..." --out audio.mp3 `
+```bash
+cd "<thư mục cài OmniVoice>"     # cùng chỗ biến OMNIVOICE_DIR trỏ tới (make_podcast.py đọc)
+.venv/bin/python narrate_cli.py --text "..." --out audio.mp3 \
   --instruct "female, young adult, moderate pitch"
+# Windows: .venv\Scripts\python.exe thay cho .venv/bin/python
 ```
 
 - `instruct` mô tả giọng bằng tiếng Anh (giới tính, tuổi, cao độ).

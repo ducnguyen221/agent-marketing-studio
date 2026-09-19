@@ -31,7 +31,7 @@ chứ không theo kênh:
 ```
 ~/.secret/
 ├── README.md                    ← MỤC LỤC: biến nào ↔ file nào ↔ ai đọc
-├── <nền-tảng>-<tài-khoản>/      ← vd: youtube-ducnguyen-ai/, facebook-tobinguyen/
+├── <nền-tảng>-<tài-khoản>/      ← vd: youtube-kenh-a/, facebook-trang-b/
 └── telegram/config.json         ← bot + danh sách chat
 ```
 
@@ -73,10 +73,20 @@ Hết. Không tạo file mới, không `setx` gì thêm.
 
 ```
 ① tạo ~/.secret/<nền-tảng>-<tài-khoản>/ và đặt file vào
-② setx <TÊN_BIẾN> "<đường dẫn>"        ← cấp user, để scheduled task nhìn thấy
+② đặt biến <TÊN_BIẾN> = "<đường dẫn>" ở cấp user, để task theo lịch nhìn thấy
 ③ THÊM MỘT DÒNG vào bảng trong ~/.secret/README.md
 ④ khai tên biến đó trong channel.yml
 ```
+
+Bước ② khác nhau theo hệ điều hành — **task theo lịch không đọc shell profile của bạn**:
+
+| Hệ điều hành | Đặt biến | Task theo lịch thấy khi nào |
+|---|---|---|
+| Windows | `setx <TÊN_BIẾN> "<đường dẫn>"` (cấp user) | lượt chạy **sau** lệnh `setx`; tiến trình đang mở thì chưa thấy |
+| macOS | khoá `EnvironmentVariables` trong file plist của job launchd (`~/Library/LaunchAgents/<job>.plist`) | sau khi nạp lại job (`launchctl bootout` rồi `bootstrap`) |
+
+Trên macOS, biến đặt trong `~/.zshrc` chỉ có ở terminal bạn mở tay — job launchd **không**
+thấy nó, nên chạy tay thì được mà chạy theo lịch thì hỏng.
 
 **Bước ③ không được bỏ.** Bảng thiếu một dòng thì sáu tháng sau không ai biết file đó của ai,
 và không ai dám xoá nó.
@@ -97,6 +107,47 @@ nhật — và không ai đoán ra vì sao. Đó là lý do chúng vẫn phải 
 
 Không làm gì cả. Chiến dịch **thừa hưởng** bí mật của kênh; `campaign.md` không bao giờ khai
 `secrets_env`. Chiến dịch cần tài khoản khác nghĩa là nó thuộc về một **kênh khác**.
+
+---
+
+## Biến môi trường code đang đọc — danh mục đầy đủ
+
+Chỗ khai **duy nhất** các biến mà script trong repo đọc. Code đọc thêm một biến mà chưa có
+dòng ở đây thì `tests/test_docs_drift.py` đỏ. Mọi biến đều **tuỳ chọn** — không đặt thì
+script dùng đường lùi ghi ở cột cuối.
+
+**Biến giữ đường dẫn tới file bí mật** (giá trị nằm trong file, không trong biến):
+
+| Biến | Ai đọc | Không đặt thì |
+|---|---|---|
+| `YT_TOKEN_PATH`, `YT_CLIENT_SECRET` | script đăng YouTube của trạm (gọi qua hook `youtube_cmd`); repo chỉ ghi TÊN ở `channel.yml:secrets_env` | — |
+| `FB_CONFIG` | script/hook Facebook của trạm; `fb_publish.py` nhận đường dẫn qua `--config` (hook chạy không qua shell nên không tự mở `$FB_CONFIG`) | — |
+| `TG_CONFIG` | `scripts/lib/telegram_io.py` (mọi đường Telegram, kể cả `notify_run.py`) | `~/.secret/telegram/config.json` |
+| `EMAIL_CONFIG` | `templates/station/_channel/send_newsletter.py` | `email-config.json` cạnh script |
+
+**Token Telegram KHÔNG có biến riêng.** `TG_CONFIG` chỉ giữ đường dẫn; token chỉ nằm trong
+file đó. Không có đường lùi đọc token từ biến môi trường — cố ý, vì token trần trong biến
+user thì mọi tiến trình con đọc được và nó lọt vào log.
+
+**Biến cấu hình máy** (không phải bí mật — chỉ chỉ chỗ):
+
+| Biến | Ai đọc | Không đặt thì |
+|---|---|---|
+| `MARKETING_STUDIO_DATA` | `studio_paths.py`, `run.ps1` — gốc trạm | `~/.marketing` (`run.ps1` đi lên tìm `CHANNELS.md` trước) |
+| `MARKETING_STUDIO_HOME` | `run.ps1` — thư mục repo | `~/Code/agent-marketing-studio` |
+| `MARKETING_STUDIO_PY` | mọi `.ps1` gọi Python (`Find-Python`) | `<repo>/.venv` → `python` → `python3` → `py`; khai mà hỏng thì DỪNG |
+| `TG_CHAT` | `telegram_io.py` — tên chat trong file cấu hình | `mac_dinh` |
+| `CHROME_BIN` | `scripts/lib/media_tools.py` — Chrome/Edge/Chromium dựng ảnh | dò đường quen thuộc của hệ điều hành (macOS: gói `.app`) → PATH |
+| `FFMPEG_DIR` | `media_tools.py` — thư mục chứa `ffmpeg` + `ffprobe` | Windows: thư mục WinGet → PATH · macOS: PATH → `/opt/homebrew/bin`, `/usr/local/bin` |
+| `FFPROBE` | `media_tools.py` — đường `ffprobe` riêng | như `FFMPEG_DIR` |
+| `VIDEO_FONT` | `media_tools.py` — font `.ttf/.otf` khi Pillow tự vẽ chữ | Segoe/Arial (Windows) · Arial hệ thống (macOS) · DejaVu |
+| `OMNIVOICE_DIR` | `make_podcast.py` — thư mục cài OmniVoice | `<nhà>/.tts/omnivoice` |
+| `OPCOS_CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | đường mặc định trong thư mục nhà |
+| `ATLAS_BASE_URL`, `ATLAS_SITE_NAME`, `ATLAS_AUTHOR` | `build_blog_html.py`, `blog_gates.py` — URL gốc, tên site, tác giả của trang blog | giá trị mặc định trong code |
+| `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |
+
+launchd chạy với PATH tối giản: ffmpeg cài qua Homebrew vẫn được dò ở thư mục Homebrew,
+nhưng công cụ đặt chỗ khác thì phải khai biến ở plist (xem bước ② ở trên).
 
 ---
 
@@ -149,7 +200,8 @@ python -c "import os;[print(f'{k:34} {os.path.isfile(os.environ.get(k,\"\"))}') 
 <runner> -Uat
 
 # 3. quyền của thư mục bí mật: protected, KHÔNG có tài khoản sandbox
-powershell -c "(Get-Acl ~/.secret).AreAccessRulesProtected"
+powershell -c "(Get-Acl ~/.secret).AreAccessRulesProtected"     # Windows
+ls -ld ~/.secret                                                # macOS: phải là drwx------
 ```
 
 Chỉ xoá bản gốc ở chỗ cũ **sau khi một chu kỳ chạy đầy đủ báo xanh**. Trước đó chúng là lưới
