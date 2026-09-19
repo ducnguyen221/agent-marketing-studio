@@ -27,6 +27,46 @@ try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false } c
 $env:PYTHONIOENCODING = 'utf-8'
 $env:PYTHONUTF8 = '1'
 
+function Find-Python {
+  # CHÉP NGUYÊN giữa các .ps1 của repo (PS 5.1 không có module chung); cổng
+  # tests/test_ps1_portable.py giữ mọi bản giống hệt nhau. Thứ tự dò:
+  #   MARKETING_STUDIO_PY -> <repo>/.venv -> python -> python3 -> py
+  # Mỗi ứng viên phải CHẠY được và tự khai là Python 3.10+: trên Windows `python3` có
+  # thể là stub của Microsoft Store — Get-Command thấy, chạy thì hỏng.
+  param([string]$Repo)
+  $chay = {
+    param([string]$exe)
+    try {
+      $v = [string](& $exe -c 'import sys;print(sys.version_info[:2])' 2>$null)
+      if ($LASTEXITCODE -ne 0) { return $false }
+      $m = [regex]::Match($v.Trim(), '^\((\d+), (\d+)\)$')
+      return ($m.Success -and [int]$m.Groups[1].Value -eq 3 -and [int]$m.Groups[2].Value -ge 10)
+    } catch { return $false }
+  }
+  if ($env:MARKETING_STUDIO_PY) {
+    if (& $chay $env:MARKETING_STUDIO_PY) { return $env:MARKETING_STUDIO_PY }
+    Write-Host ('Find-Python: MARKETING_STUDIO_PY=' + $env:MARKETING_STUDIO_PY + ' khong chay duoc Python 3.10+ -> DUNG.')
+    return $null
+  }
+  $ung = @()
+  if ($Repo) {
+    foreach ($con in @('Scripts', 'bin')) {
+      $thu = Join-Path (Join-Path $Repo '.venv') $con
+      if (Test-Path $thu) {
+        $ung += @(Get-ChildItem -Path $thu -Filter 'python*' -File -ErrorAction SilentlyContinue |
+          Where-Object { $_.BaseName -eq 'python' -or $_.BaseName -eq 'python3' } |
+          Sort-Object Name | ForEach-Object { $_.FullName })
+      }
+    }
+  }
+  $ung += @('python', 'python3', 'py')
+  foreach ($u in $ung) {
+    if (& $chay $u) { return $u }
+  }
+  Write-Host 'Find-Python: khong thay Python 3.10+ (MARKETING_STUDIO_PY, .venv, python, python3, py) -> DUNG.'
+  return $null
+}
+
 # Thư mục chiến dịch suy từ đường dẫn BẢN CHỤP: `run.ps1` luôn ghi nó vào
 # `<chiến dịch>/logs/config-<ngày>.json`. Suy từ đó thay vì nhận thêm một tham số nữa —
 # một nguồn sự thật, và không có cách nào truyền lệch hai giá trị cho nhau.
@@ -67,5 +107,7 @@ if ($Lookahead -ge 0) { $argv += @('--lookahead', [string]$Lookahead) }
 if ($Uat)         { $argv += '--uat' }
 if ($DryRun)      { $argv += '--dry-run' }
 
-& python $py @argv
+$python = Find-Python -Repo (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent)
+if (-not $python) { exit 2 }
+& $python $py @argv
 exit $LASTEXITCODE
