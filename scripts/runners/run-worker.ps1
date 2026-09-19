@@ -33,10 +33,22 @@ function Find-Python {
   param([string]$Repo)
   $chay = {
     param([string]$exe)
+    # Chuyen huong luong loi cua LENH NGOAI duoi `Stop`: PS 5.1 boc tung dong stderr thanh
+    # NativeCommandError, va dong DAU TIEN da la loi ket thuc. Mot Python CHAY DUOC nhung
+    # in canh bao luc khoi dong (wrapper .cmd, shim pyenv/conda, mot .pth in ra) bi loai
+    # OAN -> exit 2; pwsh 7 thi khong -> cung mot file, hai hanh vi (review P1, N1).
+    # Ha ve `Continue` trong chinh scriptblock nay: goi bang `&` nen bien la CUC BO, khong
+    # ro ri ra ngoai. Ket qua that van doc tu $LASTEXITCODE — noi loi la te hon chet.
+    # Test: tests/test_find_python.py
+    $ErrorActionPreference = 'Continue'
     try {
-      $v = [string](& $exe -c 'import sys;print(sys.version_info[:2])' 2>$null)
+      $ra = @(& $exe -c 'import sys;print(sys.version_info[:2])' 2>$null)
       if ($LASTEXITCODE -ne 0) { return $false }
-      $m = [regex]::Match($v.Trim(), '^\((\d+), (\d+)\)$')
+      # Dong CUOI chu khong phai ca stdout: `[string](@(...))` noi moi dong bang dau cach,
+      # nen mot loi chao in truoc dong phien ban lam regex neo truot.
+      $v = ''
+      foreach ($d in $ra) { $t = ([string]$d).Trim(); if ($t) { $v = $t } }
+      $m = [regex]::Match($v, '^\((\d+), (\d+)\)$')
       return ($m.Success -and [int]$m.Groups[1].Value -eq 3 -and [int]$m.Groups[2].Value -ge 10)
     } catch { return $false }
   }
