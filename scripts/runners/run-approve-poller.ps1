@@ -102,7 +102,13 @@ if (-not $python) {
   Ghi '=== DUNG: khong tim thay Python 3.10+ (xem dong Find-Python o tren), ma 2 ==='
   exit 2
 }
-& $python $py receive --campaign $Campaign --follow $AliveSeconds 2>&1 | ForEach-Object { Ghi ("  " + $_) }
+# `2>&1` voi lenh ngoai duoi `Stop`: PowerShell 5.1 boc moi dong stderr thanh
+# NativeCommandError, va dong DAU TIEN da la loi ket thuc -> runner chet exit 1 truoc
+# khi kip ghi log (do 20/09/2026). Ha ve `Continue` DUNG quanh loi goi; "$_" doi dong
+# stderr ve chu thuong; ket qua that doc tu $LASTEXITCODE. Test: tests/test_runner_stderr.py
+$ErrorActionPreference = 'Continue'
+& $python $py receive --campaign $Campaign --follow $AliveSeconds 2>&1 | ForEach-Object { Ghi ("  " + "$_") }
 $ma = $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
 Ghi ("=== thoat, ma " + $ma + " ===")
 exit $ma

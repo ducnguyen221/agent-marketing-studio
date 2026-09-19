@@ -88,8 +88,14 @@ if (-not $python) {
   exit 2
 }
 
-$ra = & $python $py $Campaign 2>&1
+# `2>&1` voi lenh ngoai duoi `Stop`: PowerShell 5.1 boc moi dong stderr thanh
+# NativeCommandError, va dong DAU TIEN da la loi ket thuc -> runner chet exit 1 truoc
+# khi kip ghi log (do 20/09/2026). Ha ve `Continue` DUNG quanh loi goi; "$_" doi dong
+# stderr ve chu thuong; ket qua that doc tu $LASTEXITCODE. Test: tests/test_runner_stderr.py
+$ErrorActionPreference = 'Continue'
+$ra = & $python $py $Campaign 2>&1 | ForEach-Object { "$_" }
 $ma = $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
 
 # Luot RONG thi KHONG ghi log — moi phut mot dong "hang rong" la 1.440 dong/ngay rac.
 if ($ra -notmatch 'hang rong|hàng rỗng') {
