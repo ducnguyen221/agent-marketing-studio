@@ -17,17 +17,97 @@
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false } catch {}
 
-$cam    = $PSScriptRoot
-$engine = Join-Path $env:USERPROFILE (Join-Path '.news' 'engine')
-$cfgpy  = Join-Path $env:USERPROFILE (Join-Path 'Code' (Join-Path 'agent-marketing-studio' (Join-Path 'scripts' (Join-Path 'pipeline' 'campaign_cfg.py'))))
-$logs   = Join-Path $cam 'logs'
+function Find-Python {
+  # CHÉP NGUYÊN giữa các .ps1 của repo (PS 5.1 không có module chung); cổng
+  # tests/test_ps1_portable.py giữ mọi bản giống hệt nhau. Thứ tự dò:
+  #   MARKETING_STUDIO_PY -> <repo>/.venv -> python -> python3 -> py
+  # Mỗi ứng viên phải CHẠY được và tự khai là Python 3.10+: trên Windows `python3` có
+  # thể là stub của Microsoft Store — Get-Command thấy, chạy thì hỏng.
+  param([string]$Repo)
+  $chay = {
+    param([string]$exe)
+    try {
+      $v = [string](& $exe -c 'import sys;print(sys.version_info[:2])' 2>$null)
+      if ($LASTEXITCODE -ne 0) { return $false }
+      $m = [regex]::Match($v.Trim(), '^\((\d+), (\d+)\)$')
+      return ($m.Success -and [int]$m.Groups[1].Value -eq 3 -and [int]$m.Groups[2].Value -ge 10)
+    } catch { return $false }
+  }
+  if ($env:MARKETING_STUDIO_PY) {
+    if (& $chay $env:MARKETING_STUDIO_PY) { return $env:MARKETING_STUDIO_PY }
+    Write-Host ('Find-Python: MARKETING_STUDIO_PY=' + $env:MARKETING_STUDIO_PY + ' khong chay duoc Python 3.10+ -> DUNG.')
+    return $null
+  }
+  $ung = @()
+  if ($Repo) {
+    foreach ($con in @('Scripts', 'bin')) {
+      $thu = Join-Path (Join-Path $Repo '.venv') $con
+      if (Test-Path $thu) {
+        $ung += @(Get-ChildItem -Path $thu -Filter 'python*' -File -ErrorAction SilentlyContinue |
+          Where-Object { $_.BaseName -eq 'python' -or $_.BaseName -eq 'python3' } |
+          Sort-Object Name | ForEach-Object { $_.FullName })
+      }
+    }
+  }
+  $ung += @('python', 'python3', 'py')
+  foreach ($u in $ung) {
+    if (& $chay $u) { return $u }
+  }
+  Write-Host 'Find-Python: khong thay Python 3.10+ (MARKETING_STUDIO_PY, .venv, python, python3, py) -> DUNG.'
+  return $null
+}
+
+$cam = $PSScriptRoot
+
+# ── Trạm · engine · repo: phân giải, KHÔNG trỏ cứng đường của máy nào ────────
+# Cùng một file chạy ở Windows (PS 5.1) và macOS (pwsh 7), nên không có ổ đĩa, không có
+# thư mục người dùng nào được viết sẵn ở đây.
+#   Trạm   : đi LÊN từ thư mục chiến dịch tới thư mục có CHANNELS.md
+#            -> biến MARKETING_STUDIO_DATA -> $HOME/.marketing
+#   Engine : <trạm>/engine — tên cố định
+#   Repo   : biến MARKETING_STUDIO_HOME -> $HOME/Code/agent-marketing-studio
+$station = $null
+$d = $cam
+while ($d) {
+  if (Test-Path (Join-Path $d 'CHANNELS.md')) { $station = $d; break }
+  $cha = Split-Path $d -Parent
+  if ($cha -eq $d) { break }
+  $d = $cha
+}
+if (-not $station) {
+  if ($env:MARKETING_STUDIO_DATA) { $station = $env:MARKETING_STUDIO_DATA }
+  else { $station = Join-Path $HOME '.marketing' }
+}
+$engine = Join-Path $station 'engine'
+# ĐƯỜNG LÙI TẠM — gỡ ở bước 3A.4 của kế hoạch chuyển máy, khi engine đã vào trạm.
+# Tới lúc đó engine dùng chung còn nằm ở thư mục `.news/engine` trong thư mục nhà.
+if (-not (Test-Path $engine)) {
+  $engineCu = Join-Path $HOME (Join-Path '.news' 'engine')
+  if (Test-Path $engineCu) {
+    Write-Host ('run.ps1: chua co ' + $engine + ' -> tam dung engine cu ' + $engineCu + ' (duong lui, go o 3A.4)')
+    $engine = $engineCu
+  }
+}
+if ($env:MARKETING_STUDIO_HOME) { $repo = $env:MARKETING_STUDIO_HOME }
+else { $repo = Join-Path $HOME (Join-Path 'Code' 'agent-marketing-studio') }
+$cfgpy = Join-Path $repo (Join-Path 'scripts' (Join-Path 'pipeline' 'campaign_cfg.py'))
+Write-Host ('run.ps1: station=' + $station + ' engine=' + $engine + ' repo=' + $repo)
+if (-not (Test-Path $cfgpy)) {
+  Write-Host ('run.ps1: khong thay ' + $cfgpy + ' -> DUNG. Dat bien MARKETING_STUDIO_HOME = thu muc repo.')
+  exit 2
+}
+
+$python = Find-Python -Repo $repo
+if (-not $python) { exit 2 }
+
+$logs = Join-Path $cam 'logs'
 New-Item -ItemType Directory -Force -Path $logs | Out-Null
 
 # Bản chụp sinh LẠI mỗi lượt -> sửa campaign.md xong chạy lại là ăn ngay, không cache.
 # Đây là NHẬT KÝ, không phải nguồn: đừng sửa tay, lượt sau ghi đè.
 $snap = Join-Path $logs ('config-' + (Get-Date -Format 'yyyy-MM-dd') + '.json')
 $env:PYTHONIOENCODING = 'utf-8'
-& python $cfgpy --campaign $cam --out $snap
+& $python $cfgpy --campaign $cam --out $snap
 if ($LASTEXITCODE -ne 0) {
   Write-Host 'run.ps1: campaign_cfg.py that bai -> DUNG. Khong chay tiep voi cau hinh thieu.'
   exit 2
@@ -39,10 +119,10 @@ if (-not $cfg.runner) { Write-Host 'run.ps1: campaign.md thieu runtime.runner ->
 # Runner tìm theo BA chỗ, ưu tiên từ gần tới xa:
 #   1. ngay trong thư mục chiến dịch  (runner riêng của một chiến dịch, vd truyện)
 #   2. `scripts/runners/` của REPO    (runner dùng chung, đi kèm repo — bản clone có ngay)
-#   3. engine dùng chung của máy      (runner cũ ở ~/.news/engine)
-# Chỗ 2 suy từ vị trí `campaign_cfg.py` chứ không trỏ cứng lần nữa: một đường dẫn cứng đã
-# đủ, hai cái thì sớm muộn lệch nhau.
-$repoScripts = Split-Path (Split-Path $cfgpy -Parent) -Parent
+#   3. engine dùng chung của trạm     (<trạm>/engine — xem phần phân giải ở trên)
+# Chỗ 2 suy từ cùng biến $repo đã tìm ra `campaign_cfg.py`: một nguồn cho đường repo,
+# hai nguồn thì sớm muộn lệch nhau.
+$repoScripts = Join-Path $repo 'scripts'
 $runner = Join-Path $cam $cfg.runner
 if (-not (Test-Path $runner)) { $runner = Join-Path $repoScripts (Join-Path 'runners' $cfg.runner) }
 if (-not (Test-Path $runner)) { $runner = Join-Path $engine $cfg.runner }

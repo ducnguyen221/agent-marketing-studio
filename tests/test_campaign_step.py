@@ -30,6 +30,10 @@ import campaign_step as CS  # noqa: E402
 
 HOM_NAY = date(2026, 9, 15)
 
+# Bộ viết giả gọi CHÍNH trình Python đang chạy test, có ngoặc kép vì đường có thể chứa
+# khoảng trắng. Không viết `python` trần: macOS chỉ có `python3`, test đỏ oan ở đó.
+_PY = '"' + sys.executable + '"'
+
 
 def _fm(rows):
     start = ("---\nschema: campaign/1\nid: CD-THU\nchannel: kenh-thu\nid_prefix: T\n"
@@ -351,7 +355,7 @@ def test_KHONG_khai_writer_cmd_thi_bao_cho_nguoi_viet(tmp_path):
 
 
 def test_writer_cmd_duoc_goi_voi_duong_dan_bai(tmp_path):
-    campaign = _cam_writer(tmp_path, writer_cmd="python -c \"import sys;print(sys.argv[1])\" {post}")
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "import sys;print(sys.argv[1])" {post}')
     goi = []
     result = CS.step_write(campaign, bot=BotGia(), hom_nay=HOM_NAY,
                       run_cmd=lambda cmd, **kw: goi.append(cmd) or _ok())
@@ -457,7 +461,7 @@ def test_writer_skills_duoc_thay_vao_cho_dien(tmp_path):
     ra = tmp_path / "goi.txt"
     campaign = _cam_writer(
         tmp_path,
-        writer_cmd=f'python -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+        writer_cmd=f'{_PY} -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
                    f'sys.argv[2],encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
                    f'"{ra}" "{{skills}}"',
         writer_skills=["kpim-skills:blog-writing", "x:y"])
@@ -470,7 +474,7 @@ def test_khong_khai_skills_thi_cho_dien_thanh_RONG(tmp_path):
     ra = tmp_path / "goi2.txt"
     campaign = _cam_writer(
         tmp_path,
-        writer_cmd=f'python -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+        writer_cmd=f'{_PY} -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
                    f'chr(91)+sys.argv[2]+chr(93),encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
                    f'"{ra}" "{{skills}}"')
     CS.step_write(campaign, bot=BotGia())
@@ -505,7 +509,7 @@ def test_CONG_DO_kich_hoat_viet_lai(tmp_path):
     ra = tmp_path / "goi.txt"
     campaign = _cam_writer(
         tmp_path,
-        writer_cmd=f'python -c "import pathlib;pathlib.Path(r\'{ra}\').write_text(chr(120))"')
+        writer_cmd=f'{_PY} -c "import pathlib;pathlib.Path(r\'{ra}\').write_text(chr(120))"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     _gates_do(post)
@@ -516,7 +520,7 @@ def test_CONG_DO_kich_hoat_viet_lai(tmp_path):
 
 def test_cong_do_ghi_ra_FILE_cho_bo_viet_doc(tmp_path):
     """Bộ viết phải biết SỬA GÌ. Bảo nó viết lại mà không nói đỏ ở đâu là bảo nó đoán."""
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     _gates_do(post, chan=("G05", "G06"))
@@ -528,7 +532,7 @@ def test_cong_do_ghi_ra_FILE_cho_bo_viet_doc(tmp_path):
 
 def test_cham_TRAN_thi_DUNG_viet_lai_va_noi_ro(tmp_path):
     """Vòng viết lại phải có trần. Mỗi vòng đốt một lượt agent thật."""
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     for i in range(CS.MAX_REWRITES):
@@ -544,7 +548,7 @@ def test_cham_TRAN_thi_DUNG_viet_lai_va_noi_ro(tmp_path):
 
 def test_cham_LAI_ra_KET_QUA_CU_thi_KHONG_viet_lai(tmp_path):
     """Chấm lại mà không đổi gì thì không phải cớ để đốt thêm một lượt agent."""
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     _gates_do(post)
@@ -561,7 +565,7 @@ def test_moi_VONG_mot_file_KHONG_ghi_de_vong_truoc(tmp_path):
     đỏ gì" — mà đó đúng là câu cần khi quyết định có nên viết lại lần ba hay dừng hỏi
     người. Cùng nguyên tắc với sổ sự kiện chỉ-nối-thêm.
     """
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
 

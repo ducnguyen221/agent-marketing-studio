@@ -19,8 +19,10 @@ Cả 5 chiến dịch có scheduled task dùng CHUNG một `run.ps1` (byte giố
 một dòng sai ở đây là 5 pipeline chết cùng lúc. Test này giữ đúng chỗ đó.
 """
 import os
+import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -53,10 +55,18 @@ PROBE_KHONG_BRAND = """param(
 """
 
 
-def _tram(tmp_path: Path, runner_args: str, probe: str = PROBE) -> Path:
-    """Dựng trạm tối thiểu 1 kênh + 1 chiến dịch, trả về thư mục chiến dịch."""
+def _tram(tmp_path: Path, runner_args: str, probe: str = PROBE,
+          channels: bool = True) -> Path:
+    """Dựng trạm tối thiểu 1 kênh + 1 chiến dịch, trả về thư mục chiến dịch.
+
+    `run.ps1` được chép NGUYÊN TỪNG BYTE từ template — không vá dòng nào. Trạm tìm bằng
+    cách đi lên tới `CHANNELS.md` (có ở `tmp_path`), repo và Python đi qua biến môi
+    trường (`_chay`), nên test chạy được ở bản clone bất kỳ, trên Windows lẫn macOS.
+    """
     campaign = tmp_path / "kenh-thu" / "cd-thu"
     campaign.mkdir(parents=True)
+    if channels:
+        (tmp_path / "CHANNELS.md").write_text("# Kênh\n", encoding="utf-8")
     (campaign.parent / "channel.yml").write_text(
         'schema: channel/1\nid: kenh-thu\nlabel: "Kênh thử"\n'
         "platforms:\n  - channel: youtube\n    post_formats: [youtube_video]\n",
@@ -67,20 +77,14 @@ def _tram(tmp_path: Path, runner_args: str, probe: str = PROBE) -> Path:
         f'  runner_args: "{runner_args}"\n---\n\nThân bài.\n', encoding="utf-8")
     (campaign / "probe.ps1").write_text(probe, encoding="utf-8-sig")
 
-    # `run.ps1` trỏ cứng tới `campaign_cfg.py` qua $env:USERPROFILE. Test phải chạy được
-    # trên BẢN CLONE ở đường dẫn bất kỳ, nên trỏ lại vào repo đang kiểm. Chỉ đổi đúng
-    # dòng đó — phần đang được kiểm (ghép đối số) giữ nguyên từng byte.
-    src = MAU.read_text(encoding="utf-8-sig")
-    cfgpy = (GOC / "scripts" / "pipeline" / "campaign_cfg.py").as_posix()
-    start, _, duoi = src.partition("$cfgpy  = ")
-    assert duoi, "run.ps1 doi cach dat $cfgpy — sua lai test cho khop"
-    src = start + "$cfgpy  = '" + cfgpy + "'\n" + duoi.split("\n", 1)[1]
-    (campaign / "run.ps1").write_text(src, encoding="utf-8-sig")
+    (campaign / "run.ps1").write_bytes(MAU.read_bytes())
     return campaign
 
 
-def _chay(campaign: Path, *add: str):
-    moi = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1")
+def _chay(campaign: Path, *add: str, **env):
+    moi = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1",
+               MARKETING_STUDIO_HOME=str(GOC), MARKETING_STUDIO_PY=sys.executable)
+    moi.update(env)
     return subprocess.run(
         [PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(campaign / "run.ps1"), *add],
         capture_output=True, text=True, encoding="utf-8", errors="replace",
@@ -166,20 +170,17 @@ def _tram_runner_repo(tmp_path: Path, runner_ten: str) -> tuple[Path, Path]:
         f'runtime:\n  label: "Nhãn thử"\n  runner: {runner_ten}\n'
         '  runner_args: "-Brand ai -Publish"\n---\n\nThân bài.\n', encoding="utf-8")
 
-    src = MAU.read_text(encoding="utf-8-sig")
-    start, _, duoi = src.partition("$cfgpy  = ")
-    src = (start + "$cfgpy  = '"
-           + (ban_sao / "pipeline" / "campaign_cfg.py").as_posix() + "'\n"
-           + duoi.split("\n", 1)[1])
-    (campaign / "run.ps1").write_text(src, encoding="utf-8-sig")
+    # Repo = bản sao ở tmp (qua MARKETING_STUDIO_HOME khi chạy), run.ps1 = template nguyên byte.
+    (tmp_path / "CHANNELS.md").write_text("# Kênh\n", encoding="utf-8")
+    (campaign / "run.ps1").write_bytes(MAU.read_bytes())
     return campaign, ban_sao
 
 
 def test_runner_dung_chung_tim_thay_o_scripts_runners_cua_repo(tmp_path):
     """Runner đi kèm repo phải chạy được ngay sau khi clone, không cần chép vào từng
     chiến dịch — nếu không thì mỗi chiến dịch giữ một bản sao và chúng trôi khỏi nhau."""
-    campaign, _ = _tram_runner_repo(tmp_path, "probe-chung.ps1")
-    r = _chay(campaign)
+    campaign, ban_sao = _tram_runner_repo(tmp_path, "probe-chung.ps1")
+    r = _chay(campaign, MARKETING_STUDIO_HOME=str(ban_sao.parent))
     assert r.returncode == 0, r.stdout + r.stderr
     assert "PROBE" in r.stdout, r.stdout
     assert "Brand=[ai]" in r.stdout and "Publish=[True]" in r.stdout, r.stdout
@@ -192,7 +193,81 @@ def test_runner_trong_thu_muc_chien_dich_VAN_thang_ban_cua_repo(tmp_path):
         'param([string]$Config="")\n"PROBE SAI — ban cua REPO da chay"\n',
         encoding="utf-8-sig")
     (campaign / "probe-chung.ps1").write_text(PROBE, encoding="utf-8-sig")
-    r = _chay(campaign)
+    r = _chay(campaign, MARKETING_STUDIO_HOME=str(ban_sao.parent))
     assert r.returncode == 0, r.stdout + r.stderr
     assert "PROBE SAI" not in r.stdout, "bản của repo thắng bản của chiến dịch — sai thứ tự"
+    assert "Brand=[ai]" in r.stdout, r.stdout
+
+
+# ── Phân giải trạm / repo / Python: cùng một file cho Windows lẫn macOS ──────
+# Bản cũ trỏ trạm và repo qua biến thư mục nhà CHỈ Windows có; trên macOS biến đó rỗng,
+# Join-Path ra đường tương đối và mọi lượt lịch chết ngay dòng đầu (audit 19/09/2026).
+
+_DONG = re.compile(r"run\.ps1: station=(.*?) engine=(.*?) repo=(.*)$", re.M)
+
+
+def _cung(a: str, b: Path) -> bool:
+    return os.path.normcase(str(Path(a).resolve())) == os.path.normcase(str(b.resolve()))
+
+
+def test_tram_tim_bang_cach_DI_LEN_toi_CHANNELS_md(tmp_path):
+    """`CHANNELS.md` gần nhất phía trên THẮNG biến MARKETING_STUDIO_DATA: chạy một chiến
+    dịch ở trạm nào thì dùng trạm đó, kể cả khi máy khai biến trỏ trạm khác."""
+    khac = tmp_path / "tram-khac"
+    khac.mkdir()
+    r = _chay(_tram(tmp_path, "-Brand ai"), MARKETING_STUDIO_DATA=str(khac))
+    assert r.returncode == 0, r.stdout + r.stderr
+    m = _DONG.search(r.stdout)
+    assert m, "thieu dong 'run.ps1: station=… engine=… repo=…': " + r.stdout
+    assert _cung(m.group(1), tmp_path), m.group(0)
+    assert _cung(m.group(3), GOC), m.group(0)
+
+
+def test_khong_co_CHANNELS_thi_lui_ve_MARKETING_STUDIO_DATA(tmp_path):
+    tram = tmp_path / "tram-bien"
+    tram.mkdir()
+    r = _chay(_tram(tmp_path, "-Brand ai", channels=False), MARKETING_STUDIO_DATA=str(tram))
+    assert r.returncode == 0, r.stdout + r.stderr
+    m = _DONG.search(r.stdout)
+    assert m and _cung(m.group(1), tram), r.stdout
+
+
+def test_engine_la_thu_muc_engine_CO_DINH_trong_tram(tmp_path):
+    """Trạm có sẵn `engine/` thì dùng nó — không đường lùi nào được thắng."""
+    (tmp_path / "engine").mkdir()
+    r = _chay(_tram(tmp_path, "-Brand ai"))
+    assert r.returncode == 0, r.stdout + r.stderr
+    m = _DONG.search(r.stdout)
+    assert m and _cung(m.group(2), tmp_path / "engine"), r.stdout
+
+
+def test_repo_sai_thi_DUNG_va_noi_ro_bien_nao(tmp_path):
+    r = _chay(_tram(tmp_path, "-Brand ai"), MARKETING_STUDIO_HOME=str(tmp_path / "khong-co"))
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "MARKETING_STUDIO_HOME" in r.stdout, r.stdout
+    assert "PROBE" not in r.stdout, r.stdout
+
+
+def test_MARKETING_STUDIO_PY_hong_thi_DUNG_khong_lang_le_doi_Python(tmp_path):
+    """Người đã khai Python nào thì dùng đúng Python đó. Khai sai mà lặng lẽ lấy Python
+    khác trong PATH là chạy với bộ thư viện khác — hỏng kiểu rất khó lần ra."""
+    r = _chay(_tram(tmp_path, "-Brand ai"),
+              MARKETING_STUDIO_PY=str(tmp_path / "khong-co-python"))
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "MARKETING_STUDIO_PY" in r.stdout, r.stdout
+    assert "PROBE" not in r.stdout, r.stdout
+
+
+def test_khong_khai_MARKETING_STUDIO_PY_van_tim_duoc_Python(tmp_path):
+    """Đường thường của lịch chạy: không biến nào, Find-Python tự dò (.venv -> python ->
+    python3 -> py). Máy chạy test chắc chắn có một Python — chính nó đang chạy test."""
+    moi = {k: v for k, v in os.environ.items() if k != "MARKETING_STUDIO_PY"}
+    campaign = _tram(tmp_path, "-Brand ai")
+    r = subprocess.run(
+        [PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(campaign / "run.ps1")],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(campaign),
+        env=dict(moi, PYTHONIOENCODING="utf-8", PYTHONUTF8="1", MARKETING_STUDIO_HOME=str(GOC)))
+    if r.returncode != 0 and "Find-Python" in r.stdout:
+        pytest.skip("PATH cua may test khong co python/python3/py: " + r.stdout)
+    assert r.returncode == 0, r.stdout + r.stderr
     assert "Brand=[ai]" in r.stdout, r.stdout
