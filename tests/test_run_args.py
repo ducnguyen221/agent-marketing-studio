@@ -81,14 +81,38 @@ def _tram(tmp_path: Path, runner_args: str, probe: str = PROBE,
     return campaign
 
 
-def _chay(campaign: Path, *add: str, **env):
+def _nha(tmp_path: Path) -> Path:
+    """Thư mục nhà GIẢ của một lượt test.
+
+    `run.ps1` lùi về `$HOME/.marketing`, `$HOME/Code/agent-marketing-studio` và
+    `$HOME/.news/engine`. Kế thừa nhà THẬT thì máy nào có sẵn mấy thứ đó sẽ chạy một nhánh
+    khác hẳn CI — hai môi trường, hai kết quả, không cổng nào biết. Tệ hơn: một test khai
+    `runner` trùng tên với runner thật trong `<nhà>/.news/engine` sẽ CHẠY runner thật.
+    """
+    d = tmp_path / "nha-gia"
+    d.mkdir(exist_ok=True)
+    return d
+
+
+def _moi_truong(campaign: Path, **env) -> dict:
+    """Môi trường của tiến trình con: nhà GIẢ + repo/Python khai tường minh.
+
+    `HOME` cho pwsh, `USERPROFILE` cho Windows PowerShell 5.1 (`$HOME` của 5.1 lấy từ đó) —
+    đặt cả hai thì cùng một test ra cùng một kết quả ở Windows lẫn macOS.
+    """
+    nha = _nha(campaign.parents[1])
     moi = dict(os.environ, PYTHONIOENCODING="utf-8", PYTHONUTF8="1",
+               HOME=str(nha), USERPROFILE=str(nha),
                MARKETING_STUDIO_HOME=str(GOC), MARKETING_STUDIO_PY=sys.executable)
     moi.update(env)
+    return moi
+
+
+def _chay(campaign: Path, *add: str, **env):
     return subprocess.run(
         [PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(campaign / "run.ps1"), *add],
         capture_output=True, text=True, encoding="utf-8", errors="replace",
-        cwd=str(campaign), env=moi)
+        cwd=str(campaign), env=_moi_truong(campaign, **env))
 
 
 def test_doi_so_buoc_theo_ten_khong_theo_vi_tri(tmp_path):
@@ -241,6 +265,58 @@ def test_engine_la_thu_muc_engine_CO_DINH_trong_tram(tmp_path):
     assert m and _cung(m.group(2), tmp_path / "engine"), r.stdout
 
 
+# ── Đường lùi engine `<nhà>/.news/engine` (tạm, gỡ ở 3A.4) ──────────────────
+# Nhánh SỐNG CÒN của P1-G5: ngay sau khi chép template sang trạm thì `<trạm>/engine` CHƯA
+# tồn tại, nên mọi lượt lịch thật đi qua đúng nhánh này. Không có test thì nó là nhánh duy
+# nhất chưa ai đo mà lại chạy thật mỗi ngày.
+#
+# Test PHẢI dựng thư mục nhà GIẢ (`_chay` trỏ HOME/USERPROFILE vào tmp): nếu để kế thừa nhà
+# thật thì máy có `<nhà>/.news/engine` chạy một nhánh, CI không có thì chạy nhánh khác, và
+# không test nào khẳng định nhánh nào — cổng xanh ở cả hai nơi mà chẳng đo gì.
+
+def test_duong_lui_engine_NHA_news_engine_khi_tram_chua_co_engine(tmp_path):
+    """`<trạm>/engine` chưa có + `<nhà>/.news/engine` có runner ⇒ dùng nó, CÓ cảnh báo."""
+    campaign = _tram(tmp_path, "-Brand ai")
+    (campaign / "probe.ps1").unlink()          # không có ở chiến dịch, cũng không ở repo
+    engine_cu = _nha(tmp_path) / ".news" / "engine"
+    engine_cu.mkdir(parents=True)
+    (engine_cu / "probe.ps1").write_text(PROBE, encoding="utf-8-sig")
+
+    r = _chay(campaign)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "duong lui, go o 3A.4" in r.stdout, "thiếu cảnh báo đường lùi: " + r.stdout
+    m = _DONG.search(r.stdout)
+    assert m and _cung(m.group(2), engine_cu), r.stdout
+    assert "Brand=[ai]" in r.stdout, "runner cua engine cu khong chay: " + r.stdout
+
+
+def test_khong_co_engine_nao_thi_DUNG_va_noi_khong_thay_runner(tmp_path):
+    """Không `<trạm>/engine`, không `<nhà>/.news/engine` ⇒ exit 2, KHÔNG đoán bừa."""
+    campaign = _tram(tmp_path, "-Brand ai")
+    (campaign / "probe.ps1").unlink()
+    r = _chay(campaign)
+    assert r.returncode == 2, f"phai dung han, ma exit={r.returncode}: {r.stdout}"
+    assert "khong thay runner probe.ps1" in r.stdout, r.stdout
+    assert "PROBE" not in r.stdout, r.stdout
+
+
+def test_bo_test_KHONG_dung_thu_muc_nha_THAT_cua_may(tmp_path):
+    """Cổng của chính bộ test: engine phân giải ra phải nằm trong cây tạm.
+
+    Thiếu cổng này thì trên máy có `<nhà>/.news/engine` thật, mọi test `run.ps1` lặng lẽ trỏ
+    vào engine thật — và nếu một test khai `runner` trùng tên với runner thật ở đó, bộ test
+    sẽ CHẠY runner thật.
+    """
+    r = _chay(_tram(tmp_path, "-Brand ai"))
+    assert r.returncode == 0, r.stdout + r.stderr
+    m = _DONG.search(r.stdout)
+    assert m, r.stdout
+    for i, ten in ((1, "station"), (2, "engine")):
+        duong = Path(m.group(i)).resolve()
+        assert tmp_path.resolve() in duong.parents or duong == tmp_path.resolve(), (
+            f"{ten}={duong} nam NGOAI cay tam — test dang dung nha that cua may")
+
+
 def test_repo_sai_thi_DUNG_va_noi_ro_bien_nao(tmp_path):
     r = _chay(_tram(tmp_path, "-Brand ai"), MARKETING_STUDIO_HOME=str(tmp_path / "khong-co"))
     assert r.returncode == 2, r.stdout + r.stderr
@@ -261,12 +337,12 @@ def test_MARKETING_STUDIO_PY_hong_thi_DUNG_khong_lang_le_doi_Python(tmp_path):
 def test_khong_khai_MARKETING_STUDIO_PY_van_tim_duoc_Python(tmp_path):
     """Đường thường của lịch chạy: không biến nào, Find-Python tự dò (.venv -> python ->
     python3 -> py). Máy chạy test chắc chắn có một Python — chính nó đang chạy test."""
-    moi = {k: v for k, v in os.environ.items() if k != "MARKETING_STUDIO_PY"}
     campaign = _tram(tmp_path, "-Brand ai")
+    moi = {k: v for k, v in _moi_truong(campaign).items() if k != "MARKETING_STUDIO_PY"}
     r = subprocess.run(
         [PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(campaign / "run.ps1")],
         capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(campaign),
-        env=dict(moi, PYTHONIOENCODING="utf-8", PYTHONUTF8="1", MARKETING_STUDIO_HOME=str(GOC)))
+        env=moi)
     if r.returncode != 0 and "Find-Python" in r.stdout:
         pytest.skip("PATH cua may test khong co python/python3/py: " + r.stdout)
     assert r.returncode == 0, r.stdout + r.stderr
