@@ -38,9 +38,24 @@ _NHA_WIN = "$env:" + "USER" + "PROFILE"
 _DUOI_EXE = "." + "ex" + "e"
 _PS_CU = "power" + "shell" + _DUOI_EXE
 
-_RE_NHA_WIN = re.compile(_E(_NHA_WIN), re.I)
-_RE_PY_TRAN = re.compile(r"&\s*(?:python3?|py)(?=\s|$)", re.I)
-_RE_EXE = re.compile(_E(_DUOI_EXE) + r"['\"]", re.I)
+# Mọi biến môi trường CHỈ Windows có. Trên macOS chúng RỖNG, và `Join-Path '' 'x'` ra đường
+# tương đối: script chạy tiếp, ghi file nhầm chỗ, không một dòng báo. Thứ tự trong danh sách
+# là thứ tự regex thử — `LOCALAPPDATA` phải đứng trước `APPDATA`, nếu không nó khớp phần đuôi
+# và thông báo chỉ tên sai.
+_BIEN_WIN = [_NHA_WIN] + ["$env:" + x for x in (
+    "LOCAL" + "APPDATA", "APP" + "DATA", "TEMP", "TMP",
+    "PROGRAM" + "FILES", "PROGRAM" + "DATA", "HOME" + "DRIVE", "HOME" + "PATH", "SYSTEM" + "ROOT", "WIN" + "DIR",
+    "COMPUTER" + "NAME", "USER" + "NAME", "USER" + "DOMAIN", "COM" + "SPEC")]
+
+_RE_NHA_WIN = re.compile(r"(?:" + "|".join(_E(x) for x in _BIEN_WIN) + r")\b", re.I)
+# `& python …` VÀ `python …` trần: PowerShell chạy y hệt nhau, `&` chỉ bắt buộc khi tên lệnh
+# nằm trong biến/chuỗi. Cổng cũ chỉ bắt dạng có `&` ⇒ `python $cfgpy --campaign $cam` và
+# `$ra = python3 $py 2>&1` lọt, dù đó đúng là lỗi luật này sinh ra để chặn (review P1, N4).
+# Chỉ tính VỊ TRÍ LỆNH — đầu dòng hoặc ngay sau `| ; ( ) { } = &` — nên `"python x.py"` trong
+# một chuỗi hướng dẫn và `$cfg.python_home` không bị báo oan.
+_RE_PY_TRAN = re.compile(r"(?:^|[|;(){}=&])\s*&?\s*(?:python3?|py)(?=\s|$)", re.I)
+# `.exe` trong nháy VÀ `.exe` trần (`& ffmpeg.exe -i …`) — cái sau cổng cũ không thấy.
+_RE_EXE = re.compile(_E(_DUOI_EXE) + r"(?=['\"\s)\]]|$)", re.I)
 _RE_JOIN_BS = re.compile(r"Join-Path\b.*?(['\"])[^'\"\n]*" + _E(_BS) + r"[^'\"\n]*\1", re.I)
 _RE_PS_CU = re.compile(_E(_PS_CU), re.I)
 _RE_CMD_C = re.compile(r"\bcmd(?:" + _E(_DUOI_EXE) + r")?\s+/c\b", re.I)
@@ -69,12 +84,14 @@ def _regex_tach_duong(dong: str) -> bool:
 
 
 LUAT = [
-    ("nha-windows", "biến thư mục nhà chỉ Windows có -> dùng $HOME",
+    ("nha-windows", "biến môi trường chỉ Windows có (rỗng trên macOS) -> $HOME, "
+                    "[IO.Path]::GetTempPath(), Join-Path",
      lambda d: bool(_RE_NHA_WIN.search(d))),
-    ("python-tran", "gọi python trần -> dùng Find-Python (macOS chỉ có python3)",
+    ("python-tran", "gọi python trần (có `&` hay không) -> dùng Find-Python (macOS chỉ có python3)",
      lambda d: bool(_RE_PY_TRAN.search(d))),
     ("duoi-exe", "literal đuôi exe -> macOS không có",
-     lambda d: bool(_RE_EXE.search(d))),
+     # `powershell.exe` / `cmd.exe /c` đã có luật riêng: một chỗ sai, một lý do.
+     lambda d: bool(_RE_EXE.search(d)) and not _RE_PS_CU.search(d) and not _RE_CMD_C.search(d)),
     ("join-path-gach-nguoc", "Join-Path với chuỗi có gạch ngược -> Join-Path lồng từng đoạn",
      lambda d: bool(_RE_JOIN_BS.search(d))),
     ("ps-cu", "gọi thẳng Windows PowerShell -> không có trên macOS",
@@ -254,9 +271,20 @@ def test_moi_ps1_parse_duoc(ten):
 _Q = '"'
 MAU_PHAM = [
     ("nha-windows", "$d = Join-Path " + _NHA_WIN + " '.marketing'"),
+    # Biến chỉ Windows có KHÁC ngoài thư mục nhà: trên macOS chúng RỖNG, và Join-Path với
+    # chuỗi rỗng ra đường tương đối — hỏng im lặng, đúng kiểu đã trả giá ở `$env:USERPROFILE`.
+    ("nha-windows", "$c = Join-Path " + _BIEN_WIN[1] + " 'npm-cache'"),
+    ("nha-windows", "$a = Join-Path " + _BIEN_WIN[2] + " 'npm'"),
+    ("nha-windows", "$t = Join-Path " + _BIEN_WIN[3] + " 'ban-chup.json'"),
     ("python-tran", "& python $x --campaign $cam"),
     ("python-tran", "$ra = & python3 $py 2>&1"),
+    # KHÔNG có `&`: PowerShell chạy y hệt. Cổng bắt hẹp hơn luật nó tuyên là cổng dối.
+    ("python-tran", "python $cfgpy --campaign $cam"),
+    ("python-tran", "$ra = python3 $py 2>&1"),
+    ("python-tran", "if ($x) { py -3 $s }"),
     ("duoi-exe", "$p = " + _Q + "C:/Tools/ffmpeg" + _DUOI_EXE + _Q),
+    # `.exe` KHÔNG nằm trong nháy cũng là `.exe`.
+    ("duoi-exe", "& ffmpeg" + _DUOI_EXE + " -i $a $b"),
     ("join-path-gach-nguoc", "Copy-Item (Join-Path $RepoRoot " + _Q + "templates" + _BS + "station" + _Q + ") $d"),
     ("ps-cu", "& " + _PS_CU + " -NoProfile -File $f"),
     ("cmd-c", "cmd /c dir"),
@@ -279,6 +307,10 @@ MAU_SACH = [
     "# " + _NHA_WIN + " trong CHÚ THÍCH không chạy, không tính",
     r"$s = $t -replace '^(\.\./)+', ''",
     "Write-Host ('run.ps1: ' + $cfg.runner + ' <- ' + $x)",
+    # Thư mục tạm hai-OS, và VĂN BẢN hướng dẫn in ra cho người đọc — không phải lời gọi.
+    "$t = Join-Path ([IO.Path]::GetTempPath()) 'ban-chup.json'",
+    "Write-Host ('  python -m pip install -r requirements.txt')",
+    "$v = $cfg.python_home",
 ]
 
 
