@@ -37,12 +37,11 @@ CAM = {
     "soan ─": "bước `soan` đã đổi tên thành `write` (xem migrate_names.py)",
     "`dang` là": "tên cũ của build-page nay là `publish` (campaign_step.STEPS)",
     "TG_BOT_TOKEN=": "token Telegram CHỈ nằm trong file cấu hình; biến TG_CONFIG giữ đường dẫn",
-    "đọc từ .env": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
-    "đọc từ `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
-    "trong `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
-    "vào `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
-    "ở `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
-    "qua file `.env`": "không script nào nạp .env; secret ở kho ~/.secret, biến chỉ giữ đường dẫn",
+    # KHÔNG cấm cái TÊN `.env`. Cổng từng cấm 6 cách nói về `.env` với lý do "không script
+    # nào nạp .env" — đúng hôm nay, nhưng F17 (plan v3.2, P2-T01/T03) biến `<repo>/.env`
+    # thành chỗ giữ cấu hình bí mật của chế độ cài `embedded`, nên tài liệu P2 BẮT BUỘC phải
+    # nói về nó. Cái vẫn sai — và sai cả sau F17 — là token THÔ nằm trong `.env`; việc đó do
+    # `test_khong_noi_TOKEN_THO_nam_trong_env` canh, chặt hơn và không chặn nhầm F17.
 }
 
 # Nơi được phép nhắc tên cũ: chỗ GIẢI THÍCH lịch sử, và chính file này.
@@ -94,6 +93,96 @@ def test_chuoi_cua_mo_hinh_da_bo(chuoi, why):
             row = text[:text.index(chuoi)].count("\n") + 1
             dinh.append(f"{name}:{row}")
     assert not dinh, f"{chuoi!r} — {why}. Còn ở: {dinh[:10]}"
+
+
+# ── `.env`: cấm MÔ HÌNH cũ, không cấm cái TÊN ───────────────────────────────
+# Cổng từng cấm mọi cách nói về `.env` với lý do "không script nào nạp .env". Đúng hôm nay,
+# nhưng nó sẽ chặn chính thứ sắp tới: F17 (plan v3.2, tác vụ P2-T01/T03) đặt `<repo>/.env`
+# làm chỗ giữ cấu hình bí mật của chế độ cài `embedded` — `.gitignore` khoá nó, `doctor`
+# kiểm quyền 600, `backup` mặc định không kèm nó — nên tài liệu P2 BẮT BUỘC phải mô tả nó.
+# Một cổng chặn đúng việc sắp phải làm thì người sau sẽ gỡ cả cổng, không gỡ riêng dòng sai.
+#
+# Cái vẫn SAI, và sai kể cả sau F17: token THÔ nằm trong `.env`. Thiết kế của repo không đổi
+# — biến giữ ĐƯỜNG DẪN, secret nằm trong file được trỏ tới (token Telegram từng lộ đúng vì
+# mô hình cũ, 08/09). Hai test dưới giữ cả hai vế: chặn cái sai, và KHÔNG chặn cái đúng.
+
+# Chữ chỉ SECRET THÔ. Cố ý KHÔNG có "secret" / "cấu hình": ở chế độ `embedded`, `.env` CHÍNH
+# LÀ chỗ giữ cấu hình bí mật, nói về nó là hợp lệ. Cái sai là để GIÁ TRỊ token nằm đó.
+TU_TOKEN = ("token", "mật khẩu", "password", "client_secret", "refresh_token", "private_key")
+# Câu nói về ĐƯỜNG DẪN tới file token (`YT_TOKEN_PATH`, "biến trỏ tới file token") là đúng
+# thiết kế ba tầng, không phải mô hình cũ — trừ ra, nếu không cổng báo oan chính luật hiện hành.
+MIEN_TRU_DUONG_DAN = ("_path", "đường dẫn", "trỏ tới", "trỏ vào", "tên biến")
+# Phải có LIÊN KẾT chứa-đựng giữa token và `.env`. Thiếu vế này thì một dòng liệt kê
+# "Token, `.env*`, `*.json` — đều bị gitignore" bị báo oan, và cổng báo oan là cổng bị tắt.
+# `\b` để "ghi" không khớp trong "nghi", "đọc" không khớp trong "đọc-ghi" ghép từ khác.
+_RE_LIEN_KET = re.compile(
+    r"\b(?:nằm|đặt|dán|lưu|ghi|khai|chứa|đọc|điền)\b|(?:trong|ở|vào|từ|qua)\s+`?\.env", re.I)
+
+
+def _token_tho_trong_env(dong: str) -> bool:
+    if ".env" not in dong:
+        return False
+    t = dong.lower()
+    if not any(w in t for w in TU_TOKEN):
+        return False
+    if any(w in t for w in MIEN_TRU_DUONG_DAN):
+        return False
+    return bool(_RE_LIEN_KET.search(t))
+
+
+def test_khong_noi_TOKEN_THO_nam_trong_env():
+    dinh = []
+    for name, text in FILES:
+        if name.startswith(("tests/", "examples/")):
+            continue
+        for i, d in enumerate(text.splitlines(), 1):
+            if _token_tho_trong_env(d):
+                dinh.append(f"{name}:{i} {d.strip()[:90]}")
+    assert not dinh, ("token THÔ không bao giờ nằm trong `.env` — biến giữ ĐƯỜNG DẪN, secret "
+                      "nằm trong file được trỏ tới (token Telegram đã lộ một lần vì mô hình "
+                      "cũ, 08/09):\n  " + "\n  ".join(dinh))
+
+
+# ── Tự kiểm: cổng phải nới ĐÚNG chỗ và không nới quá tay ─────────────────────
+
+MAU_F17_HOP_LE = [
+    "Chế độ `embedded` giữ cấu hình bí mật trong `.env` ở gốc repo.",
+    "Bộ cài ghi lựa chọn vào `.env` khi người dùng chọn `embedded`.",
+    "Thiếu biến môi trường thì đọc từ `.env` (chỉ khi `mode=embedded`).",
+    "Cấu hình của chế độ `embedded` nằm ở `.env`.",
+    "Cấu hình đi qua file `.env` khi cài theo chế độ `embedded`.",
+    "`doctor` kiểm quyền của `.env` là 600 trên POSIX.",
+    "`backup` mặc định KHÔNG kèm `.env`; muốn kèm thì bật cờ riêng.",
+    "Biến `YT_TOKEN_PATH` khai trong `.env` chỉ giữ ĐƯỜNG DẪN tới file token.",
+]
+
+MAU_MO_HINH_CU = [
+    "Đặt token Telegram vào `.env` rồi chạy lại.",
+    "Script đọc token từ `.env` lúc khởi động.",
+    "Token nằm trong `.env` ở gốc repo.",
+    "Khai token ở `.env` là đủ.",
+    "Dán client_secret vào `.env`.",
+]
+
+
+@pytest.mark.parametrize("dong", MAU_F17_HOP_LE)
+def test_cong_KHONG_chan_cach_noi_cua_F17_embedded(dong):
+    """Tài liệu F17 phải viết được. Cổng chặn đúng việc sắp phải làm = cổng sẽ bị gỡ cả cụm."""
+    cam = [c for c in CAM if c in dong]
+    assert not cam, f"chuỗi cấm {cam} chặn cách nói HỢP LỆ của F17: {dong!r}"
+    assert not _token_tho_trong_env(dong), f"luật token chặn cách nói hợp lệ: {dong!r}"
+
+
+@pytest.mark.parametrize("dong", MAU_MO_HINH_CU)
+def test_cong_VAN_chan_mo_hinh_token_tho_trong_env(dong):
+    """Vế ngược: nới cho F17 mà nới luôn mô hình cũ thì cổng thành đồ trang trí."""
+    assert _token_tho_trong_env(dong) or [c for c in CAM if c in dong], (
+        f"mô hình cũ lọt qua cổng: {dong!r}")
+
+
+def test_TG_BOT_TOKEN_van_bi_cam():
+    """Biến token-trong-env đã bị bỏ hẳn sau lần lộ token; F17 không đụng tới điều đó."""
+    assert "TG_BOT_TOKEN=" in CAM
 
 
 @pytest.mark.xfail(strict=True, reason="AGENTS.md là file luật — chờ người duyệt sửa (C2)")
