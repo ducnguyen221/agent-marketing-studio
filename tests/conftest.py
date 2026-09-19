@@ -15,6 +15,7 @@ NGAY CẢ KHI biến môi trường bị gỡ sạch.
 ở mọi lệnh, trong khi người clone về chạy `pytest` thì 6 test đỏ.
 """
 import os
+import shutil
 
 import pytest
 
@@ -28,3 +29,19 @@ def _utf8_cho_tien_trinh_con(monkeypatch):
 def pytest_report_header(config):
     return (f"encoding máy: PYTHONUTF8={os.environ.get('PYTHONUTF8', '(không đặt)')} · "
             f"PYTHONIOENCODING={os.environ.get('PYTHONIOENCODING', '(không đặt)')}")
+
+
+def pytest_configure(config):
+    """CI đòi PowerShell THẬT: thiếu thì dừng cả lượt, không để test tự `skip`.
+
+    Ba file test (`test_run_args`, `test_runner_stderr`, `test_ps1_portable`) tự bỏ qua khi
+    máy không có PowerShell — hợp lý cho người clone về chạy thử, nhưng trên CI thì "bỏ qua"
+    trông y hệt "xanh": runner macOS thiếu `pwsh` sẽ báo CI qua mà chưa chạy một dòng `.ps1`
+    nào. Workflow đặt `MARKETING_STUDIO_REQUIRE_POWERSHELL=1` để biến im lặng đó thành lỗi.
+    """
+    if os.environ.get("MARKETING_STUDIO_REQUIRE_POWERSHELL") == "1" and not (
+            shutil.which("powershell") or shutil.which("pwsh")):
+        raise pytest.UsageError(
+            # Khong dau co chu dich: pytest in loi nay qua console cp1252 cua runner Windows.
+            "MARKETING_STUDIO_REQUIRE_POWERSHELL=1 nhung khong thay `powershell`/`pwsh` "
+            "tren PATH - cai PowerShell 7 truoc khi chay test (cac test .ps1 se bi skip).")
