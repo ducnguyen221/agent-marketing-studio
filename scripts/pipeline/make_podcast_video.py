@@ -20,32 +20,19 @@ CLI: python make_podcast_video.py --audio A\audio.mp3 --scenes scenes.json --met
 from __future__ import annotations
 import argparse, json, os, shutil, subprocess, sys, tempfile, urllib.parse, urllib.request
 
-CHROME_CANDIDATES = [
-    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    os.path.join(os.environ.get("LOCALAPPDATA", ""), r"Google\Chrome\Application\chrome.exe"),
-]
-# WinGet ghim SỐ HIỆU BẢN ffmpeg vào tên thư mục -> nâng cấp ffmpeg là đứt đường này.
-# Thứ tự: biến môi trường -> đường WinGet -> PATH (xem _ff).
-FF_DIR = os.environ.get("FFMPEG_DIR") or os.path.join(
-    os.environ.get("LOCALAPPDATA", ""),
-    "Microsoft", "WinGet", "Packages",
-    "Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe",
-    "ffmpeg-8.1.1-full_build", "bin")
+# Chrome/ffmpeg dò ở MỘT chỗ cho mọi hệ điều hành (CHROME_BIN, FFMPEG_DIR): scripts/lib/media_tools.py
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+import media_tools as MT  # noqa: E402
 UA = "Mozilla/5.0 tobi-pipeline"
 OPENVERSE = "https://api.openverse.org/v1/images/"
 
 
 def _ff(name):
-    p = os.path.join(FF_DIR, name + ".exe")
-    return p if os.path.isfile(p) else (shutil.which(name) or name)
+    return MT.ff_tool(name)
 
 
 def _find_chrome():
-    for c in CHROME_CANDIDATES:
-        if c and os.path.isfile(c):
-            return c
-    return shutil.which("chrome") or shutil.which("msedge")
+    return MT.find_chrome()
 
 
 def _esc(s):
@@ -184,7 +171,7 @@ def image_html(scene, img_path, credit, idx, W, H):
     kick = _esc(scene.get("kick", ""))
     cap = _esc(scene.get("caption", scene.get("title", "")))
     head = _HEAD.format(W=W, H=H)
-    fileurl = "file:///" + img_path.replace("\\", "/")
+    fileurl = MT.file_url(img_path)
     brand = '<div class="brand"><span class="mark"><svg viewBox="0 0 576 512" fill="#fff"><path d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z"/></svg></span><div class="n">Học cùng <span>Tobi</span></div></div>'
     cr = f'<div class="credit">{_esc(credit)}</div>' if credit else ""
     body = (f'<div class="photo" style="background-image:url(\'{fileurl}\')"></div><div class="shade"></div>'
@@ -205,7 +192,7 @@ def render_slide(html, out_png, W, H):
     cmd = [chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
            "--allow-file-access-from-files", "--force-device-scale-factor=1",
            f"--window-size={W},{H}", f"--screenshot={os.path.abspath(out_png)}",
-           "file:///" + hp.replace("\\", "/")]
+           MT.file_url(hp)]
     try:
         subprocess.run(cmd, check=True, capture_output=True, timeout=120)
     finally:

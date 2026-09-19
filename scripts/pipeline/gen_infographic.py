@@ -22,12 +22,9 @@ import tempfile
 
 W, H = 1280, 720   # cover landscape 16:9 (kiểu hero compaclass + thumbnail YouTube)
 
-CHROME_CANDIDATES = [
-    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    os.path.join(os.environ.get("LOCALAPPDATA", ""), r"Google\Chrome\Application\chrome.exe"),
-    os.path.join(os.environ.get("PROGRAMFILES", ""), r"Microsoft\Edge\Application\msedge.exe"),
-]
+# Chrome/font dò ở MỘT chỗ cho mọi hệ điều hành (CHROME_BIN, VIDEO_FONT): scripts/lib/media_tools.py
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+import media_tools as MT  # noqa: E402
 
 
 # ================================================================ trích nội dung
@@ -149,11 +146,7 @@ def _esc(s):
 # ================================================================ render Chrome
 
 def _find_chrome():
-    for c in CHROME_CANDIDATES:
-        if c and os.path.isfile(c):
-            return c
-    found = shutil.which("chrome") or shutil.which("msedge")
-    return found
+    return MT.find_chrome()
 
 
 def render_chrome(html, out_png):
@@ -171,7 +164,7 @@ def render_chrome(html, out_png):
            f"--window-size={W},{H}",
            f"--screenshot={os.path.abspath(out_png)}",
            "--default-background-color=00000000",
-           "file:///" + html_path.replace("\\", "/")]
+           MT.file_url(html_path)]
     try:
         subprocess.run(cmd, check=True, capture_output=True, timeout=120)
     except Exception as e:
@@ -194,8 +187,7 @@ def render_pillow(title, points, meta, out_png):
     d = ImageDraw.Draw(img)
 
     def font(sz, bold=True):
-        for name in (("segoeuib.ttf" if bold else "segoeui.ttf"),
-                     "arialbd.ttf" if bold else "arial.ttf"):
+        for name in MT.font_candidates(bold):
             try:
                 return ImageFont.truetype(name, sz)
             except OSError:

@@ -42,6 +42,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fb_format as FF  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import post_paths as PP  # noqa: E402
+import media_tools as MT  # noqa: E402
 
 CHAN, CANH_BAO = "block", "warn"
 
@@ -146,8 +147,11 @@ def _dem_goc_nhin(blog: str) -> tuple[int, int]:
 
 
 def _thoi_luong(p: Path) -> float | None:
-    """Độ dài media bằng ffprobe. Không có ffprobe -> None (thiếu), KHÔNG phải 0."""
-    ff = os.environ.get("FFPROBE") or "ffprobe"
+    """Độ dài media bằng ffprobe. Không có ffprobe -> None (thiếu), KHÔNG phải 0.
+
+    Dò: FFPROBE → FFMPEG_DIR → PATH → Homebrew (launchd trên Mac không có nó trên PATH).
+    """
+    ff = MT.ff_tool("ffprobe")
     try:
         ra = subprocess.run([ff, "-v", "error", "-show_entries", "format=duration",
                              "-of", "default=nw=1:nk=1", str(p)],
