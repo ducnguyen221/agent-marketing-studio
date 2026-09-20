@@ -173,8 +173,11 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | Biến | Giá trị trên Apple Silicon | Không đặt thì |
 |---|---|---|
 | `OMNIVOICE_DEVICE` | `mps` | engine tự dò `cuda → mps → cpu` |
-| `OMNIVOICE_DTYPE` | `float16` | engine dùng `float32` cho mọi thứ không phải CUDA — chậm gấp nhiều lần |
-| `HF_DEACTIVATE_ASYNC_LOAD` | `1` | nạp trọng số bất đồng bộ, hỏng trên MPS |
+| `OMNIVOICE_DTYPE` | `float32` cho job **tin**, `float16` cho job **truyện** | engine dùng `float32` cho mọi thứ không phải CUDA — với truyện là vượt trần giờ |
+| `HF_DEACTIVATE_ASYNC_LOAD` | `1` — **chỉ** job truyện (nhánh fp16) | nạp trọng số fp16 bất đồng bộ trên MPS thì hỏng ngay lúc nạp model |
+
+⚠️ Hai pipeline **không** dùng chung một bộ giá trị. Bảng đầy đủ + lý do:
+[`STATION_LAYOUT.md`](STATION_LAYOUT.md) mục 4c.
 
 > **Bỏ 20/09/2026 — `ATLAS_BASE_URL` · `ATLAS_SITE_NAME` · `ATLAS_AUTHOR`.** URL gốc, tên
 > site và tác giả của trang blog nay đọc từ khối `brand:` trong `channel.yml` của kênh

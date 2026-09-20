@@ -27,8 +27,10 @@
     <!-- PATH: launchd KHÔNG đọc ~/.zshrc. Job chỉ thấy PATH khai ở đây, nên
          `ffmpeg`, `pwsh`, `node`, `npx` phải nằm trong danh sách này. Đầu log của
          notify_run.py in `which` của từng cái — đọc là biết thiếu gì.
-         OMNIVOICE_DEVICE / OMNIVOICE_DTYPE: Apple Silicon chạy `mps` + `float16`.
-         HF_DEACTIVATE_ASYNC_LOAD=1: bắt buộc khi nạp trọng số trên MPS. -->
+         KHÔNG khai OMNIVOICE_DTYPE / HF_DEACTIVATE_ASYNC_LOAD: job này không chạy TTS.
+         Một con số dtype khai thừa ở đây là mầm cho lần chép nhầm sang job CÓ giọng —
+         mỗi pipeline khai lấy số của chính nó (xem `studio.marketing.daily-story` và
+         năm job tin). -->
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
@@ -41,8 +43,6 @@
     <key>VIDEO_STATION</key><string>__VIDEO_STATION__</string>
     <key>OMNIVOICE_PY</key><string>__OMNIVOICE_PY__</string>
     <key>OMNIVOICE_DEVICE</key><string>mps</string>
-    <key>OMNIVOICE_DTYPE</key><string>float16</string>
-    <key>HF_DEACTIVATE_ASYNC_LOAD</key><string>1</string>
   </dict>
 
   <key>WorkingDirectory</key><string>__STATION__</string>

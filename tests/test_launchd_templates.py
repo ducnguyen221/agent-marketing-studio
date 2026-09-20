@@ -58,6 +58,46 @@ LICH = {
     "studio.marketing.daily-story": {"Hour": 0, "Minute": 0},
 }
 
+# ══ HAI PIPELINE, HAI CẤU HÌNH — bảng quyết định, không phải hệ quả của code ══
+#
+# Tin và truyện chạy cùng một engine giọng nhưng KHÔNG dùng chung cấu hình:
+#
+#   TIN        lượt 4–12 phút (bản tuần ~41 phút) trong cửa sổ 18:00–21:00 ⇒ thừa thời
+#              gian, đổi tốc độ lấy độ chính xác: `float32`. Không đi nhánh fp16 nên
+#              KHÔNG khai `HF_DEACTIVATE_ASYNC_LOAD` — vụ nổ mà biến đó vá chỉ xảy ra
+#              lúc nạp trọng số fp16 trên MPS.
+#   TRUYỆN     5 h 47 chỉ riêng TTS ⇒ thời gian mới là thứ khan hiếm: `float16`, và
+#              fp16 trên MPS thì `HF_DEACTIVATE_ASYNC_LOAD=1` là BẮT BUỘC.
+#   worker /   không chạy TTS ⇒ không khai cái nào. Một con số dtype thừa ở đây là mầm
+#   poller     cho lần chép nhầm sang job có giọng.
+#
+# Vì sao phải có cổng: gộp lại thành MỘT cấu hình chung là hỏng đúng một bên mà không
+# ai thấy — tin chạy fp16 thì đọc sai số, truyện chạy fp32 thì vượt trần giờ và bị giết
+# sau khi đã chạy 6 tiếng. Cả hai đều báo ✅ cho tới khi có người nghe lại.
+
+TIN = ["studio.marketing.daily-news-a", "studio.marketing.daily-news-b",
+       "studio.marketing.weekly-news-a", "studio.marketing.weekly-news-b",
+       "studio.marketing.weekly-repo"]
+TRUYEN = ["studio.marketing.daily-story"]
+KHONG_TTS = ["studio.marketing.worker", "studio.marketing.approve-poller"]
+
+# label -> (giá trị OMNIVOICE_DTYPE hoặc None nếu KHÔNG được khai, có HF_DEACTIVATE_ASYNC_LOAD?)
+GIONG = {**{l: ("float32", False) for l in TIN},
+         **{l: ("float16", True) for l in TRUYEN},
+         **{l: (None, False) for l in KHONG_TTS}}
+
+# Trần giờ của wrapper. launchd không có `ExecutionTimeLimit`, nên con số này LÀ cái trần.
+# Truyện 30600 s (8 h 30): lượt đo ~6 h 05 trên máy RẢNH, lượt thật còn crawl + dựng video
+# chen vào. Trần cũ 21600 (6 h) giết lượt đúng lúc đọc xong mà chưa kịp dựng video.
+TRAN_GIO = {
+    "studio.marketing.daily-news-a": 7200,
+    "studio.marketing.daily-news-b": 7200,
+    "studio.marketing.weekly-news-a": 10800,
+    "studio.marketing.weekly-news-b": 10800,
+    "studio.marketing.weekly-repo": 10800,
+    "studio.marketing.daily-story": 30600,
+}
+
 
 def test_co_du_8_mau():
     assert len(LABELS) == 8, f"đếm được {len(LABELS)} mẫu: {LABELS}"
@@ -97,15 +137,34 @@ def test_truyen_chay_LUC_0_GIO():
     assert d["StartCalendarInterval"]["Hour"] == 0
 
 
+def _tran_gio(label) -> int:
+    a = plistlib.loads(IL.render(label, GIA))["ProgramArguments"]
+    assert "--timeout" in a, "job theo lịch phải có --timeout (launchd không tự giết)"
+    assert a.index("--timeout") < a.index("--"), "--timeout là cờ của wrapper, không của lệnh con"
+    return int(a[a.index("--timeout") + 1])
+
+
 @pytest.mark.parametrize("label", [l for l in LABELS if l in LICH])
 def test_job_theo_lich_CO_tran_gio(label):
     """launchd không có ExecutionTimeLimit — trần giờ phải nằm ở wrapper, không được quên."""
-    d = plistlib.loads(IL.render(label, GIA))
-    a = d["ProgramArguments"]
-    assert "--timeout" in a, "job theo lịch phải có --timeout (launchd không tự giết)"
-    giay = int(a[a.index("--timeout") + 1])
+    giay = _tran_gio(label)
     assert 600 <= giay <= 24 * 3600, f"trần {giay}s vô lý"
-    assert a.index("--timeout") < a.index("--"), "--timeout là cờ của wrapper, không của lệnh con"
+
+
+@pytest.mark.parametrize("label,giay", sorted(TRAN_GIO.items()))
+def test_tran_gio_dung_bang_da_chot(label, giay):
+    assert _tran_gio(label) == giay
+
+
+def test_truyen_KHONG_duoc_ha_tran_gio_sat_luot_that():
+    """Trần của lượt truyện là quyết định của người, và nó có một đáy.
+
+    Lượt thật bấm giờ ≈ 6 h 05 (TTS 5 h 47 + dựng video 15,5 phút + upload 30 phút) —
+    nhưng đo trên máy RẢNH. Lượt hằng đêm còn crawl và dựng video chen vào. Hạ trần
+    xuống sát 6 h là giết lượt đúng lúc nó vừa đọc xong và chưa kịp dựng video: mất
+    trọn 6 tiếng đã chạy, mà wrapper vẫn chỉ báo "quá giờ".
+    """
+    assert _tran_gio("studio.marketing.daily-story") >= 30600
 
 
 @pytest.mark.parametrize("label", ["studio.marketing.worker",
@@ -123,10 +182,61 @@ def test_job_song_dai_KHONG_boc_wrapper_bao_Telegram(label):
 def test_moi_plist_khai_bien_MPS_cua_tram_giong(label):
     e = plistlib.loads(IL.render(label, GIA))["EnvironmentVariables"]
     assert e["OMNIVOICE_DEVICE"] == "mps"
-    assert e["OMNIVOICE_DTYPE"] == "float16"
-    assert e["HF_DEACTIVATE_ASYNC_LOAD"] == "1"
     # launchd không đọc ~/.zshrc: PATH phải khai ở đây, và phải có chỗ Homebrew.
     assert "/opt/homebrew/bin" in e["PATH"]
+
+
+def test_bang_GIONG_phu_kin_moi_mau():
+    """Thêm một mẫu plist mà quên xếp nó vào pipeline nào ⇒ đỏ ở đây.
+
+    Không có cổng này thì mẫu mới lặng lẽ thừa hưởng cấu hình của mẫu người ta chép từ
+    đó — đúng cách bộ plist cũ khai fp16 cho cả 8 job.
+    """
+    assert set(GIONG) == set(LABELS), (
+        f"chưa xếp pipeline cho: {sorted(set(LABELS) - set(GIONG))}; "
+        f"xếp cho label không có mẫu: {sorted(set(GIONG) - set(LABELS))}")
+
+
+@pytest.mark.parametrize("label", LABELS)
+def test_moi_pipeline_khai_dtype_cua_CHINH_no(label):
+    dtype, co_hf = GIONG[label]
+    e = plistlib.loads(IL.render(label, GIA))["EnvironmentVariables"]
+    assert e.get("OMNIVOICE_DTYPE") == dtype, (
+        f"{label}: chờ OMNIVOICE_DTYPE={dtype!r}, thấy {e.get('OMNIVOICE_DTYPE')!r}")
+    assert ("HF_DEACTIVATE_ASYNC_LOAD" in e) is co_hf, (
+        f"{label}: HF_DEACTIVATE_ASYNC_LOAD {'phải có' if co_hf else 'KHÔNG được khai'}")
+    if co_hf:
+        assert e["HF_DEACTIVATE_ASYNC_LOAD"] == "1"
+
+
+@pytest.mark.parametrize("label", TIN)
+def test_plist_TIN_khong_duoc_mang_cau_hinh_cua_TRUYEN(label):
+    """Cổng chốt của quyết định 20/09: KHÔNG gộp hai pipeline lại làm một.
+
+    Đỏ nếu một plist tin mang `float16` hoặc mang `HF_DEACTIVATE_ASYNC_LOAD` — hai thứ
+    thuộc về nhánh fp16 của lượt truyện. Đọc thẳng khối `EnvironmentVariables` đã điền
+    (không quét chữ trong file) vì phần chú thích của plist tin có NHẮC tên hai thứ đó
+    để giải thích vì sao chúng vắng mặt.
+    """
+    e = plistlib.loads(IL.render(label, GIA))["EnvironmentVariables"]
+    assert e["OMNIVOICE_DTYPE"] == "float32"
+    assert e["OMNIVOICE_DTYPE"] != "float16", "pipeline tin chạy fp32 — xem bảng GIONG"
+    assert "HF_DEACTIVATE_ASYNC_LOAD" not in e, (
+        "biến này vá vụ nổ khi nạp trọng số fp16 trên MPS; lượt tin không đi nhánh đó")
+
+
+@pytest.mark.parametrize("label", TRUYEN)
+def test_plist_TRUYEN_giu_fp16_va_bien_chong_no(label):
+    e = plistlib.loads(IL.render(label, GIA))["EnvironmentVariables"]
+    assert e["OMNIVOICE_DTYPE"] == "float16", "truyện 5 h 47 TTS — fp32 là vượt trần giờ"
+    assert e["HF_DEACTIVATE_ASYNC_LOAD"] == "1", "thiếu là crash ngay lúc nạp model"
+
+
+@pytest.mark.parametrize("label", KHONG_TTS)
+def test_job_khong_chay_TTS_thi_khong_khai_dtype(label):
+    e = plistlib.loads(IL.render(label, GIA))["EnvironmentVariables"]
+    assert "OMNIVOICE_DTYPE" not in e
+    assert "HF_DEACTIVATE_ASYNC_LOAD" not in e
 
 
 def test_ba_job_nguy_hiem_KHONG_nam_trong_bo_mac_dinh():

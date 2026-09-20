@@ -42,8 +42,14 @@
     <!-- PATH: launchd KHÔNG đọc ~/.zshrc. Job chỉ thấy PATH khai ở đây, nên
          `ffmpeg`, `pwsh`, `node`, `npx` phải nằm trong danh sách này. Đầu log của
          notify_run.py in `which` của từng cái — đọc là biết thiếu gì.
-         OMNIVOICE_DEVICE / OMNIVOICE_DTYPE: Apple Silicon chạy `mps` + `float16`.
-         HF_DEACTIVATE_ASYNC_LOAD=1: bắt buộc khi nạp trọng số trên MPS. -->
+         OMNIVOICE_DEVICE=mps: ép dùng GPU tích hợp của Apple Silicon.
+         OMNIVOICE_DTYPE=float32 — ĐÂY LÀ PIPELINE TIN, KHÔNG PHẢI TRUYỆN. Một lượt tin
+         chỉ 4–12 phút (bản tuần ~41 phút) trong cửa sổ 18:00–21:00, nên nó thừa thời
+         gian để đổi tốc độ lấy độ chính xác. Và vì không đi nhánh fp16 nên ở đây KHÔNG
+         khai HF_DEACTIVATE_ASYNC_LOAD: biến đó vá một vụ nổ chỉ xảy ra lúc nạp trọng số
+         fp16 trên MPS, khai thừa chỉ làm người sau tưởng hai pipeline giống nhau.
+         Cấu hình của TRUYỆN nằm ở `studio.marketing.daily-story` và khác hẳn — xem
+         `docs/RUNBOOK-DOI-MAY.md` mục "hai pipeline, hai cấu hình". -->
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
@@ -56,8 +62,7 @@
     <key>VIDEO_STATION</key><string>__VIDEO_STATION__</string>
     <key>OMNIVOICE_PY</key><string>__OMNIVOICE_PY__</string>
     <key>OMNIVOICE_DEVICE</key><string>mps</string>
-    <key>OMNIVOICE_DTYPE</key><string>float16</string>
-    <key>HF_DEACTIVATE_ASYNC_LOAD</key><string>1</string>
+    <key>OMNIVOICE_DTYPE</key><string>float32</string>
   </dict>
 
   <key>WorkingDirectory</key><string>__STATION__</string>

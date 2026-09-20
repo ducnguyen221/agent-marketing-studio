@@ -118,8 +118,23 @@ CPU — chậm gấp nhiều lần, hoặc nổ lúc nạp trọng số.
 | Biến | Giá trị trên Apple Silicon | Vì sao |
 |---|---|---|
 | `OMNIVOICE_DEVICE` | `mps` | ép dùng GPU tích hợp; không đặt thì engine tự dò `cuda → mps → cpu` |
-| `OMNIVOICE_DTYPE` | `float16` | mặc định của engine là `float32` cho mọi thứ không phải CUDA |
-| `HF_DEACTIVATE_ASYNC_LOAD` | `1` | tắt nạp trọng số bất đồng bộ — bắt buộc trên MPS |
+| `OMNIVOICE_DTYPE` | **theo pipeline** — xem bảng dưới | mặc định của engine là `float32` cho mọi thứ không phải CUDA |
+| `HF_DEACTIVATE_ASYNC_LOAD` | **chỉ pipeline truyện** | tắt nạp trọng số bất đồng bộ — bắt buộc khi nạp fp16 trên MPS |
+
+**Hai pipeline, hai cấu hình — không dùng chung một bộ:**
+
+| | **TIN** (`daily-news-a/b`, `weekly-news-a/b`, `weekly-repo`) | **TRUYỆN** (`daily-story`) |
+|---|---|---|
+| `OMNIVOICE_DTYPE` | `float32` | `float16` |
+| `HF_DEACTIVATE_ASYNC_LOAD` | **không khai** | `1` |
+| Trần giờ wrapper | 2 h (ngày) · 3 h (tuần) | 30600 s (8 h 30) |
+
+Lượt tin 4–12 phút trong cửa sổ 18:00–21:00 ⇒ thừa thời gian, đổi tốc độ lấy độ chính
+xác; nó không đi nhánh fp16 nên vụ nổ mà `HF_DEACTIVATE_ASYNC_LOAD` vá không tồn tại ở
+đây. Lượt truyện đọc 5 h 47 ⇒ thời gian mới là thứ khan hiếm, và fp16 trên MPS thì biến
+kia là bắt buộc. `worker`/`approve-poller` không khai cái nào (không chạy TTS). Chi tiết
+và cách nghiệm thu từng pipeline: [`../../docs/RUNBOOK-DOI-MAY.md`](../../docs/RUNBOOK-DOI-MAY.md)
+mục *Hai pipeline, hai cấu hình*.
 
 ### 4d. Secret — luật ba tầng
 

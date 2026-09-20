@@ -3,6 +3,12 @@
 <!-- studio.marketing.daily-story
      Lượt truyện hằng ngày. GIỜ ĐÃ DỜI: bản Windows chạy 03:00, trên Mac là 00:00 (Hour 0) — lượt dài ~5 h nên phải bắt đầu đầu ngày để xong trước giờ làm việc.
 
+     Trần giờ (cờ `timeout` của wrapper) = 30600 s (8 h 30). Số đo: TTS 5 h 47 + dựng
+     video 15,5 phút + upload 30 phút ≈ 6 h 05 — nhưng đó là trên máy RẢNH. Lượt thật
+     còn crawl và dựng video chen vào, nên trần KHÔNG được hạ sát 6 h: trần cũ 21600
+     (6 h) giết lượt đúng lúc nó vừa đọc xong và chưa kịp dựng video, tức mất trọn 6
+     tiếng đã chạy.
+
      MẪU — mọi `__TÊN__` là chỗ trống. Đừng sửa tay bản trong `~/Library/LaunchAgents`:
      sửa ở đây rồi chạy lại `scripts/runners/install_launchd.py`.
      `__CHANNEL__` / `__CAMPAIGN__` lấy từ cờ `map` của bộ cài lịch, hoặc từ
@@ -23,7 +29,7 @@
     <string>--composer-dir</string>
     <string>__STATION__/engine</string>
     <string>--timeout</string>
-    <string>21600</string>
+    <string>30600</string>
     <string>--</string>
     <string>pwsh</string>
     <string>-NoProfile</string>
@@ -34,8 +40,12 @@
     <!-- PATH: launchd KHÔNG đọc ~/.zshrc. Job chỉ thấy PATH khai ở đây, nên
          `ffmpeg`, `pwsh`, `node`, `npx` phải nằm trong danh sách này. Đầu log của
          notify_run.py in `which` của từng cái — đọc là biết thiếu gì.
-         OMNIVOICE_DEVICE / OMNIVOICE_DTYPE: Apple Silicon chạy `mps` + `float16`.
-         HF_DEACTIVATE_ASYNC_LOAD=1: bắt buộc khi nạp trọng số trên MPS. -->
+         OMNIVOICE_DEVICE=mps: ép dùng GPU tích hợp của Apple Silicon.
+         OMNIVOICE_DTYPE=float16 + HF_DEACTIVATE_ASYNC_LOAD=1 — ĐÂY LÀ PIPELINE TRUYỆN.
+         Một lượt đọc mất ~5 h 47 chỉ riêng TTS, nên ở đây THỜI GIAN mới là thứ khan
+         hiếm: fp16 là bắt buộc, và nạp trọng số fp16 bất đồng bộ trên MPS thì nổ ngay
+         lúc nạp model, nên `HF_DEACTIVATE_ASYNC_LOAD=1` phải đi kèm fp16.
+         Năm job TIN dùng `float32` và KHÔNG khai biến kia — đừng gộp hai bộ làm một. -->
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>

@@ -184,6 +184,34 @@ trong shell chỉ tồn tại trong shell. Job theo lịch chỉ thấy những 
 `EnvironmentVariables` của plist — và `install_launchd.py` điền sẵn khối đó từ
 `studio_paths`, nên hãy để nó điền thay vì sửa tay plist.
 
+### Hai pipeline, hai cấu hình — đừng gộp
+
+Tin và truyện chạy **cùng một engine giọng** nhưng **không** dùng chung cấu hình. Đây là
+chỗ dễ sai nhất khi dựng trạm trên Mac, và sai thì cả hai bên vẫn báo ✅:
+
+| | **TIN** (`daily-news-a/b`, `weekly-news-a/b`, `weekly-repo`) | **TRUYỆN** (`daily-story`) |
+|---|---|---|
+| `OMNIVOICE_DTYPE` | **`float32`** | **`float16`** |
+| `HF_DEACTIVATE_ASYNC_LOAD` | **không khai** | **`1`, bắt buộc** |
+| Trần giờ của wrapper | 2 h (ngày) · 3 h (tuần) | **30600 s = 8 h 30** |
+| Mỗi lượt | 4–12 phút · bản tuần ~41 phút | TTS 5 h 47 · cả lượt ≈ 6 h 05 |
+
+- **Vì sao tin dùng fp32:** lượt tin nằm gọn trong cửa sổ 18:00–21:00 và thừa thời gian,
+  nên đổi tốc độ lấy độ chính xác là đáng. Nó không đi nhánh fp16, mà vụ nổ lúc nạp trọng
+  số bất đồng bộ trên MPS **chỉ xảy ra ở nhánh fp16** — nên `HF_DEACTIVATE_ASYNC_LOAD`
+  không có việc gì để làm ở đây, và khai thừa chỉ làm người sau tưởng hai bên giống nhau.
+- **Vì sao truyện dùng fp16:** với 5 h 47 chỉ riêng TTS thì **thời gian** mới là thứ khan
+  hiếm. Đã fp16 trên MPS thì `HF_DEACTIVATE_ASYNC_LOAD=1` là bắt buộc — thiếu là crash
+  ngay lúc nạp model.
+- **Trần giờ truyện không được hạ sát 6 h:** 6 h 05 là số đo trên máy **rảnh**; lượt hằng
+  đêm còn crawl và dựng video chen vào. Trần cũ 21600 s (6 h) giết lượt đúng lúc nó vừa
+  đọc xong mà chưa kịp dựng video — mất trọn 6 tiếng đã chạy.
+- `worker` và `approve-poller` **không khai** cả hai biến: chúng không chạy TTS.
+
+Cấu hình này nằm trong `templates/launchd/*.plist`; `tests/test_launchd_templates.py`
+(bảng `GIONG`, `TRAN_GIO`) đỏ nếu có ai gộp hai bộ lại làm một. **Nghiệm thu trên Mac phải
+chạy từng pipeline một**, không dùng chung một cấu hình cho cả hai.
+
 **Đạt khi:** `python scripts/pipeline/doctor.py` trả mã **0**.
 
 ---
@@ -242,7 +270,7 @@ mà báo. Sáng hôm sau bạn chỉ thấy: hôm qua không có bài.
 **Cách canh, theo thứ tự nên dùng:**
 
 1. **`notify_run.py --timeout <giây>`** — cách chính, và là thứ các plist mẫu đã bật sẵn
-   (2 h cho lượt ngày, 3 h cho lượt tuần, 6 h cho lượt truyện). Quá giờ thì wrapper giết
+   (2 h cho lượt ngày, 3 h cho lượt tuần, **8 h 30 cho lượt truyện**). Quá giờ thì wrapper giết
    **cả nhóm tiến trình con** (không chỉ cái vỏ — `run.ps1` đẻ ra ffmpeg, node, python),
    gửi tin ❌ ghi rõ "QUÁ GIỜ", và thoát mã 1. Đây là **ngoại lệ duy nhất** của luật "mã
    thoát = mã của lệnh con": khi bị giết thì không có mã con nào để trả.

@@ -24,6 +24,23 @@ từ một nguồn: `studio_paths` — đúng nguồn mà mọi script khác tro
 Thiếu khai cho một label được chọn ⇒ **mã 2** và nói rõ thiếu label nào. Không đoán:
 đoán sai thì job chạy đúng giờ vào **nhầm chiến dịch**, và nó vẫn báo ✅.
 
+## Hai pipeline, HAI cấu hình giọng — không gộp
+
+Khối `EnvironmentVariables` của mẫu **không** giống nhau giữa các job, và đó là chủ đích:
+
+    tin (daily-news-a/b, weekly-news-a/b, weekly-repo)
+        `OMNIVOICE_DTYPE=float32`, KHÔNG khai `HF_DEACTIVATE_ASYNC_LOAD`
+    truyện (daily-story)
+        `OMNIVOICE_DTYPE=float16` + `HF_DEACTIVATE_ASYNC_LOAD=1`, trần giờ 30600 s
+    worker / approve-poller
+        không khai cái nào (không chạy TTS)
+
+Lượt tin chỉ 4–12 phút trong cửa sổ 18:00–21:00 nên nó thừa thời gian để đổi tốc độ lấy
+độ chính xác; lượt truyện đọc 5 h 47 nên thời gian mới là thứ khan hiếm, và fp16 trên MPS
+thì `HF_DEACTIVATE_ASYNC_LOAD=1` là bắt buộc (thiếu là nổ lúc nạp model). Script này chỉ
+chép nguyên khối đó từ mẫu sang plist — muốn đổi thì đổi ở `templates/launchd/`, và
+`tests/test_launchd_templates.py` (bảng `GIONG`) sẽ đỏ nếu ai gộp hai bộ lại làm một.
+
 ## Mặc định không nạp ba job (F13)
 
 `worker`, `approve-poller`, `daily-story` **không** nằm trong bộ mặc định. Ba job đó hoặc
