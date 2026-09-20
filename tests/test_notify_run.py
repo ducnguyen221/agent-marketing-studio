@@ -410,3 +410,48 @@ def test_timeout_giet_CA_CHUM_khong_chi_tien_trinh_vo(cau_hinh, mang, tmp_path):
     time.sleep(1.5)
     b = dau.stat().st_size if dau.exists() else 0
     assert b == a, f"cháu vẫn còn ghi ({a} -> {b} byte) — chỉ tiến trình vỏ bị giết"
+
+
+# ── (g) REVIEW-P2 N13: regex link không được bỏ sót link THẬT ────────────────
+# Một lượt đăng THÀNH CÔNG mà tin ✅ ghi "không phát hiện link" là hỏng đúng thứ wrapper
+# sinh ra để làm (chuẩn báo cáo §E2 của máy). Ba chỗ hụt, đều tái lập được:
+#   · không `re.I`      -> `https://WWW.YouTube.com/...` trượt
+#   · chỉ `(?:www\.)?`  -> `m.youtube.com` trượt
+#   · miền brand buộc có `/path` -> trang chủ thương hiệu trượt
+
+def test_link_bat_duoc_du_VIET_HOA(cau_hinh, mang):
+    """Log của công cụ ngoài không hứa viết thường. `Https://Youtu.be/...` vẫn là link."""
+    code = ("print('YT: https://WWW.YouTube.com/watch?v=HOA1');"
+            "print('FB: HTTPS://www.Facebook.com/1/posts/2')")
+    assert NR.main(["--title", "T", *_py(code)]) == 0
+    t = mang.tin
+    assert "watch?v=HOA1" in t and "posts/2" in t
+    assert "không phát hiện link" not in t
+
+
+def test_link_bat_duoc_ten_mien_di_dong(cau_hinh, mang):
+    assert NR.main(["--title", "T", *_py("print('https://m.youtube.com/watch?v=MOB1')")]) == 0
+    assert "watch?v=MOB1" in mang.tin
+
+
+def test_mien_brand_khong_co_path_van_la_link(cau_hinh, mang):
+    """Bài đăng ở trang chủ (`https://blog.example.com`) không có `/path` — vẫn phải kèm."""
+    assert NR.main(["--title", "T", "--link-domains", "blog.example.com",
+                    *_py("print('xong: https://blog.example.com')")]) == 0
+    assert "https://blog.example.com" in mang.tin
+
+
+def test_mien_brand_KHONG_bat_ten_mien_dai_hon(cau_hinh, mang):
+    """Bỏ bắt buộc `/path` mà không neo đuôi thì `example.com` nuốt luôn `example.company`."""
+    assert NR.main(["--title", "T", "--link-domains", "example.com",
+                    *_py("print('https://example.company/x')")]) == 0
+    assert "example.company" not in mang.tin
+
+
+def test_token_trong_log_con_KHONG_lot_vao_tin(cau_hinh, mang):
+    """REVIEW-P2 Ghi nhận 13. `_loi()` đã che token, `soan_tin` thì chưa — mà chính
+    `soan_tin` mới là đường log của TIẾN TRÌNH CON đi ra Telegram."""
+    gia = "123456789:" + "A" * 24
+    assert NR.main(["--title", "T", *_py(f"import sys; print('loi: {gia}'); sys.exit(1)")]) == 1
+    assert gia not in mang.tin, "token trong log con đi thẳng vào tin Telegram"
+    assert "token-da-che" in mang.tin

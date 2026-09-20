@@ -117,7 +117,7 @@ def hyperframes_version(goc: Path | None = None) -> str | None:
     Để `doctor` và báo cáo nói được "engine nào đã dựng video này" mà không phải gọi
     tiến trình con.
     """
-    bien = (os.environ.get("HYPERFRAMES_VERSION") or "").strip()
+    bien = (SP.secret_env("HYPERFRAMES_VERSION") or "").strip()
     if bien:
         return bien
     try:

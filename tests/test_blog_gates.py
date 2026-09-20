@@ -463,3 +463,21 @@ def test_G22_khong_khai_ten_thi_bao_THIEU_chu_khong_bao_xanh():
 def test_link_tran_co_gach_noi_chi_dem_MOT_lan():
     """`vi-du.vn/x` từng bị đếm hai lần: một lần trọn, một lần từ sau dấu gạch nối."""
     assert G._URL_TRAN.findall("xem vi-du.vn/atlas/x roi thoi") == ["vi-du.vn/atlas/x"]
+
+
+def test_tom_tat_KHONG_giau_cong_chua_do_duoc(capsys):
+    """REVIEW-P2 Ghi nhận 17. `missing` là "chưa đo được", không phải "xanh". Tóm tắt cũ
+    bỏ qua chúng nên người đọc thấy "✔ KHÔNG cổng nào chặn" trong khi G22 chưa đo được
+    (`brand.org_names` để trống) — đúng thứ mà chính G22 sinh ra để tránh."""
+    ket = {"stage": "write", "gates": [
+        {"id": "G01", "name": "Do duoc", "status": "pass", "level": G.CHAN,
+         "measured": "1", "rule": "x", "note": ""},
+        {"id": "G22", "name": "Ten to chuc", "status": "missing", "level": G.CHAN,
+         "measured": "-", "rule": "x", "note": "brand.org_names trong"},
+        {"id": "G20", "name": "Trang web", "status": "missing", "level": G.CHAN,
+         "measured": "-", "rule": "x", "note": "chưa tới lượt"},
+    ]}
+    G._in_vi_sao_bi_chan(ket)
+    ra = capsys.readouterr().out
+    assert "G22" in ra and "CH\u01afA \u0110O \u0110\u01af\u1ee2C" in ra
+    assert "G20" not in ra.split("CH\u01afA \u0110O")[-1], "cong HOAN khong duoc dem hai lan"

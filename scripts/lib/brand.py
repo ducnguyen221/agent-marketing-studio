@@ -49,8 +49,15 @@ KHOA_BAT_BUOC = ("site_name", "author", "site_base")
 
 # Khoá TÙY CHỌN mà bốn script dựng sản phẩm biết đọc. Liệt kê ra đây để `channel.yml`
 # mẫu và tài liệu có một danh sách duy nhất để đối chiếu.
+# Bảy khoá cuối thêm 20/09 (REVIEW-P2 Ghi nhận 12): mã ĐANG ĐỌC chúng nhưng danh sách
+# này không có, trong khi chính nó tự xưng là "một danh sách duy nhất để đối chiếu". Một
+# danh sách thiếu thì tệ hơn không có: người dùng tin nó và không biết mình đang bỏ trống
+# một khoá có tác dụng. `home_domain` khai được ở CẤP KÊNH (ngoài khối `brand:`) — xem
+# `doc()`; liệt kê ở đây để khuôn `channel.yml` luôn có một dòng cho nó.
 KHOA_TUY_CHON = ("home_url", "author_title", "author_avatar", "og_image", "footer",
-                 "org_names", "socials", "badge_default")
+                 "org_names", "socials", "badge_default",
+                 "a", "b", "author_display", "footer_image", "footer_video",
+                 "home_domain", "site_home")
 
 
 class BrandThieu(RuntimeError):

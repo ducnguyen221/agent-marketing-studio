@@ -301,3 +301,66 @@ def test_bo_cai_in_duong_tai_lieu(capsys, duong):
     ra = capsys.readouterr()
     assert duong in (ra.out + ra.err), f"bộ cài không chỉ sang {duong}"
     assert (ROOT / duong).is_file(), f"{duong} được in ra nhưng không tồn tại"
+
+
+# ══ REVIEW-P2 N6 + N7 — lỗi CẤU HÌNH của `--station` phải là mã 2, và không ═
+# ══ bao giờ để lại một cây nửa vời ══════════════════════════════════════════
+
+def test_station_tro_vao_mot_FILE_la_ma_2(tmp_path):
+    """`FileExistsError` lọt ra thành mã 1 = "thử lại được", và lịch chạy/CI sẽ thử lại
+    vô hạn một lỗi gõ nhầm đường dẫn."""
+    f = tmp_path / "toi-la-file"
+    f.write_text("x", encoding="utf-8")
+    with pytest.raises(IS.SC.ContractError):
+        IS.do_init(station=str(f), yes=True)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="MAX_PATH la luat cua Windows")
+def test_duong_qua_MAX_PATH_la_ma_2_va_KHONG_tao_gi(tmp_path):
+    """`station import` đã học bài này (`station.py:267`), `init_station` thì chưa: mkdir
+    tạo được vài cấp rồi nổ, để lại cây nửa vời mà người dùng không biết dọn gì."""
+    sau = tmp_path / ("x" * 90) / ("y" * 90) / ("z" * 90) / ("w" * 90)
+    with pytest.raises(IS.SC.ContractError) as e:
+        IS.do_init(station=str(sau), yes=True)
+    assert "260" in str(e.value) or "dài" in str(e.value).lower()
+    assert not (tmp_path / ("x" * 90)).exists(), "đã nổ mà vẫn để lại cây nửa vời"
+
+
+def test_hai_VO_cai_xu_su_GIONG_NHAU_khi_khong_co_ai_tra_loi():
+    """REVIEW-P2 N8. `install.sh --noninteractive` cho mã 2 (lõi không hiểu cờ, và kể cả
+    hiểu thì luật "không có người ⇒ không đoán" cũng cho mã 2), trong khi `install.ps1
+    -NonInteractive` lặng lẽ đổi thành `--yes` ⇒ cài embedded không hỏi ai.
+
+    Đó là hai bộ cài khác nhau cho hai hệ điều hành — đúng thứ P2-T02 gộp lõi để tránh.
+    Cổng này canh bằng văn bản vì không chạy được `install.ps1` thật trên máy CI macOS."""
+    ps1 = (ROOT / "install.ps1").read_text(encoding="utf-8-sig")
+    dong = [d.strip() for d in ps1.splitlines()
+            if "--yes" in d and not d.strip().startswith("#")]
+    assert dong, "khong thay dong ghep --yes trong install.ps1"
+    for d in dong:
+        assert "NonInteractive" not in d, (
+            "`-NonInteractive` KHONG duoc tu bien thanh `--yes`: khong co ai tra loi thi "
+            "dung va bao ma 2, giong het install.sh")
+
+
+def test_hai_VO_deu_chuyen_co_KHONG_TUONG_TAC_vao_LOI():
+    """Parity phải là parity THẬT: cả hai vỏ cùng đổ vào một cờ của lõi, chứ không phải
+    mỗi vỏ tự diễn giải "không có ai ngồi đây" theo cách riêng."""
+    ps1 = (ROOT / "install.ps1").read_text(encoding="utf-8-sig")
+    sh = (ROOT / "install.sh").read_text(encoding="utf-8")
+    assert "'--non-interactive'" in ps1
+    assert "--non-interactive" in sh, "install.sh phai NHAC toi co nay (no forward $@)"
+    # Va no phai la mot co THAT cua loi, khong phai mot chuoi trang tri:
+    assert "--non-interactive" in IS._parser_help()
+
+
+def test_non_interactive_KHONG_doan_che_do(tmp_path, monkeypatch):
+    """`--non-interactive` nghĩa là "đừng hỏi", KHÔNG phải "đoán hộ tôi"."""
+    for b in IS.BIEN_NHAN_DIEN:
+        monkeypatch.delenv(b, raising=False)
+    monkeypatch.setattr(IS, "nha_marketing", lambda: tmp_path / "khong-co")
+    with pytest.raises(IS.SC.ContractError) as e:
+        IS.chon_che_do(non_interactive=True)
+    assert "chọn chế độ" in str(e.value)
+    # nhưng khai rõ thì vẫn chạy, không hỏi ai
+    assert IS.chon_che_do(station=str(tmp_path / "t"), non_interactive=True)[0] == "separate"

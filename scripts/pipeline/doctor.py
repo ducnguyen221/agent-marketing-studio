@@ -44,8 +44,8 @@ except (AttributeError, ValueError):
 PROG = "doctor"
 # Thư mục đồng bộ đám mây: git trong đó là index hỏng/treo, và `.env` trong đó là secret
 # đã lên cloud của người khác. Cảnh báo chứ không chặn — có người cố ý làm thế.
-TEN_CLOUD = ("OneDrive", "Google Drive", "My Drive", "Dropbox", "iCloud Drive",
-             "com~apple~CloudDocs")
+TEN_CLOUD = ("OneDrive", "Google Drive", "My Drive", "GoogleDrive", "Dropbox",
+             "iCloud Drive", "com~apple~CloudDocs", "CloudStorage", "SharePoint")
 PHAI_BI_IGNORE = (SP.WORKSPACE, ".env", SP.LOCAL_CONFIG)
 
 # Mỗi mục là `f(so, tram) -> None`; đăng ký ở cuối file. `tram` là gốc trạm nội dung đã
@@ -90,12 +90,72 @@ def _git_bo_qua(repo: Path, duong: str) -> bool | None:
     return r.returncode == 0
 
 
+# Ký tự được phép đứng ngay sau tên nhà cung cấp: `OneDrive - <công ty>`,
+# `OneDrive-<công ty>`, `My Drive (<tài khoản>)`. Không có danh sách này thì
+# `onedriver-notes` cũng thành cloud.
+_SAU_TEN_CLOUD = " -_.("
+
+
 def _trong_cloud(p: Path) -> str | None:
-    phan = {x.lower() for x in p.parts}
-    for t in TEN_CLOUD:
-        if t.lower() in phan:
-            return t
+    """Tên nhà cung cấp là TIỀN TỐ của thành phần đường dẫn, không phải cả thành phần.
+
+    So khớp tuyệt đối không bao giờ nổ ở nơi có tài khoản doanh nghiệp: thư mục thật tên
+    `OneDrive - <tên công ty>`, và macOS còn đặt ở `Library/CloudStorage/OneDrive-…`. Một
+    cảnh báo không bao giờ nổ là một cảnh báo không tồn tại (REVIEW-P2 N4)."""
+    for x in p.parts:
+        x = x.strip().lower()
+        for t in TEN_CLOUD:
+            ten = t.lower()
+            if x == ten or (x.startswith(ten) and x[len(ten):len(ten) + 1] in _SAU_TEN_CLOUD):
+                return t
     return None
+
+
+_BIEN_PY = re.compile(r"""secret_env\(\s*["']([A-Z][A-Z0-9_]+)["']""")
+_BIEN_PS = re.compile(r"\$env:([A-Z][A-Z0-9_]+)")
+
+
+def _bien_doc_duoc(repo: Path) -> tuple[set, set]:
+    """(biến Python đọc QUA `.env`, biến chỉ PowerShell đọc) — quét chính bản clone.
+
+    Quét mã nguồn chứ không giữ một danh sách hằng: một danh sách chép tay sẽ lệch, và
+    lệch ở đây nghĩa là `doctor` nói dối về chuyện biến nào có tác dụng."""
+    py, ps = set(), set()
+    for d, mau, kho in ((repo / "scripts", _BIEN_PY, py), (repo, _BIEN_PS, ps)):
+        if not d.is_dir():
+            continue
+        for p in d.rglob("*.p*"):
+            if p.suffix.lower() not in (".py", ".ps1") or "__pycache__" in p.parts:
+                continue
+            try:
+                kho.update(mau.findall(p.read_text(encoding="utf-8", errors="replace")))
+            except OSError:
+                continue
+    return py, ps
+
+
+def _kham_env_khong_ai_doc(so: So, repo: Path) -> None:
+    """Biến khai trong `.env` mà KHÔNG script nào đọc được từ đó.
+
+    Chế độ `embedded` hứa "điền `.env` là xong". Lời hứa đó chỉ đúng với biến đi qua
+    `studio_paths.secret_env`; biến đọc thẳng `os.environ`, và mọi biến mà **PowerShell**
+    đọc (`$env:X` — PS không có cách nào đọc `.env`), thì điền vào đó là điền vào chỗ
+    không ai nhìn. Fail-closed nên không mất dữ liệu; nhưng im lặng thì người dùng mất
+    buổi chiều đi tìm (REVIEW-P2 N11)."""
+    khai = set(SP.doc_env_file(repo))
+    if not khai:
+        return
+    py, ps = _bien_doc_duoc(repo)
+    cau = sorted(khai - py)
+    if not cau:
+        return
+    chi_ps = [b for b in cau if b in ps]
+    so.nhac(f"{len(cau)} biến trong .env KHÔNG script Python nào đọc từ đó: "
+            f"{', '.join(cau[:8])}"
+            + (f" — trong đó {', '.join(chi_ps[:5])} là biến của `.ps1`, và PowerShell "
+               f"không có cách nào đọc .env: đặt chúng ở cấp user (setx) hoặc trong môi "
+               f"trường của scheduled task." if chi_ps else "")
+            + " Xem docs/WORKSPACE.md mục `.env`.")
 
 
 def kham(station=None) -> dict:
@@ -134,10 +194,12 @@ def kham(station=None) -> dict:
         f_env = repo / ".env"
         if not f_env.is_file():
             so.nhac(f"chưa có {f_env} — chép từ .env.example rồi điền đường dẫn của bạn")
-        elif os.name != "nt":
-            quyen = f_env.stat().st_mode & 0o777
-            if quyen & 0o077:
-                so.nhac(f".env đang mở cho người khác đọc ({oct(quyen)}) — chmod 600 {f_env}")
+        else:
+            if os.name != "nt":
+                quyen = f_env.stat().st_mode & 0o777
+                if quyen & 0o077:
+                    so.nhac(f".env đang mở cho người khác đọc ({oct(quyen)}) — chmod 600 {f_env}")
+            _kham_env_khong_ai_doc(so, repo)
 
     # 4. Repo/trạm nằm trong thư mục đồng bộ đám mây
     for ten, p in (("repo", repo), ("trạm", st)):
@@ -189,8 +251,22 @@ _HOI_PHIEN_BAN = (
     "print(json.dumps(ra))\n")
 
 
+_PHIEN_BAN = re.compile(r"\s*v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(.*)")
+
+
 def _so(v) -> tuple:
-    return tuple(int(x) for x in re.findall(r"\d+", str(v))[:3])
+    """Phiên bản -> tuple so sánh được, LUÔN 4 phần.
+
+    Hai bẫy đã đo (REVIEW-P2 N12):
+    · `("1","0") < ("1","0","0")` là True ⇒ trạm khai `API_VERSION = "1.0"` bị đỏ mã 3 oan.
+      Độ dài phải cố định, thiếu thì bù 0.
+    · `1.0.0-rc1` và `1.0.0` bằng nhau nếu chỉ nhặt chữ số ⇒ bản thử nghiệm lọt cổng.
+      Phần thứ tư: 0 cho bản có hậu tố `-…`, 1 cho bản chính thức."""
+    m = _PHIEN_BAN.match(str(v))
+    if not m:
+        return (0, 0, 0, 0)
+    return tuple(int(x or 0) for x in m.groups()[:3]) + (
+        0 if (m.group(4) or "").strip().startswith("-") else 1,)
 
 
 def _khai_trong_kenh(tram: Path) -> list[tuple[str, dict]]:

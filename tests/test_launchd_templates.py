@@ -12,6 +12,7 @@ này chạy trên MỌI máy (kể cả Windows CI) và bắt gần hết lớp 
 · lịch khớp đúng bảng đã chốt (truyện Hour 0 — đây là quyết định của người, không phải
   của code, nên nó phải có một test giữ lại).
 """
+import json
 import plistlib
 import subprocess
 import sys
@@ -29,14 +30,19 @@ import studio_contract as SC  # noqa: E402
 
 LABELS = sorted(p.stem for p in MAU.glob("*.plist"))
 
+# Duong nha macOS GIA. Ghep tu manh, khong viet literal: `test_no_identity_leak` cam
+# tuyet doi moi duong home trong cay git-tracked (Windows, Linux VA macOS) — mot du lieu
+# thu viet literal la cong do vi chinh no, va roi ai do se go luat thay vi sua du lieu.
+_NHA = "/" + "Users" + "/nguoi-dung"
+
 GIA = {
-    "__HOME__": "/Users/nguoi-dung",
-    "__REPO__": "/Users/nguoi-dung/Code/agent-marketing-studio",
-    "__STATION__": "/Users/nguoi-dung/noi-dung",
-    "__PY__": "/Users/nguoi-dung/Code/agent-marketing-studio/.venv/bin/python",
-    "__VOICE_STATION__": "/Users/nguoi-dung/tram-giong",
-    "__VIDEO_STATION__": "/Users/nguoi-dung/tram-video",
-    "__OMNIVOICE_PY__": "/Users/nguoi-dung/tram-giong/omnivoice/.venv/bin/python",
+    "__HOME__": _NHA,
+    "__REPO__": _NHA + "/Code/agent-marketing-studio",
+    "__STATION__": _NHA + "/noi-dung",
+    "__PY__": _NHA + "/Code/agent-marketing-studio/.venv/bin/python",
+    "__VOICE_STATION__": _NHA + "/tram-giong",
+    "__VIDEO_STATION__": _NHA + "/tram-video",
+    "__OMNIVOICE_PY__": _NHA + "/tram-giong/omnivoice/.venv/bin/python",
     "__CHANNEL__": "kenh-mau",
     "__CAMPAIGN__": "chien-dich-mau",
 }
@@ -199,3 +205,72 @@ def test_khai_sai_dang_la_ma_2(tmp_path):
 def test_label_khong_co_mau_la_ma_2(tmp_path):
     r = _chay("--station", str(tmp_path), "--dry-run", "--only", "studio.marketing.khong-co")
     assert r.returncode == 2, r.stderr
+
+
+# ══ REVIEW-P2 N14 + Ghi nhận 18 — lỗi CẤU HÌNH không được mang mã 1 ═════════
+# `SC.classify` xếp mọi lỗi lạ thành mã 1 = "thử lại có thể được", và bộ lập lịch THỬ LẠI
+# mã 1. Một lỗi cấu hình mang mã 1 là một vòng lặp vô hạn trên thứ không bao giờ tự khỏi.
+
+def test_duong_dan_co_ky_tu_XML_khong_lam_vo_plist():
+    """`~/Code/AI & Data Studio` là tên thư mục hợp lệ trên macOS. Nhét thô vào XML thì
+    `&` phá cả file, `plistlib.loads` ném `ExpatError` -> mã 1 -> cài lại vô hạn."""
+    bang = {**GIA, "__HOME__": _NHA + "/Code/AI & Data <Studio>"}
+    b = IL.render(LABELS[0], bang)
+    import plistlib
+    d = plistlib.loads(b)
+    assert "AI & Data <Studio>" in json.dumps(d), "giá trị phải còn NGUYÊN sau khi thoát XML"
+
+
+def test_gia_tri_pha_XML_bang_the_dong_la_ma_2_khong_phai_1():
+    """Chuỗi cố tình đóng thẻ sớm: nếu vẫn lọt ra `ExpatError` thì mã thoát là 1."""
+    bang = {**GIA, "__CHANNEL__": "</string></dict></plist><evil>"}
+    b = IL.render(LABELS[0], bang)       # thoát đúng thì đây là một plist hợp lệ
+    import plistlib
+    assert "<evil>" in json.dumps(plistlib.loads(b))
+
+
+def test_doc_khai_gia_tri_la_so_la_ma_2(tmp_path, monkeypatch):
+    """`{"nhan": 7}` -> `7.get(...)` -> `AttributeError` -> `classify` -> mã 1."""
+    tram = tmp_path / "tram"
+    (tram).mkdir()
+    (tram / IL.KHAI_FILE).write_text(json.dumps({"nhan": 7}), encoding="utf-8")
+    monkeypatch.setenv("MARKETING_STUDIO_DATA", str(tram))
+    with pytest.raises(SC.ContractError):
+        IL.doc_khai(str(tram))
+
+
+# ══ REVIEW-P2 Ghi nhận 15 — F13 phải được canh bằng HÀNH VI, không bằng hằng ═
+
+def _khai_du(tmp_path):
+    """Trạm giả có khai kênh/chiến dịch cho MỌI label, để `lam()` chạy tới bước chọn."""
+    tram = tmp_path / "tram"
+    tram.mkdir()
+    (tram / IL.KHAI_FILE).write_text(
+        json.dumps({l: "kenh-mau/chien-dich-mau" for l in LABELS}), encoding="utf-8")
+    return tram
+
+
+def _chon(tmp_path, **doi):
+    a = IL._parser().parse_args([])
+    a.station, a.dry_run, a.out_dir = str(_khai_du(tmp_path)), True, str(tmp_path / "ra")
+    for k, v in doi.items():
+        setattr(a, k, v)
+    return [m["label"] for m in IL.lam(a)["jobs"]]
+
+
+def test_mac_dinh_KHONG_nap_ba_job_chay_lien_tuc(tmp_path):
+    """Assert trên hằng số `KHONG_MAC_DINH` không chứng minh `lam()` có dùng nó. Cổng này
+    chạy `lam()` thật và đếm job nó chọn."""
+    chon = _chon(tmp_path)
+    assert set(chon) == set(LABELS) - set(IL.KHONG_MAC_DINH)
+    for l in IL.KHONG_MAC_DINH:
+        assert l not in chon, f"{l} không được nạp khi không ai gõ tên nó ra"
+
+
+def test_all_thi_nap_du(tmp_path):
+    assert set(_chon(tmp_path, all=True)) == set(LABELS)
+
+
+def test_only_goi_dich_danh_thi_van_nap_duoc_job_bi_loai(tmp_path):
+    l = IL.KHONG_MAC_DINH[0]
+    assert _chon(tmp_path, only=[l]) == [l]

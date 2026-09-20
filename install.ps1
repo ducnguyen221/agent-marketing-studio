@@ -20,9 +20,9 @@
 
 .EXAMPLE
     .\install.ps1                              # hoi ban chon che do cai
-    .\install.ps1 -Yes                         # nhan khuyen nghi: embedded
     .\install.ps1 -Station "D:/noi-dung"       # tram ngoai repo, khong hoi
-    .\install.ps1 -NonInteractive              # khong co ai tra loi -> embedded
+    .\install.ps1 -Yes                         # nhan khuyen nghi: embedded
+    .\install.ps1 -NonInteractive              # khong hoi; khong co ai tra loi -> ma 2
 
 .NOTES
     File này phải giữ BOM UTF-8 để PowerShell 5.1 đọc đúng tiếng Việt.
@@ -130,9 +130,13 @@ $init = Join-Path (Join-Path (Join-Path $RepoRoot 'scripts') 'pipeline') 'init_s
 $doi = @()
 if ($Station) { $doi += @('--station', $Station) }
 if ($Mode) { $doi += @('--mode', $Mode) }
-# -NonInteractive = "không có ai ngồi đây": nhận khuyến nghị (embedded). Máy đã có trạm
-# ngoài thì lõi vẫn tự chọn separate và bỏ qua cờ này — đó là chủ đích (F17.2).
-if ($NonInteractive -or $Yes) { $doi += '--yes' }
+# CHI `-Yes` moi ghep `--yes`. `-NonInteractive` chi noi "dung hoi", KHONG noi "cu doan
+# ho toi": lõi thay stdin khong co nguoi thi dung voi ma 2 va noi ro phai go `-Yes`.
+# Ban truoc ghep ca hai, nen `install.ps1 -NonInteractive` lang le cai embedded trong khi
+# `install.sh --noninteractive` cho ma 2 — hai bo cai khac nhau cho hai he dieu hanh,
+# dung thu P2-T02 gop loi de tranh (REVIEW-P2 N8).
+if ($Yes) { $doi += '--yes' }
+if ($NonInteractive) { $doi += '--non-interactive' }
 
 Say ""
 # Ha ErrorActionPreference quanh DUNG loi goi: init_station.py in moi log cho nguoi doc ra

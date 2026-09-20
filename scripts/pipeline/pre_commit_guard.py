@@ -94,4 +94,12 @@ def main(argv=None) -> int:
 
 
 if __name__ == "__main__":
+    # Console Windows mặc định cp1252: một thông điệp CHẶN có dấu sẽ nổ thành traceback
+    # thay vì câu giải thích. Cổng vẫn fail-closed (commit vẫn bị chặn), nhưng người đọc
+    # nhận một bãi ngăn xếp đúng lúc cần hiểu mình vừa vi phạm gì (REVIEW-P2 Ghi nhận 16).
+    for _luong in (sys.stdout, sys.stderr):
+        try:
+            _luong.reconfigure(encoding="utf-8")
+        except (AttributeError, ValueError, OSError):
+            pass
     sys.exit(main())

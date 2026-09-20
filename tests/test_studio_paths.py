@@ -5,6 +5,7 @@
 thay vì đọc CHANNELS.md thì kênh ngoài trở nên vô hình, và nó vô hình một cách IM LẶNG —
 lệnh chạy xong, chỉ là không thấy kênh đó đâu.
 """
+import json
 import sys
 from pathlib import Path
 
@@ -238,3 +239,51 @@ def test_mode_doc_tu_studio_local_json(repo_gia):
     assert SP.mode() is None
     _ghi_local(repo_gia, mode="embedded", station_path=SP.WORKSPACE)
     assert SP.mode() == "embedded"
+
+
+# ══ REVIEW-P2 N11 — chế độ `embedded` HỨA đọc `.env` thì phải đọc thật ══════
+# Trước 20/09 chỉ `TG_CONFIG` đi qua `secret_env`; ~18 biến còn lại đọc thẳng `os.environ`.
+# Người cài `embedded` điền `VOICE_STATION=` vào `.env`, `doctor` vẫn báo "chưa khai
+# VOICE_STATION" và không gì giải thích vì sao. Fail-closed nên không mất dữ liệu — nhưng
+# nó làm người dùng mất buổi chiều.
+
+@pytest.fixture
+def repo_embedded(tmp_path, monkeypatch):
+    """Một bản clone giả ở chế độ `embedded`, có `.env`."""
+    repo = tmp_path / "repo"
+    (repo / "scripts" / "lib").mkdir(parents=True)
+    (repo / "install.ps1").write_text("x", encoding="utf-8")
+    (repo / SP.LOCAL_CONFIG).write_text(json.dumps({"mode": "embedded"}), encoding="utf-8")
+    for b in ("VOICE_STATION", "OMNIVOICE_DIR", "VIDEO_STATION", "VIDEO_ROOT",
+              "OMNIVOICE_PY", "HYPERFRAMES_VERSION", "WEB_REPO_DIR", "VOICES_DIR"):
+        monkeypatch.delenv(b, raising=False)
+    return repo
+
+
+@pytest.mark.parametrize("bien, doc", [
+    ("VOICE_STATION", lambda r: SP.voice_station(r)),
+    ("VIDEO_STATION", lambda r: SP.video_station(r)),
+])
+def test_bien_tram_nang_luc_doc_duoc_tu_env(repo_embedded, tmp_path, bien, doc):
+    dich = tmp_path / "tram-ngoai"
+    dich.mkdir()
+    (repo_embedded / ".env").write_text(f"{bien}={dich}\n", encoding="utf-8")
+    assert doc(repo_embedded) == dich.resolve(), f"{bien} khai trong .env mà không ai đọc"
+
+
+def test_bien_moi_truong_van_THANG_env_file(repo_embedded, tmp_path, monkeypatch):
+    """Thứ tự của `secret_env` không đổi: biến môi trường trước, `.env` là đường lùi."""
+    a, b = tmp_path / "tu-bien", tmp_path / "tu-env"
+    a.mkdir(); b.mkdir()
+    (repo_embedded / ".env").write_text(f"VOICE_STATION={b}\n", encoding="utf-8")
+    monkeypatch.setenv("VOICE_STATION", str(a))
+    assert SP.voice_station(repo_embedded) == a.resolve()
+
+
+def test_che_do_separate_KHONG_doc_env_cua_repo(repo_embedded, tmp_path):
+    """`.env` là cơ chế của riêng `embedded`. Ở `separate`, repo có thể là bản public."""
+    (repo_embedded / SP.LOCAL_CONFIG).write_text(json.dumps({"mode": "separate",
+                                                             "station": str(tmp_path / "t")}),
+                                                 encoding="utf-8")
+    (repo_embedded / ".env").write_text(f"VOICE_STATION={tmp_path}\n", encoding="utf-8")
+    assert SP.voice_station(repo_embedded) is None

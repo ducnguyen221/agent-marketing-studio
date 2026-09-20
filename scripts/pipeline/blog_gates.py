@@ -556,6 +556,11 @@ def _in_vi_sao_bi_chan(result: dict) -> None:
     hoan = [r for r in result["gates"]
             if r["status"] == "missing" and "chưa tới lượt" in (r["note"] or "")]
 
+    # Cổng `missing` KHÔNG phải cổng xanh: nó là cổng CHƯA ĐO ĐƯỢC. Tóm tắt cũ bỏ qua
+    # chúng, nên người đọc thấy "✔ KHÔNG cổng nào chặn" trong khi có cổng chưa biết kết
+    # quả — ví dụ G22 khi `brand.org_names` để trống (REVIEW-P2 Ghi nhận 17).
+    chua_do = [r for r in result["gates"]
+               if r["status"] == "missing" and r not in hoan]
     if not chan:
         sys.stdout.write(f"\n  ✔ KHÔNG cổng nào chặn ở bước `{result['stage']}`.\n")
     else:
@@ -573,6 +578,11 @@ def _in_vi_sao_bi_chan(result: dict) -> None:
                          + ", ".join(r["id"] for r in hoan) + "\n"
                          "     (ảnh · trang web · link thật · sổ đăng bài — bước soạn "
                          "không tạo ra được nên không chặn ở đây)\n")
+    if chua_do:
+        sys.stdout.write(f"\n  ❔ CHƯA ĐO ĐƯỢC {len(chua_do)} cổng — không phải xanh, chỉ là "
+                         "chưa biết:\n")
+        for r in chua_do:
+            sys.stdout.write(f"     {r['id']} {r['name']}: {r['note'] or r['measured']}\n")
 
 
 def main(argv=None) -> int:

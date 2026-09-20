@@ -76,6 +76,13 @@ file cấu hình lạc vào repo không được phép cướp trạm.
 dẫn**, file ngoài git giữ **giá trị**. Chi tiết:
 [`knowledge/toolchains/SECRETS.md`](../knowledge/toolchains/SECRETS.md).
 
+**Giới hạn của `.env`, nói rõ một lần:** chỉ biến đi qua `studio_paths.secret_env()` mới
+đọc được từ file đó. Biến mà **PowerShell** đọc (`$env:X` trong các `.ps1`) thì không —
+PowerShell không có cách nào đọc `.env`, nên những biến đó phải đặt ở cấp user (`setx`)
+hoặc trong môi trường của scheduled task, **kể cả** ở chế độ `embedded`. Không phải đoán:
+`doctor` liệt kê thẳng dòng nào trong `.env` không script nào đọc, và nói rõ dòng nào là
+biến của `.ps1`.
+
 `studio.local.json` (bị gitignore) giữ đúng năm khoá:
 
 ```json

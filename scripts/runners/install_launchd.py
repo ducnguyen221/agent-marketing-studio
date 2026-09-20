@@ -44,6 +44,8 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from xml.parsers.expat import ExpatError
+from xml.sax import saxutils
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import studio_contract as SC  # noqa: E402
@@ -67,7 +69,7 @@ _CHO_TRONG = re.compile(r"__[A-Z_]+__")
 
 def _python_tram() -> str:
     """Python chạy các `.ps1`/`.py` của repo — cùng thứ tự với `Find-Python`."""
-    bien = (os.environ.get("MARKETING_STUDIO_PY") or "").strip()
+    bien = (SP.secret_env("MARKETING_STUDIO_PY") or "").strip()
     if bien:
         return bien
     for con in ("bin", "Scripts"):
@@ -134,8 +136,19 @@ def doc_khai(station=None) -> dict:
         raise SC.ContractError(f"{p} không đọc được: {e}") from e
     if not isinstance(d, dict):
         raise SC.ContractError(f"{p} phải là một object {{label: 'kênh/chiến dịch'}}")
-    return {k: (v if isinstance(v, str) else
-                f"{v.get('channel', '')}/{v.get('campaign', '')}") for k, v in d.items()}
+    ra = {}
+    for k, v in d.items():
+        if isinstance(v, str):
+            ra[k] = v
+        elif isinstance(v, dict):
+            ra[k] = f"{v.get('channel', '')}/{v.get('campaign', '')}"
+        else:
+            # Không để `AttributeError` lọt ra: `classify` xếp nó vào mã 1 = thử lại được,
+            # và bộ lập lịch sẽ thử lại mãi một file khai viết sai (REVIEW-P2 Ghi nhận 18).
+            raise SC.ContractError(
+                f"{p}: khai {k!r} là {type(v).__name__}, chờ chuỗi `<kênh>/<chiến dịch>` "
+                f"hoặc object {{channel, campaign}}")
+    return ra
 
 
 def _tach(gia: str, label: str) -> tuple[str, str]:
@@ -155,18 +168,29 @@ def nhan() -> list[str]:
 
 
 def render(label: str, bang: dict) -> bytes:
-    """Điền một mẫu. Còn sót chỗ trống nào là LỖI — không bao giờ ghi ra một plist dở."""
+    """Điền một mẫu. Còn sót chỗ trống nào là LỖI — không bao giờ ghi ra một plist dở.
+
+    Giá trị được THOÁT XML trước khi thay. `~/Code/AI & Data Studio` là tên thư mục hợp lệ
+    trên macOS, và một dấu `&` thô phá cả file: `plistlib.loads` ném `ExpatError`, thứ mà
+    `SC.classify` xếp vào **mã 1 = thử lại được**. Bộ lập lịch thử lại mã 1, nên một lỗi
+    cấu hình thành vòng lặp vô hạn trên thứ không bao giờ tự khỏi (REVIEW-P2 N14)."""
     f = MAU_DIR / f"{label}.plist"
     if not f.is_file():
         raise SC.StationMissing(f"không có mẫu {f}")
     t = f.read_text(encoding="utf-8")
     for k, v in bang.items():
-        t = t.replace(k, v)
+        t = t.replace(k, saxutils.escape(str(v)))
     sot = sorted(set(_CHO_TRONG.findall(t)))
     if sot:
         raise SC.ContractError(f"{label}: còn chỗ trống chưa điền {sot}")
     b = t.encode("utf-8")
-    plistlib.loads(b)          # XML hỏng thì hỏng NGAY ở đây, không phải lúc launchctl nạp
+    try:
+        plistlib.loads(b)      # XML hỏng thì hỏng NGAY ở đây, không phải lúc launchctl nạp
+    except ExpatError as e:
+        raise SC.ContractError(
+            f"{label}: plist dựng ra không phải XML hợp lệ ({e}). Đây là lỗi CẤU HÌNH — "
+            f"một giá trị trong bảng thay thế mang ký tự mà XML không chịu; chạy lại "
+            f"nguyên trạng là vô ích. Kiểm các đường dẫn trong `studio.local.json`.") from e
     return b
 
 
@@ -281,7 +305,7 @@ def lam(a) -> dict:
     return {"jobs": ra, "out_dir": str(dich_dir)}
 
 
-def main(argv=None) -> int:
+def _parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog=PROG, description="Điền mẫu launchd và nạp bằng launchctl (macOS).")
     ap.add_argument("--station", help="gốc trạm (mặc định: trạm đang phân giải)")
@@ -299,7 +323,11 @@ def main(argv=None) -> int:
                     help="chỉ báo sẽ làm gì: không ghi file, không gọi launchctl")
     ap.add_argument("--list", action="store_true", help="liệt kê label có mẫu rồi thoát")
     ap.add_argument("--json", action="store_true", help="in một dòng JSON kết quả")
-    args, ma = SC.parse(ap, argv)
+    return ap
+
+
+def main(argv=None) -> int:
+    args, ma = SC.parse(_parser(), argv)
     if args is None:
         return ma
     args.prog = PROG

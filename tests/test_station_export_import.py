@@ -347,9 +347,18 @@ def test_import_KHONG_lay_ma_thoat_cua_doctor_lam_ma_cua_minh(tram, tmp_path):
     import. Để `doctor` quyết mã thoát của `import` là biến bước-đầu-tiên thành thất bại."""
     out = tmp_path / "goi.zip"
     STN.export_station(tram, out)
-    kq = STN.import_station(out, tmp_path / "moi")
-    assert kq["doctor"]["code"] != 0
-    assert STN.main(["import", str(out), "--station", str(tmp_path / "moi2")]) == 0
+    # `doctor` PHẢI đỏ ở ca này — nhưng ép nó đỏ bằng một giá trị TỰ DỰNG, không dựa vào
+    # việc máy đang chạy test chưa cài trạm giọng. Máy Đức đã cài đủ từ PV-G4, nên vế
+    # `kq["doctor"]["code"] != 0` là một khẳng định về MÔI TRƯỜNG, và nó sẽ đỏ giả đúng
+    # trên máy đã cài xong (REVIEW-P2 Ghi nhận 6).
+    that = STN._kham
+    STN._kham = lambda st: (that(st)[0], {"code": SC.STATION_MISSING, "fail": ["gia lap"]})
+    try:
+        kq = STN.import_station(out, tmp_path / "moi")
+        assert kq["doctor"]["code"] != 0
+        assert STN.main(["import", str(out), "--station", str(tmp_path / "moi2")]) == 0
+    finally:
+        STN._kham = that
 
 
 # ── đổi đường của máy cũ ──────────────────────────────────────────────────────────────
@@ -591,3 +600,59 @@ def test_moi_file_trang_thai_cua_ke_hoach_deu_co_luat(tram):
                 "kenh-a/truyen/truyen-out/daily-logs/_heal_state.json",
                 "Auto Task.xlsx"):
         assert rel in co, f"file trạng thái §4 bị bỏ khỏi gói: {rel}"
+
+
+# ══ REVIEW-P2 N5 — cổng va chạm chỉ soi ĐƯỜNG FILE, không soi thư mục tổ tiên ═
+
+def test_dich_co_FILE_trung_ten_THU_MUC_trong_goi_la_ma_2_va_CHUA_ghi_gi(tram, tmp_path):
+    """Đích có sẵn một FILE tên `kenh-a` trong khi gói có THƯ MỤC `kenh-a/…`.
+
+    Cổng cũ chỉ so từng đường file khai trong manifest nên không thấy va chạm này; nó nổ
+    thành `FileExistsError` giữa vòng chuyển, để lại cây nửa vời — phá đúng lời hứa "CHƯA
+    ghi gì" mà chính thông điệp của cổng nói ra. Tệ hơn: `classify` xếp `OSError` vào mã 1
+    = thử lại được, nên lịch chạy sẽ thử lại mãi một thứ không bao giờ qua."""
+    goi = tmp_path / "goi.zip"
+    STN.export_station(tram, goi)
+
+    dich = tmp_path / "dich"
+    dich.mkdir()
+    (dich / "kenh-a").write_text("toi la FILE", encoding="utf-8")
+    with pytest.raises(SC.ContractError) as e:
+        STN.import_station(goi, dich)
+    assert "kenh-a" in str(e.value)
+    assert (dich / "kenh-a").read_text(encoding="utf-8") == "toi la FILE", "đã ghi đè"
+    assert not (dich / "CHANNELS.md").exists(), "để lại cây nửa vời sau khi TỪ CHỐI"
+
+
+def test_doi_duong_KHONG_nuot_ten_nha_dai_hon(tmp_path):
+    """REVIEW-P2 Ghi nhận 1. Nhà máy cũ là `<...>/an`; trong gói có cả `<...>/an-cu`.
+
+    Thay theo tiền tố thô thì đường thứ hai thành `~-cu` — một đường không tồn tại ở đâu
+    cả, và không có lỗi nào báo."""
+    _BS = chr(92)
+    nha = "D:" + _BS + "nha" + _BS + "an"
+    noi = (nha + _BS + "x" + chr(10) + nha + "-cu" + _BS + "x" + chr(10)
+           + "xem " + nha + " nhe" + chr(10)).encode("utf-8")
+    ra = STN._doi_duong(noi, nha).decode("utf-8")
+    assert ra.splitlines()[0] == "~" + _BS + "x"
+    assert ra.splitlines()[1] == nha + "-cu" + _BS + "x", "nuot mat mot ten nha KHAC"
+    assert ra.splitlines()[2] == "xem ~ nhe", "ranh gioi la khoang trang cung phai thay"
+
+
+# ══ REVIEW-P2 Ghi nhận 4 — luật zip-slip phải đo được trên CẢ HAI hệ điều hành ═
+# Test tích hợp ở trên khẳng định `not (tmp_path/"thoat.txt").exists()`. Trên Windows vế
+# đó xanh kể cả khi luật bị gỡ, vì tiền tố `\?\` của `_dai()` chặn hộ `..`. Nhánh này là
+# `mac-portable`, nên luật phải được đo bằng chính hàm quyết định, không qua hệ tập tin.
+
+@pytest.mark.parametrize("duong", [
+    "../thoat.txt", "a/../../thoat.txt", "/tuyet-doi.txt", "..",
+    chr(92) + "windows" + chr(92) + "x", "C:/o-dia.txt", "a/../..",
+])
+def test_an_toan_TU_CHOI_moi_duong_di_ra_ngoai(duong):
+    assert STN._an_toan(duong) is False, f"{duong!r} lọt qua cổng zip-slip"
+
+
+@pytest.mark.parametrize("duong", ["a.txt", "kenh-a/cd-1/out/2026-01-01/x.json",
+                                   "ten..co.dau.cham/x", "a/b/c.md"])
+def test_an_toan_CHO_QUA_duong_tuong_doi_lanh(duong):
+    assert STN._an_toan(duong) is True, f"{duong!r} bị chặn oan"

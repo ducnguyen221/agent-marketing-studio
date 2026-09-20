@@ -105,8 +105,19 @@ def _mien(ds: list[str]) -> list[str]:
 
 
 def link_re(mien: list[str]) -> re.Pattern:
-    them = "".join(r"|(?:[\w-]+\.)*" + re.escape(d) + r"/\S+" for d in mien)
-    return re.compile(r"https?://(?:www\.)?(?:" + LINK_GOC + them + ")")
+    """Mẫu bắt link sản phẩm trong log của lệnh con.
+
+    Ba chỗ từng hụt, và cả ba đều biến một lượt đăng THÀNH CÔNG thành tin ✅ ghi "không
+    phát hiện link" — tức là hỏng đúng thứ wrapper sinh ra để làm (REVIEW-P2 N13):
+
+    · **`re.I`**: log của công cụ ngoài không hứa viết thường (`https://WWW.YouTube.com/…`).
+    · **tiền tố bất kỳ** thay cho `(?:www\\.)?`: `m.youtube.com` là link thật trên điện thoại.
+    · **`/path` không bắt buộc** cho miền thương hiệu: bài đăng ở trang chủ vẫn là bài đăng.
+      Bỏ bắt buộc `/path` thì phải neo đuôi bằng `(?![\\w.-])`, nếu không `example.com` nuốt
+      luôn `example.company`.
+    """
+    them = "".join(r"|(?:[\w-]+\.)*" + re.escape(d) + r"(?:/\S*)?(?![\w.-])" for d in mien)
+    return re.compile(r"https?://(?:[\w-]+\.)*(?:" + LINK_GOC + them + ")", re.I)
 
 
 def trich_link(dong: list[str], mien: list[str]) -> list[str]:
@@ -320,7 +331,9 @@ def soan_tin(title: str, ma: int, dur: str, dong: list[str], mien: list[str],
                 "error": "⚠️ <b>Không kiểm được độ phủ</b>",
                 "nodata": "<b>Độ phủ Facebook</b> (chưa đủ dữ liệu)"}.get(tt, "<b>Độ phủ Facebook</b>")
         msg += f"\n\n{tieu}\n<pre>" + _esc("\n".join(khoi[:16])) + "</pre>"
-    return _cat(msg)
+    # Che token ở ĐÂY, không chỉ ở `_loi()`: tin này mang nguyên log đuôi của tiến trình
+    # con, và tiến trình con là chỗ dễ in nhầm token ra nhất (REVIEW-P2 Ghi nhận 13).
+    return _cat(_che_token(msg))
 
 
 # ── Gửi ──────────────────────────────────────────────────────────────────────

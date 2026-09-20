@@ -118,8 +118,13 @@ def _hoi_ban_phim(bang: str) -> str:
     return input()
 
 
-def chon_che_do(station=None, mode=None, yes=False, ask=None):
-    """-> (chế độ, gốc trạm, lý do). Ném ContractError khi cần người chọn mà không hỏi được."""
+def chon_che_do(station=None, mode=None, yes=False, ask=None, non_interactive=False):
+    """-> (chế độ, gốc trạm, lý do). Ném ContractError khi cần người chọn mà không hỏi được.
+
+    `non_interactive` = người gọi TỰ KHAI "không có ai ngồi đây". Nó KHÔNG có nghĩa là
+    "cứ đoán hộ tôi": thiếu `--yes`/`--mode`/`--station` thì vẫn là mã 2. Hai vỏ cài
+    (`install.ps1 -NonInteractive`, `install.sh --non-interactive`) cùng đổ vào đây, nên
+    chúng không thể trôi khỏi nhau nữa (REVIEW-P2 N8)."""
     repo = SP.repo_root()
     if station:
         return "separate", Path(station).expanduser().resolve(), "--station"
@@ -143,7 +148,7 @@ def chon_che_do(station=None, mode=None, yes=False, ask=None):
             mode, ly_do = "embedded", "--yes (nhận khuyến nghị)"
         else:
             if ask is None:
-                if not _co_nguoi_tra_loi():
+                if non_interactive or not _co_nguoi_tra_loi():
                     SC.log(BANG_LUA_CHON)
                     raise SC.ContractError(
                         "cần người dùng chọn chế độ cài. Agent: trình bảng ở trên cho người "
@@ -208,9 +213,29 @@ def _chep_env(repo: Path, da_tao: list):
             SC.log(f"[init] không đặt được quyền 600 cho .env ({e}) — kiểm tay.")
 
 
-def _cai_hook(repo: Path) -> str:
+def _thu_muc_hook(repo: Path) -> Path | None:
+    """`.git/hooks` THẬT — hỏi git, không đoán.
+
+    Trong một `git worktree` thì `.git` là một FILE trỏ sang chỗ khác, nên phép thử
+    `(repo/".git"/"hooks").is_dir()` sai và rào lớp hai lặng lẽ vắng mặt đúng ở nơi người
+    ta hay thử nghiệm (REVIEW-P2 Ghi nhận 3)."""
+    try:
+        r = subprocess.run(["git", "-C", str(repo), "rev-parse", "--git-path", "hooks"],
+                           capture_output=True, text=True, timeout=30)
+        if r.returncode == 0 and (r.stdout or "").strip():
+            p = Path((r.stdout or "").strip())
+            p = p if p.is_absolute() else (repo / p)
+            p.mkdir(parents=True, exist_ok=True)
+            return p
+    except (OSError, subprocess.SubprocessError):
+        pass
     hooks = repo / ".git" / "hooks"
-    if not hooks.is_dir():
+    return hooks if hooks.is_dir() else None
+
+
+def _cai_hook(repo: Path) -> str:
+    hooks = _thu_muc_hook(repo)
+    if hooks is None:
         return "không có .git/hooks"
     hook = hooks / "pre-commit"
     if hook.exists():
@@ -253,8 +278,54 @@ def _ghi_local(repo: Path, mode: str, st: Path, da_tao: list):
     da_tao.append(SP.LOCAL_CONFIG)
 
 
-def do_init(station=None, mode=None, yes=False, existing=False, dry_run=False, ask=None) -> dict:
-    mode, st, ly_do = chon_che_do(station=station, mode=mode, yes=yes, ask=ask)
+# Windows không mở được đường dài hơn ngần này nếu chưa bật long path — cùng con số với
+# `station.py:GIOI_HAN_DUONG`, và cùng bài học: kiểm TRƯỚC khi ghi.
+GIOI_HAN_DUONG = 259
+
+
+def _kiem_cho_dung(st: Path, existing: bool) -> None:
+    """Hai lỗi CẤU HÌNH phải nổ thành mã 2, TRƯỚC khi ghi byte nào (REVIEW-P2 N6, N7).
+
+    Cả hai đều từng lọt ra thành `FileExistsError`/`FileNotFoundError`, và `SC.classify`
+    xếp chúng vào mã 1 hoặc 3 — mã 1 thì bộ lập lịch/CI thử lại vô hạn một thứ không bao
+    giờ tự khỏi, còn cây nửa vời thì người dùng không biết mình phải dọn gì."""
+    if st.exists() and not st.is_dir():
+        raise SC.ContractError(
+            f"--station {st} đang là một FILE, không phải thư mục. Đây là lỗi cấu hình: "
+            f"chạy lại nguyên trạng là vô ích. Trỏ sang một thư mục (hoặc chỗ trống).")
+    if os.name == "nt" and len(str(st)) > GIOI_HAN_DUONG - 60 and not existing:
+        # Trừ hao 60 ký tự cho đường con sâu nhất của cây mẫu: kiểm đúng gốc trạm thì
+        # cây dựng xong vẫn có thể có file không mở được, và nó hỏng ngầm về sau.
+        raise SC.ContractError(
+            f"--station {st} dài {len(str(st))} ký tự — cây trạm dựng bên trong sẽ vượt "
+            f"giới hạn 260 ký tự của Windows và đường ống hỏng ngầm về sau. Trỏ vào một "
+            f"thư mục nông hơn (ví dụ ngay trong thư mục nhà). CHƯA ghi gì.")
+
+
+def _mkdir_don_neu_hong(st: Path) -> None:
+    """Tạo gốc trạm; nổ giữa chừng thì dọn đúng phần MÌNH vừa tạo rồi báo mã 2."""
+    da_co = [p for p in [st, *st.parents] if p.exists()]
+    moc = da_co[0] if da_co else None
+    try:
+        st.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        p = st
+        while p != moc and p.is_dir() and not any(p.iterdir()):
+            cha = p.parent
+            try:
+                p.rmdir()
+            except OSError:
+                break
+            p = cha
+        raise SC.ContractError(
+            f"không tạo được thư mục trạm {st}: {e}. Lỗi cấu hình — sửa đường dẫn rồi chạy "
+            f"lại; phần cây vừa tạo dở đã được dọn.") from e
+
+
+def do_init(station=None, mode=None, yes=False, existing=False, dry_run=False, ask=None,
+            non_interactive=False) -> dict:
+    mode, st, ly_do = chon_che_do(station=station, mode=mode, yes=yes, ask=ask,
+                                  non_interactive=non_interactive)
     repo = SP.repo_root()
     kq = {"mode": mode, "station": str(st), "reason": ly_do, "repo": str(repo) if repo else None,
           "dry_run": bool(dry_run), "created": [], "hook": None}
@@ -263,9 +334,10 @@ def do_init(station=None, mode=None, yes=False, existing=False, dry_run=False, a
             f"--existing nhưng không có thư mục trạm: {st}. Bỏ --existing để dựng mới.")
     if dry_run:
         return kq
+    _kiem_cho_dung(st, existing)
     da_tao = kq["created"]
     if not existing:
-        st.mkdir(parents=True, exist_ok=True)
+        _mkdir_don_neu_hong(st)
         t = cay_mau(repo)
         if t:
             _chep_cay(t, st, da_tao)
@@ -324,25 +396,37 @@ def _goi_doctor(kq: dict):
     return r.returncode
 
 
-def main(argv=None) -> int:
+def _parser_help() -> str:
+    """Văn bản `--help` của lõi — để cổng parity so được cờ nào lõi thật sự hiểu."""
+    return _parser().format_help()
+
+
+def _parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog=PROG, description="Dựng trạm nội dung (hai chế độ: embedded / separate).")
     ap.add_argument("--station", help="trạm ngoài repo — chọn separate, không hỏi")
     ap.add_argument("--mode", choices=SP.MODES, help="chọn chế độ, không hỏi")
     ap.add_argument("--yes", action="store_true", help="nhận khuyến nghị (embedded), không hỏi")
+    ap.add_argument("--non-interactive", action="store_true",
+                    help="không có ai trả lời: KHÔNG hỏi và KHÔNG đoán — thiếu "
+                         "--yes/--mode/--station thì dừng với mã 2")
     ap.add_argument("--existing", action="store_true",
                     help="nhận một trạm đang chạy: không rải file mẫu")
     ap.add_argument("--dry-run", action="store_true", help="chỉ báo sẽ làm gì, không ghi")
     ap.add_argument("--no-doctor", action="store_true", help="bỏ bước kiểm cuối")
     ap.add_argument("--json", action="store_true", help="in một dòng JSON kết quả ra stdout")
-    args, ma = SC.parse(ap, argv)
+    return ap
+
+
+def main(argv=None) -> int:
+    args, ma = SC.parse(_parser(), argv)
     if args is None:
         return ma
     args.prog = PROG
 
     def chay(a):
         kq = do_init(station=a.station, mode=a.mode, yes=a.yes, existing=a.existing,
-                     dry_run=a.dry_run)
+                     dry_run=a.dry_run, non_interactive=a.non_interactive)
         _in(kq)
         if not a.dry_run and not a.no_doctor:
             kq["doctor"] = _goi_doctor(kq)

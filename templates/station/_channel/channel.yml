@@ -154,6 +154,10 @@ brand:
   site_base:        # BẮT BUỘC. URL gốc, KHÔNG dấu / cuối — site_root và page_weekly_base
                     # suy ra từ đây; <link canonical> và og:url cũng ghép từ đây
   home_url:         # trang chủ của tác giả/tổ chức — hiện ở nav và chân trang
+  site_home:        # đường về trang chủ của CHÍNH site này; trống = `site_base` + "/"
+  home_domain:      # miền của site, không có scheme (vd "example.vn") — cổng bài viết dùng
+                    # nó để phân biệt link nội bộ với link ra ngoài. Khai được cả ở CẤP
+                    # KÊNH (ngoài khối `brand:`); khai ở đó thì để trống dòng này.
   author:           # BẮT BUỘC. Ai tuyển chọn/biên tập; vào <meta name="author"> và chân trang
   script_url:       # Apps Script nhận đăng ký nhận bản tin (nếu có)
   audio_keep:       # giữ lại bao nhiêu file audio cũ

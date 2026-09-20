@@ -196,14 +196,14 @@ def _tram_ngoai(ten_moi, ten_cu, khoa, len_mot_cap=False, repo=None) -> Path | N
 def voice_station(repo=None) -> Path | None:
     """Trạm giọng: `VOICE_STATION` → `OMNIVOICE_DIR` (tên CŨ = thư mục ENGINE, lùi một cấp)
     → `studio.local.json: voice_station` → None (chưa cài `agent-voice-studio`)."""
-    return _tram_ngoai(os.environ.get("VOICE_STATION"), os.environ.get("OMNIVOICE_DIR"),
+    return _tram_ngoai(secret_env("VOICE_STATION", repo), secret_env("OMNIVOICE_DIR", repo),
                        "voice_station", len_mot_cap=True, repo=repo)
 
 
 def video_station(repo=None) -> Path | None:
     """Trạm video: `VIDEO_STATION` → `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station`
     → None (chưa cài `agent-video-studio`)."""
-    return _tram_ngoai(os.environ.get("VIDEO_STATION"), os.environ.get("VIDEO_ROOT"),
+    return _tram_ngoai(secret_env("VIDEO_STATION", repo), secret_env("VIDEO_ROOT", repo),
                        "video_station", repo=repo)
 
 

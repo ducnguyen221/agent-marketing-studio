@@ -176,6 +176,12 @@ def _doc_manifest(z: zipfile.ZipFile, goi: Path) -> dict:
     return mf
 
 
+# Byte có thể NỐI DÀI một tên thư mục. Ký tự ngay sau đường nhà mà nằm trong đây thì
+# chuỗi vừa khớp chỉ là TIỀN TỐ của một tên khác, không phải đường nhà.
+_NOI_TEN = frozenset(
+    bytes([c]) for c in b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.")
+
+
 def _doi_duong(b: bytes, nha_cu: str) -> bytes:
     """Đổi đường nhà của máy cũ thành `~`. Làm trên BYTE, không decode.
 
@@ -186,11 +192,27 @@ def _doi_duong(b: bytes, nha_cu: str) -> bytes:
     Ba dạng của cùng một đường, thay theo thứ tự dài-trước: gạch chéo ngược ĐÔI (cách JSON
     viết đường Windows), gạch chéo ngược ĐƠN (trong `.ps1`/`.md`), và gạch chéo XUÔI
     (trong `.yml`). Trên máy POSIX cả ba là một, nên phép thay chỉ chạy không.
+
+    Phép thay NEO RANH GIỚI: ký tự ngay sau đường nhà không được là ký tự có thể NỐI DÀI
+    tên thư mục đó. Thay theo tiền tố thô thì thư mục nhà của một người là tiền tố tên nhà
+    của người khác (`…/an` và `…/an-cu`), và một bản sao lưu cạnh đó bị viết lại thành
+    một đường vô nghĩa (REVIEW-P2 Ghi nhận 1).
     """
     if len(nha_cu) < 4:
         return b
-    for truoc in (nha_cu.replace("\\", "\\\\"), nha_cu, nha_cu.replace("\\", "/")):
-        b = b.replace(truoc.encode("utf-8"), b"~")
+    _BS = chr(92)
+    for truoc in (nha_cu.replace(_BS, _BS * 2), nha_cu, nha_cu.replace(_BS, "/")):
+        goc = truoc.encode("utf-8")
+        ra, i = bytearray(), 0
+        while True:
+            k = b.find(goc, i)
+            if k < 0:
+                ra += b[i:]
+                break
+            sau = b[k + len(goc):k + len(goc) + 1]
+            ra += b[i:k] + (b"~" if sau not in _NOI_TEN else goc)
+            i = k + len(goc)
+        b = bytes(ra)
     return b
 
 
@@ -263,6 +285,13 @@ def import_station(archive, station) -> dict:
                 f"TỪ CHỐI — {len(cham)} file đã có ở {st}, ví dụ: {cham[:5]}. "
                 "`import` KHÔNG ĐÈ: bản ở đích có thể mới hơn bản trong gói. Dọn thư mục "
                 "đích (hoặc trỏ --station vào chỗ trống) rồi chạy lại. CHƯA ghi gì.")
+        ket = _to_tien_la_file(stw, [m["path"] for m in muc] + thu_muc)
+        if ket:
+            raise SC.ContractError(
+                f"TỪ CHỐI — ở {st} đang có FILE trùng tên THƯ MỤC của gói: {ket[:5]}. "
+                "Cổng trên chỉ so từng đường file nên không thấy ca này; để nó chạy tiếp "
+                "là nổ giữa vòng chuyển và để lại cây nửa vời. Dọn/đổi tên chỗ đó rồi chạy "
+                "lại. CHƯA ghi gì.")
 
         if os.name == "nt":
             dai = sorted(((len(str(st / m["path"])), m["path"]) for m in muc), reverse=True)
@@ -299,7 +328,15 @@ def import_station(archive, station) -> dict:
                 cho.write_bytes(b)
             for d in thu_muc:
                 (tam / d).mkdir(parents=True, exist_ok=True)
-            _dat_vao_cho(tam, stw)
+            try:
+                _dat_vao_cho(tam, stw)
+            except OSError as e:
+                # `classify` xếp `OSError` vào mã 1 = "thử lại được", và bộ lập lịch thử
+                # lại mã 1. Va chạm ở đích không bao giờ tự khỏi: phải là mã 2 (REVIEW-P2 N5).
+                raise SC.ContractError(
+                    f"không đưa được cây vừa dựng vào {st}: {e}. Đích có thứ gì đó chặn "
+                    f"(file trùng tên thư mục, quyền, hoặc đường quá dài) — sửa rồi chạy "
+                    f"lại; chạy lại nguyên trạng là vô ích.") from e
         finally:
             if tam.exists():
                 shutil.rmtree(tam, ignore_errors=True)
@@ -312,6 +349,24 @@ def import_station(archive, station) -> dict:
             "source_home": mf.get("source_home"), "source_os": mf.get("source_os"),
             "state_files": dem, "dirs": thu_muc, "missing": SM.thieu(dem), "rewritten": doi,
             "git_refreshed": _git_refresh(st), "check_tree": cay, "doctor": bs}
+
+
+def _to_tien_la_file(stw: Path, rels) -> list[str]:
+    """Thư mục tổ tiên nào của gói đang là một FILE ở đích.
+
+    Cổng va chạm phía trên chỉ so ĐƯỜNG FILE. Gói có `engine/run.ps1` mà đích có sẵn một
+    FILE tên `engine` thì không đường file nào trùng — cổng cho qua, rồi `mkdir` nổ giữa
+    vòng chuyển và để lại cây nửa vời (REVIEW-P2 N5)."""
+    xau, da_xem = [], set()
+    for rel in rels:
+        for cha in Path(str(rel)).parents:
+            k = cha.as_posix()
+            if k in (".", "") or k in da_xem:
+                continue
+            da_xem.add(k)
+            if (stw / cha).is_file():
+                xau.append(k)
+    return sorted(xau)
 
 
 def _dat_vao_cho(tam: Path, st: Path):
@@ -348,6 +403,10 @@ def _in_export(kq: dict):
            f"{' · kèm trạng thái logs' if kq['logs_state'] else ''}")
     for nhan, n in kq["state_files"].items():
         SC.log(f"           {nhan:<24} {n}")
+    # Nói HẬU QUẢ ngay ở export, không đợi tới import: lúc import người ta đã ở máy mới và
+    # không còn máy cũ để lấy lại thứ thiếu (REVIEW-P2 Ghi nhận 2).
+    for dong in SM.thieu(kq["state_files"]):
+        SC.log(f"[export] ⚠ {dong}")
     if kq["dry_run"]:
         SC.log("[export] --dry-run: chưa ghi gì.")
     else:

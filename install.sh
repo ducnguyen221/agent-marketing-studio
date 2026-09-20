@@ -10,6 +10,7 @@
 # Dùng:
 #   ./install.sh                          # hỏi bạn chọn chế độ cài
 #   ./install.sh --yes                    # nhận khuyến nghị: embedded
+#   ./install.sh --non-interactive        # không hỏi; không ai trả lời -> mã 2
 #   ./install.sh --station ~/noi-dung     # trạm ngoài repo, không hỏi
 #   ./install.sh --mode separate
 #

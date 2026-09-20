@@ -505,14 +505,17 @@ def main(argv=None):
     with open(args.meta, encoding="utf-8-sig") as f:
         meta = json.load(f)
 
+    # CẢ HAI lời gọi phải nằm trong `try`. `BR.socials()`/`BR.icon()` chạy bên trong
+    # `build_html_full`, nên để nó ngoài đây thì `icon: linkedin` hay `socials[0]` thiếu
+    # `url` cho exit 1 = "thử lại được" — và lịch chạy retry mãi một lỗi `channel.yml`
+    # không bao giờ tự khỏi (REVIEW-P2 N15).
     try:
         b = BR.doc(args.brand or None, tu=args.meta)
+        html = build_html_full(md_text, meta, args.infographic, args.youtube_url,
+                               args.audio_src, args.summary_img, brand=b)
     except BR.BrandThieu as e:
         sys.stderr.write(f"build_blog_html: {e}\n")
         return 2
-
-    html = build_html_full(md_text, meta, args.infographic, args.youtube_url, args.audio_src,
-                           args.summary_img, brand=b)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write(html)

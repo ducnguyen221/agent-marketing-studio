@@ -260,3 +260,69 @@ def test_chay_that_bang_dong_lenh(may, tmp_path, monkeypatch):
                        capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == SC.OK, r.stderr
     assert "agent-voice-studio" in r.stderr
+
+
+# ══ REVIEW-P2 N4 + N12 — hai phép so khớp "đúng trên giấy, sai trên máy này" ══
+
+def test_canh_bao_cloud_bat_duoc_ONEDRIVE_CO_HAU_TO_CONG_TY():
+    """So khớp TUYỆT ĐỐI với "OneDrive" không bao giờ nổ ở nơi dùng tài khoản doanh
+    nghiệp: thư mục thật tên `OneDrive - <tên công ty>`, và macOS đặt ở
+    `Library/CloudStorage/OneDrive-…`. Cảnh báo không bao giờ nổ là cảnh báo không tồn
+    tại — và nó nhắm đúng cái cây đang chứa trạm."""
+    from pathlib import Path as _P
+    for d in ("OneDrive - Mot Cong Ty", "OneDrive-MotCongTy", "CloudStorage",
+              "My Drive (nguoi-dung)", "Dropbox", "SharePoint"):
+        assert DR._trong_cloud(_P("/nha/toi") / d / "repo"), f"trượt {d!r}"
+
+
+def test_canh_bao_cloud_KHONG_bat_ten_chi_TINH_CO_giong():
+    """Khớp theo tiền tố mà không neo ranh giới thì `onedriver-notes` cũng thành cloud."""
+    from pathlib import Path as _P
+    for d in ("onedriver-notes", "dropboxes", "mydrives"):
+        assert DR._trong_cloud(_P("/nha/toi") / d / "repo") is None, f"bắt oan {d!r}"
+
+
+def test_so_phien_ban_hai_phan_KHONG_thua_ba_phan():
+    """`_so("1.0") < _so("1.0.0")` là True nếu so tuple khác độ dài ⇒ trạm khai
+    `API_VERSION = "1.0"` bị đỏ mã 3 OAN, và cả bộ cài đứng vì một dấu chấm."""
+    assert DR._so("1.0") == DR._so("1.0.0")
+    assert DR._so("1.1") > DR._so("1.0.0")
+    assert DR._so("2.0") > DR._so("1.9.9")
+
+
+def test_so_phien_ban_PRE_RELEASE_khong_duoc_coi_la_ban_chinh():
+    """`1.0.0-rc1` == `1.0.0` thì một bản thử nghiệm lọt qua cổng hợp đồng."""
+    assert DR._so("1.0.0-rc1") < DR._so("1.0.0")
+
+
+def test_doctor_noi_ra_bien_env_KHONG_AI_DOC(tmp_path, monkeypatch):
+    """REVIEW-P2 N11 (nửa còn lại). `.env` nhận mọi dòng người ta gõ vào; `doctor` phải
+    nói thẳng dòng nào không có tác dụng, nhất là biến mà chỉ `.ps1` đọc."""
+    repo = tmp_path / "repo"
+    (repo / "scripts" / "lib").mkdir(parents=True)
+    (repo / "install.ps1").write_text("$env:MARKETING_STUDIO_PY\n", encoding="utf-8")
+    (repo / "scripts" / "lib" / "x.py").write_text(
+        'secret_env("VOICE_STATION")\n', encoding="utf-8")
+    so = DR.So()
+    (repo / DR.SP.LOCAL_CONFIG).write_text(json.dumps({"mode": "embedded"}), encoding="utf-8")
+    (repo / ".env").write_text("VOICE_STATION=/a\nMARKETING_STUDIO_PY=/b\nLA_HOAC=/c\n",
+                               encoding="utf-8")
+    DR._kham_env_khong_ai_doc(so, repo)
+    assert so.warn, "khong noi gi ve bien khong ai doc"
+    t = " ".join(so.warn)
+    assert "MARKETING_STUDIO_PY" in t and "LA_HOAC" in t
+    assert "VOICE_STATION" not in t, "bien DOC DUOC ma van bi keu la bao oan"
+    assert "PowerShell" in t
+
+
+def test_doctor_im_lang_khi_env_toan_bien_doc_duoc(tmp_path):
+    repo = tmp_path / "repo"
+    (repo / "scripts" / "lib").mkdir(parents=True)
+    (repo / "install.ps1").write_text("x", encoding="utf-8")
+    (repo / "scripts" / "lib" / "x.py").write_text('secret_env("VOICE_STATION")\n',
+                                                    encoding="utf-8")
+    (repo / DR.SP.LOCAL_CONFIG).write_text(json.dumps({"mode": "embedded"}), encoding="utf-8")
+    (repo / ".env").write_text("VOICE_STATION=/a\n", encoding="utf-8")
+    so = DR.So()
+    DR._kham_env_khong_ai_doc(so, repo)
+    assert not so.warn

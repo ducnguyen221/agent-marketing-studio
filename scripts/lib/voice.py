@@ -87,7 +87,7 @@ def python_exe(goc: Path | None = None) -> str:
     Biến đặt tay thắng `station.json`: máy đang chạy lịch thật khai đường tường minh, và
     một file cấu hình trong trạm không được phép đổi interpreter dưới chân nó.
     """
-    bien = (os.environ.get("OMNIVOICE_PY") or "").strip()
+    bien = (SP.secret_env("OMNIVOICE_PY") or "").strip()
     if bien:
         return str(Path(bien).expanduser())
     goc = goc or station()
@@ -115,10 +115,10 @@ def voices_dir(goc: Path | None = None) -> Path:
     `OMNIVOICE_DIR` (tên cũ, trỏ thẳng thư mục engine). Lệch một bước là `doctor` soi một
     kho giọng khác với kho mà engine đọc — và khi đó nó báo xanh cho một cấu hình hỏng.
     """
-    bien = (os.environ.get("VOICES_DIR") or "").strip()
+    bien = (SP.secret_env("VOICES_DIR") or "").strip()
     if bien:
         return Path(bien).expanduser()
-    cu = (os.environ.get("OMNIVOICE_DIR") or "").strip()
+    cu = (SP.secret_env("OMNIVOICE_DIR") or "").strip()
     if cu:
         return Path(cu).expanduser() / "voices"
     goc = goc or station()

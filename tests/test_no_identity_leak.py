@@ -40,8 +40,12 @@ _BS = chr(92)
 CAM_TUYET_DOI = [
     "C:" + _BS + "Users" + _BS,   # bất kỳ đường home Windows nào, không riêng của ai
     "/" + "home" + "/",           # tương đương trên Linux
-    # Ca hai chuoi tren deu DUNG TU MANH, khong viet literal: file nay nam trong cay
+    "/" + "Users" + "/",          # tương đương trên macOS — máy ĐÍCH của cuộc di trú này
+    # Ba chuoi tren deu DUNG TU MANH, khong viet literal: file nay nam trong cay
     # git-tracked nen chinh no bi quet. Viet literal = cong luon do vi chinh no.
+    # Luat cua macOS vang mat toi tan 20/09 (REVIEW-P2 N10): ca pha nay la de chay tren
+    # macOS va repo la PUBLIC da push, nen lo do se mo ra dung luc bat dau dung. Test nao
+    # can mot duong nha macOS GIA lam du lieu thi cung ghep tu manh nhu o day.
 ]
 # Email cá nhân: dùng MẪU chứ không viết literal. Bản trước ghi thẳng địa chỉ vào đây rồi
 # tự miễn trừ chính file này — tức cổng mang sẵn thứ nó đi tìm, và không bao giờ thấy.

@@ -45,3 +45,48 @@ def test_dau_sao_phep_nhan_khong_thanh_nghieng():
 def test_dam_van_chay_va_khong_bi_nghieng_an_mat():
     h = md_to_html("**đậm** và *nghiêng* trong một dòng")
     assert "<strong>đậm</strong>" in h and "<em>nghiêng</em>" in h
+
+
+# ══ REVIEW-P2 N15 — lỗi `brand:` phải là mã 2 ở MỌI nhánh ═══════════════════
+# `BR.doc()` nằm trong `try` nên thiếu khoá bắt buộc ra mã 2 đúng như commit tuyên bố.
+# Nhưng `BR.socials()` / `BR.icon()` chạy bên TRONG `build_html_full()`, và lời gọi đó
+# nằm NGOÀI `try` — nên `icon: linkedin` (không có trong kho) hay `socials[0]` thiếu
+# `url` cho exit 1 = "thử lại được", và lịch chạy retry mãi một lỗi `channel.yml`.
+
+import json as _json  # noqa: E402
+import subprocess as _sp  # noqa: E402
+import sys as _sys  # noqa: E402
+
+import pytest as _pt  # noqa: E402
+
+_BBH = ROOT / "scripts" / "pipeline" / "build_blog_html.py"
+
+
+def _du_an(tmp_path, brand_them: dict):
+    brand = {"site_name": "Trang Thu", "author": "Nguoi Viet",
+             "site_base": "https://vi-du.test", **brand_them}
+    (tmp_path / "brand.json").write_text(_json.dumps({"brand": brand}), encoding="utf-8")
+    (tmp_path / "bai.md").write_text("# Tieu de\n\nMot doan.\n", encoding="utf-8")
+    (tmp_path / "meta.json").write_text(_json.dumps({"slug": "bai", "title": "Tieu de"}),
+                                        encoding="utf-8")
+    return _sp.run([_sys.executable, str(_BBH), "--blog-md", str(tmp_path / "bai.md"),
+                    "--meta", str(tmp_path / "meta.json"),
+                    "--brand", str(tmp_path / "brand.json"),
+                    "--out", str(tmp_path / "ra.html")],
+                   capture_output=True, text=True, encoding="utf-8", errors="replace")
+
+
+@_pt.mark.parametrize("brand_them, vi_sao", [
+    ({"socials": [{"icon": "linkedin", "url": "https://vi-du.test/x"}]}, "icon la"),
+    ({"socials": [{"icon": "website"}]}, "socials thieu url"),
+])
+def test_brand_sai_o_socials_la_ma_2_khong_phai_1(tmp_path, brand_them, vi_sao):
+    r = _du_an(tmp_path, brand_them)
+    assert r.returncode == 2, f"{vi_sao}: mã {r.returncode}\n{r.stderr}"
+    assert not (tmp_path / "ra.html").exists(), "đã hỏng mà vẫn ghi ra file"
+
+
+def test_brand_du_thi_van_dung_duoc(tmp_path):
+    r = _du_an(tmp_path, {"socials": [{"icon": "website", "url": "https://vi-du.test"}]})
+    assert r.returncode == 0, r.stderr
+    assert (tmp_path / "ra.html").is_file()
