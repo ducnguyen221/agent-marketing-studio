@@ -33,6 +33,7 @@
 | **Trạm nào giữ gì · biến nào trỏ đâu** (ba trạm) | `knowledge/toolchains/STATION_LAYOUT.md` | `knowledge/toolchains/SECRETS.md` · `scripts/pipeline/doctor.py` |
 | **Xem một trạm đã điền trông thế nào** | `examples/README.md` | `examples/example-studio/` |
 | **Kiểm cây liên kết / tìm bài mồ côi** | `scripts/pipeline/check_tree.py` | `workflows/00_WORKFLOW_INDEX.md` |
+| **Dọn media quá hạn ở trạm** (giữ 14 ngày; audio chỉ dọn khi đã có bản web) | `scripts/pipeline/prune_media.py` | `knowledge/toolchains/SECRETS.md` (`WEB_REPO_DIR`) · `tests/test_prune_media.py` |
 | **Dựng chiến dịch CHẠY THEO LỊCH** (bản tin, series tự động) | `knowledge/toolchains/NEWS_PIPELINE.md` | `templates/README.md` · `scripts/pipeline/campaign_cfg.py` (bản chụp cấu hình) |
 | **Sửa nguồn cấu hình của một runner** | `knowledge/toolchains/NEWS_PIPELINE.md` §"Trước khi đổi nguồn cấu hình" | `scripts/pipeline/campaign_cfg.py` · `tests/test_campaign_cfg.py` |
 | **Đổi bộ màu / thiết kế của kênh** | `templates/station/_channel/channel.yml` (khối `theme:`) | `brand.md` (ghi nhận định thiết kế) — script chỉ đọc `theme:` khi kênh khai; kênh cũ giữ màu cứng trong code |

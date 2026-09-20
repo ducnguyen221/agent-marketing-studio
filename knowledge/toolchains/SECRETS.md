@@ -149,6 +149,7 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `MARKETING_STUDIO_HOME` | `run.ps1` — thư mục repo | `~/Code/agent-marketing-studio` |
 | `MARKETING_STUDIO_PY` | mọi `.ps1` gọi Python (`Find-Python`) | `<repo>/.venv` → `python` → `python3` → `py`; khai mà hỏng thì DỪNG |
 | `TG_CHAT` | `telegram_io.py` — tên chat trong file cấu hình | `mac_dinh` |
+| `WEB_REPO_DIR` | `scripts/pipeline/prune_media.py` — repo web để đối chiếu bản audio đã đăng (`<repo>/<kênh>/audio/<ngày>/`) | không đối chiếu được ⇒ GIỮ mọi audio quá hạn, ghi lý do vào báo cáo |
 | `CHROME_BIN` | `scripts/lib/media_tools.py` — Chrome/Edge/Chromium dựng ảnh | dò đường quen thuộc của hệ điều hành (macOS: gói `.app`) → PATH |
 | `FFMPEG_DIR` | `media_tools.py` — thư mục chứa `ffmpeg` + `ffprobe` | Windows: thư mục WinGet → PATH · macOS: PATH → `/opt/homebrew/bin`, `/usr/local/bin` |
 | `FFPROBE` | `media_tools.py` — đường `ffprobe` riêng | như `FFMPEG_DIR` |
