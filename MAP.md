@@ -33,6 +33,7 @@
 | **Trạm nào giữ gì · biến nào trỏ đâu** (ba trạm) | `knowledge/toolchains/STATION_LAYOUT.md` | `knowledge/toolchains/SECRETS.md` · `scripts/pipeline/doctor.py` |
 | **Xem một trạm đã điền trông thế nào** | `examples/README.md` | `examples/example-studio/` |
 | **Kiểm cây liên kết / tìm bài mồ côi** | `scripts/pipeline/check_tree.py` | `workflows/00_WORKFLOW_INDEX.md` |
+| **Sắp ghi file vào gốc trạm** (cấu hình theo máy, sổ, hàng đợi) | `scripts/lib/engine_dir.py` (vì sao `<trạm>/engine` không phải chỗ chứa file) | `scripts/pipeline/check_engine.py` (chạy cổng) · `knowledge/toolchains/STATION_LAYOUT.md` |
 | **Dọn media quá hạn ở trạm** (chỉ dọn khi CÓ BẰNG CHỨNG đã đăng; 14 ngày là sàn an toàn) | `docs/RETENTION.md` | `scripts/pipeline/prune_media.py` · `scripts/lib/publish_evidence.py` · `knowledge/toolchains/SECRETS.md` (`WEB_REPO_DIR`) |
 | **Dựng chiến dịch CHẠY THEO LỊCH** (bản tin, series tự động) | `knowledge/toolchains/NEWS_PIPELINE.md` | `templates/README.md` · `scripts/pipeline/campaign_cfg.py` (bản chụp cấu hình) |
 | **Sửa nguồn cấu hình của một runner** | `knowledge/toolchains/NEWS_PIPELINE.md` §"Trước khi đổi nguồn cấu hình" | `scripts/pipeline/campaign_cfg.py` · `tests/test_campaign_cfg.py` |

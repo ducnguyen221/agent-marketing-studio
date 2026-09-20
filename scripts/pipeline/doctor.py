@@ -15,9 +15,10 @@ Mã thoát theo hợp đồng ba trạm (`scripts/lib/studio_contract.py`):
 Phân biệt 2 với 3 là để người đọc biết mình đang ở đâu: "làm tiếp bước còn thiếu" khác
 hẳn "cái bạn đã làm đang sai".
 
-Bản này khám hai phần: **F17** (hai chế độ cài) và **hai trạm năng lực** của hợp đồng ba
-trạm — trạm giọng `agent-voice-studio`, trạm video `agent-video-studio` (cuối file).
-Phần sau nối vào qua `KHAM_THEM`, một danh sách, để thêm mục không phải sửa lại luồng.
+Bản này khám ba phần: **F17** (hai chế độ cài), **hai trạm năng lực** của hợp đồng ba
+trạm — trạm giọng `agent-voice-studio`, trạm video `agent-video-studio` — và **thư mục
+`<trạm>/engine`** (cuối file). Hai phần sau nối vào qua `KHAM_THEM`, một danh sách, để
+thêm mục không phải sửa lại luồng.
 """
 from __future__ import annotations
 
@@ -30,6 +31,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import engine_dir as ED  # noqa: E402
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import video as VIDEO  # noqa: E402
@@ -415,6 +417,25 @@ def kham_nang_luc(so: So, tram: Path):
 
 
 KHAM_THEM.append(kham_nang_luc)
+
+
+# ══ `<trạm>/engine` — hoặc không tồn tại, hoặc đủ bộ chạy ════════════════════════════
+#
+# Luật, sự cố đã trả giá và lý do mã 2: `scripts/lib/engine_dir.py`. Ở đây chỉ nối vào
+# `doctor` để máy THẬT báo đỏ, chứ không phải chỉ bộ test biết. Một luật sống trong tests
+# mà không sống trong `doctor` thì nó chỉ canh được các trạm giả.
+
+def kham_engine(so: So, tram: Path):
+    kq = ED.kiem(tram)
+    for x in kq["fail"]:
+        so.hong(x)
+    if kq["state"] == "vang":
+        so.ghi(f"engine: không có {kq['engine']} — `run.ps1` dùng đường lùi (hợp lệ)")
+    elif kq["state"] == "du":
+        so.ghi(f"engine: {kq['engine']} đủ bộ chạy ({', '.join(ED.RUNNER_BAT_BUOC)})")
+
+
+KHAM_THEM.append(kham_engine)
 
 
 def _in(kq: dict):

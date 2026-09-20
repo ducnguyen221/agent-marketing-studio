@@ -151,9 +151,10 @@ def config_path(station=None) -> Path:
 
     Vì sao KHÔNG để mặc định trong `<trạm>/engine/`: `run.ps1` của mọi chiến dịch coi sự
     **tồn tại** của `<trạm>/engine` là tín hiệu "engine đã dọn về trạm" và bỏ đường lùi sang
-    `~/.news/engine`. Đặt một file cấu hình vào đó là tự tạo thư mục ⇒ lượt lịch kế tiếp đi
-    tìm runner trong thư mục chỉ có JSON rồi thoát mã 2. Đã xảy ra thật đêm 20→21/09 và kịp
-    phát hiện trước lượt 19:00. Thư mục riêng `_agent-call/` không mang nghĩa nào với
+    engine dùng chung trong thư mục nhà của máy nguồn. Đặt một file cấu hình vào đó là tự
+    tạo thư mục ⇒ lượt lịch kế tiếp đi tìm runner trong thư mục chỉ có JSON rồi thoát mã 2.
+    Đã xảy ra thật đêm 20→21/09 và kịp phát hiện trước lượt 19:00; nay có cổng riêng canh —
+    `scripts/lib/engine_dir.py`. Thư mục riêng `_agent-call/` không mang nghĩa nào với
     `run.ps1`; nhánh `engine/` giữ lại để sau khi khối 3-A dọn engine về trạm thì cấu hình
     nằm cạnh engine vẫn đọc được.
     """

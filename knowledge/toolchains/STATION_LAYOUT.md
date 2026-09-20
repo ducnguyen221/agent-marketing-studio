@@ -60,6 +60,15 @@ một ca: quá `--timeout` thì nó trả `1` vì không còn mã con nào để
 `engine/` là **tên cố định**, luôn nằm ngay dưới gốc trạm. Bên trong chỉ có mã chạy lịch
 của trạm nội dung — không tài sản video, không thư viện nhạc.
 
+⚠️ **`engine/` mang ngữ nghĩa điều khiển, không chỉ là chỗ chứa file: hoặc nó KHÔNG tồn
+tại, hoặc nó đủ bộ chạy.** `run.ps1` chỉ hỏi `Test-Path <trạm>/engine`; thấy thư mục là nó
+bỏ đường lùi và đi tìm runner trong đó. Một thư mục rỗng — hay một thư mục ra đời vì có
+lệnh ghi file vào `<trạm>/engine/x.json` và lệnh đó tự tạo thư mục cha — bật đúng nhánh
+"đã dọn xong" trong khi chưa dọn gì, và **mọi** chiến dịch cùng chết một lúc ở lượt lịch kế
+tiếp. Cấu hình theo máy để ở `<trạm>/_agent-call/`, không để trong `engine/`. Cổng canh:
+`python scripts/pipeline/check_engine.py --check-station <đường>` (và `doctor` chạy cùng
+luật đó); luật đầy đủ + sự cố đã trả giá nằm trong docstring `scripts/lib/engine_dir.py`.
+
 `<kênh>/assets/` khác `out/`: `assets/` là nguyên liệu bạn bỏ vào và **luôn đi theo gói
 chuyển máy**; `out/` là sản phẩm, chỉ có phần *dấu vết đã đăng* (`*-top.json`,
 `*.published.json`) đi theo, còn mp4/ảnh thì không.
