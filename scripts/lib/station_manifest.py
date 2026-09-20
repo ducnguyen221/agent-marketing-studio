@@ -35,6 +35,32 @@ không dựng lại được", nên không loại cả thư mục mà lọc theo
                  của máy cũ, mang sang là hồi sinh một lượt chạy không còn tiến trình nào.
     truyen-out/  chỉ `_heal_state.json`; phần còn lại là cache TTS và video.
 
+## `engine/` — bộ chạy của trạm
+
+Từ P3, trạm mang theo **bộ chạy** ở `<trạm>/engine/` (`run-toptoday-hot.ps1`,
+`notify-run.ps1`, `compose_report.py`, `youtube_upload.py`, `paths.py`, `tests/`…). Nó
+KHÔNG phải sản phẩm dựng lại được: `run.ps1` của mỗi chiến dịch dò `<trạm>/engine` trước,
+và chỉ khi **không có** thư mục đó mới rơi về **đường lùi trong thư mục nhà của máy
+nguồn** — thứ không tồn tại trên máy mới. Gói bàn giao thiếu `engine/` thì máy mới hoặc
+dừng mã 2 ("khong thay runner"), hoặc — tệ hơn — chạy im lặng bằng một bộ mã khác.
+
+Vì `giu()` mặc định là "giữ", `engine/**` đã đi theo gói từ trước mà không ai khai; cái
+thiếu là **tiếng nói**: manifest không đếm nó, nên không có gì báo khi nó vắng. Nay nó có
+mục riêng trong `DEM_HA_TANG`, cùng hai thứ bị loại đích danh:
+
+    engine/_xlsx-pending/   hàng đợi dòng Excel khi sổ đang bị khoá — việc dở của máy cũ,
+                            `merge_excel_pending.py` ở máy mới sẽ ghi nhầm lượt chạy cũ
+                            vào sổ mới. `Auto Task.xlsx` (đã gộp) vẫn đi theo gói.
+    engine/__pycache__/     bytecode, `.tmp*/`, `*.bak*` — đã có luật chung loại rồi.
+
+## `launchd.json`
+
+Khai `<label> → <kênh>/<chiến dịch>` của bộ cài lịch macOS. Nằm ở gốc trạm, vài trăm byte,
+và **không suy lại được**: thiếu nó thì `install_launchd.py` dừng mã 2 vì không được phép
+đoán job nào thuộc chiến dịch nào (đoán sai = chạy đúng giờ vào nhầm chiến dịch, vẫn báo
+✅). Nó khớp theo **đường** chứ không theo tên, để một `launchd.json` nằm lạc trong kênh
+nào đó không bị tính là bản khai của trạm.
+
 ## `.git`
 
 Mặc định KHÔNG kèm (§P0 (b), phương án C). `--with-git` thì kèm nguyên `.git/` trừ file
@@ -53,8 +79,10 @@ FORMAT = 1
 
 # ── loại ở MỌI cấp ────────────────────────────────────────────────────────────────────
 
+# `_xlsx-pending`: hàng đợi dòng Excel của `engine/` khi sổ đang bị khoá — việc dở của
+# máy cũ. Mang sang là để `merge_excel_pending.py` ghi lượt chạy cũ vào sổ của máy mới.
 THU_MUC_BO = ("__pycache__", ".venv", "venv", ".pytest_cache", ".uat-web", "node_modules",
-              "_backup", "_task-backup", "_vtitles")
+              "_backup", "_task-backup", "_vtitles", "_xlsx-pending")
 THU_MUC_BO_MAU = ("_migrated-*", ".tmp*")
 
 # `campaign.html`/`index.html` là trang sinh ra từ nội dung; `*.lock` là khoá của tiến
@@ -217,14 +245,31 @@ DEM_TRANG_THAI = (
     ("Auto Task.xlsx", "Auto Task.xlsx", "mất lịch sử lượt chạy"),
 )
 
-HAU_QUA = {nhan: vi_sao for nhan, _, vi_sao in DEM_TRANG_THAI}
+# Hạ tầng của trạm: cũng không dựng lại được, nhưng khớp theo **ĐƯỜNG** tính từ gốc trạm
+# chứ không theo tên file. Neo theo đường là chủ đích: `launchd.json` chỉ có nghĩa khi nó
+# ở gốc trạm, và `engine/` chỉ có nghĩa khi nó là bộ chạy của trạm — một file trùng tên
+# nằm sâu trong một kênh không được tính là "gói đã có".
+DEM_HA_TANG = (
+    ("engine/**", "engine/*",
+     "máy mới không có bộ chạy: `run.ps1` của chiến dịch rơi về đường lùi trong thư mục "
+     "nhà của MÁY NGUỒN, hoặc dừng mã 2 'khong thay runner'"),
+    ("launchd.json", "launchd.json",
+     "không cài được lịch macOS: `install_launchd.py` không biết job nào thuộc "
+     "kênh/chiến dịch nào -> mã 2"),
+)
+
+HAU_QUA = {nhan: vi_sao for nhan, _, vi_sao in DEM_TRANG_THAI + DEM_HA_TANG}
 
 
 def kiem_ke(rels) -> dict:
-    """Đếm từng loại file trạng thái §4 có trong gói -> {nhãn: số lượng}."""
+    """Đếm từng loại file trạng thái §4 + hạ tầng có trong gói -> {nhãn: số lượng}."""
     ten = [r.split("/")[-1] for r in rels]
-    return {nhan: sum(1 for t in ten if fnmatch.fnmatch(t, mau))
-            for nhan, mau, _ in DEM_TRANG_THAI}
+    dem = {nhan: sum(1 for t in ten if fnmatch.fnmatch(t, mau))
+           for nhan, mau, _ in DEM_TRANG_THAI}
+    # `fnmatch` cho `*` ăn cả dấu `/`, nên `engine/*` phủ luôn `engine/tests/x.py`.
+    dem.update({nhan: sum(1 for r in rels if fnmatch.fnmatch(r, mau))
+                for nhan, mau, _ in DEM_HA_TANG})
+    return dem
 
 
 def thieu(dem: dict) -> list[str]:

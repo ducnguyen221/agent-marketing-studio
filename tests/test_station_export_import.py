@@ -96,6 +96,24 @@ CAY = [
     ("_migrated-20260907/cu.md", False),
     ("_task-backup/cu.md", False),
     (".tmp.driveupload/rac.bin", False),
+    ("launchd.json", True),                            # khai lịch macOS: không suy lại được
+    # `engine/` = BỘ CHẠY của trạm. Thiếu nó thì `run.ps1` rơi về đường lùi trong thư mục nhà
+    # của máy NGUỒN (không có ở máy mới) hoặc dừng mã 2. Media dựng lại được; cái này thì không.
+    ("engine/notify-run.ps1", True),
+    ("engine/run-toptoday-hot.ps1", True),
+    ("engine/brand-paths.ps1", True),
+    ("engine/paths.py", True),
+    ("engine/compose_report.py", True),
+    ("engine/youtube_upload.py", True),
+    ("engine/README.md", True),
+    ("engine/docs/FACEBOOK_SETUP.md", True),
+    ("engine/tests/test_engine_portable.py", True),
+    ("engine/__pycache__/paths.cpython-313.pyc", False),
+    ("engine/tests/__pycache__/x.cpython-313.pyc", False),
+    ("engine/run-toptoday-hot.ps1.bak-20260825", False),
+    ("engine/.tmp-engine-staging/nua-chung.py", False),
+    ("engine/_xlsx-pending/2026-09-20-1800.json", False),   # việc dở của máy cũ
+    ("logs/launchd/studio.marketing.daily-news-a.out.log", False),
     ("kenh-a/channel.yml", True),
     ("kenh-a/CAMPAIGNS.md", True),
     ("kenh-a/brand.md", True),
@@ -299,6 +317,57 @@ def test_manifest_dem_du_file_trang_thai_theo_ke_hoach(tram, tmp_path):
     assert ke["fb-state.json"] == 1
     assert ke["*.published.json"] == 1
     assert kq["state_files"] == ke
+
+
+# ── engine/: bộ chạy của trạm (3A-T02b) ───────────────────────────────────────────────
+
+ENGINE_TRONG_GOI = [rel for rel, co in CAY if co and rel.startswith("engine/")]
+
+
+def test_manifest_KHAI_RO_bo_chay_engine(tram, tmp_path):
+    """Kiểm kê phải ĐẾM `engine/`, không chỉ lặng lẽ gói nó theo.
+
+    `giu()` mặc định trả True nên `engine/**` vẫn vào gói kể cả khi không ai khai — và
+    đó đúng là vấn đề: không có gì BÁO khi nó vắng. Một gói thiếu bộ chạy trông y hệt
+    một gói đủ, cho tới lượt chạy đầu tiên trên máy mới lúc 18:00.
+    """
+    ke = _doc_manifest_sau_export(tram, tmp_path)
+    assert ke["engine/**"] == len(ENGINE_TRONG_GOI), ke
+    assert ke["launchd.json"] == 1, ke
+
+
+def _doc_manifest_sau_export(tram, tmp_path) -> dict:
+    STN.export_station(tram, tmp_path / "goi.zip")
+    return _doc_manifest(tmp_path / "goi.zip")["state_files"]
+
+
+def test_goi_THIEU_engine_thi_bao_hau_qua(tmp_path):
+    """Đột biến: bỏ `engine/` ra khỏi gói ⇒ phải có một dòng nói rõ hậu quả.
+
+    Không chặn (trạm chưa chuyển sang bộ chạy riêng thì đúng là không có `engine/`),
+    nhưng phải NÓI — vì lúc import thì máy cũ đã ở xa rồi.
+    """
+    thieu = SM.thieu(SM.kiem_ke(["CHANNELS.md", "kenh-a/channel.yml"]))
+    assert any("engine/**" in d for d in thieu), thieu
+    assert any("đường lùi" in d and "MÁY NGUỒN" in d for d in thieu), (
+        "phải nói rõ hậu quả: rơi về đường lùi của máy nguồn")
+    assert any("launchd.json" in d for d in thieu), thieu
+    # Và ngược lại: có engine thì không báo thiếu engine nữa.
+    du = SM.thieu(SM.kiem_ke(["engine/paths.py", "launchd.json"]))
+    assert not any("engine/**" in d or d.startswith("gói không có file nào thuộc loại "
+                                                    "'launchd.json'") for d in du), du
+
+
+def test_engine_di_theo_goi_NGUYEN_VEN_qua_import(tram, tmp_path):
+    """sha256 từng file bộ chạy phải khớp hai đầu: một byte lệch ở `.ps1` là một lượt
+    chạy hỏng lúc nửa đêm, không phải một lỗi build."""
+    out = tmp_path / "goi.zip"
+    STN.export_station(tram, out)
+    dich = tmp_path / "moi"
+    STN.import_station(out, dich)
+    for rel in ENGINE_TRONG_GOI:
+        assert (dich / rel).is_file(), rel
+        assert SM.sha256(dich / rel) == SM.sha256(tram / rel), rel
 
 
 # ── import ────────────────────────────────────────────────────────────────────────────
