@@ -25,7 +25,8 @@ CAM = {
     "Link đặt ĐẦU bài": "luật link Facebook đã đảo 04/09: thân bài 0 URL, link ở comment đầu",
     "post:youtube_video": "neo đã đổi thành post:youtube_desc (gen_article chỉ hiểu tên mới)",
     "fb_image.png": "đã gộp thành facebook/infographic.png — xem post_paths.LAYOUT",
-    # KHÔNG cấm "tobi_excel.py": nó xuất hiện HỢP LỆ trong khối cảnh báo đầu hai file .ps1
+    # Danh sách này cấm TÊN script đã bỏ. Tên nào còn xuất hiện hợp lệ trong khối cảnh
+    # báo đầu file .ps1 thì không được cho vào đây — cấm nó là bắt oan chính lời cảnh báo.
     # (đang giải thích vì sao chúng chưa chạy được). Cấm một cái tên vì nó cũ là sai —
     # chỉ cấm thứ còn tự xưng là LUẬT HIỆN HÀNH.
     "2 cổng duyệt": "đường ống có BA cổng (approval_gate.GATES); Cổng 3 bật khi bảng Content "

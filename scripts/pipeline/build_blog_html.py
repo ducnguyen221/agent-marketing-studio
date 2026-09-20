@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r"""build_blog_html.py — blog.md + meta + infographic.png → atlas.html self-contained.
 
-Bắt chước cấu trúc databricks-genai.html: topbar (brand Tobi), hero có infographic,
+Bố cục: topbar (nhận diện kênh, lấy từ `brand:` của channel.yml), hero có infographic,
 nội dung bài (H2/H3, bullet, callout, bảng), footer tác giả + social. Dark theme,
 font Be Vietnam Pro / Outfit / JetBrains Mono, dark tokens. Ảnh nhúng base64 để
 file chạy độc lập (mở trực tiếp được).
@@ -19,6 +19,10 @@ import os
 import re
 import sys
 import html as _html
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import brand as BR  # noqa: E402
 
 # Atlas category map (CONTRACT). meta.category override được.
 PILLAR_CAT = {"powerbi": "bi", "fabric": "de", "ai-agent": "ai", "career": "strategy"}
@@ -161,12 +165,17 @@ def md_to_html(md_text):
     return "\n".join(out)
 
 
-def _title(md_text, meta):
+def _title(md_text, meta, lui=""):
+    """Tiêu đề bài: H1 của markdown → `meta.title` → tên site (`lui`).
+
+    `lui` đến từ `brand.site_name`, không từ hằng số trong mã: một bài không có H1 mà
+    lấy tên site của người khác làm tiêu đề là đúng kiểu sai im lặng.
+    """
     for ln in md_text.replace("\r\n", "\n").split("\n"):
         m = re.match(r"^#\s+(.*)$", ln.strip())
         if m:
             return re.sub(r"\*\*(.+?)\*\*", r"\1", m.group(1)).strip()
-    return meta.get("title", "Học cùng Tobi")
+    return meta.get("title") or lui
 
 
 def _img_data_uri(png_path):
@@ -183,7 +192,7 @@ _TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} · Học cùng Tobi</title>
+<title>{title} · {site_name}</title>
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{page_url}">
 <meta name="author" content="{author}">
@@ -322,9 +331,9 @@ td{{color:var(--text-2)}}
 <body>
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="https://ducnguyen.vn/atlas/" target="_blank" rel="noopener">
-      <div class="brand-mark"><svg viewBox="0 0 576 512" fill="#fff"><path d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z"/></svg></div>
-      <div class="brand-text"><h1>Học cùng <span>Tobi</span></h1><p>COMPA Class · KPIM Academy</p></div>
+    <a class="brand" href="{site_home}" target="_blank" rel="noopener">
+      <div class="brand-mark">{icon_brand}</div>
+      <div class="brand-text">{brand_text}</div>
     </a>
     <span class="pill">{badge}</span>
   </div>
@@ -336,31 +345,7 @@ td{{color:var(--text-2)}}
     {body}
   </article>
 
-  <footer class="author-card" aria-labelledby="author-name">
-    <div class="author-avatar">
-      <img src="https://ducnguyen221.github.io/profile/assets/images/KPIM-Duc-Nguyen.png" alt="Nguyễn Quang Đức" loading="lazy" width="84" height="84">
-    </div>
-    <div class="author-info">
-      <div class="kicker">Tác giả · Author</div>
-      <h3 id="author-name">Nguyễn Quang Đức (Tobi)</h3>
-      <p>Data &amp; AI Engineer · Trainer tại KPIM Academy &amp; COMPA Class. Trang cá nhân tại
-        <a href="https://ducnguyen.vn" target="_blank" rel="noopener">ducnguyen.vn</a>.</p>
-    </div>
-    <nav class="social-grid" aria-label="Liên kết tác giả">
-      <a class="social-btn" href="https://ducnguyen.vn" target="_blank" rel="noopener" aria-label="Website" title="ducnguyen.vn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
-      </a>
-      <a class="social-btn" href="https://www.facebook.com/TobiNguyenData/" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
-      </a>
-      <a class="social-btn" href="https://www.youtube.com/@PowerBIHeroVn" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-      </a>
-      <a class="social-btn" href="https://ducnguyen221.github.io/profile/" target="_blank" rel="noopener" aria-label="E-Profile" title="E-Profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-      </a>
-    </nav>
-  </footer>
+  {author_card}
 </main>
 </body>
 </html>"""
@@ -407,11 +392,73 @@ def _cover_block(title, youtube_url, audio_src, cover_uri="", summary_img="", su
     return '<section class="media cover">' + "".join(inner) + '</section>'
 
 
+def _brand_text(b, site_name):
+    """Tên site ở topbar. `brand.a` + `brand.b` tách làm hai để nửa sau được tô nhấn —
+    cùng cặp khoá mà `build-index.ps1` của kênh đang dùng, không đẻ tên khoá thứ hai."""
+    a, bb = str(b.get("a") or "").strip(), str(b.get("b") or "").strip()
+    ten = (f"{_esc(a)} <span>{_esc(bb)}</span>" if a and bb else _esc(site_name))
+    chan = str(b.get("footer") or "").strip()
+    return f"<h1>{ten}</h1>" + (f"<p>{_esc(chan)}</p>" if chan else "")
+
+
+def _author_card(b):
+    """Chân trang tác giả, dựng TỪ CẤU HÌNH kênh.
+
+    Khối này từng là HTML cứng mang ảnh đại diện, tên thật và bốn nút mạng xã hội của
+    một người. Mọi trang do repo này dựng ra, ở bất kỳ máy nào, đều ký tên người đó.
+    """
+    ra = ['<footer class="author-card" aria-labelledby="author-name">']
+    avatar = str(b.get("author_avatar") or "").strip()
+    # `alt` của ảnh là TÊN NGƯỜI (`author`); dòng `<h3>` mới là tên hiển thị, có thể kèm
+    # biệt danh. Hai chỗ khác nhau có chủ đích — trình đọc màn hình đọc `alt`.
+    ten_that = str(b["author"]).strip()
+    ten = str(b.get("author_display") or ten_that).strip()
+    if avatar:
+        ra += ['    <div class="author-avatar">',
+               f'      <img src="{_esc(avatar)}" alt="{_esc(ten_that)}" loading="lazy" '
+               f'width="84" height="84">',
+               '    </div>']
+    ra += ['    <div class="author-info">',
+           '      <div class="kicker">Tác giả · Author</div>',
+           f'      <h3 id="author-name">{_esc(ten)}</h3>']
+    chuc = str(b.get("author_title") or "").strip()
+    nha = str(b.get("home_url") or "").strip()
+    if chuc and nha:
+        # Nhãn của link là TÊN MIỀN CỦA CHÍNH `home_url`, không phải của `site_base`:
+        # hai thứ trùng nhau ở kênh đầu tiên nên lấy nhầm vẫn ra đúng, và sẽ sai im
+        # lặng ở kênh đầu tiên đăng bài trên một tên miền khác trang cá nhân.
+        nhan = nha.split("//", 1)[-1].rstrip("/")
+        ra += [f'      <p>{_esc(chuc)}. Trang cá nhân tại',
+               f'        <a href="{_esc(nha)}" target="_blank" rel="noopener">'
+               f'{_esc(nhan)}</a>.</p>']
+    elif chuc:
+        ra += [f'      <p>{_esc(chuc)}</p>']
+    ra += ['    </div>']
+    xh = BR.socials(b)
+    if xh:
+        ra += ['    <nav class="social-grid" aria-label="Liên kết tác giả">']
+        for m in xh:
+            ra += [f'      <a class="social-btn" href="{_esc(m["url"])}" target="_blank" '
+                   f'rel="noopener" aria-label="{_esc(m["label"])}" title="{_esc(m["title"])}">',
+                   f'        {m["icon"]}',
+                   '      </a>']
+        ra += ['    </nav>']
+    ra += ['  </footer>']
+    return "\n".join(ra)
+
+
 def build_html_full(md_text, meta, infographic_png, youtube_url="", audio_src="",
-                    summary_img=""):
-    title = _title(md_text, meta)
+                    summary_img="", brand=None):
+    """`brand` là khối `brand:` của kênh (xem scripts/lib/brand.py) — BẮT BUỘC."""
+    b = brand if brand is not None else {}
+    thieu = [k for k in BR.KHOA_BAT_BUOC if not str(b.get(k) or "").strip()]
+    if thieu:
+        raise BR.BrandThieu(f"dựng trang thiếu khoá brand {thieu} — xem channel.yml của kênh")
+
+    site_name = str(b["site_name"]).strip()
+    title = _title(md_text, meta, site_name)
     pillar = (meta.get("pillar") or "").strip().lower()
-    badge = PILLAR_LABEL.get(pillar, meta.get("pillar") or "COMPA Class")
+    badge = PILLAR_LABEL.get(pillar, meta.get("pillar") or b.get("badge_default") or site_name)
     angle = meta.get("angle", "") or title
     body = md_to_html(md_text)
     img_uri = _img_data_uri(infographic_png)
@@ -421,17 +468,19 @@ def build_html_full(md_text, meta, infographic_png, youtube_url="", audio_src=""
     # --- Open Graph: can URL TUYET DOI. Anh nhung data-URI khong dung duoc cho og:image
     # (Facebook phai tai duoc anh qua HTTP), nen tro toi cover .jpg nam canh bai tren Pages.
     # Quy uoc da xac minh tren atlas that: <slug>.html / <slug>.jpg / <slug>.mp3 cung thu muc.
-    site = os.environ.get("ATLAS_BASE_URL", "https://ducnguyen.vn/atlas").rstrip("/")
+    site = BR.site_base(b)
     cat  = (meta.get("category") or PILLAR_CAT.get(pillar, "ai")).strip()
     slug = (meta.get("slug") or "").strip()
     page_url = f"{site}/content/{cat}/{slug}.html" if slug else site
-    og_image = f"{site}/content/{cat}/{slug}.jpg" if slug else ""
+    og_image = f"{site}/content/{cat}/{slug}.jpg" if slug else str(b.get("og_image") or "")
     return _TEMPLATE.format(
         title=_esc(title), desc=_esc(angle), badge=_esc(badge), angle=_esc(angle),
         hero_cls="", hero_img="", media=media, body=body,
         page_url=_esc(page_url), og_image=_esc(og_image),
-        author=_esc(os.environ.get("ATLAS_AUTHOR", "Nguyen Quang Duc")),
-        site_name=_esc(os.environ.get("ATLAS_SITE_NAME", "Hoc cung Tobi")),
+        author=_esc(b["author"]), site_name=_esc(site_name),
+        site_home=_esc(str(b.get("site_home") or (site + "/"))),
+        icon_brand=BR.ICON["brand"], brand_text=_brand_text(b, site_name),
+        author_card=_author_card(b),
         published=_esc(meta.get("schedule_date") or meta.get("published_date") or ""))
 
 
@@ -446,6 +495,9 @@ def main(argv=None):
                          "Đặt ở đầu bài. Không nhúng base64 (ảnh lớn) và không được trùng "
                          "'<slug>.jpg' vì findThumb sẽ nhặt nhầm làm cover card.")
     ap.add_argument("--audio-src", default="", help="đường dẫn tương đối tới mp3 trong atlas (vd <slug>.mp3)")
+    ap.add_argument("--brand", default="",
+                    help="file khai khối `brand:` (json/yml). Bỏ trống thì đi ngược lên từ "
+                         "--meta tìm channel.yml của kênh.")
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
 
@@ -453,8 +505,14 @@ def main(argv=None):
     with open(args.meta, encoding="utf-8-sig") as f:
         meta = json.load(f)
 
+    try:
+        b = BR.doc(args.brand or None, tu=args.meta)
+    except BR.BrandThieu as e:
+        sys.stderr.write(f"build_blog_html: {e}\n")
+        return 2
+
     html = build_html_full(md_text, meta, args.infographic, args.youtube_url, args.audio_src,
-                           args.summary_img)
+                           args.summary_img, brand=b)
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write(html)

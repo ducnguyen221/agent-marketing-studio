@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r"""make_podcast_video.py (v2) — Video = AUDIO PODCAST + slide xen kẽ ẢNH THẬT & INFOGRAPHIC.
 
-- Lồng thẳng audio.mp3 (podcast my-voice), KHÔNG sinh narration mới.
+- Lồng thẳng audio.mp3 có sẵn, KHÔNG sinh narration mới.
 - Slide xen kẽ: ~50% ẢNH THẬT (tải từ Openverse — CC, theo keyword, có credit) + ~50% INFOGRAPHIC/SmartArt
   (card on-brand style ai-news: Inter, near-black, grid+orb, accent cyan/teal).
 - Slide đầu = thumbnail.png (hiện tiêu đề blog).
@@ -22,8 +22,11 @@ import argparse, json, os, shutil, subprocess, sys, tempfile, urllib.parse, urll
 
 # Chrome/ffmpeg dò ở MỘT chỗ cho mọi hệ điều hành (CHROME_BIN, FFMPEG_DIR): scripts/lib/media_tools.py
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+import brand as BR  # noqa: E402
 import media_tools as MT  # noqa: E402
-UA = "Mozilla/5.0 tobi-pipeline"
+# User-Agent trung tính: Openverse chỉ cần biết là một công cụ dựng video,
+# không cần biết của ai.
+UA = "Mozilla/5.0 marketing-studio/1.0"
 OPENVERSE = "https://api.openverse.org/v1/images/"
 
 
@@ -135,10 +138,21 @@ html,body{{width:{W}px;height:{H}px;overflow:hidden}}
  background:rgba(0,0,0,.35);padding:4px 10px;border-radius:8px}}
 </style></head><body><div id="root">"""
 
-_TAIL = '<div class="site">COMPA Class · ducnguyen.vn/atlas</div></div></body></html>'
+def _tail(b):
+    """Chân slide. Lấy từ `brand.footer_video` → `brand.footer` → `site_name`."""
+    chan = _esc(b.get("footer_video") or b.get("footer") or b["site_name"])
+    return f'<div class="site">{chan}</div></div></body></html>'
 
 
-def infographic_html(scene, idx, W, H):
+def _brand_block(b):
+    """Khối nhận diện góc trái mọi slide — tên site từ cấu hình kênh."""
+    a, bb = str(b.get("a") or "").strip(), str(b.get("b") or "").strip()
+    ten = f"{_esc(a)} <span>{_esc(bb)}</span>" if a and bb else _esc(b["site_name"])
+    return (f'<div class="brand"><span class="mark">{BR.ICON["brand"]}</span>'
+            f'<div class="n">{ten}</div></div>')
+
+
+def infographic_html(scene, idx, W, H, b):
     kind = scene.get("kind", "concept")
     title = _esc(scene.get("title", ""))
     kick = _esc(scene.get("kick", "Vibe Coding"))
@@ -163,22 +177,22 @@ def infographic_html(scene, idx, W, H):
         content = f'<div class="sec"><div class="chip">{kick}</div><h1 style="font-size:{hsize}px">{title}</h1>{panel}</div>'
     head = _HEAD.format(W=W, H=H)
     deco = '<div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div>'
-    brand = '<div class="brand"><span class="mark"><svg viewBox="0 0 576 512" fill="#fff"><path d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z"/></svg></span><div class="n">Học cùng <span>Tobi</span></div></div>'
-    return head + deco + brand + f'<div class="idx">{idx:02d}</div>' + content + _TAIL
+    brand = _brand_block(b)
+    return head + deco + brand + f'<div class="idx">{idx:02d}</div>' + content + _tail(b)
 
 
-def image_html(scene, img_path, credit, idx, W, H):
+def image_html(scene, img_path, credit, idx, W, H, b):
     kick = _esc(scene.get("kick", ""))
     cap = _esc(scene.get("caption", scene.get("title", "")))
     head = _HEAD.format(W=W, H=H)
     fileurl = MT.file_url(img_path)
-    brand = '<div class="brand"><span class="mark"><svg viewBox="0 0 576 512" fill="#fff"><path d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z"/></svg></span><div class="n">Học cùng <span>Tobi</span></div></div>'
+    brand = _brand_block(b)
     cr = f'<div class="credit">{_esc(credit)}</div>' if credit else ""
     body = (f'<div class="photo" style="background-image:url(\'{fileurl}\')"></div><div class="shade"></div>'
             + brand
             + f'<div class="icap"><div class="chip">{kick}</div><h2>{cap}</h2></div>'
             + f'<div class="idx">{idx:02d}</div>' + cr)
-    return head + body + _TAIL
+    return head + body + _tail(b)
 
 
 def render_slide(html, out_png, W, H):
@@ -203,7 +217,7 @@ def render_slide(html, out_png, W, H):
 
 # --------------------------------------------------------- assemble (xfade)
 
-def build_video(audio, scenes, out, base_dir, W, H, T=0.5, use_images=True):
+def build_video(audio, scenes, out, base_dir, W, H, b, T=0.5, use_images=True):
     dur = audio_duration(audio)
     if dur <= 0:
         raise RuntimeError("Không đọc được thời lượng audio")
@@ -235,14 +249,14 @@ def build_video(audio, scenes, out, base_dir, W, H, T=0.5, use_images=True):
                     # ảnh nguyên (vd thumbnail) — copy thẳng, scale ở ffmpeg
                     shutil.copyfile(img, p)
                 elif img:
-                    render_slide(image_html(s, img, credit, i + 1, W, H), p, W, H)
+                    render_slide(image_html(s, img, credit, i + 1, W, H, b), p, W, H)
                 else:  # fallback -> infographic nếu ảnh fail
                     s2 = dict(s); s2["kind"] = "concept"
                     s2.setdefault("title", s.get("caption", ""))
                     s2.setdefault("lines", [])
-                    render_slide(infographic_html(s2, i + 1, W, H), p, W, H)
+                    render_slide(infographic_html(s2, i + 1, W, H, b), p, W, H)
             else:
-                render_slide(infographic_html(s, i + 1, W, H), p, W, H)
+                render_slide(infographic_html(s, i + 1, W, H, b), p, W, H)
             pngs.append(p)
 
         # Chrome PNG có zlib stream làm ffmpeg lỗi "inflate -3" khi -loop -> convert sang JPG (không zlib).
@@ -304,8 +318,16 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--size", default="1280x720")
     ap.add_argument("--no-images", action="store_true")
+    ap.add_argument("--brand", default="",
+                    help="file khai khối `brand:` (json/yml). Bỏ trống thì đi ngược lên từ "
+                         "--scenes tìm channel.yml của kênh.")
     a = ap.parse_args(argv)
     W, H = (int(x) for x in a.size.lower().split("x"))
+    try:
+        b = BR.doc(a.brand or None, tu=a.meta or a.scenes)
+    except BR.BrandThieu as e:
+        sys.stderr.write(f"make_podcast_video: {e}\n")
+        return 2
     with open(a.scenes, encoding="utf-8-sig") as f:
         scenes = json.load(f)
     # Đường tương đối trong scenes.json phân giải theo thư mục CỦA CHÍNH scenes.json,
@@ -313,7 +335,7 @@ def main(argv=None):
     # audio dời sang atlas/ còn scenes.json ở gốc thì mọi "src" đều trỏ hụt — và ảnh
     # cover rơi mất mà video vẫn dựng ra, không ai báo.
     base_dir = os.path.dirname(os.path.abspath(a.scenes))
-    out = build_video(a.audio, scenes, a.out, base_dir, W, H, use_images=not a.no_images)
+    out = build_video(a.audio, scenes, a.out, base_dir, W, H, b, use_images=not a.no_images)
     print(json.dumps({"out": out, "scenes": len(scenes)}, ensure_ascii=False))
     print(f"OK {out}")
     return 0

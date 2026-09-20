@@ -31,7 +31,7 @@ def campaign(tmp_path):
     B = C / "AST-001_slug"
     B.mkdir(parents=True)
     M.write_fm(C / "campaign.md",
-               {"id": "CMP-2609-x", "name": "Chiến dịch thử", "channel": "tobi",
+               {"id": "CMP-2609-x", "name": "Chiến dịch thử", "channel": "kenh-b",
                 "channels": ["web_blog", "youtube"],
                 "kpi_target": {"blog": 300, "youtube": 150}},
                "\n<!-- CONTENT:BEGIN -->\n" + M.render_table(COT, [{

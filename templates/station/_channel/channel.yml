@@ -113,14 +113,39 @@ theme:
   email_accent:              # nền EMAIL là TRẮNG: màu ở đây phải đủ tương phản để đọc.
                              # Đo thật: #00f0ff chỉ đạt 1,4:1 — không dùng được cho chữ.
 
+# ── DANH TÍNH của kênh. Bốn script dựng sản phẩm công khai (`build_blog_html`,
+# `gen_infographic`, `make_podcast_video`, `blog_gates`) đọc khối này và **DỪNG với mã 2**
+# nếu thiếu `site_name` / `author` / `site_base`.
+#
+# Vì sao fail-closed chứ không có giá trị mặc định: ba khoá này từng là hằng số trong mã
+# — tên miền, tên người, tên tổ chức của một chủ repo. Ai clone về cũng xuất bản dưới
+# danh nghĩa người đó mà không hề biết. Một mặc định "chạy được ngay" là cách chắc chắn
+# nhất để khuôn không bao giờ được điền. Xem `scripts/lib/brand.py`.
 brand:
+  site_name:        # TÊN SITE đầy đủ, vào <title> và og:site_name. BẮT BUỘC
   a:                # nửa đầu tên hiển thị, vd "AI"
-  b:                # nửa sau, vd "News"
+  b:                # nửa sau, vd "News" — được tô nhấn ở topbar/ảnh bìa
+  footer:           # dòng chân trang/chân ảnh, vd "Tên tổ chức · Tên chương trình"
+  footer_image:     # chân ẢNH BÌA, nếu muốn khác `footer`
+  footer_video:     # chân SLIDE VIDEO, nếu muốn khác `footer`
+  author_display:   # tên hiện ở chân trang, nếu khác `author` (vd có biệt danh)
+  author_title:     # một dòng giới thiệu tác giả ở chân trang
+  author_avatar:    # URL ảnh đại diện. Để trống = không hiện khối ảnh
+  og_image:         # ảnh og: mặc định khi bài chưa có slug
+  badge_default:    # nhãn hiện ở góc khi bài không khai `pillar`
+  # Bộ tên tổ chức mà cổng G22 đi tìm trong BẢN CÔNG KHAI. Để trống = G22 báo `thiếu`
+  # (không đo được), KHÔNG báo xanh — xanh giả còn tệ hơn không có cổng.
+  org_names: []     # vd ["Tên Công Ty", "Tên Chương Trình"]
+  # Nút mạng xã hội ở chân trang. `icon` chọn theo TÊN trong kho
+  # `scripts/lib/brand.py:ICON` (website · facebook · youtube · profile) — cố ý không
+  # cho dán SVG thô vào đây, vì nội dung file này đi thẳng vào HTML xuất bản.
+  socials: []       # vd [{icon: website, url: "https://…", label: Website}]
   repo:             # thư mục repo web trên máy (nếu kênh có trang web)
   gh_repo:          # owner/repo trên GitHub
-  site_base:        # URL gốc, KHÔNG có dấu / cuối — site_root và page_weekly_base suy ra từ đây
+  site_base:        # BẮT BUỘC. URL gốc, KHÔNG dấu / cuối — site_root và page_weekly_base
+                    # suy ra từ đây; <link canonical> và og:url cũng ghép từ đây
   home_url:         # trang chủ của tác giả/tổ chức — hiện ở nav và chân trang
-  author:           # ai tuyển chọn/biên tập, hiện ở chân trang ("Tuyển chọn bởi …")
+  author:           # BẮT BUỘC. Ai tuyển chọn/biên tập; vào <meta name="author"> và chân trang
   script_url:       # Apps Script nhận đăng ký nhận bản tin (nếu có)
   audio_keep:       # giữ lại bao nhiêu file audio cũ
   # Để TRỐNG là KHÔNG nhúng pixel nào. `build-index.ps1` chỉ sinh khối Meta Pixel khi khoá

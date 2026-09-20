@@ -1,6 +1,6 @@
 # Output Style — COMPA Class Blog (giọng Tobi / Đức)
 
-> Style chuẩn cho **bài blog học thuật** đăng compaclass.com → Atlas (ducnguyen.vn).
+> Style chuẩn cho **bài blog học thuật** đăng trang blog của kênh (Atlas).
 > Rút từ 5 bài thật của tác giả (vibe coding, AI×Data Analytics, GitHub alternatives, open-source repo, 2024→2026 AI).
 > Agent PHẢI đọc file này (kể cả lăng kính **tobi-viewpoint** ở mục "H2 góc nhìn thẳng" bên dưới — không có file riêng) trước khi viết. Bài lệch style = viết lại.
 
@@ -9,7 +9,7 @@
 ## VOICE PROFILE (machine-readable — downstream consume trực tiếp)
 
 ```yaml
-author: Nguyễn Quang Đức (Đức / Tobi) — CEO KPIM, Co-Founder COMPA
+author: ĐẶT THEO `brand.author` CỦA KÊNH — không viết cứng tên ai vào đây
 xung_ho:
   tac_gia: "Đức" (ngôi 3 nhẹ, kể trải nghiệm) HOẶC "mình" (thân mật). KHÔNG dùng "tôi" cứng xuyên suốt.
   doc_gia: "bạn" / "anh chị em" (blog non-tech) — chọn 1 và nhất quán trong 1 bài.

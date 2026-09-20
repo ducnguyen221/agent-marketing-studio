@@ -158,8 +158,13 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `VIDEO_STATION` | `studio_paths.video_station()` — gốc trạm video (`agent-video-studio`) | `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station` → coi như chưa cài |
 | `VIDEO_ROOT` | tên CŨ của `VIDEO_STATION`, còn đọc được để không gãy máy đang chạy | — |
 | `OPCOS_CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | đường mặc định trong thư mục nhà |
-| `ATLAS_BASE_URL`, `ATLAS_SITE_NAME`, `ATLAS_AUTHOR` | `build_blog_html.py`, `blog_gates.py` — URL gốc, tên site, tác giả của trang blog | giá trị mặc định trong code |
 | `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |
+
+> **Bỏ 20/09/2026 — `ATLAS_BASE_URL` · `ATLAS_SITE_NAME` · `ATLAS_AUTHOR`.** URL gốc, tên
+> site và tác giả của trang blog nay đọc từ khối `brand:` trong `channel.yml` của kênh
+> (`scripts/lib/brand.py`), và **thiếu là dừng với mã 2**. Ba biến cũ có giá trị mặc định
+> ngay trong mã là danh tính thật của một chủ repo: ai clone về cũng xuất bản dưới danh
+> nghĩa người đó mà không hề biết, vì chẳng có gì báo là mình chưa khai.
 
 launchd chạy với PATH tối giản: ffmpeg cài qua Homebrew vẫn được dò ở thư mục Homebrew,
 nhưng công cụ đặt chỗ khác thì phải khai biến ở plist (xem bước ② ở trên).

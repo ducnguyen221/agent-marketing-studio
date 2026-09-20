@@ -27,7 +27,10 @@ import post_paths as PP  # noqa: E402
 import fb_format as FF  # noqa: E402
 
 BAI_DO = ROOT / "fixtures" / "bai_do"
-HOME = "ducnguyen.vn"
+HOME = "vidu.vn"
+# G22 đo theo bộ tên tổ chức do KÊNH khai (`brand.org_names`). Trước 20/09 bộ tên này là
+# hằng số trong mã và là tên thật của chủ repo — xem scripts/lib/brand.py.
+TO_CHUC = ["Ví Dụ Corp", "Vidu Academy"]
 
 
 def _theo_ma(result):
@@ -38,7 +41,7 @@ def _theo_ma(result):
 
 @pytest.fixture(scope="module")
 def do():
-    return _theo_ma(G.run_cmd(BAI_DO, HOME, stage="release"))
+    return _theo_ma(G.run_cmd(BAI_DO, HOME, stage="release", org_names=TO_CHUC))
 
 
 def test_fixture_do_ton_tai():
@@ -123,7 +126,7 @@ def bai_xanh(tmp_path):
         FF.bold("Tiêu đề đậm") + "\n\n" + "Nội dung bài. " * 400 + "\n\n"
         + "#AI #Data #CongNghe #Prompt #Agent #HocMai\n", encoding="utf-8")
     (PP.p(d, "fb_comment")).write_text(
-        "Bản đầy đủ 👇\nhttps://ducnguyen.vn/atlas/content/ai/x.html\n", encoding="utf-8")
+        "Bản đầy đủ 👇\nhttps://vidu.vn/atlas/content/ai/x.html\n", encoding="utf-8")
     (PP.p(d, "podcast")).write_text("từ " * 850, encoding="utf-8")
     (PP.p(d, "scenes")).write_text(
         json.dumps([{"kind": "concept", "title": f"Scene {i}"} for i in range(8)]),
@@ -425,3 +428,38 @@ def test_G24_prompt_du_thi_xanh(bai_xanh):
 def test_G24_bai_khong_dang_facebook_thi_khong_doi_prompt(bai_xanh):
     PP.p(bai_xanh, "fb_post").unlink()
     assert _theo_ma_stage(bai_xanh, "write")["G24"]["status"] == "missing"
+
+
+# ------------------------------------------------------- G22 theo cấu hình kênh
+
+def test_G22_do_theo_bo_ten_cua_KENH():
+    """Tên tổ chức là CẤU HÌNH, không phải hằng số trong mã.
+
+    Trước 20/09 bộ tên nằm cứng trong `blog_gates.py` và là tên thật của chủ repo: vừa
+    là rò danh tính trong một repo public, vừa làm cổng này vô dụng ở mọi máy khác —
+    người clone về không bao giờ bị cảnh báo vì tên tổ chức CỦA HỌ lọt ra bản công khai.
+    """
+    import tempfile
+    from pathlib import Path as P
+    d = P(tempfile.mkdtemp())
+    (d / "facebook").mkdir()
+    (d / "facebook" / "post.txt").write_text("Bài do Acme Corp thực hiện.\n", encoding="utf-8")
+    r = _theo_ma(G.run_cmd(d, HOME, stage="release", org_names=["Acme Corp"]))["G22"]
+    assert r["status"] == "fail" and r["measured"] == 1
+    r2 = _theo_ma(G.run_cmd(d, HOME, stage="release", org_names=["Beta Ltd"]))["G22"]
+    assert r2["status"] == "pass"
+    import shutil
+    shutil.rmtree(d, ignore_errors=True)
+
+
+def test_G22_khong_khai_ten_thi_bao_THIEU_chu_khong_bao_xanh():
+    """Không có bộ tên thì cổng không đo được gì. Báo xanh ở đây là xanh giả —
+    người đọc báo cáo sẽ tin rằng bản công khai đã được soi, trong khi chưa hề."""
+    r = _theo_ma(G.run_cmd(BAI_DO, HOME, stage="release", org_names=[]))["G22"]
+    assert r["status"] == "missing"
+    assert "org_names" in r["note"]
+
+
+def test_link_tran_co_gach_noi_chi_dem_MOT_lan():
+    """`vi-du.vn/x` từng bị đếm hai lần: một lần trọn, một lần từ sau dấu gạch nối."""
+    assert G._URL_TRAN.findall("xem vi-du.vn/atlas/x roi thoi") == ["vi-du.vn/atlas/x"]

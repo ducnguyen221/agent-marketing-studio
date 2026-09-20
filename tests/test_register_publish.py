@@ -34,22 +34,22 @@ def _chay(post, *a, mong_doi=0):
 @pytest.fixture
 def post(tmp_path):
     """Cây tối thiểu: kênh → chiến dịch → bài, đủ để register_publish chạy."""
-    K = tmp_path / "st" / "tobi"
+    K = tmp_path / "st" / "kenh-b"
     C = K / "CMP-2609-x"
     B = C / "AST-001_slug"
     PP.make_dirs(B)
     (K / "channel.yml").write_text(
-        "schema: channel/1\nid: tobi\npillars: [ai-agent]\n"
+        "schema: channel/1\nid: kenh-b\npillars: [ai-agent]\n"
         "platforms:\n"
         "  - channel: youtube\n    post_formats: [youtube_video]\n"
         "  - channel: web_blog\n    post_formats: [blog_article]\n"
         "  - channel: facebook\n    post_formats: [facebook_post]\n", encoding="utf-8")
     (K / "CAMPAIGNS.md").write_text(
-        "---\nschema: campaigns/1\nchannel: tobi\n---\n\n<!-- CAMPAIGNS:BEGIN -->\n"
+        "---\nschema: campaigns/1\nchannel: kenh-b\n---\n\n<!-- CAMPAIGNS:BEGIN -->\n"
         "| campaign_id | bài | đã đăng |\n|---|---|---|\n| CMP-2609-x | 0 | 0 |\n"
         "<!-- CAMPAIGNS:END -->\n", encoding="utf-8")
     (C / "campaign.md").write_text(
-        "---\nid: CMP-2609-x\nchannel: tobi\nid_prefix: AST\n"
+        "---\nid: CMP-2609-x\nchannel: kenh-b\nid_prefix: AST\n"
         "channels: [web_blog, youtube, facebook]\nkpi: {}\n---\n\n<!-- CONTENT:BEGIN -->\n"
         "| content_id | status | g2 | published |\n|---|---|---|---|\n"
         "| AST-001 | in_production |  |  |\n<!-- CONTENT:END -->\n", encoding="utf-8")

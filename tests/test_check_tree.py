@@ -25,21 +25,21 @@ PY = sys.executable
 def cay(tmp_path):
     """Cây ĐÚNG: 1 kênh · 1 chiến dịch · 1 bài."""
     S = tmp_path / "st"
-    K = S / "tobi"
+    K = S / "kenh-b"
     C = K / "CMP-2609-x"
     B = C / "AST-001_slug"
     PP.make_dirs(B)
     M.write_fm(S / "CHANNELS.md", {"schema": "channels/1", "channels": [
-        {"id": "tobi", "label": "Tobi", "path": "./tobi", "status": "active"}]}, "# Sổ\n")
+        {"id": "kenh-b", "label": "Kênh B", "path": "./kenh-b", "status": "active"}]}, "# Sổ\n")
     (K / "channel.yml").write_text(
-        "schema: channel/1\nid: tobi\npillars: [ai-agent]\n"
+        "schema: channel/1\nid: kenh-b\npillars: [ai-agent]\n"
         "platforms:\n  - channel: web_blog\n    post_formats: [blog_article]\n",
         encoding="utf-8")
-    M.write_fm(K / "CAMPAIGNS.md", {"schema": "campaigns/1", "channel": "tobi"},
+    M.write_fm(K / "CAMPAIGNS.md", {"schema": "campaigns/1", "channel": "kenh-b"},
                "\n<!-- CAMPAIGNS:BEGIN -->\n| campaign_id | bài | đã đăng |\n|---|---|---|\n"
                "| CMP-2609-x | 1 | 0 |\n<!-- CAMPAIGNS:END -->\n")
     M.write_fm(C / "campaign.md",
-               {"id": "CMP-2609-x", "channel": "tobi", "id_prefix": "AST",
+               {"id": "CMP-2609-x", "channel": "kenh-b", "id_prefix": "AST",
                 "content_pillar": "ai-agent", "channels": ["web_blog"], "status": "proposed"},
                "\n<!-- CONTENT:BEGIN -->\n| content_id | status | g1 | published | folder |\n"
                "|---|---|---|---|---|\n| AST-001 | proposed |  |  | ./AST-001_slug/ |\n"
@@ -49,7 +49,7 @@ def cay(tmp_path):
     M.write_fm(B / "research.md", {"content_id": "AST-001", "campaign_id": "CMP-2609-x"}, "")
     (B / "content.md").write_text("## post:blog_article\nA\n", encoding="utf-8")
     json.dump({"schema": "publish/2", "post_id": "AST-001", "campaign_id": "CMP-2609-x",
-               "channel_id": "tobi", "posts": []},
+               "channel_id": "kenh-b", "posts": []},
               (B / "publish.json").open("w", encoding="utf-8"), ensure_ascii=False)
     return S, K, C, B
 
@@ -70,7 +70,7 @@ def test_path_trong_CHANNELS_chet(cay):
 def test_thu_muc_chien_dich_mo_coi(cay):
     S, K, _, _ = cay
     (K / "CMP-2609-y").mkdir()
-    M.write_fm(K / "CMP-2609-y" / "campaign.md", {"id": "CMP-2609-y", "channel": "tobi"}, "")
+    M.write_fm(K / "CMP-2609-y" / "campaign.md", {"id": "CMP-2609-y", "channel": "kenh-b"}, "")
     assert any("mồ côi" in x and "CMP-2609-y" in x for x in CT.run_cmd(S).do)
 
 

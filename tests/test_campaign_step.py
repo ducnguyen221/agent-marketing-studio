@@ -464,9 +464,9 @@ def test_writer_skills_duoc_thay_vao_cho_dien(tmp_path):
         writer_cmd=f'{_PY} -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
                    f'sys.argv[2],encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
                    f'"{ra}" "{{skills}}"',
-        writer_skills=["kpim-skills:blog-writing", "x:y"])
+        writer_skills=["vi-du-skills:blog-writing", "x:y"])
     CS.step_write(campaign, bot=BotGia())
-    assert ra.read_text(encoding="utf-8") == "kpim-skills:blog-writing,x:y"
+    assert ra.read_text(encoding="utf-8") == "vi-du-skills:blog-writing,x:y"
 
 
 def test_khong_khai_skills_thi_cho_dien_thanh_RONG(tmp_path):
