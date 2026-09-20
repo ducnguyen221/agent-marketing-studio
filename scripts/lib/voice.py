@@ -109,10 +109,18 @@ def python_exe(goc: Path | None = None) -> str:
 
 
 def voices_dir(goc: Path | None = None) -> Path:
-    """Kho giọng: `VOICES_DIR` → `<trạm>/<engine_dir>/voices`."""
+    """Kho giọng: `VOICES_DIR` → `<thư mục engine>/voices`.
+
+    Thứ tự này ĐI THEO `voice_studio._env.voices_dir()` từng bước, kể cả nhánh
+    `OMNIVOICE_DIR` (tên cũ, trỏ thẳng thư mục engine). Lệch một bước là `doctor` soi một
+    kho giọng khác với kho mà engine đọc — và khi đó nó báo xanh cho một cấu hình hỏng.
+    """
     bien = (os.environ.get("VOICES_DIR") or "").strip()
     if bien:
         return Path(bien).expanduser()
+    cu = (os.environ.get("OMNIVOICE_DIR") or "").strip()
+    if cu:
+        return Path(cu).expanduser() / "voices"
     goc = goc or station()
     return goc / str(station_config(goc).get("engine_dir") or "omnivoice") / "voices"
 

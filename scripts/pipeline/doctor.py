@@ -268,13 +268,17 @@ def _kham_profile(so: So, goc_giong: Path, khai_kenh):
     if not kho.is_dir():
         so.thieu(f"kho giọng {kho} chưa có — tạo profile bằng `voice-studio make-profile`.")
         return
-    co = {p.name.split(".")[0] for p in kho.iterdir()}
+    # Một profile tồn tại ⇔ có `<tên>.wav` trong kho — ĐÚNG luật mà engine giọng dùng
+    # (`voice_studio.profiles.list_profiles` chỉ đếm `.wav`, `_exists` cũng chỉ hỏi `.wav`).
+    # Nới ở đây (nhận cả `.txt` lẻ) là tự tạo XANH GIẢ: doctor bảo ổn, rồi `speak` trả mã 2
+    # giữa lượt chạy. Cổng phải đo đúng thứ engine đo, không phải thứ trông hợp lý.
+    co = {p.stem for p in kho.glob("*.wav") if not p.name.startswith("_")}
     for kenh, khai in khai_kenh:
         ten = str(khai.get("voice_profile") or "").strip()
         if ten and ten not in co:
             so.hong(f"kênh {kenh} khai voice_profile {ten!r} nhưng kho giọng {kho} không có "
-                    f"(đang có: {', '.join(sorted(co)) or '(rỗng)'}). Sửa channel.yml hoặc "
-                    f"tạo profile đó.")
+                    f"{ten}.wav (đang có: {', '.join(sorted(co)) or '(rỗng)'}). Sửa "
+                    f"channel.yml, hoặc tạo profile bằng `voice-studio make-profile`.")
 
 
 def kham_nang_luc(so: So, tram: Path):

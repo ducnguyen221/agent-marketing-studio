@@ -70,6 +70,9 @@ def _tram_giong(tmp_path, monkeypatch, *, station_json=True, voice_ver="1.0.0",
     voices = goc / "omnivoice" / "voices"
     voices.mkdir(parents=True, exist_ok=True)
     for p in profiles:
+        # Một profile = `<tên>.wav` (clip mẫu) + `<tên>.txt` (lời của clip). Engine giọng
+        # chỉ đếm `.wav`, nên fixture phải dựng đúng cặp đó.
+        (voices / f"{p}.wav").write_bytes(b"RIFF")
         (voices / f"{p}.txt").write_text("lời mẫu", encoding="utf-8")
     if station_json:
         (goc / "station.json").write_text(json.dumps(
@@ -186,12 +189,25 @@ def test_profile_khai_trong_channel_yml_KHONG_co_trong_kho_giong_thi_MA_2(
     assert any("giong-khong-ton-tai" in x for x in kq["fail"]), kq["fail"]
 
 
+def test_CHI_co_loi_mau_txt_ma_THIEU_wav_thi_van_DO(may, tmp_path, monkeypatch):
+    """Xanh giả nguy hiểm hơn không có cổng: engine giọng coi profile là tồn tại **khi và
+    chỉ khi** có `<tên>.wav` (`voice_studio.profiles.list_profiles`). Doctor nới hơn engine
+    nghĩa là nó báo ổn, rồi `speak` trả mã 2 giữa một lượt chạy lúc 18h."""
+    goc = _tram_giong(tmp_path, monkeypatch, profiles=())
+    _tram_video(tmp_path, monkeypatch)
+    (goc / "omnivoice" / "voices" / "giong-mau.txt").write_text("x", encoding="utf-8")
+    _kenh(may, voice_profile="giong-mau")
+    kq = DR.kham()
+    assert kq["code"] == SC.CONTRACT_ERROR
+    assert any("giong-mau.wav" in x for x in kq["fail"]), kq["fail"]
+
+
 def test_VOICES_DIR_doi_cho_kho_giong(may, tmp_path, monkeypatch):
     _tram_giong(tmp_path, monkeypatch, profiles=())
     _tram_video(tmp_path, monkeypatch)
     kho = tmp_path / "kho-rieng"
     kho.mkdir()
-    (kho / "giong-mau.txt").write_text("x", encoding="utf-8")
+    (kho / "giong-mau.wav").write_bytes(b"RIFF")
     monkeypatch.setenv("VOICES_DIR", str(kho))
     _kenh(may, voice_profile="giong-mau")
     assert DR.kham()["code"] == SC.OK
