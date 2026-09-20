@@ -46,6 +46,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+# `agent_call` NẰM Ở `lib/`, và `pipeline/` có một file trùng tên (CLI mỏng). Nhập ở đây,
+# ngay sau khi `lib/` lên đầu `sys.path`, thay vì nhập muộn trong thân hàm: nhập muộn thì
+# lấy đúng thứ gì đang nằm trong `sys.modules` lúc đó, và ai nhập trước sẽ quyết hộ.
+import agent_call as AC  # noqa: E402
 import engine_dir as ED  # noqa: E402
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
@@ -64,6 +68,10 @@ PROG = "doctor"
 TEN_CLOUD = ("OneDrive", "Google Drive", "My Drive", "GoogleDrive", "Dropbox",
              "iCloud Drive", "com~apple~CloudDocs", "CloudStorage", "SharePoint")
 PHAI_BI_IGNORE = (SP.WORKSPACE, ".env", SP.LOCAL_CONFIG)
+
+# Múi giờ các kênh của repo đang khai (`channel.yml: timezone`) — dùng làm ví dụ cụ thể
+# trong lời nhắc thiếu dữ liệu múi giờ, để người đọc thấy đúng thứ sẽ hỏng.
+MUI_GIO_CHUAN = "Asia/Ho_Chi_Minh"
 
 # Mỗi mục là `f(so, tram) -> None`; đăng ký ở cuối file. `tram` là gốc trạm nội dung đã
 # phân giải — hàm khám không được tự phân giải lại, nếu không `doctor --station X` sẽ khám
@@ -182,6 +190,28 @@ def _kham_env_khong_ai_doc(so: So, repo: Path) -> None:
               "Xem docs/WORKSPACE.md mục `.env`.")
 
 
+def _kham_du_lieu_mui_gio(so: So) -> None:
+    """Máy có dữ liệu múi giờ IANA không — thứ Windows KHÔNG kèm sẵn.
+
+    NHẮC, không THIẾU: bản cài không có `tzdata` vẫn viết bài và vẫn đăng được. Cái hỏng
+    là hẹp và cụ thể — `agent_call` không đọc nổi `resets 7:50pm (Asia/Ho_Chi_Minh)`
+    trong dòng lỗi hết hạn mức, nên mã 4 đi ra mà không kèm `resets_at` và lịch không
+    biết phải đợi tới lúc nào. Đỏ cả bản cài vì chuyện đó là nói quá.
+
+    Vì sao doctor phải hỏi câu này: `tzdata` đã khai trong `requirements.txt`, nhưng máy
+    của Đức có sẵn gói đó do một thứ khác kéo về, nên chạy ở đây thì ngon còn CI Windows
+    (máy sạch) thì đỏ. Thiếu một phụ thuộc đã khai là thứ chỉ máy sạch mới thấy — doctor
+    là chỗ duy nhất trong repo biết hỏi máy đang chạy, nên nó phải hỏi.
+    """
+    try:
+        co = AC._co_du_lieu_mui_gio()
+    except Exception as e:                  # noqa: BLE001 - không kiểm được thì nói thế
+        so.nhac(f"không kiểm được dữ liệu múi giờ ({e.__class__.__name__}: {e})")
+        return
+    if not co:
+        so.nhac(AC.THIEU_TZ.format(ten=MUI_GIO_CHUAN))
+
+
 def kham(station=None) -> dict:
     so = So()
     repo = SP.repo_root()
@@ -232,6 +262,9 @@ def kham(station=None) -> dict:
             if c:
                 so.nhac(f"{ten} nằm trong thư mục đồng bộ {c} ({p}) — git ở đó hay hỏng index, "
                         "và mọi thứ trong đó đi lên cloud. Cân nhắc dời ra ngoài.")
+
+    # 5. Thứ máy được cho là "có sẵn" mà không phải máy nào cũng có
+    _kham_du_lieu_mui_gio(so)
 
     for them in KHAM_THEM:                  # trạm giọng, trạm video
         them(so, st)

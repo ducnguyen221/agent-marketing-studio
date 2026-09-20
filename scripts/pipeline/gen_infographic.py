@@ -203,12 +203,24 @@ def render_pillow(title, points, meta, out_png, b):
     img = Image.new("RGB", (W, H), (11, 16, 32))
     d = ImageDraw.Draw(img)
 
+    da_nhac = set()
+
     def font(sz, bold=True):
         for name in MT.font_candidates(bold):
             try:
                 return ImageFont.truetype(name, sz)
             except OSError:
                 continue
+        # Cùng họ với lỗi thiếu `tzdata`: ta đang giả định máy có sẵn một font TrueType.
+        # `load_default()` KHÔNG hỏng — nó vẽ được, chỉ là bằng một font bitmap cố định
+        # không có dấu tiếng Việt và không đổi được cỡ. Tức ảnh vẫn ra, vẫn xanh, chỉ là
+        # chữ sai. Im lặng ở đây nghĩa là người dùng chỉ phát hiện khi nhìn ảnh đã đăng.
+        if "x" not in da_nhac:
+            da_nhac.add("x")
+            print("[infographic] không thấy font TrueType nào trong "
+                  f"{MT.font_candidates(bold)} → dùng font bitmap mặc định của Pillow: "
+                  "chữ sẽ MẤT DẤU tiếng Việt và không đúng cỡ. Khai đường font bằng biến "
+                  "VIDEO_FONT (xem scripts/lib/media_tools.py).", file=sys.stderr)
         return ImageFont.load_default()
 
     # accent bar

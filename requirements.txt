@@ -5,6 +5,17 @@ openpyxl>=3.1      # export_excel.py — XUẤT .xlsx từ Markdown (một chi�
 requests>=2.31     # register_publish.py verify HTTP · fb_publish.py gọi Graph API
 Pillow>=10.0       # gen_infographic.py fallback, sửa chữ trên ảnh
 pytest>=8.0        # bộ test
+# dữ liệu múi giờ IANA cho `zoneinfo` — `agent_call.parse_resets` đọc
+# `resets 7:50pm (Asia/Ho_Chi_Minh)` trong dòng lỗi hết hạn mức ra giờ ISO.
+tzdata>=2024.1
+
+# Vì sao `tzdata` KHÔNG có điều kiện `platform_system == "Windows"`, dù chỉ Windows thiếu:
+# cái điều kiện đó là một GIẢ ĐỊNH MÔI TRƯỜNG mới — "mọi máy không-Windows đều có sẵn cơ
+# sở dữ liệu múi giờ của hệ điều hành" — và nó sai với container Linux slim, với bản macOS
+# bị gọt, với mọi chỗ ta chưa chạy thử. Đó đúng là kiểu giả định đã làm đỏ CI bốn lần
+# trong 24 giờ (dấu phân cách đường dẫn · cùng ổ đĩa · `D:` là đường tuyệt đối · hệ có sẵn
+# dữ liệu múi giờ). Gói này là 350 KB dữ liệu thuần, không mã, không phụ thuộc: khai thẳng
+# rẻ hơn nhiều so với lần đỏ thứ năm, và khai thẳng thì máy NÀO cài theo file này cũng có.
 
 # `requirements-voice.txt` và `requirements-video.txt` KHÔNG phải file cho `pip install -r`:
 # chúng khai NGƯỠNG phiên bản hợp đồng của hai trạm năng lực (`agent-voice-studio`,

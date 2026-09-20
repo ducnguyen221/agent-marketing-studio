@@ -86,6 +86,7 @@ import threading
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfoNotFoundError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import studio_contract as SC  # noqa: E402
@@ -469,7 +470,16 @@ def parse_resets(text: str, *, now=None) -> str | None:
         gio = 0
     if buoi == "p":
         gio += 12
-    tzinfo = _tz(tz)
+    try:
+        tzinfo = _tz(tz)
+    except ThieuDuLieuMuiGio as e:
+        # Thiếu dữ liệu múi giờ thì giờ mở lại tính ra sẽ LỆCH đúng bằng chênh múi giờ
+        # (đo trên CI Windows 20/09: `+00:00` thay vì `+07:00`, sai 7 tiếng). Một
+        # `resets_at` SAI còn tệ hơn không có: mã 4 bảo lịch "đợi tới giờ X", và lịch sẽ
+        # ngoan ngoãn đợi tới một thời điểm vô nghĩa rồi lại đâm vào đúng bức tường hạn
+        # mức. Nên ở đây: không đoán, nói ra, trả None.
+        SC.log(f"[agent-call] {e}")
+        return None
     bay_gio = (now or datetime.now(tzinfo)).astimezone(tzinfo)
     moc = bay_gio.replace(hour=gio, minute=phut, second=0, microsecond=0)
     if moc <= bay_gio:
@@ -477,11 +487,53 @@ def parse_resets(text: str, *, now=None) -> str | None:
     return moc.isoformat()
 
 
+class ThieuDuLieuMuiGio(RuntimeError):
+    """Máy KHÔNG CÓ dữ liệu múi giờ — khác hẳn "tên múi giờ viết sai".
+
+    Hai thứ này cùng ném `ZoneInfoNotFoundError` nhưng đòi hai cách xử lý ngược nhau:
+    tên sai (engine in ra một chuỗi lạ) thì lùi về giờ máy là hợp lý; còn thiếu cả cơ sở
+    dữ liệu thì MỌI tên đều sai, và lùi về giờ máy nghĩa là lặng lẽ trả ra một con số sai.
+    """
+
+
+THIEU_TZ = (
+    "máy này không có dữ liệu múi giờ IANA nên không đọc được múi giờ {ten!r}. Windows "
+    "không kèm sẵn cơ sở dữ liệu đó, nên `zoneinfo` của Python phải lấy từ gói `tzdata`. "
+    "Cài: `python -m pip install -r requirements.txt` (hoặc `python -m pip install tzdata`)."
+)
+
+
+def _co_du_lieu_mui_gio() -> bool:
+    """Máy có BẤT KỲ nguồn dữ liệu múi giờ nào không: gói `tzdata`, hay thư mục của hệ.
+
+    Hỏi bằng `find_spec` chứ không `import tzdata`: gói này là 600 thư mục dữ liệu, nạp
+    nó chỉ để biết nó có tồn tại là trả tiền cho một câu hỏi yes/no.
+    """
+    import importlib.util
+    import zoneinfo
+    try:
+        if importlib.util.find_spec("tzdata") is not None:
+            return True
+    except (ImportError, ValueError):
+        # `find_spec` KHÔNG chỉ trả None — nó ném khi gói có mà hỏng. Hàm này chỉ trả lời
+        # một câu yes/no cho một lời NHẮC; để nó ném là biến lời nhắc thành lỗi cứng.
+        pass
+    return any(os.path.isdir(p) for p in zoneinfo.TZPATH)
+
+
 def _tz(ten):
+    """Tên múi giờ -> tzinfo. Ném `ThieuDuLieuMuiGio` khi máy thiếu CẢ cơ sở dữ liệu."""
     if ten:
+        ten = ten.strip()
         try:
             from zoneinfo import ZoneInfo
-            return ZoneInfo(ten.strip())
+            return ZoneInfo(ten)
+        except ZoneInfoNotFoundError:
+            if not _co_du_lieu_mui_gio():
+                raise ThieuDuLieuMuiGio(THIEU_TZ.format(ten=ten)) from None
+            # Có dữ liệu mà vẫn không thấy tên này ⇒ engine in ra một tên lạ. Lùi về
+            # giờ máy: lệch có thể có, nhưng đây là lỗi của DỮ LIỆU VÀO, không phải của
+            # bản cài, và không có gì để bảo người dùng đi cài.
         except Exception:
             pass
     return datetime.now().astimezone().tzinfo or timezone.utc
