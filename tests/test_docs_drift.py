@@ -58,11 +58,9 @@ MIEN_TRU_RIENG = {
 }
 
 # File LUẬT của repo (AGENTS.md) chỉ sửa khi người duyệt gật — agent không tự sửa. Chuỗi cũ
-# còn ở đó thì CHỜ, nhưng chờ có hạn: `test_file_luat_con_cho_duyet` là xfail STRICT, nên
-# ngày AGENTS.md được sửa nó thành XPASS và đỏ, buộc gỡ miễn trừ ở đây.
-CHO_DUYET_FILE_LUAT = {
-    "2 cổng duyệt": ("AGENTS.md",),
-}
+# còn ở đó thì CHỜ ở đây, và `test_chuoi_cua_mo_hinh_da_bo` bỏ qua đúng file đó. Rỗng =
+# không còn gì chờ: AGENTS.md chịu cổng chính như mọi file khác (C2 duyệt 21/09/2026).
+CHO_DUYET_FILE_LUAT = {}
 
 NHI_PHAN = {".png", ".jpg", ".jpeg", ".mp3", ".mp4", ".xlsx", ".ico", ".woff", ".woff2"}
 
@@ -186,15 +184,6 @@ def test_cong_VAN_chan_mo_hinh_token_tho_trong_env(dong):
 def test_TG_BOT_TOKEN_van_bi_cam():
     """Biến token-trong-env đã bị bỏ hẳn sau lần lộ token; F17 không đụng tới điều đó."""
     assert "TG_BOT_TOKEN=" in CAM
-
-
-@pytest.mark.xfail(strict=True, reason="AGENTS.md là file luật — chờ người duyệt sửa (C2)")
-@pytest.mark.parametrize("chuoi", list(CHO_DUYET_FILE_LUAT))
-def test_file_luat_con_cho_duyet(chuoi):
-    """Đỏ (xfail) khi file luật còn chuỗi cũ. Sửa xong file luật ⇒ XPASS ⇒ strict làm đỏ
-    cả lượt: gỡ chuỗi khỏi `CHO_DUYET_FILE_LUAT` để cổng chính canh luôn file đó."""
-    con = [n for n, t in FILES if n in CHO_DUYET_FILE_LUAT[chuoi] and chuoi in t]
-    assert not con, f"{chuoi!r} còn ở file luật {con}"
 
 
 # ── Lệnh trong tài liệu phải là lệnh CLI hiểu được ─────────────────────────

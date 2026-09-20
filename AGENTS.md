@@ -26,8 +26,9 @@ canonical: true
   - Đọc/ghi các trường trạng thái của Agent trong `publish.json` (`agent_status`, `quality_check`).
   - Chạy script kiểm tra QA nội bộ.
 - **Scope Gate (Phải có con người xác nhận):**
-  - Chuyển sang khâu ③ Produce (Cần Cổng 1: `Content.status = approved` + `approved_date`).
-  - Chuyển sang khâu ⑤ Render và ⑥ Publish (Cần Cổng 2: `Post.review_status = approved`).
+  - Chuyển sang khâu ③ Produce (Cần Cổng 1: bảng Content `status = approved` **và** ô `g1` có ngày).
+  - Chuyển sang khâu ⑤ Render và ⑥ Publish (Cần Cổng 2: `publish.json → posts[].review.status = approved`, kèm `approved_by` + câu duyệt nguyên văn).
+  - Phát YouTube/Facebook sau khi web đã lên (Cần Cổng 3 — chỉ khi bảng Content có cột `g3`: ô `g3` có ngày).
   - Thay đổi cấu trúc bảng tính hoặc thêm trường dữ liệu mới vào Data Model.
 - **Never (Tuyệt đối cấm):**
   - Tự ý đánh dấu đã duyệt ở bất kỳ cổng nào (1, 2 hoặc 3).
@@ -44,23 +45,25 @@ canonical: true
 
 ### Ba nguồn tài liệu cốt lõi:
 1. [`knowledge/data_model/DATA_MODEL.md`](knowledge/data_model/DATA_MODEL.md) — Định nghĩa chi tiết 75 trường dữ liệu và ràng buộc.
-2. [`workflows/00_WORKFLOW_INDEX.md`](workflows/00_WORKFLOW_INDEX.md) — Tổng quan quy trình 7 khâu, 2 cổng duyệt.
+2. [`workflows/00_WORKFLOW_INDEX.md`](workflows/00_WORKFLOW_INDEX.md) — Tổng quan quy trình 7 khâu, 3 cổng duyệt.
 3. [`output_styles/`](output_styles/) — Giọng văn thương hiệu chuẩn theo từng kênh.
 
 ---
 
-## 3. Quy Trình 7 Khâu & 2 Cổng Duyệt
+## 3. Quy Trình 7 Khâu & 3 Cổng Duyệt
 
 ```
 ① new ─→ ② plan ─🔒cổng 1─→ ③ produce ─→ ④ selfqa ─🔒cổng 2─→ ⑤ render ─→ ⑥ publish ─→ ⑦ measure
-         Content              content.md      quality_check      audio/video    Post.publish_*   actual_*
-         (proposed)           + Post rows      (MÁY tự kiểm)                                     + báo cáo .md
+     bảng Content         content.md      24 cổng kiểm       audio/video    publish.json     actual_*
+      (proposed)          + posts[]        (MÁY tự kiểm)                    + URL vào bảng   + báo cáo .md
+                                                                  🔒cổng 3 nằm TRONG ⑥: web → cổng 3 → YouTube · Facebook
 ```
 
 | Cổng Duyệt | Điều Kiện Kích Hoạt | Khâu Được Phép Mở |
 |---|---|---|
 | **Cổng 1 — Duyệt đề tài** | bảng Content: `status = approved` **và** có ngày ở ô `g1` | ③ produce |
 | **Cổng 2 — Duyệt trước khi đăng** | `publish.json → posts[].review.status = approved`, kèm `approved_by` + câu duyệt nguyên văn | ⑤ render, ⑥ publish |
+| **Cổng 3 — Duyệt bản thật trên web (tuỳ chọn)** | bảng Content có cột `g3` **và** ô `g3` có ngày — trang web lên trước, người xem bằng mắt | phát YouTube / Facebook (`release`) |
 
 - **Quy tắc tạo mới:** luôn dùng script — `new_channel.py` → `new_campaign.py` → `new_post.py`
   (có `--bulk` để tạo cả loạt). Chúng copy từ `templates/` và ghi đúng chỗ.
@@ -73,8 +76,8 @@ canonical: true
 
 ## 4. Bảy Điều Tuyệt Đối Cần Tuân Thủ
 
-1. **Không duyệt hộ:** Không bao giờ tự đặt `Content.status = approved`, `approved_date` hoặc `Post.review_status = approved`.
-2. **Không xuất bản chui:** Không đăng thật khi chưa đủ token, chưa qua Cổng 2, hoặc chưa có lệnh phê duyệt.
+1. **Không duyệt hộ:** Không bao giờ tự đặt `status = approved`, ô `g1`/`g3` trong bảng Content, hay `posts[].review.status = approved` trong `publish.json`.
+2. **Không xuất bản chui:** Không đăng thật khi chưa đủ token, chưa qua cổng tương ứng (Cổng 2; Cổng 3 nếu chiến dịch có bật), hoặc chưa có lệnh phê duyệt.
 3. **Không bịa đặt số liệu:** Số liệu chưa xác minh phải gắn tag `[KIỂM CHỨNG]` hoặc để trống.
 4. **Không điền số 0 giả:** Ô rỗng là một giá trị có nghĩa, không điền `0` thay cho dữ liệu chưa có.
 5. **Không lộ hạ tầng:** Không để lộ tên công cụ nội bộ (Prompt, Engine, Tool names) trong nội dung gửi khán giả.
