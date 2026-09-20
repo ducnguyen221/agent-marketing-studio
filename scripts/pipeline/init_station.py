@@ -18,8 +18,11 @@ cho MỌI script về sau.
 
 ## Ba luật của file này
 
-1. **Bắt buộc hỏi, không tự chọn im lặng.** Chế độ quyết định nội dung của người dùng nằm
-   trong hay ngoài repo — đó là quyết định của họ.
+1. **Bắt buộc hỏi, không tự chọn im lặng — nhưng chỉ hỏi ĐÚNG MỘT câu.** Chế độ quyết
+   định nội dung của người dùng nằm trong hay ngoài repo, đó là quyết định của họ; và câu
+   hỏi phải đi kèm phân tích, không phải một dấu nhắc trống. Bộ cài **không** hỏi về trạm
+   giọng/video: viết bài và đăng là LÕI, chạy được ngay sau bước này. Lời đề nghị cài hai
+   trạm kia đến sau, đúng lúc một bước chạm tới chúng (`scripts/lib/voice.py`).
 2. **Không có người trả lời thì DỪNG.** `stdin` không phải terminal (CI, tác vụ theo lịch,
    pipe) ⇒ in bảng lựa chọn ra stderr rồi thoát **mã 2**, chưa ghi một byte nào. Đoán hộ ở
    đây là dựng trạm sai chỗ, và người dùng chỉ phát hiện ra sau khi đã viết vài bài.
@@ -62,21 +65,25 @@ BIEN_NHAN_DIEN = ("MARKETING_STUDIO_DATA", "VOICE_STATION", "VIDEO_STATION",
 KHO_SECRET = "~/.secret/marketing-studio"
 
 BANG_LUA_CHON = """\
-Chọn chỗ đặt TRẠM nội dung (nơi chứa kênh, chiến dịch, bài, sản phẩm đã dựng):
+Chọn chỗ đặt TRẠM nội dung (nơi chứa kênh, chiến dịch, bài, sản phẩm đã dựng).
+Chỉ một câu hỏi này thôi — cài xong là viết bài và đăng được ngay: bản cài này
+không bắt buộc trạm giọng/video. Hai trạm đó chỉ cần khi bạn muốn lồng tiếng hoặc dựng
+video, và lúc đó chương trình sẽ nói đúng lệnh phải chạy.
 
   [1] embedded — gọn trong repo   ← KHUYẾN NGHỊ (bấm Enter)
       Là gì : trạm nằm ở <repo>/workspace/, biến cấu hình ở <repo>/.env (git bỏ qua cả hai).
       Lợi   : mở một folder là thấy hết; không phải đặt biến môi trường; backup một phát.
       Hại   : xoá folder repo là mất luôn nội dung — đừng xoá repo để cài lại, dùng
               `studio.py update`; và nhớ `studio.py backup`.
-      Chọn khi: một máy, muốn dùng được ngay, không rành kỹ thuật.
+      Chọn khi: một máy, muốn dùng được ngay, không rành kỹ thuật. Đang phân vân thì
+              chọn cái này — đổi sang [2] sau được, đổi ngược lại cũng được.
 
   [2] separate — trạm ngoài repo (mặc định ~/.marketing)
       Là gì : trạm ở thư mục riêng; bí mật ở kho secret của máy ({kho}).
       Lợi   : repo luôn sạch (an toàn khi repo là bản public của chính bạn); nhiều máy /
               nhiều repo dùng chung một trạm; cập nhật repo không đụng nội dung.
       Hại   : thêm một chỗ phải nhớ; nên đặt MARKETING_STUDIO_DATA cho lịch chạy thấy trạm.
-      Chọn khi: rành kỹ thuật, nhiều máy, hoặc repo public của chính bạn.
+      Chọn khi: rành kỹ thuật, nhiều máy, hoặc repo là bản public của chính bạn.
 
 Sau này đổi ý được: `python scripts/pipeline/studio.py migrate --to separate`.
 """.format(kho=KHO_SECRET)

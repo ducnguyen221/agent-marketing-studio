@@ -48,10 +48,21 @@ sys.path.insert(0, str(_HERE.parent / "lib"))
 sys.path.insert(0, str(_HERE))
 import md_io  # noqa: E402
 import post_paths as PP  # noqa: E402
+import studio_paths as SP  # noqa: E402
 from blog_gates import PROMPT_ANH_TOI_THIEU  # noqa: E402
 
 REPO = _HERE.parents[1]
 CAU_MAC_DINH = Path.home() / ".opcos" / "bridges" / "codex-bridge" / "cli.mjs"
+
+
+def _bridge_mac_dinh() -> Path:
+    """Đường cầu Codex mặc định cho cờ `--bridge`: `OPCOS_CODEX_BRIDGE` → đường quen.
+
+    Đọc qua `secret_env` nên chế độ cài `embedded` khai được trong `<repo>/.env`;
+    `os.environ` thẳng thì dòng trong `.env` không ai đọc, và không gì báo vì đã có
+    sẵn một đường mặc định trông hợp lệ."""
+    khai = (SP.secret_env("OPCOS_CODEX_BRIDGE") or "").strip()
+    return Path(khai).expanduser() if khai else CAU_MAC_DINH
 # Cầu tự có trần thời gian cho mỗi lượt. Trần này chỉ chặn tiến trình con treo hẳn.
 TRAN_CHO_GIAY = 900
 ANH_TOI_THIEU = 800            # cùng ngưỡng với G19
@@ -244,7 +255,7 @@ def main(argv=None) -> int:
     a_make = sub.add_parser("make", help="sinh ảnh từ facebook/infographic.prompt.txt")
     a_make.add_argument("--post", required=True, type=Path)
     a_make.add_argument("--bridge", type=Path,
-                        default=Path(os.environ.get("OPCOS_CODEX_BRIDGE") or CAU_MAC_DINH))
+                        default=_bridge_mac_dinh())
     a_make.add_argument("--force", action="store_true", help="sinh lại; ảnh cũ được giữ cạnh bên")
     a_ver = sub.add_parser("verify", help="ghi kết quả soát chữ trên ảnh")
     a_ver.add_argument("--post", required=True, type=Path)

@@ -93,10 +93,12 @@ Hai file, hai vai, đừng lẫn:
 **Thiếu khối `brand:` là lỗi, không phải cảnh báo.** Engine dừng với mã 2 thay vì lùi về
 một tên mặc định — vì cái tên mặc định ấy sẽ là danh tính của người khác.
 
-Kênh có audio/video thì khai thêm trong `channel.yml`:
+Kênh có audio/video thì khai thêm trong `channel.yml` — **chỉ khi** bạn đã hoặc sẽ bật
+năng lực giọng (bước 8); khai sẵn khi chưa có trạm giọng thì `doctor` chỉ nhắc, không đỏ:
 
-- `voice_profile:` — tên một profile **có thật** trong kho giọng. `doctor` kiểm giúp bạn
-  trước giờ chạy; khai sai mà không kiểm thì bạn biết lúc 3 giờ sáng.
+- `voice_profile:` — tên một profile **có thật** trong kho giọng. Khi trạm giọng đã bật,
+  `doctor` đối chiếu tên này với kho và trả **mã 2** nếu không khớp — khai sai mà không
+  kiểm thì bạn biết lúc 3 giờ sáng.
 - `bgm_style:` — style trong thư viện nhạc nền của trạm giọng.
 
 **Kiểm:** `python scripts/pipeline/check_tree.py --channel ten-kenh` → `0 đỏ`.
@@ -134,10 +136,16 @@ dẫn in ra: nó phải chứa đúng skill/tham số bạn nghĩ. Ba bước ru
 
 ---
 
-## Bước 8 — Trạm giọng và trạm video (chỉ khi bạn làm audio/video)
+## Bước 8 — Trạm giọng và trạm video (NĂNG LỰC THÊM — bỏ qua được)
+
+**Bước này không bắt buộc.** Lõi của repo là viết bài và đăng; nó
+**không bắt buộc trạm giọng/video**. Bảy bước trên đã đủ để bạn viết và đăng bài đầu tiên.
 
 Repo này **không** tự dựng hình, không tự đọc. Nó gọi hai trạm năng lực riêng qua
-`scripts/lib/voice.py` và `scripts/lib/video.py`. Không làm audio/video thì bỏ qua cả bước.
+`scripts/lib/voice.py` và `scripts/lib/video.py`. Không làm audio/video thì bỏ qua cả bước
+— `doctor` sẽ ghi *"giọng: chưa bật — cần khi bạn muốn lồng tiếng…"* và vẫn trả mã 0. Khi
+nào bạn chạy một bước thật sự cần giọng (ví dụ `make_podcast.py`), chính bước đó dừng lại
+với **mã 3** và in ra đúng các lệnh dưới đây — không ai phải nhớ trước.
 
 ```sh
 git clone <repo giọng> ~/Code/agent-voice-studio
@@ -175,8 +183,11 @@ Dùng `-e` cho máy đang phát triển; dùng bản sao cho máy chạy lịch.
 python scripts/pipeline/doctor.py
 ```
 
-Đạt khi trả mã **0**. Mã **3** = còn thiếu trạm; thông điệp nói rõ thiếu repo nào và các
-bước cài tiếp — `doctor` cố tình **không** tự cài repo khác cho bạn.
+Đạt khi trả mã **0** — và nó trả mã 0 **cả khi bạn bỏ qua cả bước 8 này**. `doctor` chỉ đỏ
+khi LÕI hỏng: mã **2** là cấu hình sai (hai nguồn sự thật, rào `.gitignore` thủng, tên
+profile khai trong `channel.yml` không có trong kho giọng), mã **3** là chưa có trạm nội
+dung. Cài dở trạm giọng/video thì nó **nhắc**, không đỏ: dòng nhắc nói rõ còn thiếu gì và
+bước nào sẽ dừng. `doctor` cố tình **không** tự cài repo khác cho bạn.
 
 ---
 

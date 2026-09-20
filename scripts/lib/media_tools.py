@@ -13,6 +13,12 @@ Biến môi trường (khai thì THẮNG mọi đường dò):
     FFPROBE      đường ffprobe riêng (giữ cho tương thích với `blog_gates.py`).
     VIDEO_FONT   file font .ttf/.otf dùng khi Pillow phải tự vẽ chữ.
 
+Cả bốn đọc qua `studio_paths.secret_env`, KHÔNG qua `os.environ` thẳng: chế độ cài
+`embedded` hứa "điền `<repo>/.env` là xong", và một biến đọc thẳng `os.environ` thì điền
+vào đó không có tác dụng gì. Hỏng kiểu đó không báo — mọi nhánh ở đây đều có đường lùi
+hợp lệ (dò Chrome trên PATH, dùng font hệ thống), nên người dùng chỉ biết khi sản phẩm ra
+sai font hoặc lượt render dùng nhầm công cụ. Biến môi trường thật vẫn thắng `.env`.
+
 Font KHÔNG đóng gói vào repo: Segoe UI và Arial là font thương mại của Microsoft/Monotype,
 không được phân phối lại. Trên Mac, Arial có sẵn ở `/System/Library/Fonts/Supplemental/`
 và đủ dấu tiếng Việt; muốn font khác (vd Inter, giấy phép OFL) thì khai `VIDEO_FONT`.
@@ -29,9 +35,17 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import studio_paths as SP  # noqa: E402
+
 # Hai chỗ chạm hệ thống — tách ra để test giả được máy khác mà không cần máy đó.
 _la_file = os.path.isfile
 _which = shutil.which
+
+
+# Mỗi chỗ đọc biến gọi `SP.secret_env("TÊN")` với tên viết THẲNG, không qua hàm bọc:
+# cổng `test_docs_drift._bien_code_doc` quét theo đúng mẫu đó để bắt mọi biến mã đang đọc.
+# Một hàm bọc `_khai(ten)` làm tên biến biến mất khỏi cổng — và biến mất im lặng.
 
 # WinGet ghim SỐ HIỆU BẢN ffmpeg vào tên thư mục -> nâng cấp ffmpeg là đứt đường này.
 # Giữ làm đường lùi cho máy Windows đang chạy; máy mới nên khai FFMPEG_DIR hoặc PATH.
@@ -73,7 +87,7 @@ def chrome_candidates() -> list[str]:
 
 def find_chrome() -> str | None:
     """CHROME_BIN → đường quen thuộc của hệ điều hành → PATH. Không thấy ⇒ None."""
-    khai = os.environ.get("CHROME_BIN", "").strip()
+    khai = (SP.secret_env("CHROME_BIN") or "").strip()
     if khai:
         if _la_file(khai):
             return khai
@@ -97,13 +111,15 @@ def find_chrome() -> str | None:
 def ff_tool(name: str) -> str:
     """Đường tới `ffmpeg`/`ffprobe`: FFPROBE (chỉ ffprobe) → FFMPEG_DIR → WinGet (Windows)
     → PATH → Homebrew (macOS). Không thấy ⇒ trả tên trần, để lỗi nổ ở chỗ gọi."""
-    if name == "ffprobe" and os.environ.get("FFPROBE", "").strip():
-        return os.environ["FFPROBE"].strip()
+    rieng = (SP.secret_env("FFPROBE") or "").strip()
+    if name == "ffprobe" and rieng:
+        return rieng
     he = _he()
     duoi = ".exe" if he == "Windows" else ""
     thu_muc = []
-    if os.environ.get("FFMPEG_DIR", "").strip():
-        thu_muc.append(os.environ["FFMPEG_DIR"].strip())
+    khai = (SP.secret_env("FFMPEG_DIR") or "").strip()
+    if khai:
+        thu_muc.append(khai)
     if he == "Windows" and os.environ.get("LOCALAPPDATA"):
         thu_muc.append(os.path.join(os.environ["LOCALAPPDATA"], *_WINGET_FF))
     for d in thu_muc:
@@ -125,8 +141,9 @@ def font_candidates(bold: bool = True) -> list[str]:
     """Font cho Pillow, theo thứ tự thử. Tên trần chỉ dùng trên Windows (Pillow tự tìm
     trong thư mục Fonts); hệ khác phải là đường tuyệt đối."""
     ra = []
-    if os.environ.get("VIDEO_FONT", "").strip():
-        ra.append(os.environ["VIDEO_FONT"].strip())
+    khai = (SP.secret_env("VIDEO_FONT") or "").strip()
+    if khai:
+        ra.append(khai)
     he = _he()
     if he == "Windows":
         ra += ["segoeuib.ttf", "arialbd.ttf"] if bold else ["segoeui.ttf", "arial.ttf"]

@@ -10,10 +10,25 @@ Mã thoát theo hợp đồng ba trạm (`scripts/lib/studio_contract.py`):
 
     0  đủ để chạy (có thể còn cảnh báo)
     2  cấu hình sai — hai nguồn sự thật, rào `.gitignore` bị thủng: phải SỬA
-    3  chưa cài xong — chưa có trạm: phải CÀI TIẾP
+    3  chưa cài xong — chưa có TRẠM NỘI DUNG: phải CÀI TIẾP
 
 Phân biệt 2 với 3 là để người đọc biết mình đang ở đâu: "làm tiếp bước còn thiếu" khác
 hẳn "cái bạn đã làm đang sai".
+
+## PHÂN TẦNG NĂNG LỰC (chỉ đạo 21/09/2026) — luật quyết định cái gì được đỏ
+
+    LÕI            viết bài + đăng. Chạy được chỉ với trạm nội dung. Lõi hỏng ⇒ ĐỎ.
+    NĂNG LỰC THÊM  giọng (`agent-voice-studio`) · video (`agent-video-studio`).
+                   Thiếu ⇒ **chưa bật**, KHÔNG phải hỏng ⇒ một dòng thông tin, **mã 0**.
+
+Cài xong repo này là viết bài và đăng được ngay; hai trạm kia chỉ cần khi người dùng thật
+sự muốn lồng tiếng hoặc dựng video. Bản trước trả mã 3 khi thiếu trạm giọng, tức bảo người
+vừa cài xong rằng máy họ "CHƯA CÀI XONG" vì một thứ họ chưa định dùng — và dạy họ rằng
+`doctor` hay kêu oan. Một cổng bị bỏ qua thì không còn là cổng.
+
+Lời đề nghị cài trạm nằm ở **chỗ chạm**, không ở đây: `scripts/lib/voice.py` và
+`scripts/lib/video.py` ném `StationMissing` (mã 3) kèm đúng các bước cài, ngay khi một
+bước thật sự cần tới chúng.
 
 Bản này khám ba phần: **F17** (hai chế độ cài), **hai trạm năng lực** của hợp đồng ba
 trạm — trạm giọng `agent-voice-studio`, trạm video `agent-video-studio` — và **thư mục
@@ -143,8 +158,13 @@ def _kham_env_khong_ai_doc(so: So, repo: Path) -> None:
     `studio_paths.secret_env`; biến đọc thẳng `os.environ`, và mọi biến mà **PowerShell**
     đọc (`$env:X` — PS không có cách nào đọc `.env`), thì điền vào đó là điền vào chỗ
     không ai nhìn. Fail-closed nên không mất dữ liệu; nhưng im lặng thì người dùng mất
-    buổi chiều đi tìm (REVIEW-P2 N11)."""
-    khai = set(SP.doc_env_file(repo))
+    buổi chiều đi tìm (REVIEW-P2 N11).
+
+    **Chỉ tính dòng ĐÃ ĐIỀN.** Bộ cài `embedded` chép nguyên `.env.example` thành `.env`,
+    nên một bản cài mới tinh đã có sẵn hàng chục dòng `TÊN=` rỗng. Kêu về chúng là chào
+    người vừa clone repo bằng một cảnh báo về thứ họ chưa làm; câu cảnh báo này nói "bạn
+    điền vào chỗ không ai nhìn", và chưa điền thì chưa có gì để nói."""
+    khai = {k for k, v in SP.doc_env_file(repo).items() if (v or "").strip()}
     if not khai:
         return
     py, ps = _bien_doc_duoc(repo)
@@ -152,12 +172,14 @@ def _kham_env_khong_ai_doc(so: So, repo: Path) -> None:
     if not cau:
         return
     chi_ps = [b for b in cau if b in ps]
-    so.nhac(f"{len(cau)} biến trong .env KHÔNG script Python nào đọc từ đó: "
+    so.nhac(f"{len(cau)} biến ĐÃ ĐIỀN trong .env mà KHÔNG script Python nào đọc từ đó: "
             f"{', '.join(cau[:8])}"
             + (f" — trong đó {', '.join(chi_ps[:5])} là biến của `.ps1`, và PowerShell "
-               f"không có cách nào đọc .env: đặt chúng ở cấp user (setx) hoặc trong môi "
-               f"trường của scheduled task." if chi_ps else "")
-            + " Xem docs/WORKSPACE.md mục `.env`.")
+               f"không có cách nào đọc .env." if chi_ps else "")
+            + " `.env` chỉ tới được script Python của repo này: không tới `.ps1`, và không "
+              "tới tiến trình con của hook đăng bài. Những dòng đó phải đặt ở cấp user "
+              "(setx / khối EnvironmentVariables của plist) mới có tác dụng. "
+              "Xem docs/WORKSPACE.md mục `.env`.")
 
 
 def kham(station=None) -> dict:
@@ -221,16 +243,21 @@ def kham(station=None) -> dict:
 
 # ══ HAI TRẠM NĂNG LỰC — hợp đồng ba trạm (§2.4) ══════════════════════════════════════
 #
-# Luật phân biệt ba mức, và lý do từng mức:
+# Ba mức, và lý do từng mức. **Không mức nào ở đây được gọi `so.thieu()`** — mã 3 nghĩa là
+# "bản cài chưa xong", và một bản cài thiếu trạm giọng thì vẫn viết bài và đăng được:
 #
-#   chưa khai gì       → NHẮC. Người chỉ viết blog không cần trạm giọng. Bắt họ nhìn
-#                        "CHƯA CÀI XONG" sau mỗi lần cài là dạy họ bỏ qua `doctor` —
-#                        và một cổng bị bỏ qua thì không còn là cổng.
-#   đã khai, chưa đủ   → ĐỎ mã 3. Biến trỏ vào một trạm không có `station.json`, hoặc một
-#                        kênh khai `voice_profile`: người dùng ĐÃ nói mình cần. Không báo
-#                        ở đây thì báo lúc 18h, giữa một lượt render.
-#   khai sai           → ĐỎ mã 2. Profile khai trong `channel.yml` không có trong kho
-#                        giọng: không phải "cài tiếp", mà là "sửa cái đang sai".
+#   chưa khai gì       → GHI một dòng "chưa bật — cần khi bạn muốn …". Người chỉ viết blog
+#                        không cần trạm giọng; dòng này nói cho họ biết cái gì còn ở đó
+#                        chờ họ, chứ không bảo họ đang thiếu.
+#   đã khai, chưa đủ   → NHẮC. Biến trỏ vào một trạm dựng dở, hay một kênh khai
+#                        `voice_profile` mà máy chưa có trạm giọng: nói TRƯỚC rằng bước
+#                        lồng tiếng sẽ dừng ở mã 3, nhưng không làm cả bản cài đỏ theo.
+#   khai sai           → ĐỎ mã 2, và CHỈ khi năng lực đã bật: profile khai trong
+#                        `channel.yml` mà kho giọng có thật lại không có. Đó là mâu thuẫn
+#                        trong cấu hình của chính người dùng — "sửa cái đang sai".
+#
+# Cổng canh chính luật này: `test_doctor_stations.py::test_KHONG_nhanh_nao_cua_phan_
+# NANG_LUC_duoc_phep_bao_THIEU` (chặn `so.thieu` rồi chạy qua bảy cảnh).
 
 # Ngưỡng hợp đồng đọc từ `requirements-voice.txt` / `requirements-video.txt` (DỮ LIỆU,
 # không phải hằng số trong mã).
@@ -315,23 +342,36 @@ def _hoi_phien_ban(py: str) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
+# Mỗi năng lực: (tên, việc nó làm, biến định vị, repo cài, lệnh init).
+# `viec` đi thẳng vào câu "cần khi bạn muốn <viec>" — nó phải là lời người dùng nghĩ khi
+# họ cần năng lực đó, không phải tên kỹ thuật của trạm.
+VIEC = {"giọng": "lồng tiếng (podcast, video có giọng đọc)", "video": "dựng video"}
+BIEN_TRAM = {"giọng": "VOICE_STATION", "video": "VIDEO_STATION"}
+
+
 def _kham_mot_tram(so: So, ten: str, goc, can: bool, ly_do: str, repo: str,
                    huong_dan: str, lenh_init: str) -> Path | None:
-    """-> gốc trạm khi nó dùng được; None khi thiếu/chưa cần. Ghi sổ đúng một lần."""
+    """-> gốc trạm khi nó dùng được; None khi năng lực chưa bật. Ghi sổ đúng một lần.
+
+    KHÔNG BAO GIỜ gọi `so.thieu()`: xem khối luật ở trên.
+    """
     if goc is None:
         if can:
-            so.thieu(f"cần trạm {ten} ({ly_do}) nhưng chưa khai chỗ nào.\n{huong_dan}")
+            so.nhac(f"{ten}: chưa bật, nhưng {ly_do} — bước cần {VIEC[ten]} sẽ dừng với "
+                    f"mã 3 và in đúng các bước cài. Viết bài và đăng vẫn chạy bình thường."
+                    f"\n{huong_dan}")
         else:
-            so.nhac(f"chưa dùng trạm {ten} — repo này chạy được mà không có nó. Khi nào cần "
-                    f"{'lồng tiếng' if ten == 'giọng' else 'dựng video'} thì cài `{repo}` và "
-                    f"đặt biến trạm; `doctor` sẽ kiểm tiếp từ đó.")
+            so.ghi(f"{ten}: chưa bật — cần khi bạn muốn {VIEC[ten]}. Viết bài và đăng "
+                   f"KHÔNG cần nó. Bật: cài `{repo}` rồi đặt {BIEN_TRAM[ten]} "
+                   f"(docs/ONBOARDING.md bước 8).")
         return None
     if not goc.is_dir():
-        so.thieu(f"trạm {ten} khai ở {goc} nhưng thư mục không tồn tại.\n{huong_dan}")
+        so.nhac(f"{ten}: chưa dùng được — khai ở {goc} nhưng thư mục không tồn tại."
+                f"\n{huong_dan}")
         return None
     if not (goc / "station.json").is_file():
-        so.thieu(f"trạm {ten} {goc} chưa có station.json — chạy `{lenh_init} --station "
-                 f"{goc}` bằng python của trạm giọng.")
+        so.nhac(f"{ten}: chưa dùng được — {goc} chưa có station.json. Chạy `{lenh_init} "
+                f"--station {goc}` bằng python của trạm giọng.")
         return None
     return goc
 
@@ -344,7 +384,8 @@ def _kham_profile(so: So, goc_giong: Path, khai_kenh):
         so.nhac(f"không xác định được kho giọng: {e}")
         return
     if not kho.is_dir():
-        so.thieu(f"kho giọng {kho} chưa có — tạo profile bằng `voice-studio make-profile`.")
+        so.nhac(f"giọng: chưa dùng được — kho giọng {kho} chưa có. Tạo profile bằng "
+                f"`voice-studio make-profile`.")
         return
     # Một profile tồn tại ⇔ có `<tên>.wav` trong kho — ĐÚNG luật mà engine giọng dùng
     # (`voice_studio.profiles.list_profiles` chỉ đếm `.wav`, `_exists` cũng chỉ hỏi `.wav`).
@@ -369,6 +410,8 @@ def kham_nang_luc(so: So, tram: Path):
 
     khai_kenh = _khai_trong_kenh(tram)
     vi_kenh = ", ".join(f"{k} khai {'/'.join(v)}" for k, v in khai_kenh)
+    if vi_kenh:
+        vi_kenh += " đang cần nó"
 
     giong = _kham_mot_tram(
         so, "giọng", SP.voice_station(), bool(khai_kenh), vi_kenh or "đã khai biến",
@@ -390,25 +433,27 @@ def kham_nang_luc(so: So, tram: Path):
             py = lay()
             break
         except SC.StudioError as e:
-            so.thieu(str(e))
+            so.nhac(f"giọng/video: chưa dùng được — {e}")
     if py is None:
         return
 
     ban = _hoi_phien_ban(py)
     if ban is None:
-        so.thieu(f"không hỏi được phiên bản hợp đồng qua {py} — python của trạm giọng chạy "
-                 f"không nổi. Dựng lại venv rồi `pip install -e` hai repo trạm.")
+        so.nhac(f"giọng/video: chưa dùng được — không hỏi được phiên bản hợp đồng qua {py}, "
+                f"python của trạm giọng chạy không nổi. Dựng lại venv rồi `pip install -e` "
+                f"hai repo trạm.")
         return
     for goi in can_goi:
         dang = ban.get(goi)
         can = CAN_PHIEN_BAN[goi]
+        ten = "giọng" if goi == "voice_studio" else "video"
         if not dang:
-            so.thieu(f"venv {py} chưa có `{goi}` — chạy:\n"
-                     f"  {py} -m pip install -e <đường dẫn>/agent-{goi.replace('_', '-')}")
+            so.nhac(f"{ten}: chưa dùng được — venv {py} chưa có `{goi}`. Chạy:\n"
+                    f"  {py} -m pip install -e <đường dẫn>/agent-{goi.replace('_', '-')}")
         elif _so(dang) < _so(can):
-            so.thieu(f"`{goi}` đang là {dang}, hợp đồng cần >= {can} "
-                     f"(requirements-{goi.split('_')[0]}.txt) — cập nhật repo trạm rồi "
-                     f"`pip install -e` lại.")
+            so.nhac(f"{ten}: chưa dùng được — `{goi}` đang là {dang}, hợp đồng cần >= {can} "
+                    f"(requirements-{goi.split('_')[0]}.txt). Cập nhật repo trạm rồi "
+                    f"`pip install -e` lại.")
         else:
             so.ghi(f"{goi}: {dang} (cần >= {can})")
 

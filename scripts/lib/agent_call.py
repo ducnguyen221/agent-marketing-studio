@@ -158,7 +158,9 @@ def config_path(station=None) -> Path:
     `run.ps1`; nhánh `engine/` giữ lại để sau khi khối 3-A dọn engine về trạm thì cấu hình
     nằm cạnh engine vẫn đọc được.
     """
-    bien = (os.environ.get("AGENT_CALL_ENGINES") or "").strip()
+    # `secret_env` chứ không `os.environ`: chế độ cài `embedded` giữ cấu hình máy ở
+    # `<repo>/.env`, và biến đọc thẳng môi trường thì điền vào đó vô tác dụng.
+    bien = (SP.secret_env("AGENT_CALL_ENGINES") or "").strip()
     if bien:
         return Path(bien).expanduser()
     goc = SP.root(station)

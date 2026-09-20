@@ -202,6 +202,26 @@ def test_chua_cai_tram_giong_thi_StationMissing_kem_HUONG_DAN_CAI(tmp_path, monk
     assert "agent-voice-studio" in loi and "clone" in loi and "VOICE_STATION" in loi
 
 
+def test_loi_de_nghi_CAI_noi_ro_day_la_NANG_LUC_CHUA_BAT(tmp_path, monkeypatch):
+    """Đây là chỗ DUY NHẤT được phép hỏi người dùng có muốn cài trạm giọng không, và nó
+    chỉ nói khi một bước THẬT SỰ chạm tới giọng.
+
+    `doctor` lúc cài không hỏi gì (chỉ đạo 21/09): hỏi vu vơ ở đó là bắt người chưa biết
+    mình có cần audio hay không phải quyết định ngay. Ở đây thì câu hỏi tự trả lời — người
+    dùng vừa gọi một lệnh đọc thành tiếng. Nên thông điệp phải nói đủ ba thứ: cần GÌ, cài
+    BẰNG LỆNH NÀO, và rằng lõi (viết bài + đăng) không hề cần cái này."""
+    for b in ("VOICE_STATION", "OMNIVOICE_DIR", "OMNIVOICE_PY", "MARKETING_STUDIO_HOME"):
+        monkeypatch.delenv(b, raising=False)
+    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(tmp_path))
+    with pytest.raises(SC.StationMissing) as e:
+        V.station()
+    loi = str(e.value).lower()
+    assert "chưa bật" in loi, loi
+    assert "lồng tiếng" in loi, loi
+    assert "viết bài và đăng" in loi, loi
+    assert SC.StationMissing.code == 3
+
+
 def test_python_lay_tu_station_json_khoa_venv(tmp_path, monkeypatch):
     for b in ("OMNIVOICE_PY", "OMNIVOICE_DIR"):
         monkeypatch.delenv(b, raising=False)

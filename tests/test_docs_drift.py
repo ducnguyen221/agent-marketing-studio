@@ -38,6 +38,11 @@ CAM = {
     "~/.tts": "trạm giọng phân giải qua OMNIVOICE_DIR, không đường cứng",
     "news-media": "thư mục media của engine cũ, không đi theo engine mới",
     "soan ─": "bước `soan` đã đổi tên thành `write` (xem migrate_names.py)",
+    # Chỉ đạo 21/09/2026 — phân tầng năng lực. `doctor` KHÔNG còn trả mã 3 vì thiếu trạm
+    # giọng/video; mã 3 chuyển về đúng chỗ chạm (`voice.py` / `video.py`). Câu cũ dạy
+    # người đọc rằng bản cài của họ hỏng khi họ mới chỉ chưa cần tới audio.
+    "Mã **3** = còn thiếu trạm": "thiếu trạm giọng/video nay là mã 0 ở `doctor` — nó chỉ "
+                                 "đỏ khi LÕI (viết bài + đăng) hỏng",
     "`dang` là": "tên cũ của build-page nay là `publish` (campaign_step.STEPS)",
     "TG_BOT_TOKEN=": "token Telegram CHỈ nằm trong file cấu hình; biến TG_CONFIG giữ đường dẫn",
     # KHÔNG cấm cái TÊN `.env`. Cổng từng cấm 6 cách nói về `.env` với lý do "không script
@@ -523,6 +528,39 @@ TAI_LIEU_VAN_HANH = ("docs/ONBOARDING.md", "docs/RUNBOOK-DOI-MAY.md",
 @pytest.mark.parametrize("f", TAI_LIEU_VAN_HANH)
 def test_tai_lieu_van_hanh_ton_tai(f):
     assert (ROOT / f).is_file(), f"{f} không có — code đang in đường dẫn tới nó"
+
+
+# ── PHÂN TẦNG NĂNG LỰC: lõi viết-và-đăng vs giọng/video (chỉ đạo 21/09/2026) ─────────
+#
+# Cổng ở trên chặn CÂU CŨ quay lại. Cổng dưới đây canh vế còn lại: câu MỚI phải thật sự
+# có mặt ở chỗ người dùng đọc. Thiếu nó thì `doctor` nói một đằng (mã 0, "chưa bật") mà
+# tài liệu nói một nẻo, và người đọc tin tài liệu — họ đi cài hai repo nữa trước khi viết
+# được bài nào, hoặc bỏ dở vì tưởng mình chưa cài xong.
+#
+# Ba file này là cửa vào: README là thứ đầu tiên người clone đọc; ONBOARDING là thứ họ làm
+# theo; STATION_LAYOUT là chỗ họ tra khi muốn biết ba trạm ăn nhập với nhau thế nào.
+
+CAU_KHONG_BAT_BUOC = "không bắt buộc trạm giọng/video"
+NOI_PHAI_NOI_RO = ("README.md", "docs/ONBOARDING.md",
+                   "knowledge/toolchains/STATION_LAYOUT.md")
+
+
+@pytest.mark.parametrize("f", NOI_PHAI_NOI_RO)
+def test_tai_lieu_noi_ro_KHONG_BAT_BUOC_tram_giong_video(f):
+    t = (ROOT / f).read_text(encoding="utf-8")
+    assert CAU_KHONG_BAT_BUOC in t, (
+        f"{f} chưa nói rằng repo {CAU_KHONG_BAT_BUOC}. `doctor` trả mã 0 khi thiếu hai "
+        f"trạm đó (chỉ đạo 21/09) — tài liệu không nói thì người đọc vẫn tưởng phải cài "
+        f"đủ ba repo mới viết được bài.")
+
+
+def test_cau_KHONG_BAT_BUOC_dung_dung_tu_ma_BO_CAI_in_ra():
+    """Tài liệu và bộ cài phải nói CÙNG MỘT CÂU. Hai cách diễn đạt cho cùng một luật là
+    hai chỗ để trôi khỏi nhau."""
+    sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+    sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import init_station as IS
+    assert CAU_KHONG_BAT_BUOC in IS.BANG_LUA_CHON
 
 
 def test_README_tro_toi_runbook_va_onboarding():

@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
-"""`doctor` — phần HAI TRẠM NĂNG LỰC của hợp đồng ba trạm (gói P2-G3).
+"""`doctor` — phần HAI TRẠM NĂNG LỰC của hợp đồng ba trạm (gói P2-G3, sửa 21/09/2026).
 
 Phần F17 (hai chế độ cài) đã có cổng riêng ở `test_gitignore_guard.py`. File này chỉ đo
 phần nối thêm: trạm giọng (`agent-voice-studio`) và trạm video (`agent-video-studio`).
 
-**Luật phân biệt — đây là chỗ dễ làm sai nhất và là lý do file này tồn tại:**
+**PHÂN TẦNG NĂNG LỰC — luật hiện hành, và là lý do file này tồn tại:**
 
-  chưa khai gì        → NHẮC, không đỏ. Một người chỉ viết blog không cần trạm giọng; bắt
-                        họ nhìn "CHƯA CÀI XONG" sau mỗi lần cài là dạy họ bỏ qua `doctor`.
-  đã khai mà chưa đủ  → ĐỎ mã 3. Có biến trỏ vào một trạm không có `station.json`, hoặc
-                        một kênh khai `voice_profile`: người dùng ĐÃ nói mình cần, và
-                        pipeline sẽ nổ giữa chừng lúc 18h thay vì lúc cài.
-  khai sai            → ĐỎ mã 2. Profile khai trong `channel.yml` không có trong kho giọng:
-                        không phải "cài tiếp", mà là "sửa cái đang sai".
+  LÕI            viết bài + đăng. Luôn chạy, không cần trạm nào ngoài trạm nội dung.
+                 Lõi hỏng ⇒ `doctor` ĐỎ: mã 2 (cấu hình sai) hoặc mã 3 (chưa cài xong).
+  NĂNG LỰC THÊM  giọng · video. Thiếu ⇒ **chưa bật**, KHÔNG phải hỏng:
+                 `doctor` ghi một dòng thông tin/nhắc và trả **mã 0**.
+
+Bản trước trả **mã 3** khi một kênh khai `voice_profile` mà máy chưa có trạm giọng. Nó
+làm đúng một việc: bảo người mới clone repo về rằng bản cài của họ "CHƯA CÀI XONG" trong
+khi họ chỉ định viết bài. Mã 3 nay chỉ xuất hiện **đúng lúc chạm bước cần giọng/video**
+(xem `test_voice_adapter.py`, `test_make_podcast.py`), không phải lúc khám máy.
+
+  khai sai  → VẪN ĐỎ mã 2, nhưng chỉ khi năng lực ĐÃ BẬT: profile khai trong `channel.yml`
+              mà kho giọng có thật lại không có. Đó là mâu thuẫn trong cấu hình của chính
+              người dùng — "sửa cái đang sai", không phải "cài tiếp".
 """
 import json
 import subprocess
@@ -112,24 +118,38 @@ def test_KHAM_THEM_that_su_duoc_noi_vao_luong():
     assert DR.KHAM_THEM, "P2-G3 phải nối phần trạm giọng/video vào doctor.KHAM_THEM"
 
 
-# ── chưa khai gì: nhắc, không đỏ ─────────────────────────────────────────────────────
+# ── chưa khai gì: một dòng thông tin "chưa bật", mã 0 ────────────────────────────────
 
-def test_chua_khai_tram_nao_thi_CHI_NHAC(may):
+def test_chua_khai_tram_nao_thi_CHUA_BAT_chu_khong_phai_HONG(may):
+    """Chỉ đạo 21/09: cài xong là viết bài và đăng được ngay. Người chưa làm audio/video
+    không được nhìn thấy một chữ đỏ nào vì thứ họ chưa cần."""
     kq = DR.kham()
     assert kq["code"] == SC.OK, kq["fail"]
-    chu = "\n".join(kq["warn"])
-    assert "agent-voice-studio" in chu and "agent-video-studio" in chu
+    assert not kq["fail"]
+    chu = "\n".join(kq["info"])
+    for phai_co in ("giọng: chưa bật", "video: chưa bật", "cần khi bạn muốn",
+                    "agent-voice-studio", "agent-video-studio"):
+        assert phai_co in chu, f"dòng thông tin thiếu {phai_co!r}:\n{chu}"
 
 
-# ── đã khai mà chưa đủ: mã 3 ─────────────────────────────────────────────────────────
+def test_dong_CHUA_BAT_noi_ro_LOI_van_chay(may):
+    """Không nói "viết bài và đăng không cần nó" thì dòng "chưa bật" vẫn đọc như một lỗi."""
+    chu = "\n".join(DR.kham()["info"])
+    assert chu.count("KHÔNG cần nó") >= 2, chu
 
-def test_khai_tram_giong_ma_chua_co_station_json_thi_MA_3_kem_huong_dan(
+
+# ── đã khai mà chưa đủ: NHẮC, vẫn mã 0 ───────────────────────────────────────────────
+
+def test_khai_tram_giong_ma_chua_co_station_json_thi_NHAC_chu_KHONG_DO(
         may, tmp_path, monkeypatch):
+    """Biến trỏ vào một trạm giọng dựng dở = năng lực chưa dùng được. Nó không chặn việc
+    viết bài, nên nó không được phép làm cả bản cài đỏ."""
     _tram_giong(tmp_path, monkeypatch, station_json=False)
     kq = DR.kham()
-    assert kq["code"] == SC.STATION_MISSING
+    assert kq["code"] == SC.OK, kq["fail"]
     chu = _chu(kq)
     assert "station.json" in chu and "voice-studio init" in chu
+    assert any("giọng" in x for x in kq["warn"]), kq["warn"]
 
 
 def test_ten_bien_CU_van_chay_nhung_co_canh_bao(may, tmp_path, monkeypatch):
@@ -143,20 +163,27 @@ def test_ten_bien_CU_van_chay_nhung_co_canh_bao(may, tmp_path, monkeypatch):
     assert any("OMNIVOICE_DIR" in x and "VOICE_STATION" in x for x in kq["warn"]), kq["warn"]
 
 
-def test_khai_tram_video_ma_chua_co_station_json_thi_MA_3(may, tmp_path, monkeypatch):
+def test_khai_tram_video_ma_chua_co_station_json_thi_NHAC_chu_KHONG_DO(
+        may, tmp_path, monkeypatch):
     _tram_giong(tmp_path, monkeypatch)
     _tram_video(tmp_path, monkeypatch, station_json=False)
     kq = DR.kham()
-    assert kq["code"] == SC.STATION_MISSING
-    assert any("video-studio init" in x for x in kq["fail"]), kq["fail"]
+    assert kq["code"] == SC.OK, kq["fail"]
+    assert any("video-studio init" in x for x in kq["warn"]), kq["warn"]
 
 
-def test_kenh_khai_voice_profile_lam_tram_giong_thanh_BAT_BUOC(may):
-    """Không biến nào được đặt, nhưng một kênh nói mình cần giọng ⇒ thiếu trạm là ĐỎ."""
+def test_kenh_khai_voice_profile_KHONG_lam_ca_ban_cai_DO(may):
+    """Một kênh khai `voice_profile` là lời hẹn cho về sau, không phải lỗi của hôm nay.
+
+    Bản trước trả mã 3 ở đây. Hệ quả: ai chép `channel.yml` mẫu về cũng thấy bản cài của
+    mình "CHƯA CÀI XONG" ngay phút đầu — và học được rằng `doctor` hay kêu oan."""
     _kenh(may, voice_profile="giong-mau")
     kq = DR.kham()
-    assert kq["code"] == SC.STATION_MISSING
-    assert any("agent-voice-studio" in x and "clone" in x for x in kq["fail"]), kq["fail"]
+    assert kq["code"] == SC.OK, kq["fail"]
+    chu = "\n".join(kq["warn"])
+    assert "kenh-a" in chu and "agent-voice-studio" in chu, kq["warn"]
+    # và phải nói TRƯỚC cho người dùng biết bước nào sẽ dừng, dừng bằng mã nào
+    assert "mã 3" in chu, kq["warn"]
 
 
 # ── đủ: xanh ─────────────────────────────────────────────────────────────────────────
@@ -215,20 +242,20 @@ def test_VOICES_DIR_doi_cho_kho_giong(may, tmp_path, monkeypatch):
 
 # ── phiên bản hợp đồng ───────────────────────────────────────────────────────────────
 
-def test_phien_ban_hop_dong_THAP_HON_yeu_cau_thi_DO(may, tmp_path, monkeypatch):
+def test_phien_ban_hop_dong_THAP_HON_yeu_cau_thi_NHAC_kem_SO(may, tmp_path, monkeypatch):
     _tram_giong(tmp_path, monkeypatch, voice_ver="0.9.0")
     _tram_video(tmp_path, monkeypatch)
     kq = DR.kham()
-    assert kq["code"] == SC.STATION_MISSING
-    assert any("0.9.0" in x and "voice_studio" in x for x in kq["fail"]), kq["fail"]
+    assert kq["code"] == SC.OK, kq["fail"]
+    assert any("0.9.0" in x and "voice_studio" in x for x in kq["warn"]), kq["warn"]
 
 
-def test_chua_cai_package_vao_venv_thi_DO_kem_lenh_pip(may, tmp_path, monkeypatch):
+def test_chua_cai_package_vao_venv_thi_NHAC_kem_lenh_pip(may, tmp_path, monkeypatch):
     _tram_giong(tmp_path, monkeypatch, video_ver=None)
     _tram_video(tmp_path, monkeypatch)
     kq = DR.kham()
-    assert kq["code"] == SC.STATION_MISSING
-    assert any("pip install" in x and "video_studio" in x for x in kq["fail"]), kq["fail"]
+    assert kq["code"] == SC.OK, kq["fail"]
+    assert any("pip install" in x and "video_studio" in x for x in kq["warn"]), kq["warn"]
 
 
 def test_yeu_cau_phien_ban_doc_tu_file_requirements():
@@ -245,7 +272,8 @@ def test_yeu_cau_phien_ban_doc_tu_file_requirements():
 # ── CLI ──────────────────────────────────────────────────────────────────────────────
 
 def test_CLI_json_van_mot_dong_cuoi_va_ma_thoat_that(may, tmp_path, monkeypatch, capsys):
-    _tram_giong(tmp_path, monkeypatch, station_json=False)
+    """Trạm nội dung — LÕI — chưa có: đó mới là "chưa cài xong", và nó vẫn là mã 3."""
+    monkeypatch.setenv("MARKETING_STUDIO_DATA", str(tmp_path / "khong-co-tram"))
     ma = DR.main(["--json"])
     out, _ = capsys.readouterr()
     assert ma == SC.STATION_MISSING
@@ -260,6 +288,37 @@ def test_chay_that_bang_dong_lenh(may, tmp_path, monkeypatch):
                        capture_output=True, text=True, encoding="utf-8")
     assert r.returncode == SC.OK, r.stderr
     assert "agent-voice-studio" in r.stderr
+
+
+# ══ CỔNG CỦA LUẬT PHÂN TẦNG ══════════════════════════════════════════════════════════
+#
+# Các test trên đo từng ca. Cái dưới đo chính LUẬT: không một nhánh nào của phần năng lực
+# được phép đẩy mã thoát lên 3. Thiếu nó thì một nhánh mới thêm vào ngày mai lại lặng lẽ
+# dựng lại đúng hành vi vừa bỏ, và không ca nào ở trên đi qua nhánh đó.
+
+def test_KHONG_nhanh_nao_cua_phan_NANG_LUC_duoc_phep_bao_THIEU(may, tmp_path, monkeypatch):
+    class Cam(DR.So):
+        def thieu(self, msg):                       # noqa: D102
+            raise AssertionError(
+                "phần năng lực gọi so.thieu() ⇒ doctor trả mã 3 vì thiếu giọng/video: " + msg)
+
+    canh = [
+        lambda: None,                                                   # chưa khai gì
+        lambda: _kenh(may, voice_profile="giong-mau"),                  # kênh khai, chưa có trạm
+        lambda: _tram_giong(tmp_path, monkeypatch, station_json=False),
+        lambda: monkeypatch.setenv("VOICE_STATION", str(tmp_path / "khong-ton-tai")),
+        lambda: (_tram_giong(tmp_path, monkeypatch, voice_ver="0.9.0"),
+                 _tram_video(tmp_path, monkeypatch)),
+        lambda: (_tram_giong(tmp_path, monkeypatch, video_ver=None),
+                 _tram_video(tmp_path, monkeypatch)),
+        lambda: (_tram_giong(tmp_path, monkeypatch, profiles=()),
+                 _kenh(may, voice_profile="giong-mau")),
+    ]
+    for i, dung in enumerate(canh):
+        dung()
+        so = Cam()
+        DR.kham_nang_luc(so, may)
+        assert so.code != SC.STATION_MISSING, f"cảnh {i}: {so.fail}"
 
 
 # ══ REVIEW-P2 N4 + N12 — hai phép so khớp "đúng trên giấy, sai trên máy này" ══
@@ -313,6 +372,40 @@ def test_doctor_noi_ra_bien_env_KHONG_AI_DOC(tmp_path, monkeypatch):
     assert "MARKETING_STUDIO_PY" in t and "LA_HOAC" in t
     assert "VOICE_STATION" not in t, "bien DOC DUOC ma van bi keu la bao oan"
     assert "PowerShell" in t
+
+
+def _repo_embedded(tmp_path, noi_dung_env: str):
+    """Repo giả ở chế độ `embedded`, có đúng một script đọc `VOICE_STATION` qua secret_env."""
+    repo = tmp_path / "repo"
+    (repo / "scripts" / "lib").mkdir(parents=True)
+    (repo / "install.ps1").write_text("$env:MARKETING_STUDIO_PY\n", encoding="utf-8")
+    (repo / "scripts" / "lib" / "x.py").write_text('secret_env("VOICE_STATION")\n',
+                                                   encoding="utf-8")
+    (repo / DR.SP.LOCAL_CONFIG).write_text(json.dumps({"mode": "embedded"}), encoding="utf-8")
+    (repo / ".env").write_text(noi_dung_env, encoding="utf-8")
+    return repo
+
+
+def test_dong_env_CHUA_DIEN_thi_KHONG_bi_keu(tmp_path):
+    """"Clone là chạy": bộ cài `embedded` chép nguyên `.env.example` thành `.env`, nên
+    người dùng chưa gõ một chữ nào đã có ~27 dòng `TÊN=` rỗng trong đó. Kêu về chúng ngay
+    phút đầu là chào người mới bằng một cảnh báo về thứ họ chưa làm — và dạy họ rằng cảnh
+    báo của `doctor` không đáng đọc.
+
+    Cảnh báo này nói "bạn điền vào chỗ không ai nhìn". Chưa điền thì chưa có gì để nói."""
+    repo = _repo_embedded(tmp_path, "MARKETING_STUDIO_PY=\nLA_HOAC=\nVOICE_STATION=\n")
+    so = DR.So()
+    DR._kham_env_khong_ai_doc(so, repo)
+    assert not so.warn, so.warn
+
+
+def test_dong_env_DA_DIEN_ma_khong_ai_doc_thi_VAN_keu(tmp_path):
+    """Nới ở trên không được phép nuốt luôn ca thật: đã gõ giá trị vào thì phải được báo."""
+    repo = _repo_embedded(tmp_path, "MARKETING_STUDIO_PY=\nLA_HOAC=D:/x\n")
+    so = DR.So()
+    DR._kham_env_khong_ai_doc(so, repo)
+    assert so.warn and "LA_HOAC" in " ".join(so.warn), so.warn
+    assert "MARKETING_STUDIO_PY" not in " ".join(so.warn), so.warn
 
 
 def test_doctor_im_lang_khi_env_toan_bien_doc_duoc(tmp_path):

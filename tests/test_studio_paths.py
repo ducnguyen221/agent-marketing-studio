@@ -287,3 +287,98 @@ def test_che_do_separate_KHONG_doc_env_cua_repo(repo_embedded, tmp_path):
                                                  encoding="utf-8")
     (repo_embedded / ".env").write_text(f"VOICE_STATION={tmp_path}\n", encoding="utf-8")
     assert SP.voice_station(repo_embedded) is None
+
+
+# ══ `embedded` phải THẬT SỰ "clone là chạy" (chỉ đạo 21/09/2026) ═══════════════════
+#
+# `.env.example` chia hai khối: "đường dẫn tới file bí mật" và "CẤU HÌNH MÁY". Bộ cài
+# `embedded` chép nguyên file đó thành `<repo>/.env` và nói "điền vào đây là xong". Lời
+# hứa đó chỉ đúng với biến đi qua `studio_paths.secret_env`; biến đọc thẳng `os.environ`
+# thì điền vào `.env` **không có tác dụng gì** — và không có gì báo, vì mọi nhánh đều có
+# đường lùi hợp lệ (dò Chrome trên PATH, dùng font hệ thống, engines.json mặc định).
+# Người dùng chỉ biết khi sản phẩm ra sai font, hoặc lượt render dùng nhầm engine.
+#
+# Khối CẤU HÌNH MÁY nằm dưới đây. Khối bí mật (YT_TOKEN_PATH, FB_CONFIG, YT_CLIENT_SECRET)
+# KHÔNG nằm ở đây có chủ đích: chúng do hook đăng bài của chính người dùng đọc, trong một
+# tiến trình con nhận môi trường thật — `.env` không với tới được, và `doctor` nói thẳng
+# điều đó thay vì để người dùng tự đoán.
+
+CAU_HINH_MAY_QUA_ENV = ("CHROME_BIN", "FFMPEG_DIR", "FFPROBE", "VIDEO_FONT",
+                        "AGENT_CALL_ENGINES", "TG_CHAT", "OPCOS_CODEX_BRIDGE")
+
+
+@pytest.fixture
+def repo_env(repo_embedded, monkeypatch):
+    """`repo_embedded` + biến `MARKETING_STUDIO_HOME` trỏ vào nó, để các module khác
+    (media_tools, agent_call…) tự tìm ra đúng bản clone này khi gọi `secret_env`."""
+    for b in CAU_HINH_MAY_QUA_ENV:
+        monkeypatch.delenv(b, raising=False)
+    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(repo_embedded))
+
+    class Repo:
+        goc = repo_embedded
+
+        @staticmethod
+        def viet(**khoa):
+            noi_dung = "".join(f"{k}={v}\n" for k, v in khoa.items())
+            (repo_embedded / ".env").write_text(noi_dung, encoding="utf-8")
+
+    return Repo
+
+
+@pytest.mark.parametrize("bien", CAU_HINH_MAY_QUA_ENV)
+def test_moi_bien_CAU_HINH_MAY_deu_doc_duoc_tu_env(repo_env, bien):
+    """Cổng của cổng: biến nào lọt khỏi `secret_env` thì đỏ ngay ở đây, trước khi ai kịp
+    tin vào `.env`."""
+    repo_env.viet(**{bien: "gia-tri-thu"})
+    assert SP.secret_env(bien) == "gia-tri-thu"
+
+
+def test_CHROME_BIN_khai_trong_env_thi_media_tools_dung_no(repo_env, tmp_path):
+    chrome = tmp_path / "chrome-gia.exe"
+    chrome.write_text("", encoding="utf-8")
+    repo_env.viet(CHROME_BIN=str(chrome))
+    import media_tools as MT
+    assert MT.find_chrome() == str(chrome)
+
+
+def test_FFPROBE_va_FFMPEG_DIR_khai_trong_env_thi_media_tools_dung_no(repo_env, tmp_path):
+    import media_tools as MT
+    duoi = ".exe" if MT._he() == "Windows" else ""
+    thu_muc = tmp_path / "ff"
+    thu_muc.mkdir()
+    (thu_muc / ("ffmpeg" + duoi)).write_text("", encoding="utf-8")
+    probe = tmp_path / ("ffprobe-rieng" + duoi)
+    probe.write_text("", encoding="utf-8")
+    repo_env.viet(FFMPEG_DIR=str(thu_muc), FFPROBE=str(probe))
+    assert MT.ff_tool("ffprobe") == str(probe)
+    assert MT.ff_tool("ffmpeg") == str(thu_muc / ("ffmpeg" + duoi))
+
+
+def test_VIDEO_FONT_khai_trong_env_thi_dung_dau_danh_sach(repo_env):
+    repo_env.viet(VIDEO_FONT="D:/fonts/Inter-Bold.ttf")
+    import media_tools as MT
+    assert MT.font_candidates()[0] == "D:/fonts/Inter-Bold.ttf"
+
+
+def test_AGENT_CALL_ENGINES_khai_trong_env_thi_agent_call_dung_no(repo_env, tmp_path):
+    f = tmp_path / "engines-cua-toi.json"
+    repo_env.viet(AGENT_CALL_ENGINES=str(f))
+    import agent_call as AC
+    assert AC.config_path() == f
+
+
+def test_TG_CHAT_khai_trong_env_thi_bot_chon_dung_chat(repo_env):
+    repo_env.viet(TG_CHAT="kenh-rieng")
+    import telegram_io as TI
+    bot = TI.Bot.__new__(TI.Bot)
+    bot._chats = {"mac_dinh": {"chat_id": 1}, "kenh-rieng": {"chat_id": 2}}
+    bot.log_path = Path("x")
+    assert bot._chat() == 2
+
+
+def test_OPCOS_CODEX_BRIDGE_khai_trong_env_thi_thanh_mac_dinh_cua_co(repo_env):
+    repo_env.viet(OPCOS_CODEX_BRIDGE="D:/cau/cli.mjs")
+    sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import make_fb_image as MF
+    assert str(MF._bridge_mac_dinh()) == str(Path("D:/cau/cli.mjs"))

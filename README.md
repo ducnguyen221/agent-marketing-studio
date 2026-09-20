@@ -21,6 +21,12 @@ Engine điều hành và tự động hóa chiến dịch marketing đa kênh to
   template). Nội dung thật sống ở một **trạm** nằm ngoài git — mặc định `~/.marketing`,
   nhưng chỗ nào là do bạn chọn. Kênh thậm chí không bắt buộc nằm trong trạm: `CHANNELS.md`
   là cạnh **duy nhất** được phép trỏ ra ngoài.
+- **Lõi là VIẾT BÀI và ĐĂNG — cài xong là dùng được ngay.** Bản cài này
+  **không bắt buộc trạm giọng/video**: lồng tiếng (`agent-voice-studio`) và dựng video
+  (`agent-video-studio`) là hai **năng lực thêm**, bật khi nào bạn cần. Thiếu chúng,
+  `doctor` chỉ ghi một dòng *"chưa bật — cần khi bạn muốn …"* và vẫn trả **mã 0**; lời
+  hướng dẫn cài chỉ hiện ra đúng lúc một bước thật sự chạm tới giọng hoặc video, và khi
+  đó nó dừng ở **mã 3** kèm đủ các lệnh phải chạy.
 - **Chiến dịch chạy theo lịch, cùng một khuôn:** bản tin ngày/tuần và series tự động là
   chiến dịch như mọi chiến dịch khác — chỉ thêm `run.ps1` (điểm vào duy nhất, giống hệt nhau
   ở mọi chiến dịch) và khối `runtime:` trong `campaign.md`. `campaign_cfg.py` gộp bốn tầng

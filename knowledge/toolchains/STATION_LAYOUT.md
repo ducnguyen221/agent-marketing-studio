@@ -16,6 +16,22 @@
 Ba trạm là **dữ liệu**; ba repo là **máy**. Repo public và thay được; trạm là của bạn và
 nằm ngoài git của repo (trạm nội dung có git riêng).
 
+### Một trạm bắt buộc, hai trạm tuỳ chọn
+
+**Chỉ trạm nội dung là bắt buộc.** Lõi — viết bài và đăng — chạy được với mình nó; bản cài
+**không bắt buộc trạm giọng/video**. Hai trạm kia là **năng lực thêm**:
+
+| | cần khi | thiếu thì `doctor` |
+|---|---|---|
+| trạm nội dung | luôn luôn | **mã 3** — chưa cài xong |
+| trạm giọng | muốn lồng tiếng (podcast, video có giọng đọc) | **mã 0**, ghi *"giọng: chưa bật — cần khi bạn muốn …"* |
+| trạm video | muốn dựng video | **mã 0**, ghi *"video: chưa bật — …"* |
+
+Lời đề nghị cài hai trạm tuỳ chọn nằm ở **chỗ chạm**, không ở `doctor`: `voice.py` /
+`video.py` ném `StationMissing` (**mã 3**) kèm đủ các bước cài, đúng lúc một bước thật sự
+cần tới chúng. Hỏi lúc cài là bắt người chưa biết mình có làm audio hay không phải quyết
+định ngay; báo đỏ lúc cài là dạy họ bỏ qua `doctor`.
+
 ### Ai gọi ai
 
 ```

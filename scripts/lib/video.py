@@ -34,7 +34,9 @@ MODULE = "video_studio"
 STATION_FILE = "station.json"
 
 HUONG_DAN = (
-    "Chưa có trạm video. Cài `agent-video-studio` rồi trỏ biến vào nó:\n"
+    "Năng lực DỰNG VIDEO chưa bật — bước bạn vừa chạy cần nó.\n"
+    "Viết bài và đăng không cần trạm video; chỉ bước dựng video mới cần. Bật nó bằng bốn\n"
+    "bước sau, rồi chạy lại đúng lệnh vừa rồi:\n"
     "  1. git clone <url>/agent-video-studio ~/Code/agent-video-studio\n"
     "  2. <python của trạm giọng> -m pip install -e ~/Code/agent-video-studio\n"
     "     (cùng venv với trạm giọng — xem docs/INSTALL.md của repo đó)\n"

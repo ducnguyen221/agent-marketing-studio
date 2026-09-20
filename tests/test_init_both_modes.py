@@ -104,6 +104,33 @@ def test_Enter_nghia_la_embedded(repo, nha):
     assert not (nha / ".marketing").exists(), "embedded không được đụng tới ~/.marketing"
 
 
+# ── bảng lựa chọn PHÂN TÍCH theo trình độ người dùng (chỉ đạo 21/09) ──────────────────
+#
+# "Hỏi trống" — `Chọn [1/2]?` không kèm gì — là đẩy một quyết định khó đảo sang người
+# chưa có dữ kiện để quyết. Bảng này phải TỰ PHÂN TÍCH: nói thẳng người kiểu nào nên chọn
+# nhánh nào, và khuyến nghị một nhánh.
+
+def test_bang_lua_chon_DAN_nguoi_dung_theo_TRINH_DO(repo):
+    """Người không rành kỹ thuật phải đọc được câu dành cho mình ở nhánh `embedded`, và
+    người nhiều máy/repo public đọc được câu của mình ở nhánh `separate`."""
+    t = IS.BANG_LUA_CHON
+    d1 = t[t.index("[1]"):t.index("[2]")]
+    d2 = t[t.index("[2]"):]
+    assert "không rành kỹ thuật" in d1, d1
+    assert "KHUYẾN NGHỊ" in d1 and "Enter" in d1, d1
+    for cum in ("rành kỹ thuật", "nhiều máy", "public"):
+        assert cum in d2, f"nhánh separate thiếu {cum!r}:\n{d2}"
+
+
+def test_bang_lua_chon_noi_ro_KHONG_BAT_BUOC_tram_giong_video(repo):
+    """Lúc cài KHÔNG hỏi vu vơ "bạn có muốn cài trạm giọng/video không" — nhưng phải nói
+    rằng cài xong là dùng được ngay, nếu không người mới tưởng mình còn thiếu hai repo nữa
+    và bỏ dở giữa chừng. Lời đề nghị cài đến sau, đúng lúc chạm bước cần (voice.py)."""
+    t = IS.BANG_LUA_CHON
+    assert "không bắt buộc trạm giọng/video" in t, t
+    assert "viết bài và đăng" in t.lower(), t
+
+
 def test_co_yes_thi_nhan_khuyen_nghi_khong_hoi(repo):
     kq = IS.do_init(yes=True, ask=khong_duoc_hoi)
     assert kq["mode"] == "embedded" and (repo / SP.WORKSPACE / "CHANNELS.md").is_file()

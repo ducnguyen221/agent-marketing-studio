@@ -182,7 +182,7 @@ class Bot:
     __str__ = __repr__
 
     def _chat(self, name: str | None = None):
-        name = name or os.environ.get("TG_CHAT") or "mac_dinh"
+        name = name or studio_paths.secret_env("TG_CHAT") or "mac_dinh"
         c = self._chats.get(name)
         if not c:
             raise KeyError(f"không có chat {name!r} trong {self.log_path}")

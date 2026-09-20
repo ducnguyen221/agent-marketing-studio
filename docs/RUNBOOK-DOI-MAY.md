@@ -39,7 +39,7 @@ Dòng cuối cùng nói máy nào đang chạy. **Nếu dòng cuối là "BẬT"
 |---|---|---|
 | Đang ở đúng máy | đọc `<trạm>/MAY-DANG-CHAY.md` | dòng cuối là "BẬT" của chính máy này |
 | Cây trạm liền mạch | `python scripts/pipeline/check_tree.py` | `0 đỏ` |
-| Bản cài đủ | `python scripts/pipeline/doctor.py` | mã 0, hoặc mã 3 mà bạn **hiểu** thiếu gì |
+| Bản cài đủ | `python scripts/pipeline/doctor.py` | mã 0 — và **đọc các dòng nhắc**: "giọng/video chưa bật" là bình thường, "chưa dùng được" nghĩa là máy nguồn đang làm audio/video mà máy đích chưa bật xong |
 | Repo sạch | `git -C <trạm> status --short` | rỗng (trạm có git từ P0) |
 
 Chưa đạt thì sửa **trước**, đừng mang một cây gãy sang máy mới: sang bên kia bạn sẽ không
@@ -162,9 +162,11 @@ trí nhớ.
    trong `.py` sau khi đổi sẽ hỏng, chỉ khác là bây giờ nó hỏng nhìn thấy được.
 
 **Đạt khi:** báo cáo `import` nói đủ số file §4, `check_tree.py` in `0 đỏ`, và `doctor`
-chỉ còn đỏ ở những thứ bạn biết là chưa cài. `import` **cố tình không** lấy mã thoát của
-`doctor`: máy vừa nhận gói gần như chắc chắn chưa cài xong trạm giọng/video — đó chính là
-lý do người ta đang import.
+chỉ còn đỏ ở những thứ bạn biết là chưa cài. Máy vừa nhận gói thường chưa cài xong trạm
+giọng/video; từ 21/09/2026 việc đó **không** làm `doctor` đỏ nữa — nó ghi *"giọng: chưa
+bật …"* và trả mã 0, vì viết bài và đăng chạy được mà không cần hai trạm ấy. `import`
+vẫn **cố tình không** lấy mã thoát của `doctor`: chuyện còn đỏ ở máy đích là chuyện của
+bước sau, không phải thước đo cho việc gói đã bung đúng hay chưa.
 
 **Lùi:** xoá thư mục trạm đích, import lại từ zip. Gói zip là bản gốc, giữ nó cho tới khi
 máy đích chạy trót lọt một lượt thật.

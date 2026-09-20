@@ -106,7 +106,11 @@ def test_CLI_thieu_kich_ban_la_ma_2(giong, tmp_path, capsys):
 
 
 def test_CHUA_CAI_TRAM_GIONG_la_ma_3_kem_huong_dan(tmp_path, monkeypatch, capsys):
-    """Fail-closed: không có trạm giọng thì DỪNG với lời chỉ đúng việc phải làm."""
+    """Fail-closed: không có trạm giọng thì DỪNG với lời chỉ đúng việc phải làm.
+
+    Đây là **chỗ chạm** — bước duy nhất trong repo thật sự cần trạm giọng. `doctor` lúc
+    cài chỉ ghi một dòng "chưa bật" và trả mã 0 (chỉ đạo 21/09); mã 3 dành đúng cho lúc
+    này, khi người dùng vừa gọi một lệnh đọc thành tiếng mà máy chưa có gì để đọc."""
     for b in ("VOICE_STATION", "OMNIVOICE_DIR", "OMNIVOICE_PY", "MARKETING_STUDIO_HOME"):
         monkeypatch.delenv(b, raising=False)
     monkeypatch.setenv("MARKETING_STUDIO_HOME", str(tmp_path))
@@ -114,6 +118,7 @@ def test_CHUA_CAI_TRAM_GIONG_la_ma_3_kem_huong_dan(tmp_path, monkeypatch, capsys
     _, err = capsys.readouterr()
     assert ma == SC.STATION_MISSING
     assert "agent-voice-studio" in err and "clone" in err
+    assert "chưa bật" in err.lower() and "lồng tiếng" in err.lower(), err
 
 
 def test_KHONG_con_duong_dan_cua_mot_may_trong_scripts():

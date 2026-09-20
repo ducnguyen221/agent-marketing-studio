@@ -37,7 +37,9 @@ MODULE = "voice_studio"
 STATION_FILE = "station.json"
 
 HUONG_DAN = (
-    "Chưa có trạm giọng. Cài `agent-voice-studio` rồi trỏ biến vào nó:\n"
+    "Năng lực LỒNG TIẾNG chưa bật — bước bạn vừa chạy cần nó.\n"
+    "Viết bài và đăng không cần trạm giọng; chỉ bước tạo giọng đọc (podcast, video có\n"
+    "giọng) mới cần. Bật nó bằng năm bước sau, rồi chạy lại đúng lệnh vừa rồi:\n"
     "  1. git clone <url>/agent-voice-studio ~/Code/agent-voice-studio\n"
     "  2. python -m venv <trạm>/omnivoice/.venv   (trạm mặc định: ~/.voice)\n"
     "  3. <venv>/python -m pip install -e ~/Code/agent-voice-studio\n"

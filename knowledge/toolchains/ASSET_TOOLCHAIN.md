@@ -48,8 +48,12 @@ nếu làm bản đọc bài blog. Văn nói, không đọc nguyên bullet.
 
 Repo này **không** chứa engine giọng. Nó gọi trạm giọng (`agent-voice-studio`) qua adapter
 `scripts/lib/voice.py` — hợp đồng: lệnh ổn định, mã thoát `0/1/2/3`, một dòng JSON cuối
-stdout. Chưa cài trạm thì mọi lệnh dưới đây dừng ở **mã 3** kèm các bước cài; chạy
-`python scripts/pipeline/doctor.py` để xem còn thiếu gì.
+stdout.
+
+Giọng là **năng lực thêm**, không phải điều kiện để dùng repo: viết bài và đăng chạy được
+mà không có nó, và `doctor` chỉ ghi *"giọng: chưa bật"* rồi trả mã 0. Đề nghị cài xuất
+hiện đúng ở đây — chưa cài trạm thì mọi lệnh trong mục này dừng ở **mã 3** kèm đủ các
+bước cài; chạy `python scripts/pipeline/doctor.py` để xem còn thiếu gì.
 
 **Cả bài một lệnh** (cách dùng mặc định — model chỉ nạp một lần):
 ```bash

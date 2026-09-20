@@ -77,11 +77,17 @@ dẫn**, file ngoài git giữ **giá trị**. Chi tiết:
 [`knowledge/toolchains/SECRETS.md`](../knowledge/toolchains/SECRETS.md).
 
 **Giới hạn của `.env`, nói rõ một lần:** chỉ biến đi qua `studio_paths.secret_env()` mới
-đọc được từ file đó. Biến mà **PowerShell** đọc (`$env:X` trong các `.ps1`) thì không —
-PowerShell không có cách nào đọc `.env`, nên những biến đó phải đặt ở cấp user (`setx`)
-hoặc trong môi trường của scheduled task, **kể cả** ở chế độ `embedded`. Không phải đoán:
-`doctor` liệt kê thẳng dòng nào trong `.env` không script nào đọc, và nói rõ dòng nào là
-biến của `.ps1`.
+đọc được từ file đó. `.env` tới được **script Python của repo này**, và chỉ thế:
+
+| Nhóm biến | `.env` có tác dụng? | Phải đặt ở đâu |
+|---|---|---|
+| Trạm & cấu hình máy — `VOICE_STATION`, `VIDEO_STATION`, `OMNIVOICE_PY`, `VOICES_DIR`, `HYPERFRAMES_VERSION`, `WEB_REPO_DIR`, `TG_CONFIG`, `TG_CHAT`, `CHROME_BIN`, `FFMPEG_DIR`, `FFPROBE`, `VIDEO_FONT`, `AGENT_CALL_ENGINES`, `OPCOS_CODEX_BRIDGE` | **có** | `<repo>/.env` là đủ |
+| Biến của `.ps1` (`$env:X`) — `MARKETING_STUDIO_DATA`, `MARKETING_STUDIO_HOME`, `MARKETING_STUDIO_PY` | **không** | cấp user (`setx`) / môi trường của scheduled task |
+| Đường tới file bí mật mà **hook đăng bài của bạn** đọc — `YT_TOKEN_PATH`, `YT_CLIENT_SECRET`, `FB_CONFIG`, `EMAIL_CONFIG` | **không** | cấp user / plist — hook chạy trong tiến trình con nhận môi trường thật, `.env` không với tới |
+
+Không phải đoán: `doctor` liệt kê thẳng dòng **đã điền** nào trong `.env` mà không script
+Python nào đọc, và nói rõ dòng nào là biến của `.ps1`. Dòng `TÊN=` còn để trống thì nó im
+— bộ cài chép nguyên `.env.example` sang, và chưa điền thì chưa có gì để cảnh báo.
 
 `studio.local.json` (bị gitignore) giữ đúng năm khoá:
 
