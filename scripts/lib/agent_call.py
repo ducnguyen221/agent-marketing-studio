@@ -43,8 +43,35 @@ dạng khối `<skill name="…">`. Cùng một chuỗi byte đi tới cả ba e
   đồng hồ im lặng sẽ giết nhầm một lượt đang chạy tốt.
 - **Giết CẢ CÂY tiến trình con.** `claude`/`codex`/`agy` đều đẻ tiến trình cháu (node,
   sandbox, MCP). Giết mỗi tiến trình cha để lại cháu mồ côi giữ cổng và giữ file.
-- **Hai đồng hồ**: tổng (`--timeout`) và im lặng (`--stall`). Một lượt viết bài dài im 3
-  phút là bình thường; im 3 phút *và* chưa in gì suốt 30 phút thì không.
+- **Hai đồng hồ**: tổng (`--timeout`) và im lặng (`--stall`) — nhưng đồng hồ im lặng chỉ
+  được vũ trang cho engine THẬT SỰ phát sóng tiến độ (xem mục dưới).
+
+## Đồng hồ im lặng chỉ đo được thứ có thể quan sát
+
+Bench 20/09 (`BENCH-WRITER-2026-09-20.md` §7.1) giết nhầm một lượt `claude` ở đúng 420 s
+**trong khi `bai.md` đã ghi xong và `--expect` đã xanh**. Nguyên nhân không phải chỉnh sai
+con số: `claude -p --output-format json` **không in một byte nào cho tới câu trả lời cuối**,
+nên với engine đó "im lặng" không phải bằng chứng treo — đồng hồ im lặng hoá ra chỉ là một
+`--timeout` thứ hai, chặt hơn. Lượt thật đo được 250–440 s, mặc định cũ 180 s ⇒ gần như mọi
+lượt sản xuất sẽ bị giết và trả mã 1 ("thử lại ngay") cho một lượt đã xong.
+
+Luật bây giờ, và nó nói về BẰNG CHỨNG chứ không về con số:
+
+1. **Không có nguồn tín hiệu thì không có đồng hồ.** `PHAT_SONG_TIEN_DO` khai engine nào
+   phát tiến độ ra stdout ở định dạng lớp này chọn (`codex --json` có; `claude` và `agy`
+   ở `--output-format json` thì không). Engine im lặng ⇒ đồng hồ im lặng **tắt**, có một
+   dòng log nói rõ, và trần tổng `--timeout` là lưới an toàn duy nhất.
+2. **Artifact lớn lên là tiến triển.** Với engine có phát sóng, mỗi nhịp lớp này đọc lại
+   kích thước các `--expect`; byte tăng thì reset đồng hồ. Đúng luật "cổng là artifact".
+3. **Trạm bật lại được** bằng `engines.<tên>.streams_progress: true` — dành cho ngày
+   chuyển `claude` sang `--output-format stream-json`.
+
+## Cổng chữ nội bộ
+
+Bench §3 đo được 2/4 bài công khai viết thẳng chữ nội bộ của quy trình vào văn bài, tức nói
+cho độc giả biết bài sinh ra từ một artifact nội bộ — và **cả hai người chấm bằng model đều
+bỏ sót**. Model chấm văn phong; nó không đếm chữ. Nên cổng này nằm ở tầng máy: `--expect`
+nào là bản công khai (`.md`/`.txt`/`.html`) thì bị soi trước khi lượt được tính là xong.
 
 Xem `scripts/pipeline/agent_call.py` cho CLI, `AGENT-CALL-DESIGN.md` §2 cho hợp đồng gốc.
 """
@@ -83,6 +110,14 @@ KIND_ORDER = ("auth", "network", "quota", "model_access", "engine")
 # thì lỗi đến từ tầng hệ điều hành, thông điệp không nói gì về prompt — nên chặn ở đây,
 # bằng mã 2 ("sửa cấu hình"), chứ không để nó thành một mã 1 khó hiểu.
 AGY_ARGV_LIMIT = 30_000
+
+# Engine nào THẬT SỰ phát tiến độ ra stdout ở định dạng lớp này chọn cho nó (xem docstring,
+# mục "Đồng hồ im lặng"). Đây là một SỰ THẬT ĐO ĐƯỢC về từng CLI, không phải một tuỳ chọn:
+# đổi dòng nào ở đây thì phải đổi `build_command` của engine đó trước.
+#   claude  `-p --output-format json`  — im tới câu cuối (đo 20/09, lượt bị giết ở 420 s)
+#   codex   `exec --json`              — JSONL liên tục: thread.started · item.completed…
+#   agy     `--output-format json`     — im tới câu cuối
+PHAT_SONG_TIEN_DO = {"claude": False, "codex": True, "agy": False}
 
 
 class QuotaExhausted(SC.StudioError):
@@ -634,6 +669,34 @@ def kill_tree(proc) -> None:
         pass
 
 
+def engine_phat_song(engine: str, cfg=None) -> bool:
+    """Engine này có phát sóng tiến độ ra stdout không? Trạm khai đè được.
+
+    Không có thì đồng hồ im lặng vô nghĩa — xem docstring đầu file. Trạm nào đổi cách gọi
+    CLI (vd `claude --output-format stream-json`) thì khai `streams_progress: true` ở
+    `engines.json`, không phải sửa mã.
+    """
+    spec = ((cfg or {}).get("engines") or {}).get(engine) or {}
+    if "streams_progress" in spec:
+        return bool(spec["streams_progress"])
+    return bool(PHAT_SONG_TIEN_DO.get(engine, False))
+
+
+def _hoi_tien_trien(probe):
+    """Hỏi dấu tiến triển. Probe nổ ⇒ None = "không biết", KHÔNG phải "đứng yên".
+
+    Phân biệt này quyết định sống chết của một lượt: `stat()` một file đang bị engine ghi
+    dở có thể ném lỗi trên Windows, và hiểu lỗi đó thành "không tiến triển" là giết đúng
+    lượt đang chạy tốt nhất.
+    """
+    if probe is None:
+        return None
+    try:
+        return probe()
+    except Exception:
+        return None
+
+
 def _spawn(argv, *, cwd, env, co_stdin: bool):
     kw = {}
     if os.name == "nt":
@@ -647,12 +710,21 @@ def _spawn(argv, *, cwd, env, co_stdin: bool):
         text=True, encoding="utf-8", errors="replace", bufsize=1, **kw)
 
 
-def run_process(argv, stdin_text=None, *, cwd=None, env=None, timeout=1800, stall=180) -> dict:
+def run_process(argv, stdin_text=None, *, cwd=None, env=None, timeout=1800, stall=180,
+                progress=None) -> dict:
     """Chạy một tiến trình dưới hai đồng hồ -> {rc, stdout, stderr, ms, timed_out, reason}.
 
     `rc = -1` khi bị giết vì quá giờ: không có mã thoát thật nên không được giả vờ có một
     mã. Bẫy `ma_thoat_khong_phai_phep_thu` — mã thoát chỉ nói tiến trình đã kết thúc thế
     nào, còn "lượt này có sản phẩm không" là câu hỏi khác, trả lời bằng `--expect`.
+
+    `stall = 0` ⇒ TẮT hẳn đồng hồ im lặng. Người gọi tắt nó khi engine không phát sóng
+    tiến độ: đo sự im lặng của một tiến trình vốn im lặng là đo chính cái đồng hồ.
+
+    `progress` là một hàm không đối số trả về một "dấu tiến triển" so sánh được (lớp gọi
+    truyền tổng byte của các `--expect`). Dấu đổi ⇒ reset đồng hồ im lặng. Đây là nguồn
+    tín hiệu THỨ HAI, bên cạnh dòng ra stdout — và nó là thứ duy nhất quan sát được khi
+    engine đang chạy một tool dài mà chưa nói gì.
     """
     t0 = time.monotonic()
     p = _spawn(argv, cwd=cwd, env=env, co_stdin=stdin_text is not None)
@@ -691,6 +763,7 @@ def run_process(argv, stdin_text=None, *, cwd=None, env=None, timeout=1800, stal
                 pass
 
     het_gio, ly_do = False, ""
+    dau = [_hoi_tien_trien(progress)]   # mốc gốc: lần hỏi đầu KHÔNG được tính là "vừa tiến"
     while True:
         if p.poll() is not None:
             break
@@ -699,8 +772,16 @@ def run_process(argv, stdin_text=None, *, cwd=None, env=None, timeout=1800, stal
             het_gio, ly_do = True, f"quá tổng {timeout}s"
             break
         if stall and gio - moc[0] > stall:
-            het_gio, ly_do = True, f"im lặng quá {stall}s"
-            break
+            # Hỏi dấu tiến triển NGAY TRƯỚC KHI GIẾT, không theo nhịp riêng: đồng hồ im
+            # lặng có thể ngắn hơn bất kỳ nhịp nào ta chọn, và một lượt bị giết oan vì
+            # "chưa tới nhịp hỏi" thì cũng oan y như không hỏi. Cách này còn rẻ hơn — mỗi
+            # chu kỳ `stall` mới đi `stat()` một lần.
+            moi = _hoi_tien_trien(progress)
+            if moi is not None and moi != dau[0]:
+                dau[0], moc[0] = moi, gio
+            else:
+                het_gio, ly_do = True, f"im lặng quá {stall}s"
+                break
         time.sleep(0.2)
     if het_gio:
         kill_tree(p)
@@ -715,6 +796,56 @@ def run_process(argv, stdin_text=None, *, cwd=None, env=None, timeout=1800, stal
 
 # ── Cổng artifact ───────────────────────────────────────────────────────────────────
 
+# `/c/kho/...` — họ đường dẫn của Git Bash/MSYS: một chữ cái ổ đĩa làm đoạn đầu.
+MAU_MSYS = re.compile(r"^/([A-Za-z])(?:/(.*))?$")
+MAU_O_DIA = re.compile(r"^[A-Za-z]:[\\/]")
+
+
+def _he_windows() -> bool:
+    """Hệ đường dẫn đang chạy có phải của Windows không — hỏi `os.path`, không hỏi `sys.platform`.
+
+    Hỏi qua `os.path` để một máy kiểm được CẢ HAI họ (test đổi `os.path` sang
+    `posixpath`/`ntpath`). Dùng `sys.platform` thì nhánh macOS chỉ chạy thật trên macOS —
+    tức chưa từng chạy, cho tới đúng hôm di trú.
+    """
+    return os.path.sep == "\\"
+
+
+def chuan_hoa_duong(tho) -> Path:
+    """Nhận CẢ HAI họ đường dẫn; đường không giải được ⇒ mã 2 kèm chỉ dẫn, không im lặng.
+
+    Bench 20/09 (§7.2): `--expect "/c/kho/.../research.json"` gõ từ Git Bash bị Python
+    hiểu thành một đường **không tồn tại**, nên cổng artifact báo "CLI trả mã 0 nhưng thiếu
+    artifact" cho cả 4 nhánh — trong khi cả 4 file đã ghi đúng chỗ — và trả **mã 1**, tức
+    bảo lịch chạy lại một lượt đã thành công. Hỏng câm, và hỏng theo hướng đắt tiền.
+
+    Hai luật:
+    · `/c/...` trên Windows ⇒ dịch sang `C:/...` (đường Git Bash là đường HỢP LỆ, chỉ khác họ).
+    · Đường tuyệt đối của họ kia mà không dịch được ⇒ `ContractError` (mã 2). "Sửa cấu
+      hình" mới là sự thật ở đây; "thử lại ngay" thì thử bao nhiêu lần cũng vậy.
+    """
+    s = str(tho).strip().strip('"')
+    if not s:
+        raise SC.ContractError("--expect rỗng")
+    if _he_windows():
+        if MAU_O_DIA.match(s):
+            return Path(s).expanduser()
+        if s.startswith("/") or s.startswith("\\"):
+            m = MAU_MSYS.match(s.replace("\\", "/"))
+            if m:
+                return Path(m.group(1).upper() + ":/" + (m.group(2) or "")).expanduser()
+            raise SC.ContractError(
+                f"--expect {s!r} là đường POSIX tuyệt đối, máy này dùng đường Windows. "
+                f"Viết đường Windows (D:/... ) hoặc đường kiểu Git Bash có ổ đĩa (/d/...), "
+                f"hoặc đường tương đối so với --cwd.")
+        return Path(s).expanduser()
+    if MAU_O_DIA.match(s):
+        raise SC.ContractError(
+            f"--expect {s!r} là đường ổ đĩa Windows, máy này dùng đường POSIX. "
+            f"Viết đường POSIX tuyệt đối hoặc đường tương đối so với --cwd.")
+    return Path(s).expanduser()
+
+
 def parse_expect(spec: str) -> tuple[Path, int]:
     """`đường/dẫn:1200` -> (Path, 1200). Không có phần số ⇒ ngưỡng 1 byte (chỉ đòi tồn tại).
 
@@ -724,8 +855,17 @@ def parse_expect(spec: str) -> tuple[Path, int]:
     s = str(spec)
     duong, dau, so = s.rpartition(":")
     if dau and so.isdigit() and duong:
-        return Path(duong).expanduser(), int(so)
-    return Path(s).expanduser(), 1
+        return chuan_hoa_duong(duong), int(so)
+    return chuan_hoa_duong(s), 1
+
+
+def _dau_tien_trien(specs, cwd):
+    """Dấu tiến triển QUAN SÁT ĐƯỢC của một lượt: tổng byte các artifact `--expect`.
+
+    Đây là thứ duy nhất nhìn thấy được khi engine đang chạy một tool dài mà chưa in gì.
+    Chỉ đọc kích thước, không đọc nội dung: file đang ghi dở đọc ra cũng vô nghĩa.
+    """
+    return tuple(e["bytes"] for e in check_expect(specs, cwd=cwd))
 
 
 def check_expect(specs, *, cwd=None) -> list[dict]:
@@ -738,6 +878,91 @@ def check_expect(specs, *, cwd=None) -> list[dict]:
         kich = p.stat().st_size if co else 0
         ra.append({"path": str(p), "min_bytes": nguong, "bytes": kich,
                    "ok": bool(co and kich >= nguong)})
+    return ra
+
+
+# ── Cổng chữ nội bộ lọt vào bản công khai ──────────────────────────────────────────
+#
+# Bench 20/09 (§3): hai trong bốn bài công khai viết thẳng chữ nội bộ của quy trình vào
+# văn bài — tức nói cho độc giả biết bài được sinh từ một artifact nội bộ. CẢ HAI người
+# chấm bằng model đều bỏ sót, nên cổng phải nằm ở tầng máy.
+#
+# Các chuỗi dưới đây dựng bằng `chr()` chứ không viết literal, cùng lý do với
+# `tests/test_no_identity_leak.py`: file này nằm trong cây git và chính nó có thể bị đem
+# soi bằng `--check-text`. Một cổng mang sẵn thứ nó đi tìm là một cổng luôn đỏ vì chính nó.
+_BO = "b" + chr(0x1ED9)                        # bộ
+_DU = "d" + chr(0x1EEF)                        # dữ
+_KIEN = "ki" + chr(0x1EC7) + "n"               # kiện
+_LIEU = "li" + chr(0x1EC7) + "u"               # liệu
+_NGHIEN_CUU = "nghi" + chr(0xEA) + "n c" + chr(0x1EE9) + "u"      # nghiên cứu
+_DONG_BANG = chr(0x111) + chr(0xF3) + "ng b" + chr(0x103) + "ng"  # đóng băng
+
+# Nhóm 1 — chữ CHỈ tồn tại trong quy trình nội bộ. Thấy là đỏ, không cần ngữ cảnh.
+CHU_NOI_BO = [
+    _BO + " " + _DU + " " + _KIEN,
+    _BO + " " + _NGHIEN_CUU,
+    _BO + " " + _DONG_BANG,
+]
+
+# Nhóm 2 — chữ tiếng Việt BÌNH THƯỜNG, chỉ hỏng khi dùng theo nghĩa trỏ-vào-quy-trình.
+# "Meta mở bộ dữ liệu huấn luyện" là câu đúng của một bài tin dữ liệu và không được chặn;
+# "chưa bên nào phản hồi trong bộ dữ liệu" thì độc giả không biết "bộ dữ liệu" nào — đó
+# chính là chỗ khuôn nội bộ lòi ra. Nên nhóm này đòi có dấu trỏ đi kèm.
+_TRO_TRUOC = ("trong", "theo", chr(0x1EDF))    # trong · theo · ở
+_TRO_SAU = ("n" + chr(0xE0) + "y", "tr" + chr(0xEA) + "n")   # này · trên
+CHU_NOI_BO_CO_NGU_CANH = [_BO + " " + _DU + " " + _LIEU]
+
+# `(?:^|\W)` trước dấu trỏ là bắt buộc, không phải làm đẹp: thiếu nó thì "mở bộ dữ liệu"
+# khớp dấu trỏ "ở" nằm trong chữ "mở" — cổng đỏ vào đúng câu tiếng Việt lành lặn, và một
+# cổng hay báo oan là cổng sẽ bị tắt.
+_MAU_NOI_BO = [(c, re.compile(re.escape(c), re.I)) for c in CHU_NOI_BO] + [
+    (c, re.compile(r"(?:(?:^|\W)(?:%s)\s+%s)|(?:%s\s+(?:%s)(?:\W|$))"
+                   % ("|".join(_TRO_TRUOC), re.escape(c), re.escape(c), "|".join(_TRO_SAU)), re.I))
+    for c in CHU_NOI_BO_CO_NGU_CANH]
+
+# Chỉ soi BẢN CÔNG KHAI. `*-top.json`, `research.json`… là artifact nội bộ của chính đường
+# ống — chữ nội bộ nằm ở đó là đúng chỗ, chặn nó là chặn nhầm.
+DUOI_CONG_KHAI = {".md", ".txt", ".html", ".htm"}
+
+
+def quet_chu_noi_bo(text: str) -> list[dict]:
+    """-> [{"chu", "dong", "trich"}…]. Rỗng = sạch.
+
+    Chuẩn hoá NFC trước khi so: cùng một chữ "ộ" có hai cách mã hoá, và một cổng thua vì
+    tổ hợp dấu thì thua im lặng.
+    """
+    import unicodedata
+    ra = []
+    for so, dong in enumerate(unicodedata.normalize("NFC", text or "").splitlines(), 1):
+        for chu, mau in _MAU_NOI_BO:
+            m = mau.search(dong)
+            if m:
+                ra.append({"chu": chu, "dong": so, "trich": dong.strip()[:160]})
+    return ra
+
+
+def quet_file_cong_khai(paths, *, cwd=None, loc_duoi=True) -> list[dict]:
+    """Soi các artifact là BẢN CÔNG KHAI -> danh sách phát hiện (có `path`).
+
+    Nói đúng cái nó đo: "file X dòng N có chữ Y". Không suy ra "bài này sẽ bị bóc mẽ" —
+    cổng không đo được điều đó (luật phát ngôn của `blog_gates.py`).
+
+    `loc_duoi=False` khi NGƯỜI gọi chỉ đích danh từng tệp (`--check-text`): lúc đó phần
+    lọc theo đuôi là đoán thay người, và đoán sai thì cổng im lặng không soi gì cả.
+    """
+    ra = []
+    for tho in paths or []:
+        p = Path(tho)
+        if not p.is_absolute() and cwd:
+            p = Path(cwd) / p
+        if (loc_duoi and p.suffix.lower() not in DUOI_CONG_KHAI) or not p.is_file():
+            continue
+        try:
+            noi_dung = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for hit in quet_chu_noi_bo(noi_dung):
+            ra.append({"path": str(p), **hit})
     return ra
 
 
@@ -784,7 +1009,8 @@ TRAN_CHO = 3 * 3600  # `--on-quota wait`: chờ tối đa 3 tiếng, quá thì t
 
 def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_mode="inline",
          cwd=None, timeout=1800, stall=180, expect=(), on_quota="fallback", fallback=None,
-         cfg=None, ledger=None, station=None, env=None, sleep=time.sleep) -> dict:
+         cfg=None, ledger=None, station=None, env=None, sleep=time.sleep,
+         content_gate=True) -> dict:
     """Gọi một agent headless theo chuỗi engine -> dict kết quả (KHÔNG ném lỗi engine).
 
     Trả về `{"ok":bool,"code":int,"engine":…,"model":…,"ms":…,"tried":[…],"expect":[…]}`.
@@ -801,6 +1027,11 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
     cwd = Path(cwd).expanduser().resolve() if cwd else Path.cwd()
     if not cwd.is_dir():
         raise SC.ContractError(f"--cwd không phải thư mục: {cwd}")
+    # Kiểm hình dạng `--expect` TRƯỚC khi spawn. Một đường dẫn sai họ là lỗi hợp đồng, và
+    # phát hiện nó SAU lượt gọi nghĩa là đã đốt 250–440 giây cùng $2–4 cho một câu trả lời
+    # sẽ bị vứt đi (bench 20/09, §7.2).
+    for s in expect or ():
+        parse_expect(s)
 
     ds_skill = [s.strip() for s in (skills.split(",") if isinstance(skills, str) else list(skills))
                 if str(s).strip()]
@@ -826,9 +1057,19 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
             p_eng = prompt_inline
         argv, stdin_text = build_command(eng, mdl, p_eng, tools=tools, cwd=cwd, cfg=cfg,
                                          native_skill=native)
+        # Đồng hồ im lặng CHỈ vũ trang cho engine thật sự phát sóng tiến độ (docstring đầu
+        # file). Với engine im tới câu cuối, "im lặng" không phải bằng chứng treo — và một
+        # đồng hồ đo cái nó không quan sát được thì chỉ giết nhầm, không cứu được gì.
+        phat_song = engine_phat_song(eng, cfg)
+        stall_luot = stall if phat_song else 0
         SC.log(f"[agent-call] {eng}:{mdl} — {len(p_eng)} ký tự prompt, tool={','.join(_tools_list(tools)) or '(không)'}")
+        if stall and not stall_luot:
+            SC.log(f"[agent-call] {eng} không phát tiến độ ra stdout — tắt đồng hồ im lặng "
+                   f"({stall}s), chỉ còn trần tổng {timeout}s")
         try:
-            r = run_process(argv, stdin_text, cwd=cwd, env=env, timeout=timeout, stall=stall)
+            r = run_process(argv, stdin_text, cwd=cwd, env=env, timeout=timeout,
+                            stall=stall_luot,
+                            progress=(lambda: _dau_tien_trien(expect, cwd)) if expect else None)
         except FileNotFoundError:
             r = {"rc": 127, "stdout": "", "stderr": f"không có {argv[0]!r} trên PATH",
                  "ms": 0, "timed_out": False, "reason": "station"}
@@ -852,6 +1093,17 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
             loai = {"kind": "engine", "resets_at": None,
                     "error": "CLI trả mã 0 nhưng thiếu artifact: "
                              + ", ".join(f"{e['path']} ({e['bytes']}/{e['min_bytes']} B)" for e in thieu)}
+        ro = []
+        if loai["kind"] is None and content_gate and expect:
+            ro = quet_file_cong_khai([e["path"] for e in ktra], cwd=cwd)
+            if ro:
+                # KHÔNG chuyển engine vì chuyện này: engine khác cũng viết từ cùng một
+                # prompt, cùng một khuôn. Mã 1 = lịch soạn lại một bản khác, và bản mới đi
+                # qua đúng cổng này.
+                loai = {"kind": "content", "resets_at": None,
+                        "error": "bản công khai lọt chữ nội bộ: "
+                                 + "; ".join(f"{Path(h['path']).name}:{h['dong']} {h['chu']!r}"
+                                             for h in ro[:5])}
 
         luot = {"engine": eng, "model": mdl, "ms": r["ms"], "rc": r["rc"],
                 "kind": loai["kind"], "resets_at": loai["resets_at"],
@@ -862,7 +1114,7 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
                            "cwd": str(cwd), "prompt_bytes": len(p_eng.encode("utf-8")),
                            "skills": ds_skill, "skills_mode": skills_mode,
                            "tools": _tools_list(tools),
-                           "expect": ktra,
+                           "expect": ktra, "noi_bo": ro, "stall": stall_luot,
                            "chain_pos": i, "chain_len": len(chuoi)})
 
         if loai["kind"] is None:

@@ -45,6 +45,10 @@ SHIM = textwrap.dedent('''
         if sot2:
             with open(sot2, "a", encoding="utf-8") as f:
                 f.write(data)
+    if kb.get("sleep_im"):
+        # Ngủ mà KHÔNG in gì — đúng hình dạng của `claude -p --output-format json`,
+        # thứ không phát ra một byte nào cho tới câu trả lời cuối cùng.
+        time.sleep(kb["sleep_im"])
     if kb.get("sleep"):
         # In một dòng trước khi ngủ để đồng hồ "im lặng" có mốc bắt đầu thật.
         print("bat dau", flush=True)
@@ -306,8 +310,8 @@ def test_load_config_thieu_file_thi_dung_mac_dinh(tmp_path):
 @pytest.fixture
 def kho_skill(tmp_path):
     goc = tmp_path / "plugins"
-    (goc / "kpim-skills" / "skills" / "blog-writing").mkdir(parents=True)
-    (goc / "kpim-skills" / "skills" / "blog-writing" / "SKILL.md").write_text(
+    (goc / "studio-skills" / "skills" / "blog-writing").mkdir(parents=True)
+    (goc / "studio-skills" / "skills" / "blog-writing" / "SKILL.md").write_text(
         "# Blog writing\nLUAT RIENG CUA GIONG VIET", encoding="utf-8")
     (goc / "hook-writer").mkdir(parents=True)
     (goc / "hook-writer" / "SKILL.md").write_text("# Hook\nMO BAI", encoding="utf-8")
@@ -315,10 +319,10 @@ def kho_skill(tmp_path):
 
 
 def test_inline_skill_chen_noi_dung_that_vao_dau_prompt(kho_skill):
-    ra = AC.inline_skills("VIET BAI", ["kpim-skills:blog-writing"], kho_skill)
+    ra = AC.inline_skills("VIET BAI", ["studio-skills:blog-writing"], kho_skill)
     assert "LUAT RIENG CUA GIONG VIET" in ra
     assert ra.index("LUAT RIENG") < ra.index("VIET BAI"), "skill phải đứng TRƯỚC mệnh lệnh"
-    assert '<skill name="kpim-skills:blog-writing">' in ra
+    assert '<skill name="studio-skills:blog-writing">' in ra
 
 
 def test_inline_skill_tim_duoc_ca_ten_tran(kho_skill):
@@ -336,7 +340,7 @@ def test_native_tren_engine_khong_co_duong_native_thi_ROI_VE_inline(kho_skill, s
     cfg = _cfg(shim, agy={})
     cfg["skill_roots"] = [str(p) for p in kho_skill]
     log = tmp_path / "argv.log"
-    AC.call("VIET BAI", engine="agy", skills="kpim-skills:blog-writing", skills_mode="native",
+    AC.call("VIET BAI", engine="agy", skills="studio-skills:blog-writing", skills_mode="native",
             cfg=cfg, cwd=tmp_path, timeout=60, stall=30, ledger=tmp_path / "so.jsonl",
             env=_env({"rc": 0, "stdout": [json.dumps({"response": "x"})]},
                      SHIM_ARGV_LOG=str(log)))
@@ -349,7 +353,7 @@ def test_cung_mot_chuoi_byte_di_toi_ca_ba_engine(kho_skill, shim, tmp_path):
     """Điều kiện để bài so sánh CÔNG BẰNG: prompt gửi đi phải giống nhau từng byte."""
     cfg = _cfg(shim, claude={}, codex={}, agy={})
     cfg["skill_roots"] = [str(p) for p in kho_skill]
-    p = AC.inline_skills("VIET BAI", ["kpim-skills:blog-writing"], AC.skill_roots(cfg))
+    p = AC.inline_skills("VIET BAI", ["studio-skills:blog-writing"], AC.skill_roots(cfg))
     _, stdin_claude = AC.build_command("claude", "m", p, cfg=cfg)
     _, stdin_codex = AC.build_command("codex", "m", p, cfg=cfg)
     argv_agy, _ = AC.build_command("agy", "m", p, cfg=cfg)
@@ -359,7 +363,12 @@ def test_cung_mot_chuoi_byte_di_toi_ca_ba_engine(kho_skill, shim, tmp_path):
 
 # ── 6. Cổng artifact ────────────────────────────────────────────────────────────────
 
-def test_parse_expect_khong_nham_o_dia_windows_voi_nguong_byte():
+def test_parse_expect_khong_nham_o_dia_windows_voi_nguong_byte(monkeypatch):
+    # Ép họ đường dẫn Windows: câu hỏi ở đây là "ổ đĩa `C:` có bị hiểu thành ngưỡng byte
+    # không", và nó phải trả lời được y hệt khi bộ test chạy trên máy macOS.
+    import ntpath
+    import os as _os
+    monkeypatch.setattr(_os, "path", ntpath)
     p, n = AC.parse_expect("C:" + chr(92) + "tmp" + chr(92) + "a.json:800")
     assert n == 800 and str(p).endswith("a.json")
     p2, n2 = AC.parse_expect("out/a.json")
@@ -615,3 +624,207 @@ def test_cli_engine_la_la_ma_2(tmp_path):
          "--engine", "gpt4all", "--json"],
         input="x", capture_output=True, text=True, encoding="utf-8", timeout=120)
     assert r.returncode == AC.CONTRACT_ERROR
+
+
+# ── 11. Đồng hồ im lặng phải đo TIẾN TRIỂN, không đo sự im lặng ─────────────────────
+#
+# Bench 20/09 (BENCH-WRITER §7.1): lượt `claude` chặng B bị giết đúng ở 420 s với
+# `rc = -1, "im lặng quá 420s"` **trong khi `bai.md` đã ghi xong đủ và `--expect` đã
+# xanh**. `claude -p --output-format json` không in một byte nào cho tới câu cuối, nên
+# với engine đó "im lặng" KHÔNG phải bằng chứng treo — đồng hồ im lặng chỉ là một
+# `--timeout` thứ hai, chặt hơn. Mặc định 180 s trong khi lượt thật mất 250–440 s ⇒ gần
+# như mọi lượt sản xuất sẽ bị giết và trả mã 1 ("thử lại ngay") cho một lượt đã xong.
+
+def test_engine_im_lang_roi_moi_in_thi_KHONG_duoc_bi_giet(shim, tmp_path):
+    """Tái hiện đúng lượt bị giết: im 4 s, rồi in và ghi file đầy đủ. Phải là mã 0."""
+    cfg = _cfg(shim, claude={})
+    bai = tmp_path / "bai.md"
+    spec = {"rc": 0, "sleep_im": 4,
+            "stdout": [json.dumps({"result": "xong", "usage": {"output_tokens": 9}})],
+            "write": {str(bai): "n" * 900}}
+    ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=2,
+                 expect=[str(bai) + ":800"], fallback="",
+                 ledger=tmp_path / "so.jsonl", env=_env(spec))
+    assert ra["ok"] and ra["code"] == AC.OK, ra.get("error")
+    assert ra["tried"][0]["rc"] == 0, "rc = -1 nghĩa là lượt bị giết, không phải kết thúc"
+
+
+def test_engine_CO_phat_song_tien_do_thi_van_bi_dong_ho_im_lang_bat(shim, tmp_path):
+    """Lưới an toàn không được mất: `codex --json` in JSONL liên tục, im lặng là bất thường."""
+    cfg = _cfg(shim, codex={})
+    ra = AC.call("x", engine="codex", cfg=cfg, cwd=tmp_path, timeout=120, stall=2,
+                 fallback="", ledger=tmp_path / "so.jsonl",
+                 env=_env({"sleep_im": 30}))
+    assert not ra["ok"] and ra["code"] == AC.ENGINE_ERROR
+    assert "im lặng" in ra["error"]
+
+
+def test_tram_khai_streams_progress_thi_vu_trang_lai_dong_ho(shim, tmp_path):
+    """Cửa thoát: trạm nào chuyển `claude` sang `stream-json` thì bật lại được ở engines.json."""
+    cfg = _cfg(shim, claude={"streams_progress": True})
+    ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=120, stall=2,
+                 fallback="", ledger=tmp_path / "so.jsonl", env=_env({"sleep_im": 30}))
+    assert not ra["ok"] and "im lặng" in ra["error"]
+
+
+def test_artifact_lon_len_duoc_tinh_la_TIEN_TRIEN(shim, tmp_path):
+    """Tín hiệu tiến độ thứ hai: `--expect` lớn dần thì reset đồng hồ im lặng."""
+    dem = {"n": 0}
+
+    def tien():
+        dem["n"] += 1
+        return dem["n"]
+
+    r = AC.run_process([sys.executable, str(shim)], None, cwd=tmp_path,
+                       env=_env({"sleep_im": 8, "read_stdin": False}),
+                       timeout=60, stall=3, progress=tien)
+    assert not r["timed_out"] and r["rc"] == 0, r["reason"]
+    assert dem["n"] >= 2, "probe tiến độ phải được hỏi nhiều lần trong lúc chờ"
+
+
+def test_artifact_dung_yen_thi_dong_ho_im_lang_van_bat(shim, tmp_path):
+    r = AC.run_process([sys.executable, str(shim)], None, cwd=tmp_path,
+                       env=_env({"sleep_im": 30, "read_stdin": False}),
+                       timeout=120, stall=3, progress=lambda: 0)
+    assert r["timed_out"] and "im lặng" in r["reason"]
+
+
+# ── 12. `--expect` nhận CẢ HAI họ đường dẫn, sai thì nổ to ──────────────────────────
+#
+# Bench 20/09 (BENCH-WRITER §7.2): `--expect "/c/kho/.../research.json"` gõ từ Git Bash
+# bị Python hiểu thành một đường không tồn tại, nên cổng báo "CLI trả mã 0 nhưng thiếu
+# artifact" cho CẢ 4 nhánh chặng A, trong khi cả 4 file đã ghi đúng chỗ. Mã trả về là 1
+# ("thử lại ngay") ⇒ lịch chạy lại một lượt đã thành công. Hỏng CÂM.
+#
+# Hai họ đường dẫn được mô phỏng bằng `monkeypatch` `os.path`: máy đích của cuộc di trú là
+# macOS, mà luật đường dẫn nào chỉ chạy được trên đúng một hệ thì nó chưa từng được kiểm.
+
+def _he_duong_dan(monkeypatch, he):
+    import os as _os
+    monkeypatch.setattr(_os, "path", he)
+
+
+def test_duong_posix_kieu_git_bash_duoc_chuan_hoa_tren_windows(monkeypatch):
+    import ntpath
+    _he_duong_dan(monkeypatch, ntpath)
+    p, n = AC.parse_expect("/c/kho/tin/research.json:800")
+    assert n == 800
+    assert str(p).replace(chr(92), "/").lower() == "c:/kho/tin/research.json"
+
+
+def test_duong_posix_khong_giai_duoc_tren_windows_la_ma_2(monkeypatch):
+    import ntpath
+    _he_duong_dan(monkeypatch, ntpath)
+    with pytest.raises(SC.ContractError) as e:
+        AC.parse_expect("/" + "home" + "/ai/bai.md")
+    assert "--expect" in str(e.value)
+
+
+def test_duong_o_dia_windows_tren_may_posix_la_ma_2(monkeypatch):
+    import posixpath
+    _he_duong_dan(monkeypatch, posixpath)
+    with pytest.raises(SC.ContractError):
+        AC.parse_expect("C:" + chr(92) + "Users" + chr(92) + "ai" + chr(92) + "bai.md")
+
+
+def test_duong_tuong_doi_khong_bi_cong_chuan_hoa_dong_cham(monkeypatch):
+    import ntpath
+    import posixpath
+    for he in (ntpath, posixpath):
+        _he_duong_dan(monkeypatch, he)
+        p, n = AC.parse_expect("out/bai.md:120")
+        assert n == 120 and str(p).replace(chr(92), "/") == "out/bai.md"
+
+
+def test_expect_sai_duong_thi_no_TRUOC_khi_dot_mot_luot_model(shim, tmp_path, monkeypatch):
+    """Mã 2 phải tới TRƯỚC lúc spawn: sai hợp đồng không đáng một lượt $3,78."""
+    import ntpath
+    _he_duong_dan(monkeypatch, ntpath)
+    dau_vet = tmp_path / "da-chay.txt"
+    cfg = _cfg(shim, claude={})
+    with pytest.raises(SC.ContractError):
+        AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
+                expect=["/" + "home" + "/ai/bai.md"], fallback="",
+                ledger=tmp_path / "so.jsonl",
+                env=_env({"rc": 0, "write": {str(dau_vet): "1"}}))
+    assert not dau_vet.exists(), "engine đã chạy dù hợp đồng sai"
+
+
+# ── 13. Cổng chữ nội bộ lọt vào bản công khai ──────────────────────────────────────
+#
+# Bench 20/09 (BENCH-WRITER §3): 2/4 bài công khai viết thẳng chữ nội bộ của quy trình vào
+# văn bài, tức nói cho độc giả biết bài được sinh từ một artifact nội bộ. CẢ HAI người chấm
+# bằng model đều BỎ SÓT. Đây là lý do cổng phải nằm ở tầng máy: model chấm văn phong, nó
+# không đếm chữ.
+
+CAU_RO_CODEX = "Sự cố Gemini trong bộ dữ kiện này là một lời nhắc rất rõ."
+CAU_RO_GEMINI = "Tới giờ chưa bên nào phản hồi trong bộ dữ liệu."
+CAU_SACH = "Nếu tòa đồng ý rằng phối hợp giảm tốc là vi phạm, sau này không CEO nào dám nói."
+
+
+def test_cong_chu_noi_bo_bat_dung_hai_ca_cua_bench():
+    assert AC.quet_chu_noi_bo(CAU_RO_CODEX), "ca của bài A (codex) phải đỏ"
+    assert AC.quet_chu_noi_bo(CAU_RO_GEMINI), "ca của bài D (agy:gemini) phải đỏ"
+    assert not AC.quet_chu_noi_bo(CAU_SACH), "bài B/C sạch thì không được đỏ"
+
+
+def test_bo_du_lieu_nghia_thuong_khong_bi_bat():
+    """`bộ dữ liệu` là tiếng Việt bình thường; chỉ cấm khi dùng theo nghĩa trỏ-vào-quy-trình."""
+    assert not AC.quet_chu_noi_bo("Meta vừa mở bộ dữ liệu huấn luyện 15 nghìn tỉ token.")
+    assert not AC.quet_chu_noi_bo("Một bộ dữ liệu sạch đáng giá hơn mô hình to.")
+
+
+def test_cong_chu_noi_bo_bao_so_dong_va_trich_dan():
+    ra = AC.quet_chu_noi_bo("dòng một\ncâu có bộ dữ kiện nằm giữa\ndòng ba\n")
+    assert len(ra) == 1 and ra[0]["dong"] == 2
+    assert "bộ dữ kiện" in ra[0]["trich"]
+
+
+def test_expect_xanh_nhung_lot_chu_noi_bo_thi_KHONG_duoc_la_ma_0(shim, tmp_path):
+    cfg = _cfg(shim, claude={})
+    bai = tmp_path / "bai.md"
+    spec = dict(OK_CLAUDE, write={str(bai): CAU_RO_CODEX + "\n" + "n" * 900})
+    ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
+                 expect=[str(bai) + ":800"], fallback="",
+                 ledger=tmp_path / "so.jsonl", env=_env(spec))
+    assert not ra["ok"] and ra["code"] == AC.ENGINE_ERROR
+    assert ra["kind"] == "content" and "bai.md" in ra["error"]
+
+
+def test_cong_chu_noi_bo_khong_soi_artifact_JSON(shim, tmp_path):
+    """`*-top.json` là artifact NỘI BỘ của đường ống — chữ nội bộ ở đó là đúng chỗ."""
+    cfg = _cfg(shim, claude={})
+    ra_json = tmp_path / "top.json"
+    spec = dict(OK_CLAUDE, write={str(ra_json): json.dumps({"ghi_chu": CAU_RO_CODEX,
+                                                            "chen": "x" * 900})})
+    ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
+                 expect=[str(ra_json) + ":800"], fallback="",
+                 ledger=tmp_path / "so.jsonl", env=_env(spec))
+    assert ra["ok"], ra.get("error")
+
+
+def test_cong_chu_noi_bo_tat_duoc_khi_ban_giao_noi_bo(shim, tmp_path):
+    cfg = _cfg(shim, claude={})
+    bai = tmp_path / "bai.md"
+    spec = dict(OK_CLAUDE, write={str(bai): CAU_RO_GEMINI + "\n" + "n" * 900})
+    ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
+                 expect=[str(bai) + ":800"], fallback="", content_gate=False,
+                 ledger=tmp_path / "so.jsonl", env=_env(spec))
+    assert ra["ok"], ra.get("error")
+
+
+def test_cli_check_text_chay_doc_lap_khong_can_engine(tmp_path):
+    import subprocess
+    ban = tmp_path / "bai.md"
+    ban.write_text(CAU_RO_CODEX, encoding="utf-8")
+    sach = tmp_path / "sach.md"
+    sach.write_text(CAU_SACH, encoding="utf-8")
+    cli = [sys.executable, str(ROOT / "scripts" / "pipeline" / "agent_call.py")]
+    r = subprocess.run(cli + ["--check-text", str(ban), "--json"],
+                       capture_output=True, text=True, encoding="utf-8", timeout=120)
+    assert r.returncode == AC.ENGINE_ERROR, r.stderr[-600:]
+    data = SC.last_json_line(r.stdout)
+    assert data and data["found"] and data["found"][0]["dong"] == 1
+    r2 = subprocess.run(cli + ["--check-text", str(sach), "--json"],
+                        capture_output=True, text=True, encoding="utf-8", timeout=120)
+    assert r2.returncode == AC.OK, r2.stderr[-600:]
