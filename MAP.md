@@ -26,7 +26,11 @@
 | **Nối token/mật khẩu cho kênh mới** | `knowledge/toolchains/SECRETS.md` | mục lục bí mật của trạm (`~/.secret/README.md`) |
 | **Thêm giọng văn thương hiệu mới** | `output_styles/README.md` | `output_styles/compa-class-blog.md` (file mẫu) |
 | **Sửa đổi trường dữ liệu** | `knowledge/data_model/DATA_MODEL.md` | `templates/station/_channel/_campaign/campaign.md` · `scripts/pipeline/export_excel.py` (bộ cột bản xuất) |
-| **Dựng trạm nội dung mới** | `install.ps1` | `examples/README.md` (trạm mẫu đã điền) · `README.md` §3 |
+| **Dựng trạm nội dung mới** | `docs/ONBOARDING.md` (mười bước, có cách kiểm từng bước) | `install.ps1` / `install.sh` · `docs/WORKSPACE.md` · `examples/README.md` (trạm mẫu đã điền) |
+| **Dẫn NGƯỜI KHÁC dựng trạm** (agent làm hướng dẫn viên) | `.agents/prompts/onboard-station.md` | `docs/ONBOARDING.md` |
+| **ĐỔI MÁY chạy trạm** (Windows ↔ macOS) — *một máy chạy tại một thời điểm* | `docs/RUNBOOK-DOI-MAY.md` | `scripts/pipeline/station.py` (export/import) · `knowledge/toolchains/STATION_LAYOUT.md` |
+| **Cài lịch chạy trên macOS** | `scripts/runners/install_launchd.py` | `templates/launchd/` · `docs/RUNBOOK-DOI-MAY.md` §launchd không có giới hạn thời gian |
+| **Trạm nào giữ gì · biến nào trỏ đâu** (ba trạm) | `knowledge/toolchains/STATION_LAYOUT.md` | `knowledge/toolchains/SECRETS.md` · `scripts/pipeline/doctor.py` |
 | **Xem một trạm đã điền trông thế nào** | `examples/README.md` | `examples/example-studio/` |
 | **Kiểm cây liên kết / tìm bài mồ côi** | `scripts/pipeline/check_tree.py` | `workflows/00_WORKFLOW_INDEX.md` |
 | **Dựng chiến dịch CHẠY THEO LỊCH** (bản tin, series tự động) | `knowledge/toolchains/NEWS_PIPELINE.md` | `templates/README.md` · `scripts/pipeline/campaign_cfg.py` (bản chụp cấu hình) |

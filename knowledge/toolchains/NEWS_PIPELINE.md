@@ -97,8 +97,20 @@ notify-run.ps1 -Title "<tên task>" -Script <đường-dẫn-run.ps1> -ScriptArg
 ```bash
 # macOS — launchd (wrapper trong repo)
 python3 <repo>/scripts/runners/notify_run.py --title "<tên task>" \
-    --composer-dir <trạm>/engine -- pwsh -NoProfile -File <chiến-dịch>/run.ps1
+    --composer-dir <trạm>/engine --timeout 7200 \
+    -- pwsh -NoProfile -File <chiến-dịch>/run.ps1
 ```
+
+Đừng gõ tay dòng đó vào plist: `templates/launchd/` có sẵn 8 mẫu trung tính, và
+`scripts/runners/install_launchd.py` điền chỗ trống từ `studio_paths` rồi nạp bằng
+`launchctl`. Chép tay là cách sinh ra ba plist khác nhau trên ba máy.
+
+⚠️ **`--timeout` chỉ cần trên launchd, và cần thật.** Task Scheduler có
+`ExecutionTimeLimit` để tự giết lượt chạy quá giờ; **launchd không có khoá tương đương**.
+Một lượt treo giữ nguyên nhãn job, nên lượt kế tiếp theo lịch bị bỏ qua lặng lẽ — sáng ra
+chỉ thấy hôm qua không có bài. Quá giờ thì wrapper giết cả nhóm tiến trình con, gửi tin ❌
+ghi rõ "QUÁ GIỜ" và thoát mã 1 (ngoại lệ duy nhất của luật "mã thoát = mã con").
+Xem [`../../docs/RUNBOOK-DOI-MAY.md`](../../docs/RUNBOOK-DOI-MAY.md).
 
 `--composer-dir` là tuỳ chọn (engine có `compose_report.py`/`triage.py` thì tin báo dễ đọc
 hơn); `--link-domains <miền>` thêm miền của trang blog vào danh sách link được trích. Token

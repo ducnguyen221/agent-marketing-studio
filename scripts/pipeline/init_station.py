@@ -304,7 +304,9 @@ def _in(kq: dict):
     log("  python scripts/pipeline/new_campaign.py --channel ten-kenh --id CMP-001 "
         "--name \"Tên chiến dịch\" --prefix ABC")
     log("  python scripts/pipeline/check_tree.py")
-    log("\nĐọc trước khi dùng: docs/WORKSPACE.md · docs/ONBOARDING.md")
+    log("\nĐọc trước khi dùng: docs/ONBOARDING.md (dựng từ đầu) · docs/WORKSPACE.md "
+        "(thư mục nào chứa gì)")
+    log("Đổi máy — MỘT máy chạy tại một thời điểm: docs/RUNBOOK-DOI-MAY.md")
 
 
 def _goi_doctor(kq: dict):

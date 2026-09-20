@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- studio.marketing.weekly-news-b
+     Bản tin tuần, khung 2 (bản Windows: thứ 7 21:00).
+
+     MẪU — mọi `__TÊN__` là chỗ trống. Đừng sửa tay bản trong `~/Library/LaunchAgents`:
+     sửa ở đây rồi chạy lại `scripts/runners/install_launchd.py`.
+     `__CHANNEL__` / `__CAMPAIGN__` lấy từ cờ `map` của bộ cài lịch, hoặc từ
+     `<trạm>/launchd.json`. Xem `docs/RUNBOOK-DOI-MAY.md`.
+
+     (Chú thích XML không chứa được hai dấu gạch liền nhau, nên tên cờ ở đây
+      viết trần. Chạy bộ cài lịch với cờ trợ giúp để thấy tên đầy đủ.) -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>studio.marketing.weekly-news-b</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>__PY__</string>
+    <string>__REPO__/scripts/runners/notify_run.py</string>
+    <string>--title</string>
+    <string>__CHANNEL__ · __CAMPAIGN__</string>
+    <string>--composer-dir</string>
+    <string>__STATION__/engine</string>
+    <string>--timeout</string>
+    <string>10800</string>
+    <string>--</string>
+    <string>pwsh</string>
+    <string>-NoProfile</string>
+    <string>-File</string>
+    <string>__STATION__/__CHANNEL__/__CAMPAIGN__/run.ps1</string>
+  </array>
+
+    <!-- PATH: launchd KHÔNG đọc ~/.zshrc. Job chỉ thấy PATH khai ở đây, nên
+         `ffmpeg`, `pwsh`, `node`, `npx` phải nằm trong danh sách này. Đầu log của
+         notify_run.py in `which` của từng cái — đọc là biết thiếu gì.
+         OMNIVOICE_DEVICE / OMNIVOICE_DTYPE: Apple Silicon chạy `mps` + `float16`.
+         HF_DEACTIVATE_ASYNC_LOAD=1: bắt buộc khi nạp trọng số trên MPS. -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key><string>__HOME__</string>
+    <key>PYTHONUTF8</key><string>1</string>
+    <key>MARKETING_STUDIO_DATA</key><string>__STATION__</string>
+    <key>MARKETING_STUDIO_HOME</key><string>__REPO__</string>
+    <key>MARKETING_STUDIO_PY</key><string>__PY__</string>
+    <key>VOICE_STATION</key><string>__VOICE_STATION__</string>
+    <key>VIDEO_STATION</key><string>__VIDEO_STATION__</string>
+    <key>OMNIVOICE_PY</key><string>__OMNIVOICE_PY__</string>
+    <key>OMNIVOICE_DEVICE</key><string>mps</string>
+    <key>OMNIVOICE_DTYPE</key><string>float16</string>
+    <key>HF_DEACTIVATE_ASYNC_LOAD</key><string>1</string>
+  </dict>
+
+  <key>WorkingDirectory</key><string>__STATION__</string>
+  <key>StandardOutPath</key><string>__STATION__/logs/launchd/studio.marketing.weekly-news-b.out.log</string>
+  <key>StandardErrorPath</key><string>__STATION__/logs/launchd/studio.marketing.weekly-news-b.err.log</string>
+  <key>ProcessType</key><string>Background</string>
+  <key>RunAtLoad</key><false/>
+  <key>StartCalendarInterval</key>
+  <dict>
+      <key>Weekday</key><integer>6</integer>
+      <key>Hour</key><integer>21</integer>
+      <key>Minute</key><integer>0</integer>
+  </dict>
+</dict>
+</plist>

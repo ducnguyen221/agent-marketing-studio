@@ -15,6 +15,18 @@ trùng lặp" bằng cách xoá một bên: đừng. Xoá bản Python là repo 
 Hai bản dùng CHUNG một hợp đồng secret (`~/.secret/<tài khoản>/config.json`) — đó mới là chỗ
 không được để lệch.
 
+Một chỗ bản Python **phải** làm hơn bản PowerShell: trần giờ. Task Scheduler có
+`ExecutionTimeLimit` giết hộ lượt chạy quá giờ; launchd **không có** khoá tương đương, nên
+`notify_run.py --timeout` là chỗ duy nhất đặt được trần trên macOS. Các plist mẫu ở
+`templates/launchd/` đã bật sẵn cờ đó. Xem `docs/RUNBOOK-DOI-MAY.md`.
+
+## Ai KHÔNG đi qua đây, và vì sao
+
+`run-worker.ps1` và `run-approve-poller.ps1` chạy mỗi phút. Báo Telegram mỗi lượt là hàng
+nghìn tin một ngày, tức là làm hỏng chính kênh báo cáo. Hai script đó tự gọi khi CÓ CHUYỆN
+(xong bước, chạm trần, hỏng hẳn); lượt rỗng thì im lặng. Plist mẫu của chúng cũng không bọc
+wrapper — đó là chủ đích, không phải bỏ sót.
+
 ## Vì sao tên là `telegram_io` chứ không phải `telegram`
 
 `telegram` là tên gói trên PyPI (`python-telegram-bot`). Thư mục này được chèn vào đầu

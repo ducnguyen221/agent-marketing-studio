@@ -127,7 +127,7 @@ gì hay không". Nối liên tiếp các lượt là phủ 100% thời gian.
 ### Kiến trúc
 
 ```
-Task Scheduler (mỗi phút, IgnoreNew)
+Task Scheduler (mỗi phút, IgnoreNew)   ·   launchd (KeepAlive + ThrottleInterval 60)
         │  đang chạy -> bỏ qua lượt gọi mới
         │  đã chết   -> dựng lại trong 60s
         ▼
@@ -140,6 +140,17 @@ approve_bus.py receive --follow 3300
 ```
 
 Phủ gần 100%, tự lành trong 60 giây, **không service nào phải trông**.
+
+**Trên macOS cùng kiến trúc đó, chỉ đổi bộ lập lịch.** launchd bảo đảm sẵn **một bản chạy
+trên mỗi `Label`**, nên bản dịch đúng là `KeepAlive` + `ThrottleInterval 60`: chết thì dựng
+lại sau tối đa 60 giây, không bao giờ có hai bản. Windows phải gọi lại mỗi phút rồi từ chối
+54/55 lượt; launchd không phải làm thế. Mẫu:
+`templates/launchd/studio.marketing.approve-poller.plist` — **không** nạp mặc định, phải
+gọi đích danh (`install_launchd.py --only …`). Nó cũng **không** bọc wrapper báo Telegram:
+gọi mỗi phút mà báo mỗi lượt là hàng nghìn tin một ngày.
+
+Lock dưới đây vẫn cần nguyên trên macOS: nó chống bản chết-sớm-rồi-chồng-nhau, chuyện mà
+không bộ lập lịch nào chặn hộ.
 
 ### Lock một-tiến-trình — vì sao KHÔNG phó thác Task Scheduler
 

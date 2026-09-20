@@ -359,3 +359,54 @@ def test_chay_nhu_lenh_that_giu_ma_va_bao_thieu_cau_hinh(tmp_path):
     assert "https://youtu.be/x" in r.stdout
     assert "which python=" in r.stdout
     assert "không thấy cấu hình Telegram" in r.stderr
+
+
+# ── (g) --timeout: launchd KHÔNG có ExecutionTimeLimit ───────────────────────
+# Task Scheduler tự giết lượt chạy quá giờ; launchd không có khoá nào tương đương, nên
+# một lượt treo giữ nguyên nhãn job và lượt kế tiếp bị bỏ qua LẶNG LẼ. Trần giờ vì thế
+# phải nằm ở wrapper — và phải giết CẢ NHÓM con, không chỉ cái vỏ.
+
+def test_timeout_giet_lenh_con_va_tra_ma_1(cau_hinh, mang):
+    """Ngoại lệ DUY NHẤT của luật 'mã thoát = mã con': bị giết thì không có mã con."""
+    ma = NR.main(["--title", "T", "--timeout", "1",
+                  "--", PY, "-c", "import time; time.sleep(60)"])
+    assert ma == 1
+    assert "QUÁ GIỜ" in mang.tin
+
+
+def test_timeout_khong_can_thiep_khi_lenh_con_xong_som(cau_hinh, mang):
+    """Đặt trần không được đổi hành vi của lượt chạy bình thường."""
+    assert NR.main(["--title", "T", "--timeout", "600",
+                    *_py("import sys; sys.exit(3)")]) == 3
+    assert "QUÁ GIỜ" not in mang.tin
+
+
+def test_khong_dat_timeout_thi_giu_nguyen_hanh_vi_cu(cau_hinh, mang):
+    assert NR.main(["--title", "T", *_py("import sys; sys.exit(2)")]) == 2
+
+
+def test_timeout_am_la_loi_dung_lenh(cau_hinh):
+    with pytest.raises(SystemExit):
+        NR.main(["--title", "T", "--timeout", "-5", *_py("pass")])
+
+
+def test_timeout_giet_CA_CHUM_khong_chi_tien_trinh_vo(cau_hinh, mang, tmp_path):
+    """`run.ps1` đẻ ffmpeg/node/python. Giết mỗi vỏ là để lại một đàn mồ côi.
+
+    Con cháu ghi một file MỖI GIÂY. Sau khi wrapper trả về, chờ thêm rồi đo: file không
+    được lớn thêm nữa. Đó là bằng chứng cháu đã chết, không phải chỉ con.
+    """
+    import time
+    dau = tmp_path / "chau.txt"
+    chau = ("import time\n"
+            f"p = open(r'{dau}', 'a')\n"
+            "while True:\n    p.write('x'); p.flush(); time.sleep(0.2)\n")
+    cha = ("import subprocess, sys, time\n"
+           f"subprocess.Popen([sys.executable, '-c', {chau!r}])\n"
+           "time.sleep(60)\n")
+    assert NR.main(["--title", "T", "--timeout", "2", "--", PY, "-c", cha]) == 1
+    time.sleep(1.0)
+    a = dau.stat().st_size if dau.exists() else 0
+    time.sleep(1.5)
+    b = dau.stat().st_size if dau.exists() else 0
+    assert b == a, f"cháu vẫn còn ghi ({a} -> {b} byte) — chỉ tiến trình vỏ bị giết"

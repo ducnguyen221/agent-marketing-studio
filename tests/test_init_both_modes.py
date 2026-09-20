@@ -286,3 +286,18 @@ def test_install_sh_dung_cu_phap():
 def test_install_ps1_giu_BOM():
     """PS 5.1 đọc file không BOM bằng ANSI — tiếng Việt trong file vỡ ngay dòng đầu."""
     assert INSTALL_PS1.read_bytes()[:3] == b"\xef\xbb\xbf"
+
+
+# ── Bộ cài phải CHỈ ĐƯỜNG sang tài liệu ──────────────────────────────────────
+# `install.sh`/`install.ps1` chỉ là vỏ dò interpreter; phần in ra cho người dùng nằm ở
+# đây. Người vừa cài xong là người duy nhất chưa biết đọc tiếp cái gì — và cũng là người
+# sắp mắc lỗi đắt nhất của cả hệ (bật lịch trên máy thứ hai).
+
+@pytest.mark.parametrize("duong", ["docs/ONBOARDING.md", "docs/WORKSPACE.md",
+                                   "docs/RUNBOOK-DOI-MAY.md"])
+def test_bo_cai_in_duong_tai_lieu(capsys, duong):
+    IS._in({"dry_run": False, "mode": "embedded", "station": "/x", "reason": "test",
+            "created": [], "hook": None})
+    ra = capsys.readouterr()
+    assert duong in (ra.out + ra.err), f"bộ cài không chỉ sang {duong}"
+    assert (ROOT / duong).is_file(), f"{duong} được in ra nhưng không tồn tại"

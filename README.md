@@ -119,13 +119,16 @@ agent-marketing-studio/
 │                              # campaign_cfg (gộp cấu hình → JSON cho PowerShell)
 │                              # blog_gates · register_publish · check_tree · build_views · export_excel
 │   └── runners/               # vỏ PowerShell cho lịch · notify_run.py (báo Telegram, dùng với launchd)
+│                              # install_launchd.py (điền mẫu plist rồi nạp bằng launchctl)
+├── docs/                      # ONBOARDING · RUNBOOK-DOI-MAY · WORKSPACE (+ trang giới thiệu)
 ├── tests/                     # bộ test + cổng chống trôi — chạy `python -m pytest -q`
 ├── knowledge/                 # Kho tri thức marketing (Data Model, Playbooks, Toolchains)
 ├── output_styles/             # Giọng văn thương hiệu chuẩn theo từng kênh
 ├── templates/
 │   ├── README.md              # khuôn nào dùng khi nào
-│   └── station/               # CÂY MẪU lồng đúng như trạm thật:
-│                              #   _channel/ → _campaign/ → _content/
+│   ├── station/               # CÂY MẪU lồng đúng như trạm thật:
+│   │                          #   _channel/ → _campaign/ → _content/
+│   └── launchd/               # 8 plist mẫu trung tính cho lịch chạy trên macOS
 ├── workflows/                 # Đặc tả chi tiết 7 khâu vận hành
 ├── examples/                  # TRẠM MẪU đã điền — 1 kênh, 1 chiến dịch, 3 bài ở 3 trạng thái
 └── content/                   # Bộ dữ liệu mô phỏng dùng cho dạy học (KPIM)
@@ -144,6 +147,10 @@ agent-marketing-studio/
 - 🧱 **Khuôn dựng kênh/chiến dịch/bài:** [`templates/README.md`](templates/README.md)
 - 📊 **Bộ dữ liệu mô phỏng (dạy học):** `content/KPIM/02_campaigns/01_Tobi_Posts/`
 - 🔐 **Bí mật & biến môi trường của máy:** [`knowledge/toolchains/SECRETS.md`](knowledge/toolchains/SECRETS.md)
+- 🚀 **Dựng từ đầu, mười bước:** [`docs/ONBOARDING.md`](docs/ONBOARDING.md)
+- 🧭 **Ba trạm — ai giữ gì, biến nào trỏ đâu:** [`knowledge/toolchains/STATION_LAYOUT.md`](knowledge/toolchains/STATION_LAYOUT.md)
+- 🔁 **Đổi máy chạy trạm (Windows ↔ macOS):** [`docs/RUNBOOK-DOI-MAY.md`](docs/RUNBOOK-DOI-MAY.md) — **một máy chạy tại một thời điểm**
+- 🗂️ **Thư mục nào trong trạm chứa gì:** [`docs/WORKSPACE.md`](docs/WORKSPACE.md)
 
 ---
 

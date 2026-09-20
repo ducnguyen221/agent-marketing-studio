@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Chạy một lệnh con rồi báo kết quả về Telegram — wrapper cho bộ lập lịch.
 
-    python notify_run.py --title "Daily Hot AI 6PM" \\
+    python notify_run.py --title "Tin hằng ngày" \\
         [--composer-dir <trạm>/engine] [--link-domains blog.example.com] \\
-        -- pwsh -NoProfile -File <chiến dịch>/run.ps1
+        [--timeout 7200] -- pwsh -NoProfile -File <chiến dịch>/run.ps1
 
 ## Vì sao có file này
 
@@ -19,6 +19,22 @@ tự đủ — nên đây là bản Python, cùng hợp đồng:
   tất cả chỉ in cảnh báo ra stderr; mã thoát vẫn là mã con.
 · Đầu log in `which` của `pwsh node ffprobe python npx`: launchd chạy với PATH tối thiểu, và
   "không thấy ffprobe" là lỗi phổ biến nhất khi dời máy — đọc đầu log là biết ngay.
+
+## `--timeout` — vì sao wrapper phải tự canh giờ
+
+Task Scheduler của Windows có `ExecutionTimeLimit`: lượt chạy quá giờ thì **bộ lập lịch** giết
+nó. **launchd không có khoá tương đương** — không `ExecutionTimeLimit`, không `TimeOut` cho
+job theo lịch (`ExitTimeOut` chỉ là thời gian ân hạn giữa SIGTERM và SIGKILL *khi đã bảo nó
+dừng*). Một lượt treo trên macOS treo **vô hạn**, giữ nguyên nhãn job, nên lượt kế tiếp theo
+lịch bị launchd bỏ qua — và không có gì báo, vì cũng chẳng có lượt nào kết thúc để báo.
+
+Nên trần giờ phải nằm ở đây, chỗ duy nhất bọc mọi lượt chạy. `--timeout <giây>` bật đồng hồ:
+hết giờ thì giết **cả nhóm tiến trình** con (không chỉ tiến trình đầu — `run.ps1` đẻ ffmpeg,
+node, python; giết mỗi vỏ là để lại một đàn mồ côi), rồi gửi tin ❌ nói rõ "quá <giây>s".
+
+**Đây là NGOẠI LỆ DUY NHẤT của luật "mã thoát = mã con".** Quá giờ thì không có mã con để
+trả: tiến trình bị giết. Wrapper trả **1** (lỗi engine, thử lại được) và nói rõ lý do trong
+cả log lẫn tin báo. Không đặt `--timeout` thì hành vi y như trước: chờ đến khi nào xong.
 
 ## Ba tầng soạn tin (giống wrapper Windows)
 
@@ -40,9 +56,11 @@ import html
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 
@@ -131,26 +149,82 @@ def in_which() -> None:
     print(f"notify_run: sys.executable={sys.executable}", flush=True)
 
 
-def chay_lenh(cmd: list[str]) -> tuple[int, list[str]]:
-    """Chạy lệnh con, gộp stderr vào stdout, vừa in ra (cho log của bộ lập lịch) vừa gom lại."""
-    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+def _giet_chum(p: "subprocess.Popen") -> None:
+    """Giết CẢ NHÓM tiến trình con, không chỉ tiến trình đầu.
+
+    `run.ps1` đẻ ra ffmpeg, node, python… Giết mỗi cái vỏ là để lại một đàn mồ côi vẫn
+    ngốn CPU và vẫn giữ file — đúng kiểu hỏng mà trần giờ sinh ra để tránh.
+    """
     try:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/T", "/F", "/PID", str(p.pid)],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+            return
+        nhom = os.getpgid(p.pid)
+        os.killpg(nhom, signal.SIGTERM)
+        try:
+            p.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            os.killpg(nhom, signal.SIGKILL)
+    except (OSError, ValueError, subprocess.SubprocessError) as e:
+        _loi(f"notify: không giết được tiến trình con — {e}")
+
+
+def chay_lenh(cmd: list[str], tran: int | None = None) -> tuple[int, list[str], bool]:
+    """Chạy lệnh con, gộp stderr vào stdout, vừa in ra (cho log của bộ lập lịch) vừa gom lại.
+
+    `tran` (giây) > 0 ⇒ quá giờ thì giết cả nhóm con. Trả `(mã, dòng, quá_giờ)`.
+    """
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
+    # Nhóm tiến trình riêng — chỉ khi có trần giờ, để không đổi hành vi của lượt chạy
+    # bình thường (Ctrl-C của người đang ngồi xem phải tới được cả chùm).
+    khoi: dict = {}
+    if tran:
+        if os.name == "nt":
+            khoi["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+        else:
+            khoi["start_new_session"] = True
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             env=env, **khoi)
     except OSError as e:
         d = f"notify_run: không chạy được lệnh {cmd[0]!r} — {e}"
         print(d, flush=True)
-        return 1, [d]
+        return 1, [d], False
+
+    qua_gio = threading.Event()
+
+    def _het_gio():
+        qua_gio.set()
+        print(f"notify_run: QUÁ GIỜ {tran}s — giết lệnh con.", flush=True)
+        _giet_chum(p)
+
+    dong_ho = threading.Timer(tran, _het_gio) if tran else None
+    if dong_ho:
+        dong_ho.daemon = True
+        dong_ho.start()
     dong: list[str] = []
-    with p:
-        assert p.stdout is not None
-        for b in p.stdout:
-            s = b.decode("utf-8", errors="replace").rstrip("\r\n")
-            dong.append(s)
-            print(s, flush=True)
-        ma = p.wait()
+    try:
+        with p:
+            assert p.stdout is not None
+            for b in p.stdout:
+                s = b.decode("utf-8", errors="replace").rstrip("\r\n")
+                dong.append(s)
+                print(s, flush=True)
+            ma = p.wait()
+    finally:
+        if dong_ho:
+            dong_ho.cancel()
     if ma < 0:                       # POSIX: chết vì tín hiệu -> quy ước shell 128+N
         ma = 128 - ma
-    return ma, dong
+    if qua_gio.is_set():
+        # Ngoại lệ DUY NHẤT của luật "mã thoát = mã con": không có mã con để trả.
+        d = (f"notify_run: lệnh con bị giết vì quá {tran}s "
+             f"(launchd không có ExecutionTimeLimit — trần giờ nằm ở wrapper).")
+        dong.append(d)
+        print(d, flush=True)
+        ma = 1
+    return ma, dong, qua_gio.is_set()
 
 
 def _goi_composer(script: Path, args: list[str], log_txt: str, tran: int) -> str:
@@ -279,11 +353,15 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="notify_run.py",
         description="Chạy lệnh con, báo kết quả về Telegram, trả nguyên mã thoát của lệnh con.",
-        usage="%(prog)s --title T [--composer-dir DIR] [--link-domains D[,D]] -- LỆNH [ĐỐI SỐ…]")
+        usage="%(prog)s --title T [--composer-dir DIR] [--link-domains D[,D]] "
+              "[--timeout GIÂY] -- LỆNH [ĐỐI SỐ…]")
     ap.add_argument("--title", required=True, help="tên task hiện trên tin báo")
     ap.add_argument("--composer-dir", help="thư mục có compose_report.py / triage.py (engine)")
     ap.add_argument("--link-domains", action="append", default=[],
                     help="miền web của thương hiệu, tính là link sản phẩm (lặp hoặc dấu phẩy)")
+    ap.add_argument("--timeout", type=int, default=0, metavar="GIÂY",
+                    help="trần giờ cho lệnh con (launchd KHÔNG có ExecutionTimeLimit); "
+                         "quá giờ = giết cả nhóm con, tin ❌, mã thoát 1")
     if "--" in argv:
         i = argv.index("--")
         opts, cmd = argv[:i], argv[i + 1:]
@@ -292,6 +370,8 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(opts)
     if not cmd:
         ap.error("thiếu lệnh con sau `--`")
+    if a.timeout < 0:
+        ap.error("--timeout phải ≥ 0 (0 = không đặt trần)")
 
     composer = Path(a.composer_dir).expanduser() if a.composer_dir else None
     if composer and not composer.is_dir():
@@ -301,13 +381,14 @@ def main(argv: list[str] | None = None) -> int:
     print(f"notify_run: {a.title} · {_dt.datetime.now():%Y-%m-%d %H:%M:%S}", flush=True)
     in_which()
     t0 = time.monotonic()
-    ma, dong = chay_lenh(cmd)
+    ma, dong, qua_gio = chay_lenh(cmd, a.timeout or None)
     giay = int(time.monotonic() - t0)
     dur = f"{giay // 3600:02d}:{giay % 3600 // 60:02d}:{giay % 60:02d}"
     print(f"notify_run: lệnh con thoát mã {ma} sau {dur}", flush=True)
 
+    tieu_de = f"{a.title} — QUÁ GIỜ {a.timeout}s" if qua_gio else a.title
     try:
-        tin = soan_tin(a.title, ma, dur, dong, _mien(a.link_domains), composer)
+        tin = soan_tin(tieu_de, ma, dur, dong, _mien(a.link_domains), composer)
         gui(tin)
     except Exception as e:  # noqa: BLE001 — báo cáo hỏng không được đổi mã thoát
         _loi(f"notify: soạn/gửi tin lỗi — {e}")

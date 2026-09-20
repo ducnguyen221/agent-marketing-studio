@@ -163,6 +163,17 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `OPCOS_CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | đường mặc định trong thư mục nhà |
 | `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |
 
+**Biến của TRẠM GIỌNG mà repo này chỉ truyền tiếp** — không script nào ở đây đọc chúng;
+`scripts/runners/install_launchd.py` ghi chúng vào khối `EnvironmentVariables` của plist
+để tiến trình con nhận được. Bảng đầy đủ ba trạm:
+[`STATION_LAYOUT.md`](STATION_LAYOUT.md) mục 4c.
+
+| Biến | Giá trị trên Apple Silicon | Không đặt thì |
+|---|---|---|
+| `OMNIVOICE_DEVICE` | `mps` | engine tự dò `cuda → mps → cpu` |
+| `OMNIVOICE_DTYPE` | `float16` | engine dùng `float32` cho mọi thứ không phải CUDA — chậm gấp nhiều lần |
+| `HF_DEACTIVATE_ASYNC_LOAD` | `1` | nạp trọng số bất đồng bộ, hỏng trên MPS |
+
 > **Bỏ 20/09/2026 — `ATLAS_BASE_URL` · `ATLAS_SITE_NAME` · `ATLAS_AUTHOR`.** URL gốc, tên
 > site và tác giả của trang blog nay đọc từ khối `brand:` trong `channel.yml` của kênh
 > (`scripts/lib/brand.py`), và **thiếu là dừng với mã 2**. Ba biến cũ có giá trị mặc định

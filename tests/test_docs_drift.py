@@ -12,8 +12,10 @@ Nó không thay người đọc — nó chỉ đảm bảo cái đã bỏ thì k
 So khớp bằng CHUỖI THẲNG, không regex — cùng lý do với test_no_identity_leak: regex nuốt escape và
 cho âm tính giả.
 """
+import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -517,6 +519,180 @@ def test_script_MAU_khong_lo_duong_dan_may_that():
             if m.group(1).lower() not in ("username", "user", "name", "you"):
                 xau.append(f"{f.relative_to(ROOT)}: {m.group(0)}")
     assert not xau, "duong dan may that lot vao template: " + ", ".join(xau)
+
+
+# ── Tài liệu vận hành: có mặt, được trỏ tới, và nói đúng cờ CLI ─────────────
+# Ba file này là thứ người ta mở ra lúc đang hoảng (máy mới, lịch không chạy, phải đổi
+# máy trong đêm). Chúng chết theo đúng hai kiểu: hoặc không ai tìm thấy, hoặc chúng bảo
+# gõ một cờ mà CLI không hiểu. Ba cổng dưới canh đúng hai kiểu đó.
+
+TAI_LIEU_VAN_HANH = ("docs/ONBOARDING.md", "docs/RUNBOOK-DOI-MAY.md",
+                     "docs/WORKSPACE.md", "knowledge/toolchains/STATION_LAYOUT.md",
+                     ".agents/prompts/onboard-station.md")
+
+
+@pytest.mark.parametrize("f", TAI_LIEU_VAN_HANH)
+def test_tai_lieu_van_hanh_ton_tai(f):
+    assert (ROOT / f).is_file(), f"{f} không có — code đang in đường dẫn tới nó"
+
+
+def test_README_tro_toi_runbook_va_onboarding():
+    """Runbook không ai tìm thấy thì bằng không có. Cửa vào là README."""
+    t = (ROOT / "README.md").read_text(encoding="utf-8")
+    for f in ("docs/RUNBOOK-DOI-MAY.md", "docs/ONBOARDING.md",
+              "knowledge/toolchains/STATION_LAYOUT.md"):
+        assert f in t, f"README chưa trỏ tới {f}"
+
+
+def test_duong_dan_docs_ma_CODE_in_ra_deu_ton_tai():
+    """`init_station` và `station.py` in tên tài liệu cho người dùng đọc tiếp.
+
+    In ra một cái tên không tồn tại là lời khuyên dẫn vào ngõ cụt — và nó chỉ lộ ra với
+    đúng người đang cần nó nhất: người vừa cài xong, hoặc vừa import xong.
+    """
+    mau = re.compile(r"\b(docs/[A-Za-z0-9_.-]+\.md)\b")
+    # Trỏ sang tài liệu của REPO KHÁC là hợp lệ và không kiểm được từ đây (`video.py` chỉ
+    # người dùng sang `docs/INSTALL.md` của repo trạm video). Nhận ra bằng chính câu văn.
+    khac_repo = ("repo đó", "repo kia", "agent-voice-studio", "agent-video-studio")
+    chet = []
+    for name, text in FILES:
+        if not name.startswith("scripts/"):
+            continue
+        dong = text.splitlines()
+        for m in mau.finditer(text):
+            row = text[:m.start()].count("\n") + 1
+            if any(k in dong[row - 1] for k in khac_repo):
+                continue
+            if not (ROOT / m.group(1)).is_file():
+                chet.append(f"{name}:{row} → {m.group(1)}")
+    assert not chet, "code in ra đường tài liệu không tồn tại:\n  " + "\n  ".join(chet)
+
+
+# Mỗi lệnh trong khối mã của tài liệu: cờ `--x` phải là cờ CLI đó HIỂU.
+# Đợt đổi tên 12/09 đã dạy bài này với lệnh con; cờ cũng hỏng y hệt, chỉ khác là người gõ
+# nhận "unrecognized arguments" thay vì "invalid choice".
+#
+# Bộ cờ lấy bằng cách CHẠY `--help`, không phải bằng cách tìm chuỗi `"--x"` trong mã nguồn.
+# Bản đầu tìm chuỗi và báo oan ngay: `register_publish.py metrics` sinh bảy cờ bằng
+# `add_argument(f"--{k}")` trong một vòng lặp, nên không cờ nào có mặt dưới dạng literal.
+# Một cổng báo oan là một cổng sắp bị tắt — nên nó phải hỏi chính argparse.
+_SCRIPT_TRONG_REPO = re.compile(r"((?:scripts/[a-z]+/)?[a-z_]+\.py)")
+_CO = re.compile(r"(?<![\w-])--([a-z][a-z0-9-]*)")
+_CHO_DIEN = re.compile(r"^<.*>$|^\{.*\}$")
+
+
+def _thu_muc_script(ten: str) -> Path | None:
+    for p in [ROOT / ten] + [ROOT / d / Path(ten).name
+                             for d in ("scripts/pipeline", "scripts/runners", "scripts/lib")]:
+        if p.is_file():
+            return p
+    return None
+
+
+def _tien_to(lenh: str, ten: str) -> list[str]:
+    """Đối số đứng TRƯỚC cờ đầu tiên (lệnh con + positional), chỗ điền thay bằng `X`."""
+    tok = lenh.split()
+    i = next((k for k, t in enumerate(tok) if ten in t), None)
+    if i is None:
+        return []
+    ra = []
+    for t in tok[i + 1:]:
+        if t.startswith("-"):
+            break
+        ra.append("X" if _CHO_DIEN.match(t) else t)
+    return ra
+
+
+_CACHE: dict = {}
+
+
+def _co_CLI_hieu(f: Path, tien_to: tuple) -> set[str] | None:
+    """Bộ cờ thật, hỏi bằng `--help`. None = không lấy được (không chấm lệnh đó)."""
+    khoa = (str(f), tien_to)
+    if khoa not in _CACHE:
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+        try:
+            r = subprocess.run([sys.executable, str(f), *tien_to, "--help"],
+                               capture_output=True, text=True, encoding="utf-8",
+                               errors="replace", env=env, timeout=60)
+        except (OSError, subprocess.SubprocessError):
+            _CACHE[khoa] = None
+            return None
+        ra = (r.stdout or "") + (r.stderr or "")
+        bo = {m.group(1) for m in _CO.finditer(ra)}
+        _CACHE[khoa] = bo if (r.returncode == 0 and bo) else None
+    return _CACHE[khoa]
+
+
+def _lenh_trong_khoi_ma(text: str):
+    """Trả từng LỆNH trong khối ``` — nối dòng tiếp nối kết thúc bằng `\\`.
+
+    Cắt chú thích ` # …` ở cuối dòng: `studio.py update   # = git pull --ff-only` là một
+    lệnh CỘNG một lời giải thích, và `--ff-only` thuộc về lời giải thích. Không cắt thì
+    cổng đi đòi `studio.py` phải có một cờ của `git`.
+    """
+    trong = False
+    dem = []
+    for d in text.splitlines():
+        if d.count('"') % 2 == 0 and d.count("'") % 2 == 0:
+            d = re.sub(r"\s+#.*$", "", d)
+        if d.lstrip().startswith("```"):
+            trong = not trong
+            if not trong and dem:
+                yield " ".join(dem)
+                dem = []
+            continue
+        if not trong:
+            continue
+        if dem:
+            dem.append(d.strip())
+        elif d.strip():
+            dem.append(d.strip())
+        else:
+            continue
+        if dem[-1].endswith("\\"):
+            dem[-1] = dem[-1][:-1]
+        else:
+            yield " ".join(dem)
+            dem = []
+    if dem:
+        yield " ".join(dem)
+
+
+def _cham_co_CLI():
+    """(số lệnh đã chấm thật, danh sách sai)."""
+    dem, sai = 0, []
+    for name, text in FILES:
+        if not name.endswith(".md") or name.startswith(("tests/", "examples/")):
+            continue
+        for lenh in _lenh_trong_khoi_ma(text):
+            for m in _SCRIPT_TRONG_REPO.finditer(lenh):
+                ten = m.group(1)
+                f = _thu_muc_script(ten)
+                if f is None:
+                    continue                      # không phải script của repo này
+                xin = {c.group(1) for c in _CO.finditer(lenh)} - {"help"}
+                if not xin:
+                    continue
+                bo = _co_CLI_hieu(f, tuple(_tien_to(lenh, ten)))
+                if bo is None:
+                    continue                      # không hỏi được argparse — không đoán
+                dem += 1
+                for c in sorted(xin - bo):
+                    sai.append(f"{name}: `{ten} {' '.join(_tien_to(lenh, ten))}` "
+                               f"không có cờ --{c}")
+    return dem, sai
+
+
+def test_co_CLI_trong_tai_lieu_DEU_duoc_script_hieu():
+    _, sai = _cham_co_CLI()
+    assert not sai, "tài liệu bảo gõ cờ CLI không có:\n  " + "\n  ".join(sorted(set(sai)))
+
+
+def test_cong_co_CLI_that_su_cham_duoc_gi():
+    """Cổng trên chấm 0 lệnh thì nó luôn xanh mà không đo gì. Chặn ngay tại đây."""
+    dem, _ = _cham_co_CLI()
+    assert dem >= 8, f"chỉ chấm được {dem} lệnh có cờ — regex hỏng, hay `--help` không chạy?"
 
 
 def test_moi_hook_khai_trong_template_deu_CO_THAT_trong_code():

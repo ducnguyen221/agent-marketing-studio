@@ -140,3 +140,19 @@ platforms:
 4. Đã chạy thử dry-run và kiểm `publish.json` thấy đúng ý.
 
 Thiếu bất kỳ điều nào thì hệ thống tự chặn — đó là thiết kế, không phải lỗi.
+
+## 6. Khi bước đăng chạy theo lịch
+
+Biến trỏ tới file token phải **bộ lập lịch** nhìn thấy, không phải shell của bạn:
+
+| Chế độ cài | Windows | macOS |
+|---|---|---|
+| `separate` | `setx <TÊN>` (cấp user) | khối `EnvironmentVariables` trong plist của job |
+| `embedded` | `<repo>/.env` | `<repo>/.env` |
+
+⚠️ **launchd không đọc `~/.zshrc`, `~/.zprofile` hay `~/.bash_profile`.** Token chạy tay
+thì được mà lịch chạy lại "thiếu token" gần như luôn là lỗi này.
+`scripts/runners/install_launchd.py` điền khối `EnvironmentVariables` từ `studio_paths`,
+nên hãy để nó điền thay vì sửa tay plist đã nạp. Bảng biến ba trạm:
+[`STATION_LAYOUT.md`](STATION_LAYOUT.md). Đổi máy:
+[`../../docs/RUNBOOK-DOI-MAY.md`](../../docs/RUNBOOK-DOI-MAY.md).

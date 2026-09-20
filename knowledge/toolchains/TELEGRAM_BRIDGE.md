@@ -36,9 +36,11 @@ lớp 2  VÒNG LẶP nối lượt          (receive_loop)
        hết 50 giây mà không có gì → gọi lượt mới NGAY, không nghỉ.
        ⇒ không hề có "khe hở 50 giây". Phủ liên tục 55 phút.
 
-lớp 3  TASK SCHEDULER mỗi phút
+lớp 3  BỘ LẬP LỊCH dựng lại trong 60 giây
        poller chết vì bất cứ lý do gì → tối đa 60 giây sau có con mới.
-       Đang sống thì Windows từ chối lượt mới (IgnoreNew) + khoá file chặn lớp hai.
+       Windows: Task Scheduler gọi mỗi phút, IgnoreNew từ chối lượt mới khi còn sống.
+       macOS:   launchd KeepAlive + ThrottleInterval 60 — một bản trên mỗi Label.
+       Cả hai đường đều còn khoá file chặn lớp hai (bản chết-sớm-rồi-chồng-nhau).
 
 lớp 4  TELEGRAM GIỮ UPDATE 24 GIỜ
        máy tắt cả đêm, mất mạng, poller chết hẳn → tin vẫn nằm trên server.
@@ -61,8 +63,10 @@ chỉ tốn chữ. Muốn phủ lâu hơn thì **nối nhiều lượt**, đó c
 ### Vì sao poller THOÁT sau 55 phút thay vì chạy mãi
 
 Tiến trình sống mãi là thứ phải trông, và **chết câm thì kẹt cổng duyệt** mà không ai biết.
-Thoát chủ động rồi để Task Scheduler dựng lại là **tự lành**: mỗi giờ có một con mới tinh,
-rò rỉ gì cũng bị dọn, và trạng thái "còn sống" được chứng minh lại mỗi phút.
+Thoát chủ động rồi để bộ lập lịch dựng lại là **tự lành**: mỗi giờ có một con mới tinh,
+rò rỉ gì cũng bị dọn, và trạng thái "còn sống" được chứng minh lại mỗi phút. Trên macOS
+người dựng lại là launchd (`KeepAlive` + `ThrottleInterval 60`), không phải Task Scheduler
+— xem `templates/launchd/studio.marketing.approve-poller.plist`.
 
 ---
 
@@ -72,10 +76,13 @@ rò rỉ gì cũng bị dọn, và trạng thái "còn sống" được chứng 
  ĐIỆN THOẠI                TELEGRAM                    MÁY ĐỂ BÀN
  ──────────                ────────                    ──────────
                                           ┌──────────────────────────────────┐
-                                          │ Task Scheduler — mỗi 1 phút      │
-                                          │ MultipleInstances = IgnoreNew    │
+                                          │ Windows: Task Scheduler mỗi 1'   │
+                                          │   MultipleInstances = IgnoreNew  │
+                                          │ macOS:   launchd KeepAlive       │
+                                          │   ThrottleInterval = 60          │
                                           └───────────────┬──────────────────┘
-                                                          │ (54/55 lượt bị từ chối)
+                                                          │ (Windows: 54/55 lượt bị từ chối;
+                                                          │  launchd chỉ dựng lại khi đã chết)
                                                           ▼
                                           ┌──────────────────────────────────┐
                                           │ run-approve-poller.ps1           │
@@ -166,8 +173,11 @@ cướp khoá; con chết để lại khoá còn mới nên mọi lượt sau đ
 (`release_lock`). Cả hai đều có test đi kèm, và cả hai đều **đã từng bị gỡ mất** bởi một đợt
 mutation testing bỏ quên trong working tree.
 
-⚠️ **Task Scheduler chạy THẲNG working tree.** Sửa dở hoặc đột biến còn nằm đó là nó nuốt
-luôn. Cổng kết thúc phiên: `git status --short` phải sạch.
+⚠️ **Bộ lập lịch chạy THẲNG working tree** — Task Scheduler cũng vậy mà launchd cũng vậy.
+Sửa dở hoặc đột biến còn nằm đó là nó nuốt luôn. Đây cũng là lý do trạm chạy lịch nên cài
+**bản sao** của hai package trạm giọng/trạm video chứ không `pip install -e`: `-e` trói
+venv vào cây repo, tức vào cả **nhánh đang checkout**. Cổng kết thúc phiên:
+`git status --short` phải sạch.
 
 ### 5.2 Vòng lặp SỬA BÀI vô hạn
 
