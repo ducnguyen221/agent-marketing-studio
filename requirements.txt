@@ -5,3 +5,8 @@ openpyxl>=3.1      # export_excel.py — XUẤT .xlsx từ Markdown (một chi�
 requests>=2.31     # register_publish.py verify HTTP · fb_publish.py gọi Graph API
 Pillow>=10.0       # gen_infographic.py fallback, sửa chữ trên ảnh
 pytest>=8.0        # bộ test
+
+# `requirements-voice.txt` và `requirements-video.txt` KHÔNG phải file cho `pip install -r`:
+# chúng khai NGƯỠNG phiên bản hợp đồng của hai trạm năng lực (`agent-voice-studio`,
+# `agent-video-studio`) để `scripts/pipeline/doctor.py` đối chiếu. Hai package đó được cài
+# `pip install -e <bản clone>` vào venv của TRẠM GIỌNG, không vào venv của repo này.

@@ -308,7 +308,7 @@ def _in(kq: dict):
 
 
 def _goi_doctor(kq: dict):
-    """`doctor` là bước cuối của bộ cài. Nó chưa có (P2-G3 viết tiếp) thì bỏ qua, không nổ.
+    """`doctor` là bước cuối của bộ cài. Bản cài rút gọn không kèm nó thì bỏ qua, không nổ.
 
     Gọi **không** `--station`: cả việc của bước này là kiểm rằng cái vừa ghi ra
     (`studio.local.json`, `workspace/`) khiến các script khác phân giải đúng trạm. Truyền

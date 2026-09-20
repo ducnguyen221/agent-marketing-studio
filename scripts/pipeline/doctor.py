@@ -15,14 +15,16 @@ Mã thoát theo hợp đồng ba trạm (`scripts/lib/studio_contract.py`):
 Phân biệt 2 với 3 là để người đọc biết mình đang ở đâu: "làm tiếp bước còn thiếu" khác
 hẳn "cái bạn đã làm đang sai".
 
-Bản này khám phần **F17** (hai chế độ cài). Phần trạm giọng / trạm video của hợp đồng ba
-trạm thêm vào `KHAM_THEM` ở cuối file (gói P2-G3) — một danh sách, để thêm mục không phải
-sửa lại luồng.
+Bản này khám hai phần: **F17** (hai chế độ cài) và **hai trạm năng lực** của hợp đồng ba
+trạm — trạm giọng `agent-voice-studio`, trạm video `agent-video-studio` (cuối file).
+Phần sau nối vào qua `KHAM_THEM`, một danh sách, để thêm mục không phải sửa lại luồng.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -30,6 +32,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
+import video as VIDEO  # noqa: E402
+import voice as VOICE  # noqa: E402
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -44,7 +48,10 @@ TEN_CLOUD = ("OneDrive", "Google Drive", "My Drive", "Dropbox", "iCloud Drive",
              "com~apple~CloudDocs")
 PHAI_BI_IGNORE = (SP.WORKSPACE, ".env", SP.LOCAL_CONFIG)
 
-KHAM_THEM = []       # P2-G3 nối thêm hàm kham(so) -> None vào đây (trạm giọng / trạm video)
+# Mỗi mục là `f(so, tram) -> None`; đăng ký ở cuối file. `tram` là gốc trạm nội dung đã
+# phân giải — hàm khám không được tự phân giải lại, nếu không `doctor --station X` sẽ khám
+# một trạm mà nó không được yêu cầu khám.
+KHAM_THEM = []
 
 
 class So:
@@ -140,12 +147,194 @@ def kham(station=None) -> dict:
                 so.nhac(f"{ten} nằm trong thư mục đồng bộ {c} ({p}) — git ở đó hay hỏng index, "
                         "và mọi thứ trong đó đi lên cloud. Cân nhắc dời ra ngoài.")
 
-    for them in KHAM_THEM:                  # P2-G3: trạm giọng, trạm video
-        them(so)
+    for them in KHAM_THEM:                  # trạm giọng, trạm video
+        them(so, st)
 
     return {"code": so.code, "mode": che_do, "station": str(st), "source": nguon,
             "repo": str(repo) if repo else None,
             "fail": so.fail, "warn": so.warn, "info": so.info}
+
+
+# ══ HAI TRẠM NĂNG LỰC — hợp đồng ba trạm (§2.4) ══════════════════════════════════════
+#
+# Luật phân biệt ba mức, và lý do từng mức:
+#
+#   chưa khai gì       → NHẮC. Người chỉ viết blog không cần trạm giọng. Bắt họ nhìn
+#                        "CHƯA CÀI XONG" sau mỗi lần cài là dạy họ bỏ qua `doctor` —
+#                        và một cổng bị bỏ qua thì không còn là cổng.
+#   đã khai, chưa đủ   → ĐỎ mã 3. Biến trỏ vào một trạm không có `station.json`, hoặc một
+#                        kênh khai `voice_profile`: người dùng ĐÃ nói mình cần. Không báo
+#                        ở đây thì báo lúc 18h, giữa một lượt render.
+#   khai sai           → ĐỎ mã 2. Profile khai trong `channel.yml` không có trong kho
+#                        giọng: không phải "cài tiếp", mà là "sửa cái đang sai".
+
+# Ngưỡng hợp đồng đọc từ `requirements-voice.txt` / `requirements-video.txt` (DỮ LIỆU,
+# không phải hằng số trong mã).
+CAN_PHIEN_BAN = dict(SC.min_version(x) for x in ("voice", "video"))
+
+# Khoá trong `channel.yml` nói "kênh này cần trạm giọng".
+KHOA_NANG_LUC = ("voice_profile", "bgm_style")
+
+# Một lần gọi python trả về phiên bản hợp đồng của CẢ HAI package. Không dùng
+# `import voice_studio, video_studio` một dòng: thiếu một cái là mất luôn thông tin về
+# cái kia, và người đọc không biết mình thiếu gì.
+_HOI_PHIEN_BAN = (
+    "import json\n"
+    "ra = {}\n"
+    "for ten in ('voice_studio', 'video_studio'):\n"
+    "    try:\n"
+    "        ra[ten] = getattr(__import__(ten), 'API_VERSION', '')\n"
+    "    except Exception as e:\n"
+    "        ra[ten] = None\n"
+    "print(json.dumps(ra))\n")
+
+
+def _so(v) -> tuple:
+    return tuple(int(x) for x in re.findall(r"\d+", str(v))[:3])
+
+
+def _khai_trong_kenh(tram: Path) -> list[tuple[str, dict]]:
+    """-> [(tên kênh, {khoá năng lực: giá trị})] đọc từ `channel.yml` của từng kênh.
+
+    Lỗi đọc KHÔNG báo ở đây: `check_tree.py` là chỗ soi cây trạm, và hai công cụ cùng
+    kêu về một file thì người đọc không biết sửa theo cái nào.
+    """
+    try:
+        import yaml
+    except ImportError:
+        return []
+    ra = []
+    try:
+        ds = SP.channels(tram)
+    except (OSError, ValueError, SP.StudioPathsError):
+        return []
+    for c in ds:
+        f = Path(c.get("dir") or "") / SP.MOC_KENH
+        if not f.is_file():
+            continue
+        try:
+            data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        except (OSError, ValueError, yaml.YAMLError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        khai = {k: data[k] for k in KHOA_NANG_LUC if data.get(k)}
+        if khai:
+            ra.append((str(c.get("id") or f.parent.name), khai))
+    return ra
+
+
+def _hoi_phien_ban(py: str) -> dict | None:
+    """-> {package: phiên bản | None}, hoặc None khi không chạy được python đó."""
+    try:
+        r = subprocess.run([py, "-c", _HOI_PHIEN_BAN], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=120)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0:
+        return None
+    data = SC.last_json_line(r.stdout)
+    return data if isinstance(data, dict) else None
+
+
+def _kham_mot_tram(so: So, ten: str, goc, can: bool, ly_do: str, repo: str,
+                   huong_dan: str, lenh_init: str) -> Path | None:
+    """-> gốc trạm khi nó dùng được; None khi thiếu/chưa cần. Ghi sổ đúng một lần."""
+    if goc is None:
+        if can:
+            so.thieu(f"cần trạm {ten} ({ly_do}) nhưng chưa khai chỗ nào.\n{huong_dan}")
+        else:
+            so.nhac(f"chưa dùng trạm {ten} — repo này chạy được mà không có nó. Khi nào cần "
+                    f"{'lồng tiếng' if ten == 'giọng' else 'dựng video'} thì cài `{repo}` và "
+                    f"đặt biến trạm; `doctor` sẽ kiểm tiếp từ đó.")
+        return None
+    if not goc.is_dir():
+        so.thieu(f"trạm {ten} khai ở {goc} nhưng thư mục không tồn tại.\n{huong_dan}")
+        return None
+    if not (goc / "station.json").is_file():
+        so.thieu(f"trạm {ten} {goc} chưa có station.json — chạy `{lenh_init} --station "
+                 f"{goc}` bằng python của trạm giọng.")
+        return None
+    return goc
+
+
+def _kham_profile(so: So, goc_giong: Path, khai_kenh):
+    """Profile khai trong `channel.yml` phải có thật trong kho giọng."""
+    try:
+        kho = VOICE.voices_dir(goc_giong)
+    except SC.StudioError as e:
+        so.nhac(f"không xác định được kho giọng: {e}")
+        return
+    if not kho.is_dir():
+        so.thieu(f"kho giọng {kho} chưa có — tạo profile bằng `voice-studio make-profile`.")
+        return
+    co = {p.name.split(".")[0] for p in kho.iterdir()}
+    for kenh, khai in khai_kenh:
+        ten = str(khai.get("voice_profile") or "").strip()
+        if ten and ten not in co:
+            so.hong(f"kênh {kenh} khai voice_profile {ten!r} nhưng kho giọng {kho} không có "
+                    f"(đang có: {', '.join(sorted(co)) or '(rỗng)'}). Sửa channel.yml hoặc "
+                    f"tạo profile đó.")
+
+
+def kham_nang_luc(so: So, tram: Path):
+    """Phần trạm giọng / trạm video của `doctor`. Chỉ đọc, như cả phần còn lại."""
+    if os.environ.get("OMNIVOICE_DIR") and not os.environ.get("VOICE_STATION"):
+        so.nhac("OMNIVOICE_DIR là TÊN CŨ và trỏ thư mục ENGINE; đặt VOICE_STATION trỏ GỐC "
+                "trạm giọng (thư mục CHA của nó) để không lệ thuộc cách dò lùi một cấp.")
+    if os.environ.get("VIDEO_ROOT") and not os.environ.get("VIDEO_STATION"):
+        so.nhac("VIDEO_ROOT là tên cũ — đặt VIDEO_STATION thay cho nó.")
+
+    khai_kenh = _khai_trong_kenh(tram)
+    vi_kenh = ", ".join(f"{k} khai {'/'.join(v)}" for k, v in khai_kenh)
+
+    giong = _kham_mot_tram(
+        so, "giọng", SP.voice_station(), bool(khai_kenh), vi_kenh or "đã khai biến",
+        "agent-voice-studio", VOICE.HUONG_DAN, "voice-studio init")
+    video = _kham_mot_tram(
+        so, "video", SP.video_station(), False, "đã khai biến",
+        "agent-video-studio", VIDEO.HUONG_DAN, "video-studio init")
+
+    can_goi = [g for g, dung in (("voice_studio", giong), ("video_studio", video)) if dung]
+    if not can_goi:
+        return
+
+    py = None
+    for lay in ((lambda: VOICE.python_exe(giong)) if giong else None,
+                (lambda: VIDEO.python_exe(video)) if video else None):
+        if lay is None:
+            continue
+        try:
+            py = lay()
+            break
+        except SC.StudioError as e:
+            so.thieu(str(e))
+    if py is None:
+        return
+
+    ban = _hoi_phien_ban(py)
+    if ban is None:
+        so.thieu(f"không hỏi được phiên bản hợp đồng qua {py} — python của trạm giọng chạy "
+                 f"không nổi. Dựng lại venv rồi `pip install -e` hai repo trạm.")
+        return
+    for goi in can_goi:
+        dang = ban.get(goi)
+        can = CAN_PHIEN_BAN[goi]
+        if not dang:
+            so.thieu(f"venv {py} chưa có `{goi}` — chạy:\n"
+                     f"  {py} -m pip install -e <đường dẫn>/agent-{goi.replace('_', '-')}")
+        elif _so(dang) < _so(can):
+            so.thieu(f"`{goi}` đang là {dang}, hợp đồng cần >= {can} "
+                     f"(requirements-{goi.split('_')[0]}.txt) — cập nhật repo trạm rồi "
+                     f"`pip install -e` lại.")
+        else:
+            so.ghi(f"{goi}: {dang} (cần >= {can})")
+
+    if giong and khai_kenh:
+        _kham_profile(so, giong, khai_kenh)
+
+
+KHAM_THEM.append(kham_nang_luc)
 
 
 def _in(kq: dict):

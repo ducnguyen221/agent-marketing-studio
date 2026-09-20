@@ -25,8 +25,11 @@ Bẫy PowerShell 5.1: đừng `2>&1` khi gọi lệnh native — mỗi dòng std
 from __future__ import annotations
 
 import json
+import re
+import subprocess
 import sys
 import traceback
+from pathlib import Path
 
 OK, ENGINE_ERROR, CONTRACT_ERROR, STATION_MISSING = 0, 1, 2, 3
 
@@ -34,6 +37,7 @@ __all__ = [
     "OK", "ENGINE_ERROR", "CONTRACT_ERROR", "STATION_MISSING",
     "StudioError", "EngineError", "ContractError", "StationMissing",
     "log", "emit", "run", "parse", "classify",
+    "last_json_line", "call", "min_version",
 ]
 
 
@@ -96,6 +100,92 @@ def run(fn, args, as_json=False) -> int:
     if as_json:
         emit({"ok": True, **ra})
     return OK
+
+
+LOAI_LOI = {ENGINE_ERROR: EngineError, CONTRACT_ERROR: ContractError,
+            STATION_MISSING: StationMissing}
+
+
+def last_json_line(stdout: str):
+    """Dòng JSON cuối của stdout -> dict, hoặc None khi không có dòng nào đọc được.
+
+    Đi NGƯỢC từ cuối lên và lấy object JSON đầu tiên gặp được. Hợp đồng nói "dòng cuối",
+    nhưng thư viện bên thứ ba vẫn in thanh tiến trình ra stdout, và đôi khi in SAU cả
+    dòng kết quả. Đọc ngược chịu được cả hai phía; đọc đúng một dòng cuối thì một dòng
+    rác duy nhất làm hỏng cả lượt render mất hàng giờ.
+    """
+    for dong in reversed((stdout or "").splitlines()):
+        d = dong.strip()
+        if not (d.startswith("{") and d.endswith("}")):
+            continue
+        try:
+            data = json.loads(d)
+        except ValueError:
+            continue
+        if isinstance(data, dict):
+            return data
+    return None
+
+
+def call(argv, *, prog: str, timeout=None, env=None, cwd=None) -> dict:
+    """Gọi một CLI theo hợp đồng ba trạm -> dict kết quả; mã thoát ≠ 0 thành exception.
+
+    `argv` là DANH SÁCH, không bao giờ là chuỗi: không `shell=True`, không tự ghép lệnh.
+    Một đường dẫn có dấu cách hay dấu `&` đi qua shell là một lệnh khác hẳn lệnh ta định
+    chạy, và đường dẫn ở đây do người dùng đặt.
+
+    stderr KHÔNG gộp vào stdout: gộp là trộn log người đọc vào chỗ máy đọc, đúng cái
+    hợp đồng tách ra.
+    """
+    try:
+        p = subprocess.run(argv, capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout, env=env, cwd=cwd)
+    except FileNotFoundError as e:
+        raise StationMissing(f"không chạy được {argv[0]!r} ({prog}): {e}") from e
+    except subprocess.TimeoutExpired as e:
+        raise EngineError(f"{prog} quá {timeout}s chưa xong — đã giết tiến trình") from e
+    except OSError as e:
+        raise EngineError(f"không chạy được {prog}: {e}") from e
+
+    data = last_json_line(p.stdout)
+    if p.returncode == OK:
+        if data is None:
+            goi = argv[argv.index("-m") + 1] if "-m" in argv[:-1] else argv[0]
+            raise ContractError(
+                f"{prog} trả mã 0 nhưng stdout KHÔNG có dòng JSON nào — bản {goi} đang cài quá "
+                f"cũ, hoặc chưa hiểu `--json`. Chạy `doctor` để so phiên bản hợp đồng.")
+        return data
+    msg = (data or {}).get("error") or _duoi_log(p.stderr) or f"{prog} thoát với mã {p.returncode}"
+    loai = LOAI_LOI.get(p.returncode)
+    if loai is None:
+        raise EngineError(f"{prog} thoát với mã {p.returncode} (ngoài hợp đồng 0/1/2/3): {msg}")
+    raise loai(msg)
+
+
+def _duoi_log(stderr: str, dong=6) -> str:
+    co = [d for d in (stderr or "").splitlines() if d.strip()]
+    return "\n".join(co[-dong:])
+
+
+_NGUONG = re.compile(r"^\s*([A-Za-z_][\w.-]*)\s*>=\s*([0-9][0-9A-Za-z.\-+]*)\s*$")
+
+
+def min_version(loai: str):
+    """-> (tên package, chuỗi phiên bản tối thiểu) đọc từ `requirements-<loai>.txt`.
+
+    Ngưỡng hợp đồng là DỮ LIỆU trong repo, không phải hằng số nằm trong mã: nâng hợp đồng
+    là sửa một dòng văn bản, và `git log` của file đó kể lại lịch sử ngưỡng.
+    """
+    f = Path(__file__).resolve().parents[2] / f"requirements-{loai}.txt"
+    if not f.is_file():
+        raise ContractError(f"thiếu {f.name} — không biết trạm {loai} phải từ bản nào trở lên")
+    for dong in f.read_text(encoding="utf-8").splitlines():
+        if dong.lstrip().startswith("#"):
+            continue
+        m = _NGUONG.match(dong)
+        if m:
+            return m.group(1), m.group(2)
+    raise ContractError(f"{f.name} không có dòng `<package>>=<phiên bản>` nào")
 
 
 def parse(ap, argv=None):

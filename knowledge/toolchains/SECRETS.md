@@ -153,10 +153,13 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `FFMPEG_DIR` | `media_tools.py` — thư mục chứa `ffmpeg` + `ffprobe` | Windows: thư mục WinGet → PATH · macOS: PATH → `/opt/homebrew/bin`, `/usr/local/bin` |
 | `FFPROBE` | `media_tools.py` — đường `ffprobe` riêng | như `FFMPEG_DIR` |
 | `VIDEO_FONT` | `media_tools.py` — font `.ttf/.otf` khi Pillow tự vẽ chữ | Segoe/Arial (Windows) · Arial hệ thống (macOS) · DejaVu |
-| `VOICE_STATION` | `studio_paths.voice_station()` — gốc trạm giọng (`agent-voice-studio`) | `OMNIVOICE_DIR` (tên cũ, lùi một cấp) → `studio.local.json: voice_station` → coi như chưa cài |
-| `OMNIVOICE_DIR` | `make_podcast.py` — thư mục ENGINE của trạm giọng; `studio_paths` đọc như tên cũ của `VOICE_STATION` | `<nhà>/.tts/omnivoice` |
-| `VIDEO_STATION` | `studio_paths.video_station()` — gốc trạm video (`agent-video-studio`) | `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station` → coi như chưa cài |
+| `VOICE_STATION` | `studio_paths.voice_station()`, `scripts/lib/voice.py` — gốc trạm giọng (`agent-voice-studio`) | `OMNIVOICE_DIR` (tên cũ, lùi một cấp) → `studio.local.json: voice_station` → coi như chưa cài |
+| `OMNIVOICE_DIR` | tên CŨ, trỏ thư mục **ENGINE** bên trong trạm giọng; `studio_paths` lùi một cấp để ra gốc trạm, `doctor` nhắc đổi sang tên mới | — |
+| `OMNIVOICE_PY` | `scripts/lib/voice.py` — python của venv trạm giọng (chỗ cài `voice_studio` + `video_studio`) | `station.json: venv` của trạm giọng → `<trạm>/omnivoice/.venv/{Scripts,bin}/python*` |
+| `VOICES_DIR` | `scripts/lib/voice.py`, `doctor` — kho profile giọng | `<trạm giọng>/<engine_dir>/voices` |
+| `VIDEO_STATION` | `studio_paths.video_station()`, `scripts/lib/video.py` — gốc trạm video (`agent-video-studio`) | `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station` → coi như chưa cài |
 | `VIDEO_ROOT` | tên CŨ của `VIDEO_STATION`, còn đọc được để không gãy máy đang chạy | — |
+| `HYPERFRAMES_VERSION` | `scripts/lib/video.py` — bản HyperFrames trạm video ghim (chỉ để báo cáo; trạm video mới là nơi dùng nó) | `station.json: hyperframes_version` của trạm video |
 | `OPCOS_CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | đường mặc định trong thư mục nhà |
 | `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |
 

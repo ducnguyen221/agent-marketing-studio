@@ -31,6 +31,15 @@ home_domain: example.vn
 # Hồ sơ giọng, đường dẫn trong repo engine (không phải trong kênh)
 brand_voice: brand.md          # hồ sơ giọng nằm NGAY TRONG kênh, không ở repo engine
 
+# ── Hai trạm năng lực (chỉ khai nếu kênh có audio/video) ────────────────────────────
+# Khai một trong hai khoá dưới đây là nói "kênh này CẦN trạm giọng": từ đó `doctor` coi
+# trạm giọng là bắt buộc và báo mã 3 khi thiếu, thay vì để pipeline nổ giữa một lượt
+# render lúc 18h. Không khai = kênh chỉ có chữ, không ai bị đòi cài thêm gì.
+# `voice_profile` phải là tên một profile CÓ THẬT trong kho giọng (`voice-studio
+# make-profile` tạo ra) — `doctor` đối chiếu và báo mã 2 nếu khai một tên không tồn tại.
+# voice_profile:               # tên profile giọng đọc của kênh
+# bgm_style:                   # style nhạc nền trong bgm-library.json của trạm giọng
+
 # Giá trị hợp lệ của content_pillar CHO KÊNH NÀY. Mỗi kênh một bộ khác nhau —
 # đây là lý do bộ trụ cột không nên nằm cứng trong DATA_MODEL.
 pillars: [tru-cot-1, tru-cot-2]

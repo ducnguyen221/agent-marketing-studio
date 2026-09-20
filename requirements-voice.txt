@@ -1,0 +1,13 @@
+# Phiên bản HỢP ĐỒNG tối thiểu của trạm giọng (`agent-voice-studio`) mà repo này gọi được.
+#
+# Đây KHÔNG phải file để `pip install -r`: `voice_studio` không lên PyPI, nó được cài
+# `pip install -e <bản clone>` vào venv của trạm giọng. File này chỉ khai NGƯỠNG, và
+# `scripts/pipeline/doctor.py` đọc nó rồi so với `voice_studio.API_VERSION` đang cài.
+#
+# Ngưỡng nằm trong một file văn bản chứ không phải hằng số trong mã: nâng hợp đồng là sửa
+# một dòng, và `git log` của file này kể lại lịch sử ngưỡng — thứ mà một hằng số chôn giữa
+# 200 dòng code không kể được.
+#
+# `API_VERSION` là semver của HỢP ĐỒNG (lệnh, cờ, hình dạng JSON), không phải của mã: số
+# minor tăng khi thêm thứ tương thích ngược, major tăng khi bên gọi phải sửa.
+voice_studio>=1.0.0
