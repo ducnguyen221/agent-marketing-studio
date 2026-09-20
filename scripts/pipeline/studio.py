@@ -33,6 +33,7 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import station_manifest as SM  # noqa: E402
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
 
@@ -45,16 +46,13 @@ except (AttributeError, ValueError):
 PROG = "studio"
 KHO_SECRET_MAC_DINH = Path.home() / ".secret" / "marketing-studio"
 
-# Tên nhìn giống secret: không bao giờ tự động vào gói. Đây là cùng bộ mẫu mà
-# `tests/test_no_identity_leak.py` dùng để canh cây git.
-MAU_GIONG_SECRET = ("*token*", "*secret*", "*credential*", ".env", ".env.*", "*.pem", "*.key")
+# Tên nhìn giống secret: không bao giờ tự động vào gói. Bộ mẫu khai ở `station_manifest`
+# và dùng chung với `station.py export` — hai bản sao của một danh sách secret sẽ lệch
+# nhau, và cái lệch là cái rò.
+MAU_GIONG_SECRET = SM.MAU_GIONG_SECRET
+_giong_secret = SM.giong_secret
 BO_QUA_THU_MUC = {".git", "__pycache__", ".venv", "venv", ".tmp", ".pytest_cache"}
 BO_QUA_FILE = ("*.pyc", "~$*")
-
-
-def _giong_secret(ten: str) -> bool:
-    t = os.path.basename(ten).lower()
-    return t != ".env.example" and any(fnmatch.fnmatch(t, m) for m in MAU_GIONG_SECRET)
 
 
 def _bo_qua_file(ten: str) -> bool:

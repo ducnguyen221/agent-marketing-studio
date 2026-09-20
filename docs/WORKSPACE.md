@@ -130,8 +130,8 @@ Giống nhau ở cả hai chế độ, chỉ khác gốc.
 | `<chiến-dịch>/campaign.md` | nội dung + cấu hình | bạn · agent | **có** | không | không |
 | `<chiến-dịch>/prompt.txt` | nội dung | bạn | **có** | không | không |
 | `<chiến-dịch>/run.ps1` | quản lý | chép từ khuôn của repo | **có** | không | được — chép lại từ `templates/station/` |
-| `<chiến-dịch>/out/` | sản phẩm | script dựng ảnh/video/trang | chỉ khi xin rõ (nặng) | không | **được** — dựng lại được |
-| `<chiến-dịch>/logs/` | nhật ký | script | chỉ khi xin rõ | vừa (có thể lẫn đường dẫn máy) | được — chỉ mất dấu vết |
+| `<chiến-dịch>/out/` | sản phẩm | script dựng ảnh/video/trang | `backup`: cả; gói chuyển máy: **chỉ `*-top.json` và `*.published.json`** | không | mp4/ảnh **được** — dựng lại được; hai loại JSON kia **không** |
+| `<chiến-dịch>/logs/` | nhật ký + trạng thái | script | `backup`: cả; gói chuyển máy: chỉ khi `--include-logs-state`, và chỉ tin duyệt chờ · việc chờ · nhật ký sự kiện | vừa (có thể lẫn đường dẫn máy) | `*.log` được; `tg-approve.json`, `jobs/pending/` thì không |
 | `<bài>/research.md`, `content.md` | nội dung | agent · bạn | **có** | không | **không** |
 | `<bài>/publish.json` | trạng thái | `register_publish.py` | **có** | có (link thật, ID bài) | **không** — mất là mất dấu đã đăng gì |
 | `engine/` | mã | chép từ pipeline tin | **có** | không | được nếu bạn không chạy pipeline tin |
@@ -144,6 +144,20 @@ nào dựng lại từ máy** — chỉ còn bản sao lưu.
 `backup` mặc định **không** kèm `.env`; muốn kèm phải `--with-env`. Và nó **từ chối** đóng
 gói khi trong trạm có file trông giống secret (`*token*`, `*credential*`, `*.pem`, `*.key`):
 những thứ đó phải nằm ở kho secret của máy, biến chỉ trỏ đường tới.
+
+**`backup` khác gói chuyển máy.** Cột trên nhắc tới hai thứ khác nhau, đừng lẫn:
+
+```
+python scripts/pipeline/studio.py  backup --out ~/sao-luu-tram.zip     # ảnh chụp cho mình
+python scripts/pipeline/station.py export --station <trạm> --out <zip> \
+       --with-git --include-logs-state                                 # gói bàn giao
+python scripts/pipeline/station.py import <zip> --station <trạm mới>
+```
+
+`export` đi theo **danh sách khai rõ** (`scripts/lib/station_manifest.py`) nên gói nhẹ hơn
+hẳn — trên một trạm 929 MB, gói kèm `.git` chỉ 38 MB — và kèm manifest + sha256 để bên
+nhận đếm lại rồi **báo thiếu**. `import` **không đè** file đã có, kiểm sha256 trước khi ghi
+byte nào, và đổi đường của máy cũ thành `~`.
 
 ---
 
