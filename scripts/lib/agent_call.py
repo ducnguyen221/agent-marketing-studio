@@ -143,16 +143,28 @@ CAU_HINH_MAC_DINH = {
 
 
 def config_path(station=None) -> Path:
-    """`$AGENT_CALL_ENGINES` → `<trạm>/engine/engines.json`.
+    """`$AGENT_CALL_ENGINES` → `<trạm>/_agent-call/engines.json` → `<trạm>/engine/engines.json`.
 
     Cấu hình theo MÁY nằm ở trạm, không nằm trong repo: repo là public và không được khoá
     cứng engine nào — cùng luật với `writer_cmd`. Biến môi trường đứng trước để máy chạy
     lịch thật ghi đè được mà không phải sửa file trong cây git.
+
+    Vì sao KHÔNG để mặc định trong `<trạm>/engine/`: `run.ps1` của mọi chiến dịch coi sự
+    **tồn tại** của `<trạm>/engine` là tín hiệu "engine đã dọn về trạm" và bỏ đường lùi sang
+    `~/.news/engine`. Đặt một file cấu hình vào đó là tự tạo thư mục ⇒ lượt lịch kế tiếp đi
+    tìm runner trong thư mục chỉ có JSON rồi thoát mã 2. Đã xảy ra thật đêm 20→21/09 và kịp
+    phát hiện trước lượt 19:00. Thư mục riêng `_agent-call/` không mang nghĩa nào với
+    `run.ps1`; nhánh `engine/` giữ lại để sau khi khối 3-A dọn engine về trạm thì cấu hình
+    nằm cạnh engine vẫn đọc được.
     """
     bien = (os.environ.get("AGENT_CALL_ENGINES") or "").strip()
     if bien:
         return Path(bien).expanduser()
-    return SP.root(station) / "engine" / "engines.json"
+    goc = SP.root(station)
+    rieng = goc / "_agent-call" / "engines.json"
+    if rieng.is_file():
+        return rieng
+    return goc / "engine" / "engines.json"
 
 
 def load_config(path=None, station=None) -> dict:
