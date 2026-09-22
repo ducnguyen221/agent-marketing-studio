@@ -431,7 +431,13 @@ MAU_NETWORK = re.compile(
     r"network (?:error|unreachable)|tls handshake", re.I)
 MAU_MODEL = re.compile(
     r"model (?:not found|not available|unknown)|unknown model|no access to model|"
-    r"does not have access to|invalid model", re.I)
+    r"does not have access to|invalid model|"
+    # `claude` in nguyên văn `[claude-code:unrecognized_model]` khi tên model không có
+    # thật — không khớp nhánh nào ở trên, nên trước 22/09 nó rơi vào `engine` và chuỗi
+    # fallback KHÔNG chạy: một dòng `order` gõ sai (hoặc một alias model bị nhà cung cấp
+    # khai tử) giết nguyên lượt lịch thay vì tụt xuống engine kế. Tên model đổi vài tháng
+    # một lần, nên đây là đường hỏng sẽ gặp lại.
+    r"unrecognized[_ ]model|unsupported[_ ]model|model[_ ]not[_ ]supported", re.I)
 MAU_AGY_ERROR = re.compile(r"AGY_ERROR:\s*(\{.*?\})\s*$", re.M | re.S)
 MAU_GIO = re.compile(r"resets?\s+(?:at\s+)?(\d{1,2}):(\d{2})\s*([ap])m\s*(?:\(([^)]+)\))?", re.I)
 MAU_ISO = re.compile(r"\b(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)")
