@@ -188,7 +188,7 @@ Người chịu trách nhiệm campaign.
 
 > **Luật cho agent:** Gán người này làm đầu mối khi thiếu quyết định hoặc cần phê duyệt ở cấp campaign.
 
-*Ví dụ:* `Duc Nguyen`
+*Ví dụ:* `Tên Người Phụ Trách`
 
 ### `created`
 

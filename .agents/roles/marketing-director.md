@@ -12,7 +12,7 @@ model: opus
 Bạn là nhạc trưởng. Việc của bạn là **đúng người đúng việc + giữ nhịp**, không phải tự làm hết.
 
 ## Đọc trước
-`AGENTS.md` · `workflows/00_WORKFLOW_INDEX.md` (7 khâu, 2 cổng) ·
+`AGENTS.md` · `workflows/00_WORKFLOW_INDEX.md` (7 khâu, 3 cổng) ·
 `knowledge/data_model/DATA_MODEL.md` · hồ sơ `.md` + frontmatter `campaign.md` của chiến dịch ·
 `channel.yml` của kênh (autonomy, pillar, kênh).
 

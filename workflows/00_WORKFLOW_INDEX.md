@@ -9,20 +9,24 @@ Trước khi đụng bất cứ ô nào: đọc [`../knowledge/data_model/DATA_M
 
 ---
 
-## Vòng đời — 7 khâu, 2 cổng của người
+## Vòng đời — 7 khâu, 3 cổng của người
 
 ```
 ① new ─→ ② plan ─🔒cổng 1─→ ③ produce ─→ ④ selfqa ─🔒cổng 2─→ ⑤ render ─→ ⑥ publish ─→ ⑦ measure
      bảng Content         content.md      24 cổng kiểm       audio/video    publish.json     actual_*
       (proposed)          + posts[]        (MÁY tự kiểm)                    + URL vào bảng   + báo cáo .md
+                                                                  🔒cổng 3 nằm TRONG ⑥: web → cổng 3 → YouTube · Facebook
 ```
 
 **Cổng 1 — người duyệt đề tài:** trong bảng Content của `campaign.md`, `status = approved`
 **và** ô `g1` có ngày.
 **Cổng 2 — người duyệt trước khi đăng:** `publish.json → posts[].review.status = approved`,
 bắt buộc kèm `approved_by` và câu duyệt nguyên văn (`register_publish approve --by … --note …`).
+**Cổng 3 — người duyệt bản thật trên web (tuỳ chọn):** chỉ có khi bảng Content khai cột `g3`.
+Trang web lên trước, người mở link xem bằng mắt, ô `g3` có ngày thì mới phát YouTube/Facebook
+([`../knowledge/toolchains/CAMPAIGN_PIPELINE.md`](../knowledge/toolchains/CAMPAIGN_PIPELINE.md)).
 
-Agent **không bao giờ** tự đặt hai giá trị đó. `quality_check` là bước MÁY tự kiểm **trước**
+Agent **không bao giờ** tự đặt các giá trị đó. `quality_check` là bước MÁY tự kiểm **trước**
 khi trình người — nó không thay được cổng.
 
 > **Vì sao render sau cổng 2:** dựng video/audio tốn thời gian và GPU. Duyệt chữ trước, dựng sau
@@ -181,7 +185,7 @@ có việc" trong khi thật ra dữ liệu sai.
 
 ## Bảy điều tuyệt đối
 
-1. Không đặt hộ `status = approved`, ô `g1`, hay `posts[].review.status = approved`.
+1. Không đặt hộ `status = approved`, ô `g1`, ô `g3`, hay `posts[].review.status = approved`.
 2. Không đăng thật khi chưa đủ token, chưa qua cổng 2, hoặc `autonomy` chưa cho phép.
 3. Không bịa số, nguồn, kết quả. Chưa kiểm được thì gắn `[KIỂM CHỨNG]` hoặc để trống.
 4. Không điền `0` thay cho "chưa có". Ô rỗng là một giá trị có nghĩa.

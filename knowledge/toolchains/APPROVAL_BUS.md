@@ -5,30 +5,36 @@
 > Hợp đồng cấp BÀI của một bài blog nằm ở [`ATLAS_CHANNEL.md`](ATLAS_CHANNEL.md) — file này
 > nói về tầng ĐIỀU PHỐI ở trên nó.
 
-## 1. Ba bước rời, hai cổng ở giữa
+## 1. Các bước rời, cổng nằm ở giữa
 
 ```
-create-post ──[ Cổng 1 ]── soan ──[ Cổng 2 ]── dang
-   │                      │                   │
-   │ new_post             │ gen_article       │ web_publish
-   │ --fill-row      │ blog_gates (23)   │ fb_publish
-   │                      │ register_publish  │ register_publish set
-   │                      │   init            │
+create-post ─[ Cổng 1 ]─ write ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+   │                      │                   │                       │
+   │ new_post             │ gen_article       │ build_blog_html       │ youtube_cmd
+   │ --fill-row           │ blog_gates (24)   │ web_publish           │ facebook_cmd
+   │                      │ register_publish  │ (+ audio_cmd)         │ (fb_publish)
+   │                      │   init            │                       │
 ```
+
+Cổng 3 chỉ có khi bảng Content khai cột `g3`. Bảng không có cột đó thì `release` chạy ngay
+sau `build-page`.
 
 **Vì sao rời chứ không gộp.** Script điều phối gộp đã bị gỡ vì nó *gộp dựng và đăng vào một
 lệnh, nên một bước hỏng là phải chạy lại từ đầu, và cổng duyệt của người bị nuốt vào giữa
-chuỗi*. Mỗi bước ở đây chạy lại được độc lập, và hai cổng nằm **giữa** các bước chứ không
+chuỗi*. Mỗi bước ở đây chạy lại được độc lập, và các cổng nằm **giữa** các bước chứ không
 lẫn vào trong.
 
-**Mỗi lượt gọi = một bước.** `run.ps1 -Buoc create-post` / `-Buoc soan` / `-Buoc dang`.
+**Mỗi lượt gọi = một bước.** Theo lịch: `run.ps1 -Step create-post` / `-Step write` /
+`-Step publish` (`publish` gọi `build-page`). Bước `release` chưa có trong runner — chạy
+`campaign_step.py <chiến dịch> release`.
 
 ## 2. Cổng nằm ở đâu — KHÔNG có kho thứ hai
 
 | Cổng | Chỗ ở THẬT | Ai ghi |
 |---|---|---|
-| **g1** duyệt đề tài | cột `g1` + `status` trong bảng Content của `campaign.md` | `approve_bus`, qua `md_io` |
-| **g2** duyệt trước khi đăng | `publish.json → posts[].review` | `register_publish approve` |
+| **g1** duyệt đề tài | cột `g1` + `status` trong bảng Content của `campaign.md` | `approval_gate` (phiên) hoặc `approve_bus` (Telegram), qua `md_io` |
+| **g2** duyệt trước khi đăng | `publish.json → posts[].review` (+ ô `g2` mirror) | `register_publish approve` |
+| **g3** duyệt bản thật trên web | cột `g3` trong bảng Content | `approval_gate` hoặc `approve_bus` |
 
 `approve_bus.py` là **mặt tiền**, không phải kho. File trạng thái riêng của nó
 (`logs/tg-approve.json`) chỉ giữ hai thứ của riêng Telegram: con trỏ `offset` và các token
@@ -36,12 +42,18 @@ lẫn vào trong.
 
 ## 3. Hai chế độ
 
-`channel.yml:autonomy` quyết mỗi cổng dừng hay tự mở.
+`channel.yml:autonomy` quyết Cổng 1 và Cổng 2 dừng hay tự mở. Dừng thì hỏi QUA ĐÂU do
+`campaign.md: runtime.approval_via` quyết: `session` (mặc định — agent trong phiên hỏi người
+ngay tại chỗ, không gửi gì) hoặc `telegram`.
 
-| Mức | Cổng 1 | Cổng 2 | Dùng khi |
-|---|---|---|---|
-| `suggest` *(mặc định)* | dừng, gửi Telegram | dừng, gửi Telegram | Nội dung có tên mình trên đó |
-| `full` | tự mở | tự mở | Đã tin quy trình, chấp nhận không ai đọc trước khi đăng |
+| Mức | Cổng 1 | Cổng 2 | Cổng 3 | Dùng khi |
+|---|---|---|---|---|
+| `suggest` *(mặc định)* | dừng, hỏi người | dừng, hỏi người | người mở | Nội dung có tên mình trên đó |
+| `auto_safe` | dừng, hỏi người | dừng, hỏi người | người mở | Ở tầng cổng giống `suggest` |
+| `full` | tự mở | tự mở | người mở | Đã tin quy trình, chấp nhận không ai đọc trước khi đăng |
+
+Cổng 3 **không** tự mở ở mức nào: `campaign_step` không gọi mở cổng này, nên `release` chờ
+tới khi ô `g3` có ngày.
 
 **Fail-closed ba lớp:** giá trị lạ → `suggest` · `campaign.md` không đè được `autonomy` ·
 chỉ NGƯỜI sửa `channel.yml`. Cả ba đều có test, và test đã được kiểm bằng đột biến.
@@ -49,8 +61,8 @@ chỉ NGƯỜI sửa `channel.yml`. Cả ba đều có test, và test đã đư�
 ## 4. Duyệt qua Telegram
 
 ```
-approve_bus.py gui  --campaign <đường dẫn> --gate g1|g2 [--batch N] [--mode per_post|batch_gate]
-approve_bus.py nhan --campaign <đường dẫn>
+approve_bus.py send    --campaign <đường dẫn> --gate g1|g2|g3 [--batch N] [--mode per_post|batch_gate]
+approve_bus.py receive --campaign <đường dẫn> [--follow GIAY]
 approve_bus.py poller-status --campaign <đường dẫn>
 ```
 
@@ -75,7 +87,7 @@ cùng hỏng ồn ào**, chứ KHÔNG phải lặng lẽ ăn trộm update của
 
 > Bản đầu của tài liệu này viết là "im lặng". Đó là **suy đoán chưa đo**, và phép đo bác
 > bỏ nó. Giữ lại ghi chú này vì nó đổi cách phòng: không cần dựng cổng phát hiện ngầm,
-> chỉ cần ĐỌC LỖI — `loi_lien_tiep` trong kết quả `nhan --follow` là đủ để nhận ra.
+> chỉ cần ĐỌC LỖI — `loi_lien_tiep` trong kết quả `receive --follow` là đủ để nhận ra.
 
 ## 5. Đăng web
 
@@ -115,19 +127,30 @@ gì hay không". Nối liên tiếp các lượt là phủ 100% thời gian.
 ### Kiến trúc
 
 ```
-Task Scheduler (mỗi phút, IgnoreNew)
+Task Scheduler (mỗi phút, IgnoreNew)   ·   launchd (KeepAlive + ThrottleInterval 60)
         │  đang chạy -> bỏ qua lượt gọi mới
         │  đã chết   -> dựng lại trong 60s
         ▼
 run-approve-poller.ps1  ── sống ~55 phút rồi TỰ THOÁT
         ▼
-approve_bus.py nhan --follow 3300
+approve_bus.py receive --follow 3300
         ├─ ① GIÀNH LOCK -> có người giữ thì THOÁT ÊM mã 0 (đường chạy bình thường mỗi phút)
         ├─ ② vòng lặp: getUpdates(timeout=50) -> xử lý -> ghi nhịp -> gia hạn lock -> log
         └─ ③ nhả lock trong `finally`
 ```
 
 Phủ gần 100%, tự lành trong 60 giây, **không service nào phải trông**.
+
+**Trên macOS cùng kiến trúc đó, chỉ đổi bộ lập lịch.** launchd bảo đảm sẵn **một bản chạy
+trên mỗi `Label`**, nên bản dịch đúng là `KeepAlive` + `ThrottleInterval 60`: chết thì dựng
+lại sau tối đa 60 giây, không bao giờ có hai bản. Windows phải gọi lại mỗi phút rồi từ chối
+54/55 lượt; launchd không phải làm thế. Mẫu:
+`templates/launchd/studio.marketing.approve-poller.plist` — **không** nạp mặc định, phải
+gọi đích danh (`install_launchd.py --only …`). Nó cũng **không** bọc wrapper báo Telegram:
+gọi mỗi phút mà báo mỗi lượt là hàng nghìn tin một ngày.
+
+Lock dưới đây vẫn cần nguyên trên macOS: nó chống bản chết-sớm-rồi-chồng-nhau, chuyện mà
+không bộ lập lịch nào chặn hộ.
 
 ### Lock một-tiến-trình — vì sao KHÔNG phó thác Task Scheduler
 
@@ -155,7 +178,7 @@ rủi ro trùng một nhịp.
 
 Về cái thứ ba: trước bản đó OpenClaw tính lời gọi API **đi ra** (gửi tin) là dấu hiệu "bot
 còn sống" — nên chiều **vào** chết mà không ai biết. Đúng hình dạng đó ở đây: `send_gate`
-vẫn gửi tin xin duyệt đều đặn trong khi `nhan` đã ngừng nhận, mọi thứ nhìn vẫn bình thường
+vẫn gửi tin xin duyệt đều đặn trong khi `receive` đã ngừng nhận, mọi thứ nhìn vẫn bình thường
 cho tới lúc có người thắc mắc sao bấm không ăn. Nên nhịp CHỈ ghi sau một lượt `getUpdates`
 thành công; gửi được tin **không tính**. Xem `logs/tg-poll-alive.json`, đọc bằng
 `approve_bus.py poller-status`.

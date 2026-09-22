@@ -85,7 +85,7 @@ def test_khong_co_neo_thi_comment_rong_chu_khong_doan():
 # ---------------------------------------------------------------- fixture ĐỎ CÓ CHỦ ĐÍCH
 
 BAI_DO = (
-    "Đọc bài đầy đủ: https://ducnguyen.vn/atlas/content/ai/x.html\n\n"   # vi phạm: URL trong thân
+    "Đọc bài đầy đủ: https://vidu.vn/atlas/content/ai/x.html\n\n"   # vi phạm: URL trong thân
     "**Tiêu đề in đậm kiểu markdown**\n\n"                               # vi phạm: markdown literal
     "Nội dung ngắn ngủn.\n\n"                                            # vi phạm: quá ngắn
     "#AI #Data\n"                                                        # vi phạm: chỉ 2 hashtag
@@ -113,7 +113,7 @@ def test_bai_xanh_khong_bao_dong_gia():
         F.bold("Chuyện gì đang xảy ra") + "\n\n"
         + "Nội dung dài. " * 400 + "\n\n"
         + "#AI #Data #CongNghe #HocMai #Prompt #Agent\n\n"
-        + "### comment_1\n\nBản đầy đủ: https://ducnguyen.vn/atlas/content/ai/x.html\n"
+        + "### comment_1\n\nBản đầy đủ: https://vidu.vn/atlas/content/ai/x.html\n"
     )
     m = F.check(post)
     assert F.danh_gia(m) == [], "bài hợp lệ không được sinh cổng đỏ nào"

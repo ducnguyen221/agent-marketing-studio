@@ -138,7 +138,7 @@ def pick_posts(campaign: Path, *, post: list[str] | None, count: int | None) -> 
 def _run_one_step(campaign: Path, cid: str, step: str, *, run) -> dict:
     """Chạy một bước cho một bài và kết luận theo ARTEFACT, không theo mã thoát.
 
-    Cùng luật với `worker._has_artefact`: `blog_gates` trả mã 1 khi cổng đỏ và `soan`
+    Cùng luật với `worker._has_artefact`: `blog_gates` trả mã 1 khi cổng đỏ và `write`
     trả khác 0 khi bài chưa đạt — cả hai ĐÃ LÀM XONG VIỆC. Đọc mã thoát rồi kết luận hỏng
     thì đúng những bài cần đi tiếp lại bị làm lại rồi vứt đi.
     """

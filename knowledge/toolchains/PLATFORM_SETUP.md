@@ -3,7 +3,8 @@
 Ba việc agent cần làm được trên nền tảng: **đăng bài** · **xuất dữ liệu** · **kéo số liệu về**.
 Mỗi việc cần một quyền khác nhau. File này là quy trình; script sẽ viết sau.
 
-**Luật xuyên suốt:** token đọc từ `.env`, không bao giờ nằm trong workbook, brief hay repo.
+**Luật xuyên suốt:** token nằm trong FILE ở kho `~/.secret/`, biến môi trường chỉ giữ đường dẫn
+([`SECRETS.md`](SECRETS.md)) — không bao giờ nằm trong workbook, brief hay repo.
 Và dù có đủ token, agent vẫn **không đăng thật** khi `channel.yml` chưa đặt `autonomy: full`.
 
 ---
@@ -23,8 +24,9 @@ Và dù có đủ token, agent vẫn **không đăng thật** khi `channel.yml` 
 2. Thêm sản phẩm **Facebook Login** và **Pages API**.
 3. Graph API Explorer → chọn App → **Get Page Access Token** → tick đủ 4 quyền trên.
 4. Đổi token ngắn hạn thành **token dài hạn** (60 ngày) rồi lấy **Page token vĩnh viễn**.
-5. Lưu page_id + token vào MỘT file JSON, rồi trỏ `FB_CONFIG` trong `.env` tới đường dẫn đó
-   (tên biến do `channel.yml:secrets_env` của kênh khai — không có sơ đồ hậu tố bắt buộc).
+5. Lưu page_id + token vào MỘT file JSON trong `~/.secret/<tài-khoản>/`, rồi đặt biến
+   `FB_CONFIG` (cấp user — xem [`SECRETS.md`](SECRETS.md)) trỏ tới đường dẫn đó. Tên biến do
+   `channel.yml:secrets_env` của kênh khai — không có sơ đồ hậu tố bắt buộc.
 6. Kiểm: `GET /{page-id}?fields=name,id` — trả về tên Page là xong.
 
 ### Mã bài để đối soát
@@ -53,8 +55,8 @@ cá nhân thì chỉ còn đường xuất tay.
 1. Google Cloud Console → tạo project → bật **YouTube Data API v3** và **YouTube Analytics API**.
 2. Tạo **OAuth client ID** loại *Desktop app* → tải `client_secret.json`.
 3. Chạy luồng OAuth một lần, chọn đúng kênh, cấp **cả hai** scope ở trên.
-4. Lưu đường dẫn vào `.env`: `YT_CLIENT_SECRET`, `YT_TOKEN_PATH` (hoặc tên khác, miễn khớp
-   `channel.yml:secrets_env` của kênh đó).
+4. Đặt hai biến giữ đường dẫn file: `YT_CLIENT_SECRET`, `YT_TOKEN_PATH` (hoặc tên khác, miễn
+   khớp `channel.yml:secrets_env` của kênh đó).
 5. Kiểm: `channels.list(part="id,snippet", mine=True)` — trả đúng kênh của bạn là xong.
 
 ⚠️ **Đã có token cũ chỉ với scope `youtube`?** Thêm scope **không tự động** mở rộng token cũ —
@@ -104,7 +106,7 @@ tiêu đề trên nền tảng khác `content_name` của Content → ai đó đ
 
 ## 4. Cấu hình theo kênh
 
-`channel.yml` giữ **định danh**, `.env` giữ **bí mật**. Không trộn.
+`channel.yml` giữ **định danh** và TÊN biến; file trong `~/.secret/` giữ **bí mật**. Không trộn.
 
 ⚠️ `platforms` là **DANH SÁCH**, mỗi mục có khoá `channel:` — không phải map theo tên nền
 tảng. Viết sai dạng thì `register_publish init` duyệt qua và sinh **0 post**, `check_tree`
@@ -138,3 +140,19 @@ platforms:
 4. Đã chạy thử dry-run và kiểm `publish.json` thấy đúng ý.
 
 Thiếu bất kỳ điều nào thì hệ thống tự chặn — đó là thiết kế, không phải lỗi.
+
+## 6. Khi bước đăng chạy theo lịch
+
+Biến trỏ tới file token phải **bộ lập lịch** nhìn thấy, không phải shell của bạn:
+
+| Chế độ cài | Windows | macOS |
+|---|---|---|
+| `separate` | `setx <TÊN>` (cấp user) | khối `EnvironmentVariables` trong plist của job |
+| `embedded` | `<repo>/.env` | `<repo>/.env` |
+
+⚠️ **launchd không đọc `~/.zshrc`, `~/.zprofile` hay `~/.bash_profile`.** Token chạy tay
+thì được mà lịch chạy lại "thiếu token" gần như luôn là lỗi này.
+`scripts/runners/install_launchd.py` điền khối `EnvironmentVariables` từ `studio_paths`,
+nên hãy để nó điền thay vì sửa tay plist đã nạp. Bảng biến ba trạm:
+[`STATION_LAYOUT.md`](STATION_LAYOUT.md). Đổi máy:
+[`../../docs/RUNBOOK-DOI-MAY.md`](../../docs/RUNBOOK-DOI-MAY.md).

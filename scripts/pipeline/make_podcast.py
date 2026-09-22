@@ -1,16 +1,27 @@
 # -*- coding: utf-8 -*-
-r"""make_podcast.py — podcast script (txt) + meta → audio.mp3 (giọng my-voice).
+"""make_podcast.py — kịch bản podcast (txt) + meta → một file audio, qua TRẠM GIỌNG.
 
-Tái dùng logic synth của OmniVoice trong mcp_server.py (_get_model / _synth /
-_save) + voice_profiles để dùng giọng clone `my-voice`. Cắt script thành đoạn
-ngắn (theo dòng trống + câu) để model đọc ổn định, ghép lại 1 file mp3.
+    python make_podcast.py --script F --meta meta.json --out <thư mục>/audio.mp3 [--profile P]
 
-CLI (theo PIPELINE_CONTRACT):
-  python make_podcast.py --script F --meta meta.json --out FOLDER\audio.mp3 --profile my-voice
-→ in dòng cuối `OK <abs_path mp3>`.
+Chạy bằng python BÌNH THƯỜNG của repo marketing. Nó không nạp model, không cần torch:
+việc đó thuộc về trạm giọng (`agent-voice-studio`), gọi qua `scripts/lib/voice.py` —
+**một lần cho cả bài**, nên model chỉ nạp một lần.
 
-Chạy bằng PYTHON của OmniVoice venv (có torch/omnivoice/soundfile). Model ~3.2GB
-load 1 lần (GPU nếu có). Lần đầu chạy thật sẽ nạp model — verify ast-parse không cần model.
+Đổi so với bản trước (P2-G3), và vì sao:
+
+- **Hết đường lùi vào bố cục của MỘT máy.** Bản cũ nhét thư mục engine của máy chủ repo
+  vào `sys.path` rồi import module private trong đó. Ai clone repo về cũng chạy trúng
+  đường đó, và khi nó không tồn tại thì lỗi hiện ra là `ModuleNotFoundError` — không ai
+  đoán được phải cài gì. Nay thiếu trạm giọng là **mã 3** kèm đúng các bước cài.
+- **Hết tên giọng mặc định.** Bản cũ mặc định một profile có thật của chủ repo. Tên giọng
+  là danh tính, không phải hằng số của engine: không khai `--profile` thì trạm giọng dùng
+  profile mặc định CỦA KHO, và kho không có mặc định thì nó dừng ở mã 2.
+- **Hết tự cắt đoạn + tự chèn khoảng lặng.** Cắt câu và vuốt mối nối là việc của engine
+  (`voice-studio speak` làm sẵn). Hai nơi cùng cắt thì nhịp đọc phụ thuộc vào nơi nào cắt
+  trước. Ở đây chỉ còn **gỡ markdown** — dấu `**`, backtick, `#` mà lọt vào engine thì bị
+  đọc thành tiếng.
+
+Mã thoát theo hợp đồng ba trạm: 0 ok · 1 engine hỏng · 2 gọi/cấu hình sai · 3 trạm thiếu.
 """
 from __future__ import annotations
 
@@ -19,119 +30,96 @@ import json
 import os
 import re
 import sys
+import tempfile
+from pathlib import Path
 
-# Đường dẫn theo MÁY, không theo người: repo này public, không được mang tên ai.
-OMNI_DIR = os.environ.get("OMNIVOICE_DIR") or os.path.join(os.path.expanduser("~"), ".tts", "omnivoice")
-if OMNI_DIR not in sys.path:
-    sys.path.insert(0, OMNI_DIR)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import studio_contract as SC  # noqa: E402
+import voice as VOICE  # noqa: E402
 
-# Offline mặc định (model đã cache) — giống mcp_server.
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except (AttributeError, ValueError):
+    pass
 
-
-def _read(path):
-    with open(path, encoding="utf-8") as f:
-        return f.read()
-
-
-_SENT_RE = re.compile(r"(?<=[.!?…])\s+")
+PROG = "make_podcast"
 
 
-def split_script(text, max_chars=320):
-    """Cắt script thành các đoạn <= max_chars: theo dòng trống, rồi theo câu.
-    Bỏ markdown nhẹ để giọng đọc sạch."""
+def clean_script(text: str) -> str:
+    """Bỏ markdown nhẹ, gộp mỗi đoạn thành một dòng -> text cho engine đọc.
+
+    Giữ RANH GIỚI ĐOẠN (dòng trống) vì engine dùng nó để ngắt hơi; bỏ ngắt dòng giữa
+    đoạn vì đó là cách trình bày, không phải chỗ nghỉ.
+    """
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
     text = re.sub(r"`([^`]+)`", r"\1", text)
     text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
-    blocks = re.split(r"\n\s*\n", text.strip())
-    chunks = []
-    for blk in blocks:
-        blk = " ".join(line.strip() for line in blk.splitlines() if line.strip())
-        if not blk:
-            continue
-        if len(blk) <= max_chars:
-            chunks.append(blk)
-            continue
-        cur = ""
-        for sent in _SENT_RE.split(blk):
-            if not sent.strip():
-                continue
-            if len(cur) + len(sent) + 1 <= max_chars:
-                cur = (cur + " " + sent).strip()
-            else:
-                if cur:
-                    chunks.append(cur)
-                cur = sent.strip()
-        if cur:
-            chunks.append(cur)
-    return [c for c in chunks if c.strip()]
+    doan = []
+    for blk in re.split(r"\n\s*\n", text.strip()):
+        mot_dong = " ".join(d.strip() for d in blk.splitlines() if d.strip())
+        if mot_dong:
+            doan.append(mot_dong)
+    return "\n\n".join(doan)
 
 
-def make_podcast(script_text, out_mp3, profile="my-voice", language="Vietnamese", gap=0.35):
-    """Synth từng đoạn bằng giọng profile, ghép thành 1 mp3."""
-    import numpy as np
-    import mcp_server as ov
-    import voice_profiles as vp
-
-    chunks = split_script(script_text)
-    if not chunks:
-        raise ValueError("Script rỗng — không có nội dung để đọc.")
-
-    model = ov._get_model()
-    sr = model.sampling_rate
-    # Chọn profile: ưu tiên profile truyền vào, nếu không có thì default.
-    prof = profile or vp.get_default() or vp.ensure_default(model)
-    silence = np.zeros(int(sr * gap), dtype=np.float32)
-
-    parts = []
-    for i, ch in enumerate(chunks, 1):
-        print(f"  [podcast] đoạn {i}/{len(chunks)} ({len(ch)} ký tự) ...", flush=True)
-        audio = ov._synth(model, ch, language, instruct="", speed=1.0, voice_profile=prof)
-        parts.append(np.asarray(audio, dtype=np.float32))
-        parts.append(silence)
-    full = np.concatenate(parts)
-
-    # _save tự convert .mp3 (libmp3lame) qua imageio-ffmpeg.
-    path = ov._save(full, out_mp3, sr)
-    dur = len(full) / sr
-    print(f"  [podcast] tổng {dur:.1f}s @ {sr}Hz, giọng={prof}", flush=True)
-    return path
+def make_podcast(script_text: str, out: str, profile: str | None = None,
+                 language: str | None = None) -> dict:
+    """Đọc cả bài thành một file audio -> dict kết quả của trạm giọng."""
+    sach = clean_script(script_text)
+    if not sach:
+        raise SC.ContractError("kịch bản rỗng — không có gì để đọc")
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="make-podcast-") as tam:
+        # Đưa qua FILE chứ không qua `--text`: một bài dài vượt giới hạn dòng lệnh của
+        # Windows (~32 000 ký tự) và lỗi khi đó là "tham số sai", không ai lần ra vì sao.
+        f = Path(tam) / "loi-doc.txt"
+        f.write_text(sach, encoding="utf-8", newline="\n")
+        return VOICE.speak(file=str(f), out=out, profile=profile, lang=language)
 
 
-def main(argv=None):
-    ap = argparse.ArgumentParser(description="podcast script → audio.mp3 (OmniVoice my-voice)")
-    ap.add_argument("--script", required=True)
-    ap.add_argument("--meta", default="")
-    ap.add_argument("--out", required=True)
-    ap.add_argument("--profile", default="my-voice")
-    ap.add_argument("--language", default="Vietnamese")
-    args = ap.parse_args(argv)
-
-    script_text = _read(args.script)
+def chay(args) -> dict:
+    kich = Path(args.script)
+    if not kich.is_file():
+        raise SC.ContractError(f"không thấy kịch bản {args.script}")
     if args.meta and os.path.isfile(args.meta):
-        # meta chỉ để log/branding, không bắt buộc dùng trong synth.
+        # `meta` chỉ để người đọc log biết đang dựng bài nào; nội dung không vào bản đọc.
         try:
-            with open(args.meta, encoding="utf-8-sig") as f:
-                json.load(f)
-        except Exception:
-            pass
+            with open(args.meta, encoding="utf-8-sig") as m:
+                SC.log(f"[{PROG}] bài: {(json.load(m) or {}).get('title', '(không tiêu đề)')}")
+        except (OSError, ValueError):
+            SC.log(f"[{PROG}] meta {args.meta} đọc không được — bỏ qua, không chặn")
+    ra = make_podcast(kich.read_text(encoding="utf-8"), args.out,
+                      profile=args.profile or None, language=args.language or None)
+    duong = (ra.get("outputs") or [{}])[0].get("path") or args.out
+    SC.log(f"[{PROG}] xong: {duong}")
+    return ra
 
-    path = make_podcast(script_text, args.out, profile=args.profile, language=args.language)
-    print(json.dumps({"out": os.path.abspath(path), "profile": args.profile},
-                     ensure_ascii=False, indent=2))
-    print(f"OK {os.path.abspath(path)}")
-    return 0
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(
+        prog=PROG, description="Kịch bản podcast → audio, qua trạm giọng (không nạp model ở đây).")
+    ap.add_argument("--script", required=True, help="file .txt/.md chứa kịch bản")
+    ap.add_argument("--meta", default="", help="meta.json của bài (chỉ để log)")
+    ap.add_argument("--out", required=True, help="file audio ra (.mp3 hoặc .wav)")
+    ap.add_argument("--profile", default="",
+                    help="tên profile giọng; bỏ trống = profile mặc định của kho giọng")
+    ap.add_argument("--language", default="", help="tên ngôn ngữ cho engine")
+    ap.add_argument("--json", action="store_true", help="một dòng JSON kết quả cuối stdout")
+    args, ma = SC.parse(ap, argv)
+    if args is None:
+        return ma
+    args.prog = PROG
+    if args.json:
+        return SC.run(chay, args, as_json=True)
+    try:
+        ra = chay(args)
+    except Exception as e:                # noqa: BLE001 — biên CLI: lỗi phải thành mã thoát
+        SC.log(f"[{PROG}] LỖI ({SC.classify(e)}): {e}")
+        return SC.classify(e)
+    print(f"OK {os.path.abspath((ra.get('outputs') or [{}])[0].get('path') or args.out)}")
+    return SC.OK
 
 
 if __name__ == "__main__":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
-    try:
-        raise SystemExit(main())
-    except Exception as e:
-        print(f"ERROR {type(e).__name__}: {e}", file=sys.stderr)
-        raise SystemExit(1)
+    sys.exit(main())

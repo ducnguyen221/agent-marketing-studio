@@ -19,8 +19,10 @@
     new_channel.py sẽ hỏi. Nó chỉ dựng trạm rỗng rồi chỉ đúng lệnh tiếp theo.
 
 .EXAMPLE
-    .\install.ps1
-    .\install.ps1 -Station "D:\noi-dung" -NonInteractive
+    .\install.ps1                              # hoi ban chon che do cai
+    .\install.ps1 -Station "D:/noi-dung"       # tram ngoai repo, khong hoi
+    .\install.ps1 -Yes                         # nhan khuyen nghi: embedded
+    .\install.ps1 -NonInteractive              # khong hoi; khong co ai tra loi -> ma 2
 
 .NOTES
     File này phải giữ BOM UTF-8 để PowerShell 5.1 đọc đúng tiếng Việt.
@@ -29,6 +31,9 @@
 [CmdletBinding()]
 param(
     [string] $Station,
+    [ValidateSet('embedded', 'separate')]
+    [string] $Mode,
+    [switch] $Yes,
     [switch] $NonInteractive
 )
 
@@ -37,6 +42,58 @@ $RepoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Say($t, $c = 'Gray') { Write-Host $t -ForegroundColor $c }
 
+function Find-Python {
+  # CHÉP NGUYÊN giữa các .ps1 của repo (PS 5.1 không có module chung); cổng
+  # tests/test_ps1_portable.py giữ mọi bản giống hệt nhau. Thứ tự dò:
+  #   MARKETING_STUDIO_PY -> <repo>/.venv -> python -> python3 -> py
+  # Mỗi ứng viên phải CHẠY được và tự khai là Python 3.10+: trên Windows `python3` có
+  # thể là stub của Microsoft Store — Get-Command thấy, chạy thì hỏng.
+  param([string]$Repo)
+  $chay = {
+    param([string]$exe)
+    # Chuyen huong luong loi cua LENH NGOAI duoi `Stop`: PS 5.1 boc tung dong stderr thanh
+    # NativeCommandError, va dong DAU TIEN da la loi ket thuc. Mot Python CHAY DUOC nhung
+    # in canh bao luc khoi dong (wrapper .cmd, shim pyenv/conda, mot .pth in ra) bi loai
+    # OAN -> exit 2; pwsh 7 thi khong -> cung mot file, hai hanh vi (review P1, N1).
+    # Ha ve `Continue` trong chinh scriptblock nay: goi bang `&` nen bien la CUC BO, khong
+    # ro ri ra ngoai. Ket qua that van doc tu $LASTEXITCODE — noi loi la te hon chet.
+    # Test: tests/test_find_python.py
+    $ErrorActionPreference = 'Continue'
+    try {
+      $ra = @(& $exe -c 'import sys;print(sys.version_info[:2])' 2>$null)
+      if ($LASTEXITCODE -ne 0) { return $false }
+      # Dong CUOI chu khong phai ca stdout: `[string](@(...))` noi moi dong bang dau cach,
+      # nen mot loi chao in truoc dong phien ban lam regex neo truot.
+      $v = ''
+      foreach ($d in $ra) { $t = ([string]$d).Trim(); if ($t) { $v = $t } }
+      $m = [regex]::Match($v, '^\((\d+), (\d+)\)$')
+      return ($m.Success -and [int]$m.Groups[1].Value -eq 3 -and [int]$m.Groups[2].Value -ge 10)
+    } catch { return $false }
+  }
+  if ($env:MARKETING_STUDIO_PY) {
+    if (& $chay $env:MARKETING_STUDIO_PY) { return $env:MARKETING_STUDIO_PY }
+    Write-Host ('Find-Python: MARKETING_STUDIO_PY=' + $env:MARKETING_STUDIO_PY + ' khong chay duoc Python 3.10+ -> DUNG.')
+    return $null
+  }
+  $ung = @()
+  if ($Repo) {
+    foreach ($con in @('Scripts', 'bin')) {
+      $thu = Join-Path (Join-Path $Repo '.venv') $con
+      if (Test-Path $thu) {
+        $ung += @(Get-ChildItem -Path $thu -Filter 'python*' -File -ErrorAction SilentlyContinue |
+          Where-Object { $_.BaseName -eq 'python' -or $_.BaseName -eq 'python3' } |
+          Sort-Object Name | ForEach-Object { $_.FullName })
+      }
+    }
+  }
+  $ung += @('python', 'python3', 'py')
+  foreach ($u in $ung) {
+    if (& $chay $u) { return $u }
+  }
+  Write-Host 'Find-Python: khong thay Python 3.10+ (MARKETING_STUDIO_PY, .venv, python, python3, py) -> DUNG.'
+  return $null
+}
+
 Say ""
 Say "=== agent-marketing-studio - dung tram noi dung ===" Green
 Say ""
@@ -44,13 +101,9 @@ Say ""
 # ── 1. Python và phụ thuộc ───────────────────────────────────────────────────
 # Kiểm TRƯỚC khi tạo thư mục: dựng xong khung rồi mới báo thiếu Python là bắt người
 # dùng đi dọn một thứ họ chưa dùng được.
-$py = $null
-foreach ($ten in @('python', 'py')) {
-    $c = Get-Command $ten -ErrorAction SilentlyContinue
-    if ($c) { $py = $c.Source; break }
-}
+$py = Find-Python -Repo $RepoRoot
 if (-not $py) {
-    Say "Khong tim thay Python. Cai Python 3.10+ roi chay lai." Red
+    Say "Khong tim thay Python. Cai Python 3.10+ roi chay lai (hoac dat MARKETING_STUDIO_PY)." Red
     exit 1
 }
 $ver = & $py -c "import sys;print('%d.%d' % sys.version_info[:2])"
@@ -69,49 +122,34 @@ if ($thieu.Trim()) {
     Say "Phu thuoc: du"
 }
 
-# ── 2. Chỗ đặt trạm ──────────────────────────────────────────────────────────
-$macDinh = Join-Path $env:USERPROFILE ".marketing"
-if (-not $Station) {
-    if ($NonInteractive) {
-        $Station = $macDinh
-    } else {
-        Say ""
-        Say "Dat TRAM o dau? (noi dung cua ban song o day, khong vao git)" Cyan
-        Say ("  Enter = {0}" -f $macDinh)
-        $tra = Read-Host "  Duong dan"
-        if ([string]::IsNullOrWhiteSpace($tra)) { $Station = $macDinh } else { $Station = $tra }
-    }
-}
-$Station = [System.IO.Path]::GetFullPath($Station)
+# ── 2. Dựng trạm — mọi quyết định nằm ở init_station.py ──────────────────────
+# Vỏ này CỐ TÌNH không tự hỏi chỗ đặt trạm nữa: `install.sh` (macOS/Linux) phải hỏi y hệt,
+# và hai vỏ hỏi riêng thì sớm muộn chúng trôi khỏi nhau. Lõi Python là chỗ duy nhất biết
+# hai chế độ cài, biết nhận diện máy đã có trạm, và biết dừng khi không có ai trả lời.
+$init = Join-Path (Join-Path (Join-Path $RepoRoot 'scripts') 'pipeline') 'init_station.py'
+$doi = @()
+if ($Station) { $doi += @('--station', $Station) }
+if ($Mode) { $doi += @('--mode', $Mode) }
+# CHI `-Yes` moi ghep `--yes`. `-NonInteractive` chi noi "dung hoi", KHONG noi "cu doan
+# ho toi": lõi thay stdin khong co nguoi thi dung voi ma 2 va noi ro phai go `-Yes`.
+# Ban truoc ghep ca hai, nen `install.ps1 -NonInteractive` lang le cai embedded trong khi
+# `install.sh --noninteractive` cho ma 2 — hai bo cai khac nhau cho hai he dieu hanh,
+# dung thu P2-T02 gop loi de tranh (REVIEW-P2 N8).
+if ($Yes) { $doi += '--yes' }
+if ($NonInteractive) { $doi += '--non-interactive' }
 
-if (Test-Path (Join-Path $Station "CHANNELS.md")) {
+Say ""
+# Ha ErrorActionPreference quanh DUNG loi goi: init_station.py in moi log cho nguoi doc ra
+# stderr (hop dong ba tram giu stdout sach cho dong JSON). Duoi `Stop`, neu ai do chay
+# `install.ps1 2>&1 | …` thi PS 5.1 boc dong stderr DAU TIEN thanh NativeCommandError va
+# giet bo cai giua chung — khi do "cai hong" va "cai xong co log" trong y het nhau.
+$eapCu = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+& $py $init @doi
+$ma = $LASTEXITCODE
+$ErrorActionPreference = $eapCu
+if ($ma -ne 0) {
     Say ""
-    Say ("Da co tram o {0} - khong ghi de." -f $Station) Yellow
-} else {
-    New-Item -ItemType Directory -Force -Path $Station | Out-Null
-    Copy-Item (Join-Path $RepoRoot "templates\station\CHANNELS.md") (Join-Path $Station "CHANNELS.md")
-    Say ""
-    Say ("Tram    : {0}" -f $Station) Green
+    Say ("Bo cai dung o ma {0}. 2 = can sua cau hinh (hoac can ban chon che do); 3 = con thieu buoc cai." -f $ma) Yellow
 }
-
-# ── 3. Bước tiếp theo ────────────────────────────────────────────────────────
-# In ra lệnh THẬT, chạy dán được. Hướng dẫn mà phải sửa mới chạy là hướng dẫn hỏng.
-Say ""
-Say "Buoc tiep theo:" Cyan
-Say ""
-Say ("  # 1. Tao kenh dau tien (--path la BAT BUOC: cho luu la quyet dinh cua ban)")
-Say ("  python scripts\pipeline\new_channel.py --id ten-kenh --label ""Ten kenh"" ``")
-Say ("      --path ""{0}\ten-kenh"" --station ""{1}""" -f $Station, $Station)
-Say ""
-Say ("  # 2. Tao chien dich")
-Say ("  python scripts\pipeline\new_campaign.py --channel ten-kenh --id CMP-2609-abc ``")
-Say ("      --name ""Ten chien dich"" --prefix ABC --station ""{0}""" -f $Station)
-Say ""
-Say ("  # 3. Dien du campaign.md, roi tao bai (buoc nay CHAN neu campaign.md con chu mau)")
-Say ("  python scripts\pipeline\new_post.py --campaign CMP-2609-abc --id ABC-001 ``")
-Say ("      --slug bai-dau-tien --title ""Tieu de"" --station ""{0}""" -f $Station)
-Say ""
-Say ("  # Xem truoc mot tram da dien san:")
-Say ("  python scripts\pipeline\check_tree.py --station .\examples")
-Say ("  (roi mo examples\index.html bang cach bam dup)")
-Say ""
+exit $ma

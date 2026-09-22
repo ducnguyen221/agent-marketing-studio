@@ -58,3 +58,22 @@ kpi_default:
 paths:
   profile: brand.md            # hồ sơ kênh: nhận diện + giọng + chính kiến. KHÔNG vào repo
   continuity: continuity.json  # sổ bài đã đăng; B0 đọc CÓ LỌC (so slug), đừng nạp cả file
+
+# ── DANH TÍNH — bốn script dựng sản phẩm công khai đọc khối này và DỪNG (mã 2) nếu thiếu
+# `site_name` / `author` / `site_base`. Không có giá trị mặc định trong mã: xem
+# `scripts/lib/brand.py`. Ở đây điền sẵn để bộ ví dụ dựng được trang thật.
+brand:
+  site_name: "Ví dụ · Xưởng nội dung"
+  author: "Người phụ trách (ví dụ)"
+  site_base: https://example.vn/blog
+  a: "Xưởng"
+  b: "Nội dung"
+  footer: "Tên tổ chức · Tên chương trình"
+  author_display: "Người phụ trách (ví dụ)"
+  author_title: "Một dòng giới thiệu tác giả"
+  home_url: https://example.vn
+  og_image: https://example.vn/blog/og-default.jpg
+  org_names: ["Tên Tổ Chức", "Tên Chương Trình"]
+  socials:
+    - {icon: website, url: "https://example.vn", label: Website, title: example.vn}
+    - {icon: facebook, url: "https://www.facebook.com/vidu", label: Facebook}

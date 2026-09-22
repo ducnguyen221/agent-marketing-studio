@@ -46,12 +46,12 @@ Gộp hai thứ vào đây thì một trong hai đường sẽ làm việc hai l
 ## Lệnh (dùng trong phiên, không cần Telegram)
 
 ```
-approval_gate.py <chiến dịch> cho     --gate g1|g2|g3 [--json]
-approval_gate.py <chiến dịch> open    --gate g1|g2|g3 --post A,B --by "Đức" --quote "..."
-approval_gate.py <chiến dịch> reject --gate g1|g2|g3 --post A   --by "Đức" --quote "..."
+approval_gate.py <chiến dịch> waiting --gate g1|g2|g3 [--json]
+approval_gate.py <chiến dịch> open    --gate g1|g2|g3 --post A,B --by "<tên>" --quote "..."
+approval_gate.py <chiến dịch> reject  --gate g1|g2|g3 --post A   --by "<tên>" --quote "..."
 ```
 
-`pending` in kèm **đường dẫn file để mở** — đó là thứ người cần để duyệt thật thay vì gật bừa.
+`waiting` in kèm **đường dẫn file để mở** — đó là thứ người cần để duyệt thật thay vì gật bừa.
 """
 from __future__ import annotations
 

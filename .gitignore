@@ -5,6 +5,13 @@ content/*
 
 
 
+# ── Chế độ cài `embedded` (F17): trạm + lựa chọn cài nằm TRONG repo ──────────
+# Cổng canh từng dòng: tests/test_gitignore_guard.py. Xoá một dòng ở đây là im lặng
+# mở cửa cho nội dung riêng đi lên một repo công khai; hook pre-commit
+# (templates/hooks/pre-commit) là lớp rào thứ hai, `doctor.py` đo lại cả hai.
+/workspace/
+studio.local.json
+
 # ── Secret: không bao giờ ────────────────────────────────────────────────────
 .env
 .env.*

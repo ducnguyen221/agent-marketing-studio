@@ -51,29 +51,36 @@ actual_spend:
 runtime:
   label:                    # tên ngắn engine dùng trong tên file log, tiêu đề
   runner:                   # tìm theo BA chỗ: thư mục này > scripts/runners/ của repo > engine của máy
-  runner_args: ""           # vd "-Brand ai -Publish" · hoặc "-Buoc create-post" cho run-blog-campaign.ps1
+  runner_args: ""           # vd "-Brand ai -Publish" · hoặc "-Step create-post" cho run-blog-campaign.ps1
   # prompt: prompt.txt
   # out_dir: daily-out
   # yt_playlist: ""
   # fb_text_post: false     # true = đăng thêm bài chữ riêng trên Facebook (mặc định KHÔNG)
   #
   # ── Chiến dịch blog dài kỳ (run-blog-campaign.ps1) ────────────────────────
-  # SÁU bước RỜI, mỗi lượt chạy một bước:
-  #   create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+  # Các bước RỜI, mỗi lượt chạy một bước:
+  #   create-post ─[ Cổng 1 ]─ write ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+  # Runner nhận `-Step create-post | write | publish` (`publish` gọi `build-page`);
+  # `release` chạy bằng `campaign_step.py <chiến dịch> release`.
   # Gộp các bước là dựng lại thứ đã bị gỡ vì nuốt cổng duyệt của người vào giữa chuỗi.
-  # `dang` là TÊN CŨ của `build-page`, giữ để lệnh cũ không gãy.
+  # `publish` là bí danh cũ của `build-page`, giữ để lệnh cũ không gãy.
   #
   # Cổng 3 bật bằng cách KHAI CỘT `g3` trong bảng Content (mẫu này đã khai sẵn).
   # Bỏ cột đó đi = tắt Cổng 3, đi thẳng từ dựng trang tới phát hành.
   #
   # ── BỐN HOOK — repo KHÔNG khoá CLI hay agent nào ──────────────────────────
   # Mỗi hook là một lệnh CỦA BẠN. Chỗ thay được: {post} thư mục bài · {cid} mã bài ·
-  # {cam} thư mục chiến dịch · {web} URL bài (chỉ ở hai hook cuối).
+  # {cam} thư mục chiến dịch · {channel} thư mục kênh · {station} gốc trạm ·
+  # {skills} (chỉ writer_cmd) · {web} URL bài (chỉ ở hai hook cuối).
+  # Script của trạm thì trỏ qua {channel}/{station}, ĐỪNG ghi cứng đường một máy:
+  # chép trạm sang máy khác (hay sang macOS) là lệnh vẫn đúng.
   #
   # writer_cmd:   '<lệnh của bạn> --post "{post}"'
+  #   vd:         'powershell -NoProfile -ExecutionPolicy Bypass -File
+  #                "{channel}/write-post.ps1" -Post "{post}" -Skills "{skills}"'
   #     Vào : thư mục bài (meta.json · research.md · content.md khung · prompt.txt ·
   #           phan-hoi.md nếu bị trả lại).  Ra: điền đầy content.md theo neo `## post:`.
-  #     KHÔNG khai = bước `soan` báo *chờ người viết* và dừng. Fail-closed, không đoán.
+  #     KHÔNG khai = bước `write` báo *chờ người viết* và dừng. Fail-closed, không đoán.
   #     ⚠️ Mã thoát 0 KHÔNG đủ để tính là xong — hệ còn kiểm content.md có chữ thật không.
   #
   # audio_cmd:    '<lệnh của bạn> --post "{post}"'      # → atlas/audio.mp3, TUỲ CHỌN
@@ -134,7 +141,7 @@ dừng lại, trỏ sang đó.
 | Thứ | Nơi canonical |
 |---|---|
 | Brief chiến lược, KPI, lịch (bản một câu) | frontmatter file này |
-| Danh sách bài + trạng thái + hai cổng duyệt | **Mục 4b** file này |
+| Danh sách bài + trạng thái + các cổng duyệt | **Mục 4b** file này |
 | Brief chi tiết từng bài | `<folder>/research.md` (frontmatter) |
 | Nghiên cứu, nguồn, mâu thuẫn số liệu | `<folder>/research.md` (thân bài) |
 | Định danh máy đọc của bài (slug, category, hashtag) | `<folder>/meta.json` |

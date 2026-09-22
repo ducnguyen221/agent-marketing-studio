@@ -14,8 +14,8 @@
 ## 1. Một hình vẽ
 
 ```
-create-post ─[ Cổng 1 ]─ soan ─ check-gates ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
-                              └ fix-gates ┘
+create-post ─[ Cổng 1 ]─ write ─ check-gates ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+                               └ fix-gates ┘
                                 (tối đa 3 vòng)
 ```
 
@@ -149,7 +149,7 @@ thế nào là việc của script trạm; repo không ép ai dùng harness nào
 ```yaml
 runtime:
   approval_via: session             # MẶC ĐỊNH — hỏi thẳng trong phiên, không nhắn Telegram
-  writer_cmd: powershell -File "…\write-post.ps1" -Post "{post}" -Skills "{skills}"
+  writer_cmd: powershell -File "{channel}/write-post.ps1" -Post "{post}" -Skills "{skills}"
   writer_skills:
     - kpim-skills:blog-writing      # giọng tác giả + chân dung độc giả
 ```
@@ -180,7 +180,7 @@ này, và chiến dịch cũ chạy y như trước.
 
 ### Mã thoát KHÔNG phải phép thử — sai cả hai chiều
 
-- `blog_gates` trả mã 1 khi kết luận đỏ, `soan` trả khác 0 khi bài chưa đạt. **Cả hai đã làm
+- `blog_gates` trả mã 1 khi kết luận đỏ, `write` trả khác 0 khi bài chưa đạt. **Cả hai đã làm
   xong việc.** Đọc mã thoát rồi báo hỏng thì bài bị làm lại ba lần rồi vứt đi — đúng những
   bài cần sửa thì không ai sửa.
 - Chiều ngược lại: bộ viết chạy êm, mã 0, mà `content.md` vẫn là khuôn trống.
@@ -190,7 +190,7 @@ sẵn; agent gọi tay từng lệnh con thì phải tự nhớ.
 
 ### Việc theo BÀI, đừng để bước quét cả chiến dịch
 
-Các bước `soan`, `fix-gates`, `build-page`, `release` mặc định quét **cả chiến dịch**.
+Các bước `write`, `fix-gates`, `build-page`, `release` mặc định quét **cả chiến dịch**.
 Chạy một bài thì phải truyền `--post <mã>`. Quên cờ đó thì một lượt cho NEN-002 viết lại luôn
 NEN-001 và NEN-003: số lần viết lại đếm sai nên trần chống-quay-tít mất nghĩa, và lượt chạy
 kéo hàng giờ.

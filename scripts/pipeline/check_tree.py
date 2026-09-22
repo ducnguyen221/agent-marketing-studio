@@ -243,6 +243,15 @@ def main(argv=None) -> int:
         for x in s.canh_bao:
             print(f"  nhắc {x}")
         print(f"\n  {len(s.do)} đỏ · {len(s.canh_bao)} cảnh báo")
+        # Hai công cụ, hai câu hỏi khác nhau — và không gộp có chủ đích: `check_tree` hỏi
+        # "cây trạm có liền mạch không", `doctor` hỏi "bản CÀI có đủ để chạy không" (rào
+        # của chế độ embedded, trạm giọng, trạm video). Gộp thì một lỗi cấu hình máy hiện
+        # ra như một lỗi nội dung, và người đọc đi sửa nhầm chỗ.
+        print("  (kiểm bản cài — rào, trạm giọng, trạm video: "
+              "python scripts/pipeline/doctor.py)")
+        # Nhắc ở ĐÂY vì đây là lệnh người ta gõ ngay trước khi bật lịch trên máy mới —
+        # và bật lịch khi máy kia chưa tắt là hỏng nặng nhất trong cả đợt chuyển.
+        print("  (đổi máy — MỘT máy chạy tại một thời điểm: docs/RUNBOOK-DOI-MAY.md)")
     return 1 if (s.do or (a.strict and s.canh_bao)) else 0
 
 

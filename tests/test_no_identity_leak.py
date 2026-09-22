@@ -15,10 +15,16 @@ Phân biệt hai thứ hay bị gộp làm một:
    instance mẫu cố ý đưa vào git, `output_styles/*.md` là hồ sơ giọng của chính thương
    hiệu đó. Cổng này KHÔNG chặn chúng trên toàn cây; chỉ giữ sạch `fixtures/`, nơi số liệu
    phải trung tính để dùng làm mốc đối chứng.
+3. **Cổng ĐẾM** (cuối file) — bắc cầu giữa hai loại trên. Nó quét CẢ CÂY và miễn trừ
+   **theo số đếm chính xác**, không miễn cả file: mỗi mục ghi số lần kỳ vọng hôm nay.
+   Nhét thêm một chỗ vào file đã được miễn cũng đỏ. Cùng khuôn với cổng của
+   `agent-voice-studio`/`agent-video-studio` để ba repo đọc như nhau.
 """
 import re
 import subprocess
+import unicodedata
 import zipfile
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -34,8 +40,12 @@ _BS = chr(92)
 CAM_TUYET_DOI = [
     "C:" + _BS + "Users" + _BS,   # bất kỳ đường home Windows nào, không riêng của ai
     "/" + "home" + "/",           # tương đương trên Linux
-    # Ca hai chuoi tren deu DUNG TU MANH, khong viet literal: file nay nam trong cay
+    "/" + "Users" + "/",          # tương đương trên macOS — máy ĐÍCH của cuộc di trú này
+    # Ba chuoi tren deu DUNG TU MANH, khong viet literal: file nay nam trong cay
     # git-tracked nen chinh no bi quet. Viet literal = cong luon do vi chinh no.
+    # Luat cua macOS vang mat toi tan 20/09 (REVIEW-P2 N10): ca pha nay la de chay tren
+    # macOS va repo la PUBLIC da push, nen lo do se mo ra dung luc bat dau dung. Test nao
+    # can mot duong nha macOS GIA lam du lieu thi cung ghep tu manh nhu o day.
 ]
 # Email cá nhân: dùng MẪU chứ không viết literal. Bản trước ghi thẳng địa chỉ vào đây rồi
 # tự miễn trừ chính file này — tức cổng mang sẵn thứ nó đi tìm, và không bao giờ thấy.
@@ -198,3 +208,146 @@ def test_TEMPLATE_khong_mang_nhan_dien_that():
     assert not dinh, (
         "khuôn trong templates/ mang nhận diện thật — sửa thành khoá cấu hình "
         "hoặc chỗ trống:\n  " + "\n  ".join(dinh))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Cổng ĐẾM — quét cả cây, miễn trừ theo SỐ ĐẾM CHÍNH XÁC
+#
+# Vì sao thêm cổng thứ ba khi đã có hai cổng trên: hai cổng kia hoặc chặn cứng một
+# chuỗi trên toàn cây (không chừa chỗ cho LICENSE, CODEOWNERS, trang giới thiệu repo),
+# hoặc chỉ soi đúng một thư mục (`templates/`, `fixtures/`). Giữa hai thái cực đó là
+# phần lớn repo — và `scripts/` nằm đúng ở giữa: nó là MÁY mà ai clone về cũng chạy,
+# nên nó phải sạch tuyệt đối, trong khi `docs/index.html` là trang giới thiệu của chính
+# chủ repo, mang tên miền thật là đúng chức năng.
+#
+# Miễn trừ theo SỐ, không theo file: thêm một chỗ vào file đã miễn cũng đỏ. Sửa nội
+# dung làm số đổi thì phải sửa con số ở đây — người sửa buộc phải nhìn thấy mình đang
+# đổi gì. Mục miễn trừ nào không còn khớp gì thì `test_mien_tru_khong_han` bắt gỡ.
+# ══════════════════════════════════════════════════════════════════════════════
+SELF = "tests/test_no_identity_leak.py"
+
+
+def _s(*ma: int) -> str:
+    return "".join(map(chr, ma))
+
+
+# Mọi chuỗi cấm dựng bằng mã ký tự: file này bị chính nó quét ở hai cổng trên, và một
+# cổng mang sẵn thứ nó đi tìm là cổng vô dụng.
+_TEN_TG = _s(100, 117, 99) + _s(110, 103, 117, 121, 101, 110)          # tài khoản tác giả
+_TEN_VN = (_s(0x4E, 0x67, 0x75, 0x79, 0x1EC5, 0x6E) + " " + _s(0x51, 0x75, 0x61, 0x6E, 0x67)
+           + " " + _s(0x110, 0x1EE9, 0x63))                            # tên đầy đủ, có dấu
+_TEN_ASCII = _s(68, 117, 99) + r"[\s-]+" + _s(78, 103, 117, 121, 101, 110)
+_PIXEL = _s(49, 55, 49, 55, 48, 52, 49, 55) + _s(51, 50, 56, 54, 54, 49, 57, 54)
+_TO_CHUC = (_s(75, 80, 73, 77), _s(67, 79, 77, 80, 65), _s(84, 111, 98, 105))
+# Đường thư mục instance mẫu — cũng dựng bằng mã ký tự, vì chính tên thư mục mang tên
+# tổ chức và file này nằm trong vùng bị quét.
+_TC = _TO_CHUC[2].upper()
+_CT = "content/" + _TO_CHUC[0] + "/02_campaigns/01_" + _TO_CHUC[2] + "_Posts"
+
+MAU_DANH_TINH = {
+    "ten-mien":  re.escape(_TEN_TG + ".vn"),
+    "handle":    re.escape(_TEN_TG + "221"),
+    "ten-nguoi": "(?:" + re.escape(_TEN_VN) + "|" + _TEN_ASCII + ")",
+    "pixel":     _PIXEL,
+    "to-chuc":   r"\b(?:" + "|".join(_TO_CHUC) + r")\b",
+    "kenh-that": r"\b(?:AI|Data)\s+News\b",
+}
+
+# Khoá CỨNG: áp cho cả cây. Đây là danh tính của MỘT người / MỘT máy — tên miền, tài
+# khoản, tên thật, id pixel quảng cáo. Ở đâu cũng là rò rỉ, trừ những chỗ ghi công đã
+# liệt kê trong MIEN_TRU.
+KHOA_CUNG = ("ten-mien", "handle", "ten-nguoi", "pixel")
+
+# Vùng MÁY: phần repo mà người clone đem đi chạy. Ở đây cấm thêm cả tên tổ chức và tên
+# kênh thật — chúng không phải secret, nhưng để trong máy thì khuôn hỏng: người khác
+# xuất bản dưới thương hiệu của chủ repo mà không hề biết.
+VUNG_MAY = ("scripts/", "templates/", "fixtures/", "examples/", ".agents/", "tests/")
+
+# (đường file, khoá) → số lần được phép. Mỗi dòng phải có LÝ DO.
+MIEN_TRU = {
+    # Ghi công tác giả + định tuyến review trên GitHub: đúng chức năng của hai file này.
+    ("LICENSE", "ten-nguoi"): 1,
+    (".github/CODEOWNERS", "handle"): 8,
+    # Trang giới thiệu repo (GitHub Pages của chính chủ) + ảnh og của nó.
+    ("docs/index.html", "ten-mien"): 9,
+    ("docs/index.html", "handle"): 8,
+    ("docs/index.html", "ten-nguoi"): 1,
+    ("docs/og-image.svg", "ten-mien"): 1,
+    # `content/` là instance mẫu CỐ Ý đưa vào git (xem .gitignore dòng 1): một bộ nội
+    # dung thật để người đọc thấy khuôn được điền ra sao. Nó là DỮ LIỆU, không phải máy.
+    (_CT + "/01_" + _TO_CHUC[2] + "_Posts.md", "ten-mien"): 1,
+    (_CT + "/assets/" + _TC + "-001_ai-agent-la-gi/content.md", "ten-mien"): 1,
+    (_CT + "/campaign_meta.json", "ten-mien"): 1,
+    (_CT + "/campaign_meta.json", "ten-nguoi"): 1,
+    (_CT + "/01_" + _TO_CHUC[2] + "_Posts.xlsx", "ten-nguoi"): 2,
+    ("content/" + _TO_CHUC[0] + "/campaigns.xlsx", "ten-mien"): 1,
+    ("content/" + _TO_CHUC[0] + "/campaigns.xlsx", "ten-nguoi"): 1,
+    # Hồ sơ giọng của chính chủ, và các file trỏ tới TÊN FILE đó. Đổi tên file hồ sơ
+    # giọng là việc của đợt docs (P2-G5): nó kéo theo README + 5 chỗ tham chiếu.
+    ("examples/example-studio/channel.yml", "to-chuc"): 1,
+    (".agents/roles/content-strategist.md", "to-chuc"): 1,
+    (".agents/roles/creative-producer.md", "to-chuc"): 1,
+    (".agents/roles/qa-reviewer.md", "to-chuc"): 1,
+    (".agents/skills/content-production/SKILL.md", "to-chuc"): 1,
+    (".agents/skills/hook-writer/SKILL.md", "to-chuc"): 1,
+}
+
+
+def _ap_dung(rel: str, khoa: str) -> bool:
+    return khoa in KHOA_CUNG or rel.startswith(VUNG_MAY)
+
+
+def dem_danh_tinh() -> Counter:
+    hits: Counter = Counter()
+    for p, text in FILES:
+        rel = p.relative_to(ROOT).as_posix()
+        if rel == SELF or not text:
+            continue
+        t = unicodedata.normalize("NFC", text)
+        for khoa, mau in MAU_DANH_TINH.items():
+            if not _ap_dung(rel, khoa):
+                continue
+            n = len(re.findall(mau, t, flags=re.IGNORECASE))
+            if n:
+                hits[(rel, khoa)] = n
+    return hits
+
+
+def test_dem_danh_tinh_khong_vuot_mien_tru():
+    vuot = {k: n for k, n in dem_danh_tinh().items() if n > MIEN_TRU.get(k, 0)}
+    assert vuot == {}, "rò danh tính / vượt số miễn trừ:\n  " + "\n  ".join(
+        f"{f} [{k}] {n} > {MIEN_TRU.get((f, k), 0)}" for (f, k), n in sorted(vuot.items()))
+
+
+def test_mien_tru_khong_han():
+    """Mục miễn trừ không còn khớp gì thì phải gỡ — cửa mở sẵn là cửa sẽ bị dùng lại."""
+    hits = dem_danh_tinh()
+    han = [k for k in MIEN_TRU if k not in hits and (ROOT / k[0]).exists()]
+    assert han == [], f"mục MIEN_TRU không còn khớp gì, gỡ đi: {han}"
+
+
+def test_mau_bat_dung_muc_tieu():
+    """Đột biến: mỗi mẫu phải bắt được chuỗi nó nhắm tới, và KHÔNG bắt chuỗi lành."""
+    mau_thu = {
+        "ten-mien":  "https://" + _TEN_TG + ".vn/atlas",
+        "handle":    _TEN_TG + "221.github.io",
+        "ten-nguoi": "tác giả " + _TEN_VN + " viết",
+        "pixel":     "fbq('init', '" + _PIXEL + "')",
+        "to-chuc":   "đăng ở " + _TO_CHUC[1] + " Class",
+        "kenh-that": "kênh AI News hằng tuần",
+    }
+    for khoa, mau in mau_thu.items():
+        assert re.search(MAU_DANH_TINH[khoa], mau, flags=re.IGNORECASE), khoa
+    # Ranh giới: không bắt chữ lành đang có sẵn trong repo.
+    assert not re.search(MAU_DANH_TINH["to-chuc"], "x.localeCompare(y)", flags=re.IGNORECASE)
+    assert not re.search(MAU_DANH_TINH["ten-nguoi"], _TEN_TG, flags=re.IGNORECASE)
+    assert not re.search(MAU_DANH_TINH["kenh-that"], "news/ai", flags=re.IGNORECASE)
+
+
+def test_vung_may_duoc_quet_that():
+    """Cổng-của-cổng: không file nào thuộc vùng máy được quét thì cổng luôn xanh."""
+    trong_vung = [p.relative_to(ROOT).as_posix() for p, t in FILES
+                  if t and p.relative_to(ROOT).as_posix().startswith(VUNG_MAY)]
+    assert len(trong_vung) > 50, f"chỉ thấy {len(trong_vung)} file trong vùng máy"
+    for tien_to in VUNG_MAY:
+        assert any(r.startswith(tien_to) for r in trong_vung), f"không quét gì dưới {tien_to}"

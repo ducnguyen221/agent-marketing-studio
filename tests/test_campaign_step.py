@@ -30,6 +30,10 @@ import campaign_step as CS  # noqa: E402
 
 HOM_NAY = date(2026, 9, 15)
 
+# Bộ viết giả gọi CHÍNH trình Python đang chạy test, có ngoặc kép vì đường có thể chứa
+# khoảng trắng. Không viết `python` trần: macOS chỉ có `python3`, test đỏ oan ở đó.
+_PY = '"' + sys.executable + '"'
+
 
 def _fm(rows):
     start = ("---\nschema: campaign/1\nid: CD-THU\nchannel: kenh-thu\nid_prefix: T\n"
@@ -351,7 +355,7 @@ def test_KHONG_khai_writer_cmd_thi_bao_cho_nguoi_viet(tmp_path):
 
 
 def test_writer_cmd_duoc_goi_voi_duong_dan_bai(tmp_path):
-    campaign = _cam_writer(tmp_path, writer_cmd="python -c \"import sys;print(sys.argv[1])\" {post}")
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "import sys;print(sys.argv[1])" {post}')
     goi = []
     result = CS.step_write(campaign, bot=BotGia(), hom_nay=HOM_NAY,
                       run_cmd=lambda cmd, **kw: goi.append(cmd) or _ok())
@@ -457,12 +461,12 @@ def test_writer_skills_duoc_thay_vao_cho_dien(tmp_path):
     ra = tmp_path / "goi.txt"
     campaign = _cam_writer(
         tmp_path,
-        writer_cmd=f'python -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+        writer_cmd=f'{_PY} -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
                    f'sys.argv[2],encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
                    f'"{ra}" "{{skills}}"',
-        writer_skills=["kpim-skills:blog-writing", "x:y"])
+        writer_skills=["vi-du-skills:blog-writing", "x:y"])
     CS.step_write(campaign, bot=BotGia())
-    assert ra.read_text(encoding="utf-8") == "kpim-skills:blog-writing,x:y"
+    assert ra.read_text(encoding="utf-8") == "vi-du-skills:blog-writing,x:y"
 
 
 def test_khong_khai_skills_thi_cho_dien_thanh_RONG(tmp_path):
@@ -470,11 +474,85 @@ def test_khong_khai_skills_thi_cho_dien_thanh_RONG(tmp_path):
     ra = tmp_path / "goi2.txt"
     campaign = _cam_writer(
         tmp_path,
-        writer_cmd=f'python -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+        writer_cmd=f'{_PY} -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
                    f'chr(91)+sys.argv[2]+chr(93),encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
                    f'"{ra}" "{{skills}}"')
     CS.step_write(campaign, bot=BotGia())
     assert ra.read_text(encoding="utf-8") == "[]"
+
+
+# ── Chỗ thay {channel} / {station} (P1 · D5) ───────────────────────────────
+#
+# Trước đây `writer_cmd` ở trạm phải ghi CỨNG đường tới script của kênh (vd ổ D: của máy
+# Windows). Chép trạm sang Mac là lệnh trỏ vào một đường không tồn tại. Hai ô này để lệnh
+# tự tìm đúng chỗ trên máy nào cũng được.
+
+def _ghi_argv(ra, n):
+    """Bộ viết giả: ghi argv[2..n+1] nối bằng `|` vào file `ra`."""
+    return (f'{_PY} -c "import sys,pathlib;pathlib.Path(sys.argv[1]).write_text('
+            f'chr(124).join(sys.argv[2:]),encoding=chr(117)+chr(116)+chr(102)+chr(45)+chr(56))" '
+            f'"{ra}" ' + " ".join('"{' + o + '}"' for o in n))
+
+
+def test_writer_cmd_thay_channel_bang_thu_muc_kenh(tmp_path):
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["channel"]))
+    CS.step_write(campaign, bot=BotGia())
+    assert Path(ra.read_text(encoding="utf-8")).resolve() == campaign.parent.resolve()
+
+
+def test_writer_cmd_thay_station_bang_thu_muc_co_CHANNELS_md(tmp_path, monkeypatch):
+    """Đi lên tới `CHANNELS.md` — cùng luật với `run.ps1` — và THẮNG biến môi trường."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["station"]))
+    (tmp_path / "tram" / "CHANNELS.md").write_text("# Kênh\n", encoding="utf-8")
+    monkeypatch.setenv("MARKETING_STUDIO_DATA", str(tmp_path / "noi-khac"))
+    CS.step_write(campaign, bot=BotGia())
+    assert Path(ra.read_text(encoding="utf-8")).resolve() == (tmp_path / "tram").resolve()
+
+
+def test_station_khong_co_CHANNELS_md_thi_lui_ve_MARKETING_STUDIO_DATA(tmp_path, monkeypatch):
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["station"]))
+    monkeypatch.setenv("MARKETING_STUDIO_DATA", str(tmp_path / "tram-bien"))
+    CS.step_write(campaign, bot=BotGia())
+    assert Path(ra.read_text(encoding="utf-8")) == tmp_path / "tram-bien"
+
+
+def test_writer_cmd_nhan_ca_cam_lan_campaign(tmp_path):
+    """Tài liệu hứa `{cam}` từ đầu, còn code chỉ biết `{campaign}` — và vì code dùng
+    `str.format`, khai `{cam}` là bước `soan` NỔ KeyError chứ không chỉ thay sai."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["cam", "campaign"]))
+    CS.step_write(campaign, bot=BotGia())
+    a, b = ra.read_text(encoding="utf-8").split("|")
+    assert Path(a).resolve() == Path(b).resolve() == campaign.resolve()
+
+
+def test_o_la_trong_lenh_giu_nguyen_khong_no(tmp_path):
+    """Ngoặc nhọn thuộc về LỆNH của người dùng (vd `{khac}`, JSON) không phải việc của
+    engine. `str.format` ném KeyError ở đó và kéo sập cả bước."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["khac", "cid"]))
+    CS.step_write(campaign, bot=BotGia())
+    assert ra.read_text(encoding="utf-8") == "{khac}|T-001"
+
+
+def test_hook_argv_thay_mot_luot_khong_thay_long(tmp_path):
+    """Giá trị đã thay mà chứa `{...}` thì KHÔNG bị thay lần hai."""
+    assert CS.hook_argv('x "{post}" {cid}', {"post": "/a/{cid}", "cid": "T-1"}) == \
+        ["x", "/a/{cid}", "T-1"]
+
+
+def test_channel_khong_phan_giai_duoc_thi_bao_hong_ro_rang(tmp_path):
+    """Chiến dịch không nằm trong kênh nào: khai `{channel}` phải HỎNG có lý do, không
+    được thay bằng chuỗi rỗng rồi chạy một lệnh trỏ vào hư không."""
+    ra = tmp_path / "goi.txt"
+    campaign = _cam_writer(tmp_path, writer_cmd=_ghi_argv(ra, ["channel"]))
+    (campaign.parent / "channel.yml").unlink()
+    result = CS.step_write(campaign, bot=BotGia())
+    assert not ra.exists(), "không có kênh mà vẫn gọi bộ viết"
+    assert result["failed"] and "{channel}" in result["failed"][0]["detail"], result
 
 
 # ── Cổng đỏ phải kích hoạt viết lại (đổi 12/09/2026) ────────────────────────
@@ -505,7 +583,7 @@ def test_CONG_DO_kich_hoat_viet_lai(tmp_path):
     ra = tmp_path / "goi.txt"
     campaign = _cam_writer(
         tmp_path,
-        writer_cmd=f'python -c "import pathlib;pathlib.Path(r\'{ra}\').write_text(chr(120))"')
+        writer_cmd=f'{_PY} -c "import pathlib;pathlib.Path(r\'{ra}\').write_text(chr(120))"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     _gates_do(post)
@@ -516,7 +594,7 @@ def test_CONG_DO_kich_hoat_viet_lai(tmp_path):
 
 def test_cong_do_ghi_ra_FILE_cho_bo_viet_doc(tmp_path):
     """Bộ viết phải biết SỬA GÌ. Bảo nó viết lại mà không nói đỏ ở đâu là bảo nó đoán."""
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     _gates_do(post, chan=("G05", "G06"))
@@ -528,7 +606,7 @@ def test_cong_do_ghi_ra_FILE_cho_bo_viet_doc(tmp_path):
 
 def test_cham_TRAN_thi_DUNG_viet_lai_va_noi_ro(tmp_path):
     """Vòng viết lại phải có trần. Mỗi vòng đốt một lượt agent thật."""
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     for i in range(CS.MAX_REWRITES):
@@ -544,7 +622,7 @@ def test_cham_TRAN_thi_DUNG_viet_lai_va_noi_ro(tmp_path):
 
 def test_cham_LAI_ra_KET_QUA_CU_thi_KHONG_viet_lai(tmp_path):
     """Chấm lại mà không đổi gì thì không phải cớ để đốt thêm một lượt agent."""
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
     _gates_do(post)
@@ -561,7 +639,7 @@ def test_moi_VONG_mot_file_KHONG_ghi_de_vong_truoc(tmp_path):
     đỏ gì" — mà đó đúng là câu cần khi quyết định có nên viết lại lần ba hay dừng hỏi
     người. Cùng nguyên tắc với sổ sự kiện chỉ-nối-thêm.
     """
-    campaign = _cam_writer(tmp_path, writer_cmd='python -c "pass"')
+    campaign = _cam_writer(tmp_path, writer_cmd=_PY + ' -c "pass"')
     post = campaign / "T-001_bai"
     _bai_da_viet(post)
 

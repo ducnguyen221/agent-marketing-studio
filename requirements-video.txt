@@ -1,0 +1,8 @@
+# Phiên bản HỢP ĐỒNG tối thiểu của trạm video (`agent-video-studio`) mà repo này gọi được.
+#
+# Cùng luật với `requirements-voice.txt`: không phải file `pip install -r`, chỉ là ngưỡng
+# để `scripts/pipeline/doctor.py` so với `video_studio.API_VERSION` đang cài trong venv.
+#
+# `video_studio` cài vào CHÍNH venv của trạm giọng (hợp đồng ba trạm §2.4b, phương án A),
+# nên `doctor` hỏi cả hai package bằng một lần gọi python.
+video_studio>=1.0.0

@@ -37,8 +37,8 @@ một dấu vết duyệt nào.
 ## Lệnh
 
 ```
-approve_bus.py gui  --campaign <đường dẫn> --gate g1|g2 [--batch N] [--mode per_post|batch_gate]
-approve_bus.py nhan --campaign <đường dẫn>
+approve_bus.py send    --campaign <đường dẫn> --gate g1|g2|g3 [--batch N] [--mode per_post|batch_gate]
+approve_bus.py receive --campaign <đường dẫn> [--follow GIAY]
 approve_bus.py poller-status --campaign <đường dẫn>
 ```
 

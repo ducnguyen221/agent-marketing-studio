@@ -26,9 +26,15 @@
 | **Nối token/mật khẩu cho kênh mới** | `knowledge/toolchains/SECRETS.md` | mục lục bí mật của trạm (`~/.secret/README.md`) |
 | **Thêm giọng văn thương hiệu mới** | `output_styles/README.md` | `output_styles/compa-class-blog.md` (file mẫu) |
 | **Sửa đổi trường dữ liệu** | `knowledge/data_model/DATA_MODEL.md` | `templates/station/_channel/_campaign/campaign.md` · `scripts/pipeline/export_excel.py` (bộ cột bản xuất) |
-| **Dựng trạm nội dung mới** | `install.ps1` | `examples/README.md` (trạm mẫu đã điền) · `README.md` §3 |
+| **Dựng trạm nội dung mới** | `docs/ONBOARDING.md` (mười bước, có cách kiểm từng bước) | `install.ps1` / `install.sh` · `docs/WORKSPACE.md` · `examples/README.md` (trạm mẫu đã điền) |
+| **Dẫn NGƯỜI KHÁC dựng trạm** (agent làm hướng dẫn viên) | `.agents/prompts/onboard-station.md` | `docs/ONBOARDING.md` |
+| **ĐỔI MÁY chạy trạm** (Windows ↔ macOS) — *một máy chạy tại một thời điểm* | `docs/RUNBOOK-DOI-MAY.md` | `scripts/pipeline/station.py` (export/import) · `knowledge/toolchains/STATION_LAYOUT.md` |
+| **Cài lịch chạy trên macOS** | `scripts/runners/install_launchd.py` | `templates/launchd/` · `docs/RUNBOOK-DOI-MAY.md` §launchd không có giới hạn thời gian |
+| **Trạm nào giữ gì · biến nào trỏ đâu** (ba trạm) | `knowledge/toolchains/STATION_LAYOUT.md` | `knowledge/toolchains/SECRETS.md` · `scripts/pipeline/doctor.py` |
 | **Xem một trạm đã điền trông thế nào** | `examples/README.md` | `examples/example-studio/` |
 | **Kiểm cây liên kết / tìm bài mồ côi** | `scripts/pipeline/check_tree.py` | `workflows/00_WORKFLOW_INDEX.md` |
+| **Sắp ghi file vào gốc trạm** (cấu hình theo máy, sổ, hàng đợi) | `scripts/lib/engine_dir.py` (vì sao `<trạm>/engine` không phải chỗ chứa file) | `scripts/pipeline/check_engine.py` (chạy cổng) · `knowledge/toolchains/STATION_LAYOUT.md` |
+| **Dọn media quá hạn ở trạm** (chỉ dọn khi CÓ BẰNG CHỨNG đã đăng; 14 ngày là sàn an toàn) | `docs/RETENTION.md` | `scripts/pipeline/prune_media.py` · `scripts/lib/publish_evidence.py` · `knowledge/toolchains/SECRETS.md` (`WEB_REPO_DIR`) |
 | **Dựng chiến dịch CHẠY THEO LỊCH** (bản tin, series tự động) | `knowledge/toolchains/NEWS_PIPELINE.md` | `templates/README.md` · `scripts/pipeline/campaign_cfg.py` (bản chụp cấu hình) |
 | **Sửa nguồn cấu hình của một runner** | `knowledge/toolchains/NEWS_PIPELINE.md` §"Trước khi đổi nguồn cấu hình" | `scripts/pipeline/campaign_cfg.py` · `tests/test_campaign_cfg.py` |
 | **Đổi bộ màu / thiết kế của kênh** | `templates/station/_channel/channel.yml` (khối `theme:`) | `brand.md` (ghi nhận định thiết kế) — script chỉ đọc `theme:` khi kênh khai; kênh cũ giữ màu cứng trong code |
@@ -58,13 +64,13 @@
 | **Bản mô tả đường ống MÁY ĐỌC ĐƯỢC** (10 trạng thái · 3 cổng · lệnh · artefact · 2 chế độ chạy) | `knowledge/data_model/pipeline.yaml` |
 | **Thứ tự các bước và CỔNG DUYỆT nằm ở đâu** (4 lệnh, 3 cổng — đọc TRƯỚC hai dòng dưới) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` |
 | **Telegram làm TRUNG GIAN người ↔ agent** (vòng đời tiến trình · chuyện "50 giây" · vỡ vòng thì nối lại) | `knowledge/toolchains/TELEGRAM_BRIDGE.md` |
-| **Một bài blog đi từ đâu tới đâu** (10 bước, 2 cổng duyệt) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
+| **Một bài blog đi từ đâu tới đâu** (10 bước, 3 cổng duyệt — Cổng 3 khi bảng có cột `g3`) | `knowledge/toolchains/ATLAS_CHANNEL.md` |
 | **Duyệt bài qua Telegram · chạy tự động · đăng web** (tầng điều phối trên 10 bước đó) | `knowledge/toolchains/APPROVAL_BUS.md` |
 | **Điều phối cả đường ống trong phiên** (chạy tới cổng rồi dừng, kê file cho người mở) | `scripts/pipeline/run_pipeline.py` |
 | **Mở / từ chối cổng KHÔNG cần Telegram** (kho cổng dùng chung của mọi mặt tiền) | `scripts/pipeline/approval_gate.py` |
-| Chạy MỘT bước của chiến dịch dài kỳ (`create-post`/`soan`/`build-page`/`release`) | `scripts/pipeline/campaign_step.py` |
+| Chạy MỘT bước của chiến dịch dài kỳ (`create-post`/`write`/`build-page`/`release`) | `scripts/pipeline/campaign_step.py` |
 | **Nối kênh ngoài của BẠN** (`audio_cmd`/`youtube_cmd`/`facebook_cmd` — không khoá CLI nào) | `knowledge/toolchains/TELEGRAM_BRIDGE.md` §6b |
-| **Nối bộ viết của BẠN vào bước `soan`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` §6 |
+| **Nối bộ viết của BẠN vào bước `write`** (`runtime.writer_cmd`, không khoá CLI nào) | `knowledge/toolchains/CAMPAIGN_PIPELINE.md` §6 |
 | Gửi/nhận cổng duyệt Telegram | `scripts/pipeline/approve_bus.py` |
 | **Bài nào đang ở bước nào** (suy ra, ~350 token thay vì nạp cả campaign.md) | `campaign_step.py <cam> status [--detail]` |
 | **Vì sao bài tới trạng thái đó** (sổ sự kiện chỉ-nối-thêm) | `logs/events.jsonl` · `scripts/lib/event_log.py` |

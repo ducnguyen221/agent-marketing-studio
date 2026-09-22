@@ -158,9 +158,9 @@ if (Test-Path $cfgPath) {
 
 # ---- scan editions -----------------------------------------------------------
 $entries = Get-ChildItem -Path $Repo -Recurse -Filter '*.html' |
-  Where-Object { $_.FullName -match '\\(\d{4})\\(\d{2})\\((\d{4}-\d{2}-\d{2})|(w\d{2}))\.html$' } |
+  Where-Object { $_.FullName -match '[\\/](\d{4})[\\/](\d{2})[\\/]((\d{4}-\d{2}-\d{2})|(w\d{2}))\.html$' } |
   ForEach-Object {
-    $null = $_.FullName -match '\\(\d{4})\\(\d{2})\\((\d{4}-\d{2}-\d{2})|(w\d{2}))\.html$'
+    $null = $_.FullName -match '[\\/](\d{4})[\\/](\d{2})[\\/]((\d{4}-\d{2}-\d{2})|(w\d{2}))\.html$'
     # capture NOW: later -match/-notmatch operators overwrite $Matches (PS 5.1)
     $yy = [int]$Matches[1]; $mm = [int]$Matches[2]; $dateStr = $Matches[3]
     $html = [System.IO.File]::ReadAllText($_.FullName, $utf8)

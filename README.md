@@ -13,11 +13,20 @@ Engine điều hành và tự động hóa chiến dịch marketing đa kênh to
   khoá file của ai.
 - **Excel là BẢN XUẤT, một chiều:** `export_excel.py` dựng `.xlsx` đúng bộ cột cũ để lọc,
   xoay, gửi cho người không dùng git. Sửa trong Excel **không** quay ngược về nguồn.
-- **2 Cổng duyệt kiểm soát bởi con người:** AI tự động lập kế hoạch và sản xuất, nhưng con người giữ quyền quyết định ở 2 chốt chặn: duyệt ý tưởng (Cổng 1) và duyệt nội dung thành phẩm (Cổng 2).
+- **3 cổng duyệt kiểm soát bởi con người:** AI tự động lập kế hoạch và sản xuất, nhưng con
+  người giữ quyền quyết định ở các chốt chặn: duyệt đề tài (Cổng 1), duyệt nội dung trước
+  khi đăng (Cổng 2), và duyệt bản thật trên web trước khi phát ra kênh ngoài (Cổng 3 — bật
+  khi bảng Content có cột `g3`).
 - **Engine ở repo, nội dung ở TRẠM:** repo này chứa engine (script, cổng kiểm, quy trình,
   template). Nội dung thật sống ở một **trạm** nằm ngoài git — mặc định `~/.marketing`,
   nhưng chỗ nào là do bạn chọn. Kênh thậm chí không bắt buộc nằm trong trạm: `CHANNELS.md`
   là cạnh **duy nhất** được phép trỏ ra ngoài.
+- **Lõi là VIẾT BÀI và ĐĂNG — cài xong là dùng được ngay.** Bản cài này
+  **không bắt buộc trạm giọng/video**: lồng tiếng (`agent-voice-studio`) và dựng video
+  (`agent-video-studio`) là hai **năng lực thêm**, bật khi nào bạn cần. Thiếu chúng,
+  `doctor` chỉ ghi một dòng *"chưa bật — cần khi bạn muốn …"* và vẫn trả **mã 0**; lời
+  hướng dẫn cài chỉ hiện ra đúng lúc một bước thật sự chạm tới giọng hoặc video, và khi
+  đó nó dừng ở **mã 3** kèm đủ các lệnh phải chạy.
 - **Chiến dịch chạy theo lịch, cùng một khuôn:** bản tin ngày/tuần và series tự động là
   chiến dịch như mọi chiến dịch khác — chỉ thêm `run.ps1` (điểm vào duy nhất, giống hệt nhau
   ở mọi chiến dịch) và khối `runtime:` trong `campaign.md`. `campaign_cfg.py` gộp bốn tầng
@@ -29,10 +38,11 @@ Engine điều hành và tự động hóa chiến dịch marketing đa kênh to
 
 ---
 
-## 2. Quy Trình 7 Khâu & 2 Cổng Duyệt
+## 2. Quy Trình 7 Khâu & 3 Cổng Duyệt
 
 ```
 ① new ─→ ② plan ─🔒 CỔNG 1 ─→ ③ produce ─→ ④ selfqa ─🔒 CỔNG 2 ─→ ⑤ render ─→ ⑥ publish ─→ ⑦ measure
+                                                                           web ─🔒 CỔNG 3 ─→ YouTube · Facebook
 ```
 
 1. **① new (Khởi tạo):** Lập hồ sơ chiến dịch từ brief của con người ([`workflows/01_new_campaign.md`](workflows/01_new_campaign.md)).
@@ -48,6 +58,9 @@ Engine điều hành và tự động hóa chiến dịch marketing đa kênh to
 5. **⑤ render (Dựng Asset):** Tạo hình ảnh, audio lồng tiếng, short video ([`workflows/05_render_assets.md`](workflows/05_render_assets.md)).
 6. **⑥ publish (Đăng bài):** YouTube → trang blog → Facebook, và URL thật ghi ngược vào
    bảng Content ([`workflows/06_publish.md`](workflows/06_publish.md)).
+   - 🔒 **CỔNG 3 — duyệt bản thật (tuỳ chọn):** khi bảng Content có cột `g3`, trang web lên
+     trước, người mở link xem bằng mắt rồi mới phát YouTube/Facebook
+     ([`knowledge/toolchains/CAMPAIGN_PIPELINE.md`](knowledge/toolchains/CAMPAIGN_PIPELINE.md)).
 7. **⑦ measure (Đo lường):** ghi số vào `publish.json`, chốt số vào Mục 9 của `campaign.md`
    ([`workflows/07_measure.md`](workflows/07_measure.md)). Thu tự động qua API **chưa có** —
    hiện nhập tay.
@@ -105,18 +118,23 @@ agent-marketing-studio/
 ├── SECURITY.md                # Chính sách bảo mật token và dữ liệu
 ├── install.ps1                # Dựng trạm: hỏi 1 câu rồi in ra ba lệnh tiếp theo
 ├── .agents/                   # Tầng quản trị Agent (Roles, Skills, Checklists, Prompts)
+├── .github/workflows/         # CI: pytest trên windows-latest + macos-latest
 ├── scripts/
 │   ├── lib/                   # md_io (đọc/ghi Markdown nguyên tử) · studio_paths · post_paths
-│   └── pipeline/              # new_channel · new_campaign · new_post · gen_article
+│   ├── pipeline/              # new_channel · new_campaign · new_post · gen_article
 │                              # campaign_cfg (gộp cấu hình → JSON cho PowerShell)
 │                              # blog_gates · register_publish · check_tree · build_views · export_excel
-├── tests/                     # 197 test — chạy `pytest tests/ -q`
+│   └── runners/               # vỏ PowerShell cho lịch · notify_run.py (báo Telegram, dùng với launchd)
+│                              # install_launchd.py (điền mẫu plist rồi nạp bằng launchctl)
+├── docs/                      # ONBOARDING · RUNBOOK-DOI-MAY · WORKSPACE (+ trang giới thiệu)
+├── tests/                     # bộ test + cổng chống trôi — chạy `python -m pytest -q`
 ├── knowledge/                 # Kho tri thức marketing (Data Model, Playbooks, Toolchains)
 ├── output_styles/             # Giọng văn thương hiệu chuẩn theo từng kênh
 ├── templates/
 │   ├── README.md              # khuôn nào dùng khi nào
-│   └── station/               # CÂY MẪU lồng đúng như trạm thật:
-│                              #   _channel/ → _campaign/ → _content/
+│   ├── station/               # CÂY MẪU lồng đúng như trạm thật:
+│   │                          #   _channel/ → _campaign/ → _content/
+│   └── launchd/               # 8 plist mẫu trung tính cho lịch chạy trên macOS
 ├── workflows/                 # Đặc tả chi tiết 7 khâu vận hành
 ├── examples/                  # TRẠM MẪU đã điền — 1 kênh, 1 chiến dịch, 3 bài ở 3 trạng thái
 └── content/                   # Bộ dữ liệu mô phỏng dùng cho dạy học (KPIM)
@@ -134,3 +152,27 @@ agent-marketing-studio/
 - ⏱️ **Chiến dịch chạy theo lịch:** [`knowledge/toolchains/NEWS_PIPELINE.md`](knowledge/toolchains/NEWS_PIPELINE.md)
 - 🧱 **Khuôn dựng kênh/chiến dịch/bài:** [`templates/README.md`](templates/README.md)
 - 📊 **Bộ dữ liệu mô phỏng (dạy học):** `content/KPIM/02_campaigns/01_Tobi_Posts/`
+- 🔐 **Bí mật & biến môi trường của máy:** [`knowledge/toolchains/SECRETS.md`](knowledge/toolchains/SECRETS.md)
+- 🚀 **Dựng từ đầu, mười bước:** [`docs/ONBOARDING.md`](docs/ONBOARDING.md)
+- 🧭 **Ba trạm — ai giữ gì, biến nào trỏ đâu:** [`knowledge/toolchains/STATION_LAYOUT.md`](knowledge/toolchains/STATION_LAYOUT.md)
+- 🔁 **Đổi máy chạy trạm (Windows ↔ macOS):** [`docs/RUNBOOK-DOI-MAY.md`](docs/RUNBOOK-DOI-MAY.md) — **một máy chạy tại một thời điểm**
+- 🗂️ **Thư mục nào trong trạm chứa gì:** [`docs/WORKSPACE.md`](docs/WORKSPACE.md)
+
+---
+
+## 5. Kiểm Thử & CI
+
+```bash
+python -m pip install -r requirements.txt
+python -m pytest -q
+```
+
+- Bộ test chạy trên **Windows** (PowerShell 5.1) và **macOS** (`pwsh` 7). CI
+  (`.github/workflows/tests.yml`) chạy `pytest` trên `windows-latest` và `macos-latest`,
+  không secret, không deploy.
+- Vài file test gọi PowerShell thật (`run.ps1`, runner). Máy không có `powershell`/`pwsh` thì
+  chúng tự bỏ qua. CI đặt `MARKETING_STUDIO_REQUIRE_POWERSHELL=1` để biến chuyện bỏ qua đó
+  thành lỗi — trên CI, "bỏ qua" trông y hệt "xanh". Muốn kiểm như CI ở máy mình thì đặt
+  biến này trước khi chạy `pytest`.
+- Cổng chống trôi tài liệu (`tests/test_docs_drift.py`) đỏ khi tài liệu gọi lệnh CLI không có,
+  khi code đọc biến môi trường chưa khai, hoặc khi luật cũ quay lại.

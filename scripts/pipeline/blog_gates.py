@@ -41,7 +41,9 @@ sys.stderr.reconfigure(encoding="utf-8")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fb_format as FF  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import brand as BR  # noqa: E402
 import post_paths as PP  # noqa: E402
+import media_tools as MT  # noqa: E402
 
 CHAN, CANH_BAO = "block", "warn"
 
@@ -69,10 +71,14 @@ CONG_THUOC_BUOC = {
 }
 
 _URL = re.compile(r"https?://[^\s)>\]\"']+", re.I)
-# URL TRẦN: Facebook tự biến "ducnguyen.vn/atlas/x" hay "www.abc.com" thành link, nên
+# URL TRẦN: Facebook tự biến "vidu.vn/atlas/x" hay "www.abc.com" thành link, nên
 # về mặt luật "thân bài 0 URL" chúng cũng là URL. Bản đầu chỉ bắt có scheme https:// nên
 # bỏ link trần vào thân bài là qua được cổng G09.
-_URL_TRAN = re.compile(r"(?<![\w/@.])(?:www\.[\w-]+|[\w-]+\.(?:vn|com|net|org|io|ai|dev))"
+# Dấu `-` nằm trong lookbehind cùng với `\w/@.`: thiếu nó thì một tên miền có gạch nối
+# ("vi-du.vn/x") bị đếm HAI lần — một lần trọn vẹn, một lần từ sau dấu gạch ("du.vn/x").
+# Cổng đòi `= 0` nên con số sai không đổi kết luận, nhưng nó in ra báo cáo và người đọc
+# sẽ đi tìm một URL thứ hai không tồn tại.
+_URL_TRAN = re.compile(r"(?<![\w/@.-])(?:www\.[\w-]+|[\w-]+\.(?:vn|com|net|org|io|ai|dev))"
                        r"(?:\.[\w-]+)*/[^\s)>\]\"']*", re.I)
 _H2 = re.compile(r"^##\s+\S", re.M)
 _BANG = re.compile(r"^\s*\|.*\|\s*$", re.M)
@@ -99,7 +105,12 @@ _OG = re.compile(r'property\s*=\s*"og:', re.I)
 # Tên công cụ nội bộ không được lộ ra bản công khai (G21).
 TOOL_NOI_BO = ["omnivoice", "hyperframes", "claude code", "codex", "antigravity",
                "opcos", "giọng ai", "text-to-speech"]
-TEN_TO_CHUC = re.compile(r"KPIM|COMPA|Tobi", re.I)
+# Tên tổ chức (G22) là CẤU HÌNH của kênh, không phải hằng số trong mã: bộ tên của chủ
+# repo này vô nghĩa với người clone về, và để nó trong mã là vừa rò danh tính vừa làm
+# cổng G22 im lặng vô dụng ở mọi máy khác. Nguồn: `brand.org_names` trong channel.yml.
+# Không khai → G22 không đo được, và nó phải NÓI ra điều đó chứ không báo xanh.
+def _mau_to_chuc(ten: list[str]):
+    return re.compile("|".join(re.escape(x) for x in ten), re.I) if ten else None
 
 # Tên file bản công khai — thứ thật sự đến tay người đọc.
 # Tên file lấy từ post_paths.LAYOUT — một nguồn sự thật cho cả pipeline.
@@ -146,8 +157,11 @@ def _dem_goc_nhin(blog: str) -> tuple[int, int]:
 
 
 def _thoi_luong(p: Path) -> float | None:
-    """Độ dài media bằng ffprobe. Không có ffprobe -> None (thiếu), KHÔNG phải 0."""
-    ff = os.environ.get("FFPROBE") or "ffprobe"
+    """Độ dài media bằng ffprobe. Không có ffprobe -> None (thiếu), KHÔNG phải 0.
+
+    Dò: FFPROBE → FFMPEG_DIR → PATH → Homebrew (launchd trên Mac không có nó trên PATH).
+    """
+    ff = MT.ff_tool("ffprobe")
     try:
         ra = subprocess.run([ff, "-v", "error", "-show_entries", "format=duration",
                              "-of", "default=nw=1:nk=1", str(p)],
@@ -189,7 +203,8 @@ class SoKetQua:
 
 
 def run_cmd(folder: Path, home_domain: str, kind: str = "full",
-         allow: dict[str, str] | None = None, stage: str = "write") -> dict:
+         allow: dict[str, str] | None = None, stage: str = "write",
+         org_names: list[str] | None = None) -> dict:
     """`allow` = {needle: lý do} — MIỄN TRỪ CÓ GHI LÝ DO cho G21.
 
     Vì sao cần: danh sách needle của G21 so khớp chuỗi thô, nên nó không phân biệt được
@@ -503,11 +518,17 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
         s.do("G23", "Placeholder {{...}} trong file công khai", len(ph), "= 0", not ph,
              note="; ".join(ph[:6]))
 
-        hit2 = [name for name, t in cong_khai.items() if TEN_TO_CHUC.search(t)]
-        s.do("G22", "Tên tổ chức trong bản công khai", len(hit2), "= 0 nếu bài sẽ vào repo",
-             not hit2, CANH_BAO,
-             note="; ".join(hit2) + " - bài đăng kênh nhà thì đây là bình thường"
-             if hit2 else "")
+        mau_tc = _mau_to_chuc(org_names or [])
+        if mau_tc is None:
+            s.thieu("G22", "Tên tổ chức trong bản công khai",
+                    "kênh chưa khai `brand.org_names` trong channel.yml — không có bộ tên "
+                    "thì cổng này không đo được gì (báo xanh ở đây là xanh giả)")
+        else:
+            hit2 = [name for name, t in cong_khai.items() if mau_tc.search(t)]
+            s.do("G22", "Tên tổ chức trong bản công khai", len(hit2),
+                 "= 0 nếu bài sẽ vào repo", not hit2, CANH_BAO,
+                 note="; ".join(hit2) + " - bài đăng kênh nhà thì đây là bình thường"
+                 if hit2 else "")
 
     fail_block = [r for r in s.rows if r["status"] == "fail" and r["level"] == CHAN]
     return {
@@ -535,6 +556,11 @@ def _in_vi_sao_bi_chan(result: dict) -> None:
     hoan = [r for r in result["gates"]
             if r["status"] == "missing" and "chưa tới lượt" in (r["note"] or "")]
 
+    # Cổng `missing` KHÔNG phải cổng xanh: nó là cổng CHƯA ĐO ĐƯỢC. Tóm tắt cũ bỏ qua
+    # chúng, nên người đọc thấy "✔ KHÔNG cổng nào chặn" trong khi có cổng chưa biết kết
+    # quả — ví dụ G22 khi `brand.org_names` để trống (REVIEW-P2 Ghi nhận 17).
+    chua_do = [r for r in result["gates"]
+               if r["status"] == "missing" and r not in hoan]
     if not chan:
         sys.stdout.write(f"\n  ✔ KHÔNG cổng nào chặn ở bước `{result['stage']}`.\n")
     else:
@@ -552,13 +578,21 @@ def _in_vi_sao_bi_chan(result: dict) -> None:
                          + ", ".join(r["id"] for r in hoan) + "\n"
                          "     (ảnh · trang web · link thật · sổ đăng bài — bước soạn "
                          "không tạo ra được nên không chặn ở đây)\n")
+    if chua_do:
+        sys.stdout.write(f"\n  ❔ CHƯA ĐO ĐƯỢC {len(chua_do)} cổng — không phải xanh, chỉ là "
+                         "chưa biết:\n")
+        for r in chua_do:
+            sys.stdout.write(f"     {r['id']} {r['name']}: {r['note'] or r['measured']}\n")
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="24 cổng đếm được cho một bài blog.")
     ap.add_argument("folder", help="thư mục bài (chứa blog.md, fb_post.txt...)")
     ap.add_argument("--home-domain", default=None,
-                    help="domain nhà, để loại khỏi phép đếm nguồn ngoài")
+                    help="domain nhà, để loại khỏi phép đếm nguồn ngoài. Bỏ trống thì lấy "
+                         "từ `brand:` của channel.yml (đi ngược lên từ thư mục bài).")
+    ap.add_argument("--brand", default="",
+                    help="file khai khối `brand:` (json/yml) thay cho channel.yml")
     ap.add_argument("--kind", choices=["full", "short"], default="full")
     ap.add_argument("--json-only", action="store_true", help="chỉ in JSON, không in bảng")
     ap.add_argument("--stage", choices=GIAI_DOAN, default="write",
@@ -574,8 +608,24 @@ def main(argv=None) -> int:
         sys.stderr.write(f"không phải thư mục: {d}\n")
         return 2
 
-    home = a.home_domain or re.sub(r"^https?://([^/]+).*$", r"\1",
-                                   os.environ.get("ATLAS_BASE_URL", "https://ducnguyen.vn"))
+    # Tên miền nhà và bộ tên tổ chức đến từ `brand:` của kênh. Cờ `--home-domain` vẫn
+    # thắng (chạy tay trên một thư mục lẻ), nhưng KHÔNG còn mặc định là tên miền thật
+    # của một ai đó: cổng nào cũng cần biết "nhà" là đâu, và đoán hộ là đo sai im lặng.
+    brand_cfg = {}
+    try:
+        brand_cfg = BR.doc(a.brand or None, tu=d, bat_buoc=())
+    except BR.BrandThieu as e:
+        if not a.home_domain:
+            sys.stderr.write(f"blog_gates: {e}\n")
+            return 2
+    home = a.home_domain or str(brand_cfg.get("home_domain") or "").strip()
+    if not home:
+        if not brand_cfg.get("site_base"):
+            sys.stderr.write(
+                "blog_gates: không biết tên miền nhà. Khai `brand.site_base` (hoặc "
+                "`home_domain`) trong channel.yml, hoặc truyền --home-domain.\n")
+            return 2
+        home = BR.home_domain(brand_cfg)
     allow = {}
     for level in a.allow:
         name, _, reason = level.partition("=")
@@ -587,7 +637,7 @@ def main(argv=None) -> int:
                 "và nó sẽ được sao chép sang bài tiếp theo mà không ai xét lại.\n")
             return 2
         allow[name.strip()] = reason.strip()
-    result = run_cmd(d, home, a.kind, allow, a.stage)
+    result = run_cmd(d, home, a.kind, allow, a.stage, BR.org_names(brand_cfg))
     PP.p(d, "gates").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n",
                                 encoding="utf-8", newline="\n")
 

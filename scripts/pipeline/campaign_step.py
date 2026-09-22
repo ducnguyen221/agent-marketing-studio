@@ -3,10 +3,11 @@
 """Chạy MỘT bước của chiến dịch blog. Không phải cả chuỗi — có chủ đích.
 
 ```
-create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+create-post ─[ Cổng 1 ]─ write ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
 ```
 
-`dang` là TÊN CŨ của `build-page`, giữ lại để lệnh cũ không gãy. Cổng 3 chỉ bật khi bảng
+`publish` là bí danh cũ của `build-page`, giữ lại để lệnh cũ không gãy (runner
+`run-blog-campaign.ps1 -Step publish` vẫn gọi nó). Cổng 3 chỉ bật khi bảng
 Content có khai cột `g3`.
 
 ## Vì sao các bước rời nhau
@@ -14,7 +15,7 @@ Content có khai cột `g3`.
 Script điều phối gộp đã bị gỡ 04/09/2026 vì nó *"gộp dựng và đăng vào một lệnh, nên một
 bước hỏng là phải chạy lại từ đầu, và cổng duyệt của người bị nuốt vào giữa chuỗi"*. Gộp
 lại dưới một cái tên khác là dựng lại đúng cái đã bỏ. Mỗi bước ở đây chạy lại được độc
-lập, và hai cổng nằm RÕ giữa các bước chứ không lẫn vào trong.
+lập, và các cổng nằm RÕ giữa các bước chứ không lẫn vào trong.
 
 ## Vì sao logic nằm ở Python còn runner chỉ là vỏ PowerShell
 
@@ -257,6 +258,48 @@ def split_command(cmd: str) -> list[str]:
     return [x.strip('"') for x in shlex.split(cmd, posix=False) if x.strip()]
 
 
+_O_HOOK = re.compile(r"\{(\w+)\}")
+
+
+def hook_argv(cmd: str, o: dict) -> list[str]:
+    """Tách lệnh hook (`split_command`) rồi thay các ô `{ten}` ĐÃ BIẾT, một lượt.
+
+    · Ô LẠ giữ nguyên. Trước đây `writer_cmd` đi qua `str.format`: một cặp ngoặc nhọn của
+      chính người dùng (`{khac}`, JSON) hay ô tài liệu có hứa mà code chưa biết (`{cam}`)
+      là KeyError — cả bước `soan` sập, không phải một bài hỏng.
+    · Thay MỘT lượt bằng regex: giá trị vừa thay mà chứa `{...}` không bị thay lần hai.
+    · Ô có trong lệnh mà giá trị là `None` (không phân giải được, vd `{channel}` khi chiến
+      dịch không nằm trong kênh nào) ⇒ ValueError nêu tên ô. Thay bằng chuỗi rỗng là
+      chạy một lệnh trỏ vào hư không mà không ai biết vì sao.
+    """
+    def thay(m):
+        k = m.group(1)
+        if k not in o:
+            return m.group(0)
+        if o[k] is None:
+            raise ValueError(f"không phân giải được ô {{{k}}} trong lệnh hook")
+        return str(o[k])
+    return [_O_HOOK.sub(thay, x) for x in split_command(cmd)]
+
+
+def _o_chung(campaign: Path, post: Path, cid: str) -> dict:
+    """Các ô dùng được ở MỌI hook.
+
+    `{channel}` = thư mục kênh (đi lên tới `channel.yml`). `{station}` = trạm: đi lên tới
+    `CHANNELS.md` như `run.ps1`, rồi `MARKETING_STUDIO_DATA`, rồi `~/.marketing`
+    (`studio_paths.root`). Hai ô này để lệnh trong `campaign.md` KHÔNG phải ghi cứng đường
+    của một máy — chép trạm sang máy khác là lệnh vẫn đúng.
+    """
+    try:
+        kenh = str(SP.channel_of(campaign / "campaign.md"))
+    except FileNotFoundError:
+        kenh = None
+    tram = next((q for q in [campaign.resolve(), *campaign.resolve().parents]
+                 if (q / SP.SO_KENH).is_file()), None) or SP.root()
+    return {"post": str(post), "cid": cid, "cam": str(campaign), "campaign": str(campaign),
+            "channel": kenh, "station": str(tram)}
+
+
 def _cong_chan(post: Path) -> tuple[list[dict], str, str]:
     """Đọc `gates.json`: danh sách cổng CHẶN, bước đã chấm, và CHỮ KÝ của lần chấm.
 
@@ -422,9 +465,12 @@ def step_write(campaign: Path, *, bot, hom_nay: date | None = None, dry_run=Fals
             if dry_run:
                 to_write.append(d["content_id"])
                 continue
-            cmd = [x.format(post=str(post), cid=d["content_id"], campaign=str(campaign),
-                            skills=skills)
-                   for x in split_command(writer)]
+            try:
+                cmd = hook_argv(writer, {**_o_chung(campaign, post, d["content_id"]),
+                                         "skills": skills})
+            except ValueError as e:
+                failed.append({"id": d["content_id"], "why": "writer_cmd", "detail": str(e)})
+                continue
             r = run_cmd(cmd)
             if r.returncode != 0:
                 failed.append({"id": d["content_id"], "why": "writer_cmd",
@@ -480,9 +526,9 @@ def step_publish(campaign: Path, *, bot, uat=False, dry_run=False, run_cmd=None,
     nữa. `build-page` làm đủ: dựng tiếng (nếu khai), dựng trang, đăng, rồi GHI URL.
 
     Hai bước làm gần giống nhau là chỗ sinh nhầm lẫn, nên gộp về một. Ai đang gọi
-    `-Buoc dang` vẫn chạy được, và được luôn phần ghi URL.
+    `-Step publish` vẫn chạy được, và được luôn phần ghi URL.
     """
-    loi("`dang` là tên cũ — đang chạy `build-page`. Đổi lệnh khi tiện.")
+    loi("`publish` là tên cũ — đang chạy `build-page`. Đổi lệnh khi tiện.")
     return step_build_page(campaign, bot=bot, dry_run=dry_run, run_cmd=run_cmd, only_post=only_post)
 
 
@@ -546,12 +592,16 @@ def step_build_page(campaign: Path, *, bot, dry_run=False, run_cmd=None,
         # B5 — tiếng (tuỳ chọn)
         co_audio = False
         if audio_cmd:
-            cmd = [x.replace("{post}", str(post)).replace("{cid}", cid)
-                    for x in split_command(audio_cmd)]
-            r = run_cmd(cmd)
-            co_audio = (post / "atlas" / "audio.mp3").is_file()
-            if getattr(r, "returncode", 1) != 0 and not co_audio:
-                loi(f"{cid}: dựng tiếng hỏng — vẫn dựng trang không có tiếng.")
+            try:
+                cmd = hook_argv(audio_cmd, _o_chung(campaign, post, cid))
+            except ValueError as e:
+                cmd = None
+                loi(f"{cid}: audio_cmd — {e} — vẫn dựng trang không có tiếng.")
+            if cmd:
+                r = run_cmd(cmd)
+                co_audio = (post / "atlas" / "audio.mp3").is_file()
+                if getattr(r, "returncode", 1) != 0 and not co_audio:
+                    loi(f"{cid}: dựng tiếng hỏng — vẫn dựng trang không có tiếng.")
 
         # B6 — dựng trang
         cmd = [sys.executable, str(src / "build_blog_html.py"),
@@ -745,13 +795,15 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
             if vi_sao:
                 loi_kenh.append(f"{name}: {vi_sao}")
                 continue
-            cmd = [x.replace("{post}", str(post)).replace("{cid}", cid)
-                    .replace("{web}", (d.get("web") or "").strip())
-                    .replace("{youtube_url}", link.get("youtube", ""))
-                    .replace("{schedule}", lich)
-                    .replace("{publish_at}", publish_at)
-                    .replace("{publish_ts}", publish_ts)
-                    for x in split_command(lenh_tho)]
+            try:
+                cmd = hook_argv(lenh_tho, {**_o_chung(campaign, post, cid),
+                                           "web": (d.get("web") or "").strip(),
+                                           "youtube_url": link.get("youtube", ""),
+                                           "schedule": lich, "publish_at": publish_at,
+                                           "publish_ts": publish_ts})
+            except ValueError as e:
+                loi_kenh.append(f"{name}: {e}")
+                continue
             r = run_cmd(cmd)
             url = ""
             for dong_ra in reversed((getattr(r, "stdout", "") or "").splitlines()):

@@ -45,7 +45,7 @@ import md_io                   # noqa: E402
 import event_log as EV        # noqa: E402
 import pipeline_state as PS        # noqa: E402
 
-# Bước nào chạy bằng lệnh nào. `sua_lai` cũng chạy `soan` — bước đó tự đọc `phan-hoi.md`.
+# Bước nào chạy bằng lệnh nào. `fix-gates` cũng chạy `write` — bước đó tự đọc `phan-hoi.md`.
 COMMANDS = {
     "write": ["write"],
     "check-gates": ["__check_gates__"],
@@ -114,7 +114,7 @@ def _has_artefact(step: str, post: Path) -> bool:
 
       · `blog_gates.py` trả 1 khi kết luận ĐỎ — nhưng nó đã chấm xong 24 cổng và ghi
         `gates.json` tử tế.
-      · `soan` trả khác 0 khi bài viết ra chưa qua cổng — nhưng bài ĐÃ ĐƯỢC VIẾT.
+      · `write` trả khác 0 khi bài viết ra chưa qua cổng — nhưng bài ĐÃ ĐƯỢC VIẾT.
 
     Đọc mã thoát rồi kết luận "hỏng" thì đúng những bài cần đi tiếp lại bị chấm/viết lại ba
     lần rồi vứt vào `failed/`. Đo thật 12/09/2026: một lượt như thế đốt 27 phút agent rồi bị

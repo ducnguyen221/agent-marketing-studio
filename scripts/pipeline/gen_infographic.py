@@ -22,12 +22,10 @@ import tempfile
 
 W, H = 1280, 720   # cover landscape 16:9 (kiểu hero compaclass + thumbnail YouTube)
 
-CHROME_CANDIDATES = [
-    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    os.path.join(os.environ.get("LOCALAPPDATA", ""), r"Google\Chrome\Application\chrome.exe"),
-    os.path.join(os.environ.get("PROGRAMFILES", ""), r"Microsoft\Edge\Application\msedge.exe"),
-]
+# Chrome/font dò ở MỘT chỗ cho mọi hệ điều hành (CHROME_BIN, VIDEO_FONT): scripts/lib/media_tools.py
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+import brand as BR  # noqa: E402
+import media_tools as MT  # noqa: E402
 
 
 # ================================================================ trích nội dung
@@ -75,12 +73,13 @@ def extract_points(md_text, n=5):
     return out or ["(chưa có ý chính)"]
 
 
-def extract_title(md_text, meta):
+def extract_title(md_text, meta, lui=""):
+    """`lui` = tên site, đến từ `brand.site_name` của kênh — không phải hằng số trong mã."""
     for ln in md_text.replace("\r\n", "\n").split("\n"):
         m = re.match(r"^#\s+(.*)$", ln.strip())
         if m:
             return _strip_md(m.group(1))
-    return meta.get("title", "Học cùng Tobi")
+    return meta.get("title") or lui
 
 
 # ================================================================ HTML on-brand
@@ -89,11 +88,26 @@ _PILLAR_LABEL = {"powerbi": "Power BI", "fabric": "Microsoft Fabric",
                  "ai-agent": "AI Agent", "career": "Sự nghiệp Data"}
 
 
-def build_html(title, points, meta):
-    """Cover landscape kiểu hero compaclass: gradient xanh dương→teal, hình khối/network
-    trừu tượng, tiêu đề tích hợp + subtitle (angle). KHÔNG list đánh số."""
+def _brand_text(b):
+    """Tên site trên ảnh: `brand.a` + `brand.b` (nửa sau được tô nhấn), hoặc `site_name`."""
+    a, bb = str(b.get("a") or "").strip(), str(b.get("b") or "").strip()
+    if a and bb:
+        return f"{_esc(a)} <span>{_esc(bb)}</span>"
+    return _esc(b["site_name"])
+
+
+def build_html(title, points, meta, b):
+    """Cover landscape: gradient xanh dương→teal, hình khối/network trừu tượng, tiêu đề
+    tích hợp + subtitle (angle). KHÔNG list đánh số.
+
+    `b` là khối `brand:` của kênh — tên site và chân ảnh đến từ đó, không từ mã nguồn.
+    """
     pillar = (meta.get("pillar") or "").strip().lower()
-    badge = _PILLAR_LABEL.get(pillar, meta.get("pillar") or "COMPA Class")
+    badge = _PILLAR_LABEL.get(pillar, meta.get("pillar")
+                              or b.get("badge_default") or b["site_name"])
+    ten_site = _brand_text(b)
+    chan = _esc(b.get("footer_image") or b.get("footer") or b["site_name"])
+    icon_brand = BR.ICON["brand"]
     subtitle = _strip_md(meta.get("angle") or (points[0] if points else ""))
     if len(subtitle) > 96:
         subtitle = subtitle[:96].rsplit(" ", 1)[0] + "…"
@@ -129,14 +143,14 @@ h1{{font-size:{tsize}px;font-weight:900;letter-spacing:-1px;line-height:1.07;max
 </style></head><body>
 <div id="root">
  <div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div>
- <div class="brand"><span class="mark"><svg viewBox="0 0 576 512" fill="#fff"><path d="M249.6 471.5c10.8 3.8 22.4-4.1 22.4-15.5V78.6c0-4.2-1.6-8.4-5-11C247.4 52 202.4 32 144 32C93.5 32 46.3 45.3 18.1 56.1C6.8 60.5 0 71.7 0 83.8V454.1c0 11.9 12.8 20.2 24.1 16.5C55.6 460.1 105.5 448 144 448c33.9 0 79 14 105.6 23.5zm76.8 0C353 462 398.1 448 432 448c38.5 0 88.4 12.1 119.9 22.6c11.3 3.8 24.1-4.6 24.1-16.5V83.8c0-12.1-6.8-23.3-18.1-27.6C529.7 45.3 482.5 32 432 32c-58.4 0-103.4 20-123 35.6c-3.3 2.6-5 6.8-5 11V456c0 11.4 11.7 19.3 22.4 15.5z"/></svg></span><div class="n">Học cùng <span>Tobi</span></div></div>
+ <div class="brand"><span class="mark">{icon_brand}</span><div class="n">{ten_site}</div></div>
  <div class="cover">
   <div class="kick">{_esc(badge)}</div>
   <h1>{_esc(title)}</h1>
   <div class="sub">{_esc(subtitle)}</div>
   <div class="bar"></div>
  </div>
- <div class="foot">COMPA Class · ducnguyen.vn/atlas</div>
+ <div class="foot">{chan}</div>
 </div>
 </body></html>"""
 
@@ -149,11 +163,7 @@ def _esc(s):
 # ================================================================ render Chrome
 
 def _find_chrome():
-    for c in CHROME_CANDIDATES:
-        if c and os.path.isfile(c):
-            return c
-    found = shutil.which("chrome") or shutil.which("msedge")
-    return found
+    return MT.find_chrome()
 
 
 def render_chrome(html, out_png):
@@ -171,7 +181,7 @@ def render_chrome(html, out_png):
            f"--window-size={W},{H}",
            f"--screenshot={os.path.abspath(out_png)}",
            "--default-background-color=00000000",
-           "file:///" + html_path.replace("\\", "/")]
+           MT.file_url(html_path)]
     try:
         subprocess.run(cmd, check=True, capture_output=True, timeout=120)
     except Exception as e:
@@ -188,18 +198,29 @@ def render_chrome(html, out_png):
 
 # ================================================================ fallback Pillow
 
-def render_pillow(title, points, meta, out_png):
+def render_pillow(title, points, meta, out_png, b):
     from PIL import Image, ImageDraw, ImageFont
     img = Image.new("RGB", (W, H), (11, 16, 32))
     d = ImageDraw.Draw(img)
 
+    da_nhac = set()
+
     def font(sz, bold=True):
-        for name in (("segoeuib.ttf" if bold else "segoeui.ttf"),
-                     "arialbd.ttf" if bold else "arial.ttf"):
+        for name in MT.font_candidates(bold):
             try:
                 return ImageFont.truetype(name, sz)
             except OSError:
                 continue
+        # Cùng họ với lỗi thiếu `tzdata`: ta đang giả định máy có sẵn một font TrueType.
+        # `load_default()` KHÔNG hỏng — nó vẽ được, chỉ là bằng một font bitmap cố định
+        # không có dấu tiếng Việt và không đổi được cỡ. Tức ảnh vẫn ra, vẫn xanh, chỉ là
+        # chữ sai. Im lặng ở đây nghĩa là người dùng chỉ phát hiện khi nhìn ảnh đã đăng.
+        if "x" not in da_nhac:
+            da_nhac.add("x")
+            print("[infographic] không thấy font TrueType nào trong "
+                  f"{MT.font_candidates(bold)} → dùng font bitmap mặc định của Pillow: "
+                  "chữ sẽ MẤT DẤU tiếng Việt và không đúng cỡ. Khai đường font bằng biến "
+                  "VIDEO_FONT (xem scripts/lib/media_tools.py).", file=sys.stderr)
         return ImageFont.load_default()
 
     # accent bar
@@ -208,10 +229,11 @@ def render_pillow(title, points, meta, out_png):
     y = 90
     # brand
     d.rounded_rectangle([pad, y, pad + 56, y + 56], 16, fill=(124, 131, 255))
-    d.text((pad + 74, y + 8), "Học cùng Tobi", font=font(34), fill=(232, 236, 255))
+    d.text((pad + 74, y + 8), str(b["site_name"]), font=font(34), fill=(232, 236, 255))
     y += 110
     # badge
-    badge = _PILLAR_LABEL.get((meta.get("pillar") or "").lower(), meta.get("pillar") or "COMPA Class")
+    badge = _PILLAR_LABEL.get((meta.get("pillar") or "").lower(),
+                              meta.get("pillar") or b.get("badge_default") or b["site_name"])
     d.text((pad, y), badge.upper(), font=font(26), fill=(165, 172, 255))
     y += 60
     # title (wrap)
@@ -229,8 +251,9 @@ def render_pillow(title, points, meta, out_png):
         y = max(ty, y + 56) + 22
     # footer
     d.line([pad, H - 90, W - pad, H - 90], fill=(31, 38, 84), width=2)
-    d.text((pad, H - 70), "COMPA Class · KPIM Academy", font=font(24, bold=False), fill=(107, 117, 168))
-    d.text((W - pad - 220, H - 70), "ducnguyen.vn", font=font(24), fill=(165, 172, 255))
+    d.text((pad, H - 70), str(b.get("footer") or b["site_name"]),
+           font=font(24, bold=False), fill=(107, 117, 168))
+    d.text((W - pad - 220, H - 70), BR.home_domain(b), font=font(24), fill=(165, 172, 255))
 
     os.makedirs(os.path.dirname(out_png) or ".", exist_ok=True)
     img.save(out_png)
@@ -261,23 +284,31 @@ def main(argv=None):
     ap.add_argument("--blog-md", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--force-pillow", action="store_true", help="bỏ qua Chrome, dùng Pillow")
+    ap.add_argument("--brand", default="",
+                    help="file khai khối `brand:` (json/yml). Bỏ trống thì đi ngược lên từ "
+                         "--meta tìm channel.yml của kênh.")
     args = ap.parse_args(argv)
 
     with open(args.meta, encoding="utf-8-sig") as f:
         meta = json.load(f)
+    try:
+        b = BR.doc(args.brand or None, tu=args.meta)
+    except BR.BrandThieu as e:
+        sys.stderr.write(f"gen_infographic: {e}\n")
+        return 2
     md_text = _read(args.blog_md, optional=True)
-    title = extract_title(md_text, meta)
+    title = extract_title(md_text, meta, str(b["site_name"]))
     points = extract_points(md_text, n=5)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
 
     used = "pillow"
     if not args.force_pillow:
-        html = build_html(title, points, meta)
+        html = build_html(title, points, meta, b)
         if render_chrome(html, args.out):
             used = "chrome"
     if used != "chrome":
-        render_pillow(title, points, meta, args.out)
+        render_pillow(title, points, meta, args.out, b)
 
     print(json.dumps({"out": os.path.abspath(args.out), "renderer": used,
                       "title": title, "points": points},

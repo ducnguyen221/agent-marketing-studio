@@ -41,25 +41,45 @@ suy ra file theo bảng này:
 
 ---
 
-## 3. Audio — OmniVoice
+## 3. Audio — qua TRẠM GIỌNG
 
 Nguồn text: khối `## post:youtube_desc` → mục **Kịch bản đọc**, hoặc `## post:blog_article`
 nếu làm bản đọc bài blog. Văn nói, không đọc nguyên bullet.
 
-**Qua MCP** (ưu tiên — agent gọi trực tiếp):
-```
-omnivoice-tts · synthesize_speech(text, output_path, instruct, language, speed)
+Repo này **không** chứa engine giọng. Nó gọi trạm giọng (`agent-voice-studio`) qua adapter
+`scripts/lib/voice.py` — hợp đồng: lệnh ổn định, mã thoát `0/1/2/3`, một dòng JSON cuối
+stdout.
+
+Giọng là **năng lực thêm**, không phải điều kiện để dùng repo: viết bài và đăng chạy được
+mà không có nó, và `doctor` chỉ ghi *"giọng: chưa bật"* rồi trả mã 0. Đề nghị cài xuất
+hiện đúng ở đây — chưa cài trạm thì mọi lệnh trong mục này dừng ở **mã 3** kèm đủ các
+bước cài; chạy `python scripts/pipeline/doctor.py` để xem còn thiếu gì.
+
+**Cả bài một lệnh** (cách dùng mặc định — model chỉ nạp một lần):
+```bash
+python scripts/pipeline/make_podcast.py \
+  --script kich-ban.txt --out <thư mục bài>/atlas/audio.mp3 [--profile <tên profile>]
 ```
 
-**Qua CLI:**
-```powershell
-cd $env:USERPROFILE\.tts\omnivoice   # nơi cài OmniVoice trên máy bạn
-.\.venv\Scripts\python.exe narrate_cli.py --text "..." --out audio.mp3 `
-  --instruct "female, young adult, moderate pitch"
+**Gọi thẳng trạm giọng** (khi cần cờ mà `make_podcast.py` không mở ra):
+```bash
+"$OMNIVOICE_PY" -m voice_studio speak --file kich-ban.txt --out audio.mp3 \
+  --profile <tên profile> --json
 ```
 
-- `instruct` mô tả giọng bằng tiếng Anh (giới tính, tuổi, cao độ).
-- Kịch bản dài → dùng `--text-file` thay vì nhồi vào dòng lệnh.
+**Từ Python trong repo này:**
+```python
+from voice import speak            # scripts/lib/voice.py
+speak(file="kich-ban.txt", out="audio.mp3", profile=None)   # None = mặc định CỦA KHO giọng
+```
+
+- **Không khai `--profile`** thì trạm giọng dùng profile mặc định của kho; kho không có
+  mặc định thì nó dừng ở **mã 2** chứ không bao giờ lùi về một giọng ngẫu nhiên. Tên
+  profile là danh tính của người dùng — repo này không mang sẵn tên nào.
+- Khai `voice_profile` trong `channel.yml` của kênh để `doctor` kiểm giùm rằng profile đó
+  có thật trước khi tới giờ chạy.
+- Kịch bản dài đi qua **file**, không qua tham số dòng lệnh (giới hạn ~32 000 ký tự trên
+  Windows).
 - Giọng trình bày là **giọng của tác giả**. Trong nội dung công khai **không nhắc "giọng AI"**.
 
 ## 4. Video dài — HyperFrames + OmniVoice

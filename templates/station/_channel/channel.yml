@@ -15,10 +15,11 @@ owner: "Người phụ trách"
 language: vi
 timezone: Asia/Ho_Chi_Minh
 
-# suggest = người duyệt cả hai cổng · auto_safe = agent tự làm phần an toàn · full
+# suggest = người duyệt Cổng 1 và 2 · auto_safe = agent tự làm phần an toàn · full
 #
 # ⚠️ Khoá này là CỔNG MÁY, không phải lời dặn. `campaign_step.py` và `fb_publish.py` đều
-# đọc nó; `full` là agent tự mở cả hai cổng và đăng thẳng ra ngoài.
+# đọc nó; `full` là agent tự mở Cổng 1 và 2 rồi đăng thẳng ra ngoài (Cổng 3, nếu bảng
+# Content có cột `g3`, vẫn chờ người).
 # · Giá trị lạ → coi như `suggest` (fail-closed): một khoá gõ sai không được thành quyền đăng.
 # · Chỉ NGƯỜI sửa file này. `campaign.md` KHÔNG đè được — nếu đè được thì một file chiến
 #   dịch tự khai `full` là tự cấp quyền cho chính nó.
@@ -29,6 +30,15 @@ home_domain: example.vn
 
 # Hồ sơ giọng, đường dẫn trong repo engine (không phải trong kênh)
 brand_voice: brand.md          # hồ sơ giọng nằm NGAY TRONG kênh, không ở repo engine
+
+# ── Hai trạm năng lực (chỉ khai nếu kênh có audio/video) ────────────────────────────
+# Khai một trong hai khoá dưới đây là nói "kênh này CẦN trạm giọng": từ đó `doctor` coi
+# trạm giọng là bắt buộc và báo mã 3 khi thiếu, thay vì để pipeline nổ giữa một lượt
+# render lúc 18h. Không khai = kênh chỉ có chữ, không ai bị đòi cài thêm gì.
+# `voice_profile` phải là tên một profile CÓ THẬT trong kho giọng (`voice-studio
+# make-profile` tạo ra) — `doctor` đối chiếu và báo mã 2 nếu khai một tên không tồn tại.
+# voice_profile:               # tên profile giọng đọc của kênh
+# bgm_style:                   # style nhạc nền trong bgm-library.json của trạm giọng
 
 # Giá trị hợp lệ của content_pillar CHO KÊNH NÀY. Mỗi kênh một bộ khác nhau —
 # đây là lý do bộ trụ cột không nên nằm cứng trong DATA_MODEL.
@@ -112,14 +122,43 @@ theme:
   email_accent:              # nền EMAIL là TRẮNG: màu ở đây phải đủ tương phản để đọc.
                              # Đo thật: #00f0ff chỉ đạt 1,4:1 — không dùng được cho chữ.
 
+# ── DANH TÍNH của kênh. Bốn script dựng sản phẩm công khai (`build_blog_html`,
+# `gen_infographic`, `make_podcast_video`, `blog_gates`) đọc khối này và **DỪNG với mã 2**
+# nếu thiếu `site_name` / `author` / `site_base`.
+#
+# Vì sao fail-closed chứ không có giá trị mặc định: ba khoá này từng là hằng số trong mã
+# — tên miền, tên người, tên tổ chức của một chủ repo. Ai clone về cũng xuất bản dưới
+# danh nghĩa người đó mà không hề biết. Một mặc định "chạy được ngay" là cách chắc chắn
+# nhất để khuôn không bao giờ được điền. Xem `scripts/lib/brand.py`.
 brand:
+  site_name:        # TÊN SITE đầy đủ, vào <title> và og:site_name. BẮT BUỘC
   a:                # nửa đầu tên hiển thị, vd "AI"
-  b:                # nửa sau, vd "News"
+  b:                # nửa sau, vd "News" — được tô nhấn ở topbar/ảnh bìa
+  footer:           # dòng chân trang/chân ảnh, vd "Tên tổ chức · Tên chương trình"
+  footer_image:     # chân ẢNH BÌA, nếu muốn khác `footer`
+  footer_video:     # chân SLIDE VIDEO, nếu muốn khác `footer`
+  author_display:   # tên hiện ở chân trang, nếu khác `author` (vd có biệt danh)
+  author_title:     # một dòng giới thiệu tác giả ở chân trang
+  author_avatar:    # URL ảnh đại diện. Để trống = không hiện khối ảnh
+  og_image:         # ảnh og: mặc định khi bài chưa có slug
+  badge_default:    # nhãn hiện ở góc khi bài không khai `pillar`
+  # Bộ tên tổ chức mà cổng G22 đi tìm trong BẢN CÔNG KHAI. Để trống = G22 báo `thiếu`
+  # (không đo được), KHÔNG báo xanh — xanh giả còn tệ hơn không có cổng.
+  org_names: []     # vd ["Tên Công Ty", "Tên Chương Trình"]
+  # Nút mạng xã hội ở chân trang. `icon` chọn theo TÊN trong kho
+  # `scripts/lib/brand.py:ICON` (website · facebook · youtube · profile) — cố ý không
+  # cho dán SVG thô vào đây, vì nội dung file này đi thẳng vào HTML xuất bản.
+  socials: []       # vd [{icon: website, url: "https://…", label: Website}]
   repo:             # thư mục repo web trên máy (nếu kênh có trang web)
   gh_repo:          # owner/repo trên GitHub
-  site_base:        # URL gốc, KHÔNG có dấu / cuối — site_root và page_weekly_base suy ra từ đây
+  site_base:        # BẮT BUỘC. URL gốc, KHÔNG dấu / cuối — site_root và page_weekly_base
+                    # suy ra từ đây; <link canonical> và og:url cũng ghép từ đây
   home_url:         # trang chủ của tác giả/tổ chức — hiện ở nav và chân trang
-  author:           # ai tuyển chọn/biên tập, hiện ở chân trang ("Tuyển chọn bởi …")
+  site_home:        # đường về trang chủ của CHÍNH site này; trống = `site_base` + "/"
+  home_domain:      # miền của site, không có scheme (vd "example.vn") — cổng bài viết dùng
+                    # nó để phân biệt link nội bộ với link ra ngoài. Khai được cả ở CẤP
+                    # KÊNH (ngoài khối `brand:`); khai ở đó thì để trống dòng này.
+  author:           # BẮT BUỘC. Ai tuyển chọn/biên tập; vào <meta name="author"> và chân trang
   script_url:       # Apps Script nhận đăng ký nhận bản tin (nếu có)
   audio_keep:       # giữ lại bao nhiêu file audio cũ
   # Để TRỐNG là KHÔNG nhúng pixel nào. `build-index.ps1` chỉ sinh khối Meta Pixel khi khoá

@@ -5,7 +5,7 @@ máy bạn — bộ viết, giọng đọc, token YouTube, token Facebook — v�
 bạn khai một dòng lệnh, engine gọi nó.
 
 ```
-create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
+create-post ─[ Cổng 1 ]─ write ─[ Cổng 2 ]─ build-page ─[ Cổng 3 ]─ release
                        │                    │                       │
                   writer_cmd           audio_cmd            youtube_cmd
                                                             facebook_cmd
@@ -15,19 +15,27 @@ create-post ─[ Cổng 1 ]─ soan ─[ Cổng 2 ]─ build-page ─[ Cổng 3 
 
 | Khoá | Khi nào chạy | Bắt buộc? | Ra cái gì |
 |---|---|---|---|
-| `writer_cmd` | bước `soan` | **có** | điền đầy `content.md` theo neo `## post:` |
+| `writer_cmd` | bước `write` | **có** | điền đầy `content.md` theo neo `## post:` |
 | `audio_cmd` | bước `build-page` | không | `atlas/audio.mp3` |
 | `youtube_cmd` | bước `release` | không | một dòng JSON có khoá `url` |
 | `facebook_cmd` | bước `release` | không | một dòng JSON có khoá `url` |
 
-**Không khai `writer_cmd`** ⇒ bước `soan` báo *chờ người viết* rồi dừng. Fail-closed, không
+**Không khai `writer_cmd`** ⇒ bước `write` báo *chờ người viết* rồi dừng. Fail-closed, không
 đoán. **Không khai ba hook còn lại** ⇒ bỏ qua, **không phải lỗi**: chiến dịch chỉ có web +
 ảnh + post vẫn chạy trót lọt.
 
 ## Chỗ thay được trong lệnh
 
-`{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch · `{web}` URL bài đã lên
-trang (chỉ có ở `youtube_cmd` và `facebook_cmd`).
+`{post}` thư mục bài · `{cid}` mã bài · `{cam}` thư mục chiến dịch · `{channel}` thư mục
+kênh · `{station}` gốc trạm · `{skills}` skill khai ở `runtime.writer_skills` (chỉ
+`writer_cmd`) · `{web}` URL bài đã lên trang (chỉ có ở `youtube_cmd` và `facebook_cmd`).
+
+`{channel}` = đi lên từ chiến dịch tới `channel.yml`. `{station}` = đi lên tới `CHANNELS.md`,
+rồi `MARKETING_STUDIO_DATA`, rồi `~/.marketing` — cùng luật với `run.ps1`. Script đặt ở trạm
+thì trỏ qua hai ô này, **đừng ghi cứng đường của một máy**: chép trạm sang máy khác (hay sang
+macOS) là lệnh vẫn đúng. Ô không phân giải được (vd chiến dịch không nằm trong kênh nào) ⇒
+hook đó **hỏng có lý do**, không chạy với chuỗi rỗng. Ngoặc nhọn khác (`{khac}`, JSON) được
+giữ nguyên.
 
 Riêng bước `release` có thêm bốn ô:
 
@@ -55,21 +63,26 @@ là chỗ duy nhất chứa link về blog:
    nào Facebook đã phát thì gắn comment. Chạy lại bao nhiêu lần cũng không comment trùng.
 
 **Thiếu pha hai thì bài hẹn lên sóng mà không có link.** Nó phải là task theo lịch của trạm,
-chạy mỗi giờ là đủ, qua `notify-run.ps1` để có báo cáo khi hỏng.
+chạy mỗi giờ là đủ, qua wrapper báo cáo của máy (`notify-run.ps1` trên Windows,
+`scripts/runners/notify_run.py` với launchd trên macOS) để có báo cáo khi hỏng.
 
 Ví dụ khai ở trạm, đường dẫn token lấy từ kho secret của máy:
 
 ```yaml
 runtime:
   publish_time: "09:00"
-  facebook_cmd: 'python D:\repo\scripts\pipeline\fb_publish.py
-                 --config <HOME>\.secret\<tài-khoản>\facebook_config.json
-                 --post "{post}" --message-file "{post}\facebook\post.txt"
-                 --comment-file "{post}\facebook\comment.txt"
-                 --image "{post}\facebook\infographic.png"
+  facebook_cmd: 'python "<repo>/scripts/pipeline/fb_publish.py"
+                 --config "<kho-secret>/<tài-khoản>/facebook_config.json"
+                 --post "{post}" --message-file "{post}/facebook/post.txt"
+                 --comment-file "{post}/facebook/comment.txt"
+                 --image "{post}/facebook/infographic.png"
                  --publish-at "{publish_ts}"
                  --fill "BLOG_URL={web}" --fill "YOUTUBE_URL={youtube_url}"'
 ```
+
+`<repo>` và `<kho-secret>` là đường **tuyệt đối** trên máy trạm: hook chạy không qua shell,
+nên `~` và `$BIEN` không tự mở. Dấu `/` chạy được trên cả Windows lẫn macOS; trên macOS
+lệnh Python thường là `python3`.
 
 `--fill` với giá trị rỗng **bỏ nguyên dòng** chứa chỗ trống đó, và in ra dòng nào đã bỏ.
 Chiến dịch chưa có video vẫn đăng được mà không để lại dòng YouTube chết.
@@ -91,8 +104,10 @@ nguyên dấu `\`, và dấu `;` trong cấu hình không thành lệnh thứ ha
 ```yaml
 runtime:
   writer_cmd: 'powershell -NoProfile -ExecutionPolicy Bypass -File
-               D:\tram\<kênh>\viet-bai.ps1 -Bai "{post}"'
+               "{channel}/write-post.ps1" -Post "{post}" -Skills "{skills}"'
 ```
+
+Trên macOS đổi `powershell` thành `pwsh` (PowerShell 7) — phần còn lại giữ nguyên.
 
 **Đừng sửa file mẫu tại chỗ trong repo.** Repo là bản chung; trạm là máy của bạn. Lẫn hai
 thứ đó thì lần `git pull` sau sẽ đè mất cấu hình riêng.

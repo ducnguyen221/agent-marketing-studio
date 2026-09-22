@@ -1,0 +1,60 @@
+# Bộ test trên hai hệ điều hành: Windows (PowerShell 5.1 — máy lịch hôm nay) và macOS
+# (pwsh 7 — máy lịch sau khi dời). Chỉ chạy `pytest`; không build, không deploy, không secret.
+#
+# Vì sao macOS phải có pwsh THẬT: ba file test `.ps1` tự skip khi thiếu PowerShell, và trên CI
+# "skip" trông y hệt "xanh". `MARKETING_STUDIO_REQUIRE_POWERSHELL=1` bảo `tests/conftest.py`
+# dừng cả lượt nếu không thấy `powershell`/`pwsh`. Cấu hình này được giữ bởi
+# `tests/test_ci_workflow.py`.
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    name: pytest (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: PowerShell 7 (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          if ! command -v pwsh >/dev/null 2>&1; then
+            brew install --cask powershell
+          fi
+          pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+
+      - name: Windows PowerShell 5.1 (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: powershell -NoProfile -Command "$PSVersionTable.PSVersion.ToString()"
+
+      - name: Cài phụ thuộc
+        run: python -m pip install -r requirements.txt
+
+      - name: pytest
+        env:
+          MARKETING_STUDIO_REQUIRE_POWERSHELL: "1"
+        run: python -m pytest -q -rs

@@ -24,6 +24,58 @@ try { [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false } c
 $env:PYTHONIOENCODING = 'utf-8'
 $env:PYTHONUTF8 = '1'
 
+function Find-Python {
+  # CHÉP NGUYÊN giữa các .ps1 của repo (PS 5.1 không có module chung); cổng
+  # tests/test_ps1_portable.py giữ mọi bản giống hệt nhau. Thứ tự dò:
+  #   MARKETING_STUDIO_PY -> <repo>/.venv -> python -> python3 -> py
+  # Mỗi ứng viên phải CHẠY được và tự khai là Python 3.10+: trên Windows `python3` có
+  # thể là stub của Microsoft Store — Get-Command thấy, chạy thì hỏng.
+  param([string]$Repo)
+  $chay = {
+    param([string]$exe)
+    # Chuyen huong luong loi cua LENH NGOAI duoi `Stop`: PS 5.1 boc tung dong stderr thanh
+    # NativeCommandError, va dong DAU TIEN da la loi ket thuc. Mot Python CHAY DUOC nhung
+    # in canh bao luc khoi dong (wrapper .cmd, shim pyenv/conda, mot .pth in ra) bi loai
+    # OAN -> exit 2; pwsh 7 thi khong -> cung mot file, hai hanh vi (review P1, N1).
+    # Ha ve `Continue` trong chinh scriptblock nay: goi bang `&` nen bien la CUC BO, khong
+    # ro ri ra ngoai. Ket qua that van doc tu $LASTEXITCODE — noi loi la te hon chet.
+    # Test: tests/test_find_python.py
+    $ErrorActionPreference = 'Continue'
+    try {
+      $ra = @(& $exe -c 'import sys;print(sys.version_info[:2])' 2>$null)
+      if ($LASTEXITCODE -ne 0) { return $false }
+      # Dong CUOI chu khong phai ca stdout: `[string](@(...))` noi moi dong bang dau cach,
+      # nen mot loi chao in truoc dong phien ban lam regex neo truot.
+      $v = ''
+      foreach ($d in $ra) { $t = ([string]$d).Trim(); if ($t) { $v = $t } }
+      $m = [regex]::Match($v, '^\((\d+), (\d+)\)$')
+      return ($m.Success -and [int]$m.Groups[1].Value -eq 3 -and [int]$m.Groups[2].Value -ge 10)
+    } catch { return $false }
+  }
+  if ($env:MARKETING_STUDIO_PY) {
+    if (& $chay $env:MARKETING_STUDIO_PY) { return $env:MARKETING_STUDIO_PY }
+    Write-Host ('Find-Python: MARKETING_STUDIO_PY=' + $env:MARKETING_STUDIO_PY + ' khong chay duoc Python 3.10+ -> DUNG.')
+    return $null
+  }
+  $ung = @()
+  if ($Repo) {
+    foreach ($con in @('Scripts', 'bin')) {
+      $thu = Join-Path (Join-Path $Repo '.venv') $con
+      if (Test-Path $thu) {
+        $ung += @(Get-ChildItem -Path $thu -Filter 'python*' -File -ErrorAction SilentlyContinue |
+          Where-Object { $_.BaseName -eq 'python' -or $_.BaseName -eq 'python3' } |
+          Sort-Object Name | ForEach-Object { $_.FullName })
+      }
+    }
+  }
+  $ung += @('python', 'python3', 'py')
+  foreach ($u in $ung) {
+    if (& $chay $u) { return $u }
+  }
+  Write-Host 'Find-Python: khong thay Python 3.10+ (MARKETING_STUDIO_PY, .venv, python, python3, py) -> DUNG.'
+  return $null
+}
+
 if (-not (Test-Path (Join-Path $Campaign 'campaign.md'))) {
   Write-Host ("run-worker: " + $Campaign + " khong phai thu muc chien dich.")
   exit 2
@@ -42,8 +94,20 @@ function Ghi($m) {
   Write-Host $m
 }
 
-$ra = & python $py $Campaign 2>&1
+$python = Find-Python -Repo (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent)
+if (-not $python) {
+  Ghi '=== tho DUNG: khong tim thay Python 3.10+ (xem dong Find-Python o tren), ma 2 ==='
+  exit 2
+}
+
+# `2>&1` voi lenh ngoai duoi `Stop`: PowerShell 5.1 boc moi dong stderr thanh
+# NativeCommandError, va dong DAU TIEN da la loi ket thuc -> runner chet exit 1 truoc
+# khi kip ghi log (do 20/09/2026). Ha ve `Continue` DUNG quanh loi goi; "$_" doi dong
+# stderr ve chu thuong; ket qua that doc tu $LASTEXITCODE. Test: tests/test_runner_stderr.py
+$ErrorActionPreference = 'Continue'
+$ra = & $python $py $Campaign 2>&1 | ForEach-Object { "$_" }
 $ma = $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
 
 # Luot RONG thi KHONG ghi log — moi phut mot dong "hang rong" la 1.440 dong/ngay rac.
 if ($ra -notmatch 'hang rong|hàng rỗng') {

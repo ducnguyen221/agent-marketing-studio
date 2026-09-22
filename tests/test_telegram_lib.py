@@ -173,3 +173,40 @@ def test_khong_long_poll_thi_van_co_han_hop_ly():
     """Gọi thường (sendMessage…) không được chờ vô hạn."""
     n = tg.cho_socket({})
     assert 10 <= n <= 60, n
+
+
+# ── F17: chế độ `embedded` — biến hợp đồng đọc được từ `<repo>/.env` ──────────────────
+
+def _repo_gia(tmp_path, monkeypatch, che_do):
+    import json
+    repo = tmp_path / "repo"
+    (repo / "scripts" / "lib").mkdir(parents=True)
+    (repo / "install.ps1").write_text("", encoding="utf-8")
+    (repo / "studio.local.json").write_text(
+        json.dumps({"mode": che_do, "station_path": "workspace"}), encoding="utf-8")
+    (repo / ".env").write_text("TG_CONFIG=D:/kho-cua-toi/tg.json\n", encoding="utf-8")
+    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(repo))
+    monkeypatch.delenv("TG_CONFIG", raising=False)
+    return repo
+
+
+def test_duong_dan_cau_hinh_doc_env_file_khi_embedded(tmp_path, monkeypatch):
+    """Người dùng chế độ `embedded` khai TG_CONFIG trong `<repo>/.env` chứ không `setx`."""
+    _repo_gia(tmp_path, monkeypatch, "embedded")
+    assert tg.duong_dan_cau_hinh() == Path("D:/kho-cua-toi/tg.json")
+
+
+def test_duong_dan_cau_hinh_KHONG_doc_env_file_khi_separate(tmp_path, monkeypatch):
+    nha = tmp_path / "nha"
+    nha.mkdir()
+    monkeypatch.setenv("HOME", str(nha))
+    monkeypatch.setenv("USERPROFILE", str(nha))
+    _repo_gia(tmp_path, monkeypatch, "separate")
+    p = tg.duong_dan_cau_hinh()
+    assert p.name == "config.json" and str(nha) in str(p)
+
+
+def test_bien_moi_truong_van_thang_env_file(tmp_path, monkeypatch):
+    _repo_gia(tmp_path, monkeypatch, "embedded")
+    monkeypatch.setenv("TG_CONFIG", "D:/tu-bien.json")
+    assert tg.duong_dan_cau_hinh() == Path("D:/tu-bien.json")

@@ -41,14 +41,14 @@ DONG = [
 @pytest.fixture
 def station(tmp_path):
     S = tmp_path / "st"
-    K = S / "tobi"
+    K = S / "kenh-b"
     C = K / "CMP-2609-x"
     C.mkdir(parents=True)
     M.write_fm(S / "CHANNELS.md", {"schema": "channels/1", "channels": [
-        {"id": "tobi", "label": "Tobi AI", "path": "./tobi", "status": "active"}]}, "# Sổ\n")
-    (K / "channel.yml").write_text("schema: channel/1\nid: tobi\n", encoding="utf-8")
+        {"id": "kenh-b", "label": "Kênh B", "path": "./kenh-b", "status": "active"}]}, "# Sổ\n")
+    (K / "channel.yml").write_text("schema: channel/1\nid: kenh-b\n", encoding="utf-8")
     M.write_fm(C / "campaign.md",
-               {"id": "CMP-2609-x", "name": "Chiến dịch thử", "channel": "tobi",
+               {"id": "CMP-2609-x", "name": "Chiến dịch thử", "channel": "kenh-b",
                 "status": "active", "key_message": "Thông điệp chính",
                 "channels": ["web_blog", "youtube"]},
                "\n<!-- CONTENT:BEGIN -->\n" + M.render_table(COT, DONG) + "\n<!-- CONTENT:END -->\n")
@@ -89,8 +89,8 @@ def test_URL_thanh_nut_bam_duoc(station):
 
 def test_index_gom_moi_kenh_va_tro_dung_campaign(station):
     t = station[0].joinpath("index.html").read_text(encoding="utf-8")
-    assert "Tobi AI" in t
-    assert 'href="tobi/CMP-2609-x/campaign.html"' in t, \
+    assert "Kênh B" in t
+    assert 'href="kenh-b/CMP-2609-x/campaign.html"' in t, \
         "đường dẫn tương đối, nếu không thì chép STATION đi chỗ khác là gãy"
     assert "AST-001" in t and "AST-002" in t
 

@@ -21,9 +21,15 @@
 comment chưa có gì để dẫn — mà **bài Facebook không có comment là bài mồ côi**: thân bài
 không chứa link, nên người đọc không có đường nào đi tiếp.
 
+**Chiến dịch bật Cổng 3** (bảng Content có cột `g3`) đi thứ tự khác: trang web lên trước →
+🔒 Cổng 3 (người mở link xem bản thật) → YouTube → Facebook, rồi có video thì dựng lại trang
+để nhúng. Xem [`CAMPAIGN_PIPELINE.md`](../knowledge/toolchains/CAMPAIGN_PIPELINE.md) §1, §5.
+
 ## 2. Trình Tự Thực Thi
 
-1. **Kiểm token & quyền.** Đọc cấu hình ở `.env`. Thiếu token → **dừng và báo người**
+1. **Kiểm token & quyền.** Tên biến khai ở `channel.yml:secrets_env` của kênh; biến giữ
+   **đường dẫn** tới file bí mật trong kho `~/.secret/` ([`SECRETS.md`](../knowledge/toolchains/SECRETS.md)).
+   Biến chưa đặt hoặc trỏ vào file không có → **dừng và báo người**
    ([`PLATFORM_SETUP.md`](../knowledge/toolchains/PLATFORM_SETUP.md)), không retry mù.
 
 2. **Cổng tự trị — cổng MÁY, không phải lời dặn.** `fb_publish.py --post <thư mục bài>`
