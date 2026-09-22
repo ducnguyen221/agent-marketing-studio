@@ -143,6 +143,15 @@ def test_cac_loai_loi_khac(text, cho):
     assert AC.classify("claude", 1, "", text)["kind"] == cho
 
 
+def test_claude_unrecognized_model_la_model_access_nen_CHUYEN_ENGINE():
+    """Chuỗi THẬT `claude` in ra khi tên model không có (đo 22/09/2026, lượt kiểm chuyển
+    engine). Trước bản vá nó rơi vào `engine` ⇒ chuỗi fallback KHÔNG chạy, và một dòng
+    `order` gõ sai giết nguyên lượt lịch thay vì tụt xuống engine kế."""
+    tho = '[claude-code:unrecognized_model] {"model":"khong-ton-tai-9z","query_source":"sdk"}'
+    assert AC.classify("claude", 1, "", tho)["kind"] == "model_access"
+    assert "model_access" in AC.CHUYEN_ENGINE
+
+
 def test_network_duoc_hoi_truoc_quota():
     """Thứ tự trong KIND_ORDER có ý nghĩa: một dòng lỗi mạng cũng có thể chứa chữ 'limit'."""
     assert AC.KIND_ORDER.index("network") < AC.KIND_ORDER.index("quota")

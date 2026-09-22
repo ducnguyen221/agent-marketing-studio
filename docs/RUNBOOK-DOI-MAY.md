@@ -186,6 +186,37 @@ trong shell chỉ tồn tại trong shell. Job theo lịch chỉ thấy những 
 `EnvironmentVariables` của plist — và `install_launchd.py` điền sẵn khối đó từ
 `studio_paths`, nên hãy để nó điền thay vì sửa tay plist.
 
+### Thứ tự engine — gói mang theo thứ tự của máy NGUỒN, không phải của máy này
+
+`<trạm>/_agent-call/engines.json` đi theo gói bàn giao (nó là JSON nhỏ ở gốc trạm, và luật
+lọc mặc định là *giữ*). Nghĩa là máy đích vừa import xong đang chạy **thứ tự engine của máy
+cũ** — im lặng, mã 0, không có gì đỏ. Máy nguồn có thể đặt Claude đứng đầu vì tài khoản
+Claude ở đó rỗi; máy đích có thể muốn engine chạy bằng credit khác đứng đầu.
+
+Mỗi máy có **một** `engines.json` riêng trên đĩa, không sync, không dùng chung — nên khoá
+`order` trong file của máy nào là nguồn sự thật của **máy đó**, và không có lớp chọn theo
+hostname nào cả (thêm một lớp như vậy chỉ thêm một chỗ có thể chọn sai âm thầm mà không bỏ
+được bước nào). Thứ tự của các máy khác nằm ở khoá ghi chú `_may_khac` — **không** dòng mã
+nào đọc nó.
+
+Sau khi import, mở `<trạm>/_agent-call/engines.json` và làm đúng ba việc:
+
+1. Sửa `_may.ten` / `_may.nen_tang` cho đúng máy đang đứng.
+2. Thay mảng `order` bằng mảng `order` trong `_may_khac.<tên máy này>` (nếu có mục đó).
+3. Xoá mục `_may_khac.<tên máy này>` vừa dùng, và thêm vào `_may_khac` một mục cho **máy
+   nguồn** với thứ tự cũ. Thứ tự của mỗi máy chỉ được xuất hiện đúng một lần trong cả hệ.
+
+Kiểm bằng một lượt không tốn hạn mức:
+
+```sh
+python -c "import sys; sys.path.insert(0,'scripts/lib'); import agent_call as AC; \
+cfg=AC.load_config(); print(AC.config_path()); print(cfg['order']); \
+print(AC.build_chain('claude','best',cfg))"
+```
+
+Còn phải kiểm riêng trên máy mới: `engines.<tên>.cmd` — đường cài `claude`/`codex`/`agy`
+trên macOS khác Windows, và một `cmd` sai chỉ lộ ra ở lượt lịch đầu tiên.
+
 ### Hai pipeline, hai cấu hình — đừng gộp
 
 Tin và truyện chạy **cùng một engine giọng** nhưng **không** dùng chung cấu hình. Đây là

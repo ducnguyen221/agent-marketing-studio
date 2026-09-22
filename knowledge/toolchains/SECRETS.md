@@ -148,7 +148,7 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `MARKETING_STUDIO_DATA` | `studio_paths.py`, `run.ps1` — gốc trạm | `~/.marketing` (`run.ps1` đi lên tìm `CHANNELS.md` trước) |
 | `MARKETING_STUDIO_HOME` | `run.ps1` — thư mục repo | `~/Code/agent-marketing-studio` |
 | `MARKETING_STUDIO_PY` | mọi `.ps1` gọi Python (`Find-Python`) | `<repo>/.venv` → `python` → `python3` → `py`; khai mà hỏng thì DỪNG |
-| `AGENT_CALL_ENGINES` | `agent_call.py` — đường tới `engines.json` (model, thứ tự fallback, đường CLI) | `<gốc trạm>/engine/engines.json`; thiếu cả file đó thì dùng mặc định trong mã |
+| `AGENT_CALL_ENGINES` | `agent_call.py` — đường tới `engines.json` (model, thứ tự fallback, đường CLI) | `<gốc trạm>/_agent-call/engines.json` → `<gốc trạm>/engine/engines.json`; thiếu cả hai thì dùng mặc định trong mã. File này là **cấu hình theo MÁY** — nó đi theo gói `station.py export`, nên máy vừa nhận gói đang chạy thứ tự engine của máy cũ; xem `docs/RUNBOOK-DOI-MAY.md` bước 5 |
 | `TG_CHAT` | `telegram_io.py` — tên chat trong file cấu hình | `mac_dinh` |
 | `WEB_REPO_DIR` | `scripts/pipeline/prune_media.py` — repo web để đối chiếu bản audio đã đăng (`<repo>/<kênh>/audio/<ngày>/<tên file>.*`, so theo TẪNG FILE) | không đối chiếu được ⇒ GIỮ mọi audio quá hạn, ghi lý do vào báo cáo. Luật đầy đủ: `docs/RETENTION.md` |
 | `CHROME_BIN` | `scripts/lib/media_tools.py` — Chrome/Edge/Chromium dựng ảnh | dò đường quen thuộc của hệ điều hành (macOS: gói `.app`) → PATH |
