@@ -45,3 +45,16 @@ def test_check_bat_duoc_adapter_lech(tmp_path):
     f = next((goc / ".claude" / "skills").glob("*/SKILL.md"))
     f.write_text(f.read_text(encoding="utf-8") + "\nsửa tay\n", encoding="utf-8", newline="\n")
     assert chay("--check").returncode == 1
+
+
+def test_doctor_bao_adapter_khop_va_NOT_CHECKED_cho_tung_host(monkeypatch):
+    """Doctor đo được adapter; việc host nạp skill thì KHÔNG — phải nói NOT_CHECKED, không xanh."""
+    sys.path.insert(0, str(ROOT / "scripts" / "lib"))
+    sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
+    import doctor as DR
+    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(ROOT))
+    so = DR.So()
+    DR.kham_host(so, ROOT / "workspace")
+    assert so.code == 0 and not so.fail
+    assert any("adapter Claude: .claude/skills khớp" in x for x in so.info), so.info
+    assert [h for h in DR.HOSTS if any(f"host {h}:" in x for x in so.not_checked)] == list(DR.HOSTS)

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Vòng đời một bản cài: `update` · `backup` · `migrate --to separate`.
+"""Vòng đời một bản cài: `update` · `backup` · `migrate --to separate` · `uninstall`.
 
-Ba lệnh cho ba lúc trong đời một bản cài, và cả ba viết ra vì cùng một lý do: người dùng
+Bốn lệnh cho bốn lúc trong đời một bản cài, và cả bốn viết ra vì cùng một lý do: người dùng
 chế độ `embedded` có nội dung nằm TRONG thư mục repo, nên những thao tác quen thuộc với
 repo (xoá đi clone lại, `git clean`, chép tay) sẽ ăn mất nội dung của họ.
 
-    update   = `git pull --ff-only`, KHÔNG BAO GIỜ xoá gì. Tài liệu nói thẳng: đừng xoá
-               folder repo để cài lại.
+    update   = `git pull --ff-only`, KHÔNG BAO GIỜ xoá gì; checkout có file sửa chưa commit
+               thì dừng trước khi kéo. Tài liệu nói thẳng: đừng xoá folder repo để cài lại.
+    uninstall = gỡ đúng phần bộ cài tạo (`studio.local.json`, hook pre-commit của nó);
+               GIỮ trạm, `.env` và repo.
     backup   = zip cả trạm. Mặc định KHÔNG kèm `.env`; kèm thì phải xin rõ `--with-env`.
     migrate  = đường ra khi người dùng lớn lên: dời `<repo>/workspace/` ra ngoài repo và
                `.env` về kho secret của máy, rồi ghi lại lựa chọn.
@@ -69,11 +71,31 @@ def _sha256(p: Path) -> str:
 
 # ── update ────────────────────────────────────────────────────────────────────────────
 
+def _sua_doi_cuc_bo(repo: Path) -> list[str]:
+    """File ĐÃ TRACK đang có sửa đổi chưa commit. File bị ignore (`workspace/`, `.env`,
+    `studio.local.json`) không tính — đó là dữ liệu của người dùng, không phải mã."""
+    r = subprocess.run(["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=no"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       timeout=60)
+    if r.returncode != 0:
+        raise SC.EngineError("`git status` không chạy được: " + (r.stderr or r.stdout).strip())
+    return [d[3:] for d in (r.stdout or "").splitlines() if d.strip()]
+
+
 def update() -> dict:
     repo = SP.repo_root()
     if not repo or not (repo / ".git").exists():
         raise SC.ContractError("không thấy bản clone git của repo — `update` chỉ chạy trên "
                                "bản clone (git clone, đừng tải zip).")
+    # Kiểm TRƯỚC khi kéo: `pull --ff-only` vẫn chạy khi file sửa tay không đụng file mới về,
+    # và người dùng không hề biết bản mình đang chạy là "mã mới + sửa cũ". Có sửa đổi thì
+    # dừng; KHÔNG stash, KHÔNG reset, KHÔNG clean — chỗ sửa đó có thể là công việc của họ.
+    ban = _sua_doi_cuc_bo(repo)
+    if ban:
+        raise SC.ContractError(
+            f"checkout có {len(ban)} file đã sửa mà chưa commit: {', '.join(ban[:6])}. "
+            "Commit hoặc tự cất chúng đi rồi chạy lại — `update` không bao giờ tự bỏ sửa "
+            "đổi của bạn. Chưa kéo gì.")
     r = subprocess.run(["git", "-C", str(repo), "pull", "--ff-only"], capture_output=True,
                        text=True, encoding="utf-8", errors="replace", timeout=300)
     if r.returncode != 0:
@@ -81,6 +103,78 @@ def update() -> dict:
             "`git pull --ff-only` không chạy được (nhánh lệch, hoặc có sửa đổi cục bộ). "
             "KHÔNG xoá gì cả — xử lý tay rồi chạy lại.\n" + (r.stderr or r.stdout).strip())
     return {"repo": str(repo), "output": (r.stdout or "").strip()}
+
+
+# ── uninstall ─────────────────────────────────────────────────────────────────────────
+#
+# Gỡ ĐÚNG phần bộ cài sở hữu, không hơn. Bộ cài (`init_station.py`) tạo ra bốn thứ:
+#
+#   studio.local.json   lựa chọn chế độ + đường trạm        → GỠ
+#   hook pre-commit     rào lớp hai của embedded            → GỠ nếu đúng là hook của bộ cài
+#   .env                chép từ .env.example rồi BẠN điền   → GIỮ (cấu hình của bạn)
+#   trạm                workspace/ hoặc thư mục ngoài       → GIỮ (nội dung của bạn)
+#
+# Xoá nội dung không bao giờ là một phần của gỡ công cụ. Skill và adapter host là file
+# được git theo dõi trong repo — gỡ chúng là xoá repo, việc đó người dùng tự làm.
+
+DAU_HOOK = "Hook pre-commit của chế độ cài `embedded`"
+
+
+def _hook_pre_commit(repo: Path) -> Path | None:
+    """Đường hook THẬT theo git (worktree có `.git` là file). Không tạo gì."""
+    try:
+        r = subprocess.run(["git", "-C", str(repo), "rev-parse", "--git-path", "hooks"],
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0 or not (r.stdout or "").strip():
+        return None
+    p = Path((r.stdout or "").strip())
+    return (p if p.is_absolute() else repo / p) / "pre-commit"
+
+
+def uninstall(dry_run: bool = False) -> dict:
+    repo = SP.repo_root()
+    if not repo:
+        raise SC.ContractError("không xác định được gốc repo (đặt MARKETING_STUDIO_HOME).")
+    try:
+        lc = SP.local_config(repo)
+    except SP.StudioPathsError:
+        lc = {}                      # file hỏng vẫn là file của bộ cài — gỡ được
+    try:
+        tram, nguon = SP.resolve_station()
+    except SP.StudioPathsError:
+        tram, nguon = None, None
+    go, giu = [], []
+
+    f = repo / SP.LOCAL_CONFIG
+    if f.is_file():
+        go.append(str(f))
+        if not dry_run:
+            f.unlink()
+
+    hook = _hook_pre_commit(repo)
+    if hook and hook.is_file():
+        try:
+            cua_bo_cai = DAU_HOOK in hook.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            cua_bo_cai = False
+        if cua_bo_cai:
+            go.append(str(hook))
+            if not dry_run:
+                hook.unlink()
+        else:
+            giu.append(f"{hook} — không phải hook của bộ cài, không đụng")
+
+    env = repo / ".env"
+    if env.is_file():
+        giu.append(f"{env} — cấu hình bạn đã điền (xoá tay nếu chắc không cần)")
+    if tram is not None and tram.is_dir():
+        giu.append(f"{tram} — trạm nội dung (nguồn: {nguon}); gỡ công cụ KHÔNG xoá nội dung")
+    if (os.environ.get("MARKETING_STUDIO_DATA") or "").strip():
+        giu.append("biến MARKETING_STUDIO_DATA vẫn đặt ở máy — gỡ tay nếu không dùng trạm đó nữa")
+    return {"repo": str(repo), "dry_run": bool(dry_run), "mode": lc.get("mode"),
+            "station": str(tram) if tram else None, "removed": go, "kept": giu}
 
 
 # ── backup ────────────────────────────────────────────────────────────────────────────
@@ -219,7 +313,8 @@ def migrate_sang_separate(station=None, kho_secret=None) -> dict:
 # ── CLI ───────────────────────────────────────────────────────────────────────────────
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog=PROG, description="Vòng đời bản cài: update · backup · migrate.")
+    ap = argparse.ArgumentParser(prog=PROG,
+                                 description="Vòng đời bản cài: update · backup · migrate · uninstall.")
     con = ap.add_subparsers(dest="lenh", required=True)
 
     con.add_parser("update", help="git pull --ff-only (không bao giờ xoá gì)")
@@ -234,7 +329,10 @@ def main(argv=None) -> int:
     m.add_argument("--station", help="đích (mặc định ~/.marketing)")
     m.add_argument("--secret-dir", help="kho secret nhận .env (mặc định ~/.secret/marketing-studio)")
 
-    for p in (ap, b, m):
+    u = con.add_parser("uninstall", help="gỡ phần bộ cài sở hữu; GIỮ trạm, .env, repo")
+    u.add_argument("--dry-run", action="store_true", help="chỉ liệt kê, không gỡ gì")
+
+    for p in (ap, b, m, u):
         p.add_argument("--json", action="store_true")
     args, ma = SC.parse(ap, argv)
     if args is None:
@@ -248,6 +346,14 @@ def main(argv=None) -> int:
         elif a.lenh == "backup":
             kq = backup(a.out, a.station, a.with_env)
             SC.log(f"[backup] {len(kq['files'])} file → {kq['out']}")
+        elif a.lenh == "uninstall":
+            kq = uninstall(a.dry_run)
+            dau = "(xem trước — chưa gỡ gì) " if kq["dry_run"] else ""
+            SC.log(f"[uninstall] {dau}gỡ {len(kq['removed'])} mục của bộ cài")
+            for x in kq["removed"]:
+                SC.log(f"  - {x}")
+            for x in kq["kept"]:
+                SC.log(f"  giữ {x}")
         else:
             kq = migrate_sang_separate(a.station, a.secret_dir)
             SC.log(f"[migrate] trạm giờ ở {kq['station']} — đặt MARKETING_STUDIO_DATA trỏ vào đó")
