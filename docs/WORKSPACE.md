@@ -66,7 +66,10 @@ Mọi script đi qua **một** hàm (`scripts/lib/studio_paths.py`), theo đúng
 | 2 | biến `MARKETING_STUDIO_DATA` | máy đã đặt biến (máy chạy lịch thật) |
 | 3 | `<repo>/studio.local.json` → `station_path` | bộ cài đã chạy |
 | 4 | `<repo>/workspace/` nếu **có thật** | chế độ embedded, file cấu hình bị mất |
-| 5 | `~/.marketing` | chưa cài gì |
+| 5 | `<repo>/workspace/` (chưa tạo) | chưa cài gì — `doctor` báo thiếu, bộ cài tạo |
+
+**Không có đường lùi về thư mục trong nhà** (`~/.marketing`…): trạm ngoài repo chỉ có khi
+bạn chỉ định — biến, `--station`, hoặc chọn `separate` lúc cài.
 
 Biến đứng **trước** `studio.local.json` là có chủ đích: máy nào đã đặt biến từ trước thì một
 file cấu hình lạc vào repo không được phép cướp trạm.

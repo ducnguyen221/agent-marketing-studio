@@ -15,15 +15,21 @@ Trạm là một KHÁI NIỆM, không phải một đường dẫn cố định.
 
     embedded   trạm = `<repo>/workspace/`, biến cấu hình ở `<repo>/.env` — "mở một folder
                là thấy hết". MẶC ĐỊNH và là khuyến nghị cho người mới.
-    separate   trạm ngoài repo (mặc định `~/.marketing`), biến đặt ở cấp user, bí mật ở kho
-               secret của máy — cho người nhiều máy, hoặc repo public của chính họ.
+    separate   trạm ngoài repo (thư mục người dùng chọn, gợi ý `~/.marketing`), biến đặt
+               ở cấp user, bí mật ở kho secret của máy — cho người nhiều máy, hoặc repo
+               public của chính họ.
 
 Lựa chọn ghi ở `<repo>/studio.local.json` (bị gitignore). Thứ tự phân giải trạm:
 
-    --station → MARKETING_STUDIO_DATA → studio.local.json → <repo>/workspace/ → ~/.marketing
+    --station → MARKETING_STUDIO_DATA → studio.local.json → <repo>/workspace/
 
 Biến môi trường đứng TRƯỚC `studio.local.json` là có chủ đích: máy nào đã đặt biến từ
 trước (máy chạy lịch thật) thì một file cấu hình lạc vào repo không được phép cướp trạm.
+
+Không có gì khai ⇒ trạm là `<repo>/workspace/` (có thật hay chưa). KHÔNG có đường lùi về
+một thư mục trong nhà người dùng: trạm ngoài repo chỉ có khi người dùng chỉ định (biến,
+`--station`, hoặc chọn `separate` lúc cài). Đường lùi ngầm về `~/.marketing` từng làm một
+bản clone mới "tìm thấy" trạm của bản cài khác trên cùng máy mà không ai hỏi.
 
 Bí mật đi theo thứ tự riêng: biến môi trường → `<repo>/.env` (**chỉ** khi `mode=embedded`)
 → kho secret của máy. Luật ba tầng không đổi: biến/`.env` giữ **đường dẫn**, file ngoài git
@@ -99,7 +105,11 @@ def mode(repo=None) -> str | None:
 
 def resolve_station(station=None) -> tuple[Path, str]:
     """-> (gốc trạm, nguồn). Nguồn ∈ `--station` · MARKETING_STUDIO_DATA · studio.local.json
-    · workspace · default. Đọc lại MỖI LẦN gọi (không đóng băng lúc import)."""
+    · workspace · default. Đọc lại MỖI LẦN gọi (không đóng băng lúc import).
+
+    `default` = không ai khai gì: trạm là `<repo>/workspace/` dù thư mục chưa có (hàm này
+    KHÔNG tạo nó — bộ cài tạo, `doctor` báo thiếu). Không xác định được repo mà cũng không
+    có gì khai → `StudioPathsError`, không đoán một thư mục trong nhà."""
     if station:
         return Path(station).expanduser().resolve(), "--station"
     bien = (os.environ.get("MARKETING_STUDIO_DATA") or "").strip()
@@ -114,7 +124,10 @@ def resolve_station(station=None) -> tuple[Path, str]:
         ws = repo / WORKSPACE
         if ws.is_dir():
             return ws.resolve(), WORKSPACE
-    return (Path.home() / ".marketing").resolve(), "default"
+        return ws.resolve(), "default"
+    raise StudioPathsError(
+        "không xác định được trạm: không có --station, biến MARKETING_STUDIO_DATA chưa đặt, "
+        "và không tìm ra bản clone repo (đặt MARKETING_STUDIO_HOME) để dùng <repo>/workspace/")
 
 
 def root(station=None) -> Path:

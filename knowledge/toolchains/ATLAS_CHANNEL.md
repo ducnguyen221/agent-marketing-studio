@@ -209,5 +209,5 @@ python scripts/pipeline/check_tree.py --station <trạm>      # phải 0 đỏ
 python scripts/pipeline/build_views.py  --station <trạm>    # sinh lại bản đọc
 ```
 
-Trạm phân giải theo `--station` → `$env:MARKETING_STUDIO_DATA` → `~/.marketing`; không đường
+Trạm phân giải theo `--station` → `$env:MARKETING_STUDIO_DATA` → `<repo>/workspace/`; không đường
 nào hardcode theo máy.

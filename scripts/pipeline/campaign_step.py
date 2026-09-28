@@ -286,8 +286,8 @@ def _o_chung(campaign: Path, post: Path, cid: str) -> dict:
     """Các ô dùng được ở MỌI hook.
 
     `{channel}` = thư mục kênh (đi lên tới `channel.yml`). `{station}` = trạm: đi lên tới
-    `CHANNELS.md` như `run.ps1`, rồi `MARKETING_STUDIO_DATA`, rồi `~/.marketing`
-    (`studio_paths.root`). Hai ô này để lệnh trong `campaign.md` KHÔNG phải ghi cứng đường
+    `CHANNELS.md` như `run.ps1`, rồi thứ tự của `studio_paths.root` (`MARKETING_STUDIO_DATA`
+    → `studio.local.json` → `<repo>/workspace/`). Hai ô này để lệnh trong `campaign.md` KHÔNG phải ghi cứng đường
     của một máy — chép trạm sang máy khác là lệnh vẫn đúng.
     """
     try:

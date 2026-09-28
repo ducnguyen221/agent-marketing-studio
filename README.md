@@ -18,8 +18,8 @@ Engine điều hành và tự động hóa chiến dịch marketing đa kênh to
   khi đăng (Cổng 2), và duyệt bản thật trên web trước khi phát ra kênh ngoài (Cổng 3 — bật
   khi bảng Content có cột `g3`).
 - **Engine ở repo, nội dung ở TRẠM:** repo này chứa engine (script, cổng kiểm, quy trình,
-  template). Nội dung thật sống ở một **trạm** nằm ngoài git — mặc định `~/.marketing`,
-  nhưng chỗ nào là do bạn chọn. Kênh thậm chí không bắt buộc nằm trong trạm: `CHANNELS.md`
+  template). Nội dung thật sống ở một **trạm** nằm ngoài git — mặc định `workspace/` trong
+  chính thư mục repo (git bỏ qua), hoặc một thư mục riêng do bạn chỉ định. Kênh thậm chí không bắt buộc nằm trong trạm: `CHANNELS.md`
   là cạnh **duy nhất** được phép trỏ ra ngoài.
 - **Lõi là VIẾT BÀI và ĐĂNG — cài xong là dùng được ngay.** Bản cài này
   **không bắt buộc trạm giọng/video**: lồng tiếng (`agent-voice-studio`) và dựng video
