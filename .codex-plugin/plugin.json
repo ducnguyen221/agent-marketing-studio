@@ -1,0 +1,30 @@
+{
+  "name": "agent-marketing-studio",
+  "version": "0.9.0",
+  "description": "Multi-channel marketing campaign engine: four skills (campaign pipeline, content production, hooks, threads), seven-stage workflow with three human approval gates. Skills and scripts run from this repository; campaign content lives in a station outside git (workspace/ by default).",
+  "author": {
+    "name": "Duc Nguyen"
+  },
+  "homepage": "https://github.com/ducnguyen221/agent-marketing-studio",
+  "repository": "https://github.com/ducnguyen221/agent-marketing-studio",
+  "license": "MIT",
+  "keywords": [
+    "marketing",
+    "campaign",
+    "content",
+    "human-in-the-loop",
+    "approval-gates",
+    "multi-channel"
+  ],
+  "skills": "./.agents/skills/",
+  "interface": {
+    "displayName": "Agent Marketing Studio",
+    "shortDescription": "Multi-channel campaigns with human approval gates",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ]
+  }
+}

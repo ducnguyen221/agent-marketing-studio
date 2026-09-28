@@ -273,6 +273,14 @@ MIEN_TRU = {
     ("docs/index.html", "handle"): 8,
     ("docs/index.html", "ten-nguoi"): 1,
     ("docs/og-image.svg", "ten-mien"): 1,
+    # Ghi công tác giả + URL repo trong manifest phát hành: host (Claude, Codex) hiển thị
+    # đúng hai trường này khi người dùng xem plugin — đúng chức năng, như LICENSE.
+    (".claude-plugin/plugin.json", "ten-nguoi"): 1,
+    (".claude-plugin/plugin.json", "handle"): 2,
+    (".claude-plugin/marketplace.json", "ten-nguoi"): 1,
+    (".codex-plugin/plugin.json", "ten-nguoi"): 1,
+    (".codex-plugin/plugin.json", "handle"): 2,
+    ("pyproject.toml", "handle"): 1,
     # `content/` là instance mẫu CỐ Ý đưa vào git (xem .gitignore dòng 1): một bộ nội
     # dung thật để người đọc thấy khuôn được điền ra sao. Nó là DỮ LIỆU, không phải máy.
     (_CT + "/01_" + _TO_CHUC[2] + "_Posts.md", "ten-mien"): 1,
