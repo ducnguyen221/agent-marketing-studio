@@ -16,3 +16,12 @@ Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject
   `channel.yml` → `brand.internal_tools`.
 - **Cổng mới** `tests/test_no_leak.py`: chặn tên và đường nội bộ của hệ thống riêng lọt vào
   repo public.
+- **Trạm mặc định là `<repo>/workspace/`:** không đặt biến, không chọn gì thì script dùng
+  `workspace/` trong repo — không còn tự lùi về một thư mục trong nhà. Trạm ngoài repo chỉ khi
+  bạn chỉ định (biến `MARKETING_STUDIO_DATA`, `--station`, hoặc chọn `separate` lúc cài).
+- **Gỡ cài đặt:** `uninstall.ps1` / `uninstall.sh` (lõi `studio.py uninstall`, có `--dry-run`) gỡ
+  đúng `studio.local.json` và hook pre-commit của bộ cài; giữ trạm, `.env`, repo.
+- **`studio.py update`** dừng trước khi kéo nếu checkout có file sửa chưa commit.
+- **`doctor`** khám skill gốc + adapter Claude; việc host nạp skill ghi `NOT_CHECKED`.
+- **Cài đặt agent-first:** `INSTALL.md` (prompt copy-dán VI/EN), `hosts/` cho Claude Code,
+  Codex, Antigravity; adapter `.claude/skills/` sinh bằng `scripts/build_host_adapters.py`.

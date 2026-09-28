@@ -281,6 +281,10 @@ MIEN_TRU = {
     (".codex-plugin/plugin.json", "ten-nguoi"): 1,
     (".codex-plugin/plugin.json", "handle"): 2,
     ("pyproject.toml", "handle"): 1,
+    # URL repo công khai — nguồn DUY NHẤT mà hướng dẫn cài bảo agent tin (clone, kiểm
+    # `git remote -v`, đọc INSTALL.md thô). Bỏ nó đi là bỏ luôn phép kiểm nguồn.
+    ("INSTALL.md", "handle"): 8,
+    ("README.md", "handle"): 2,
     # `content/` là instance mẫu CỐ Ý đưa vào git (xem .gitignore dòng 1): một bộ nội
     # dung thật để người đọc thấy khuôn được điền ra sao. Nó là DỮ LIỆU, không phải máy.
     (_CT + "/01_" + _TO_CHUC[2] + "_Posts.md", "ten-mien"): 1,
