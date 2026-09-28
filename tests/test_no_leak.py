@@ -49,12 +49,7 @@ MAU = {
 KHONG_PHAN_BIET_HOA = {"he-dieu-phoi", "duong-cau"}
 
 # (đường file, khoá) → số lần được phép. Mỗi dòng phải có LÝ DO.
-MIEN_TRU = {
-    # Chân trang web giới thiệu repo có một link sang sản phẩm khác của tác giả (URL +
-    # nhãn = 2 lần). Có được nhắc công khai hay không đang chờ chủ repo quyết (P-1); quyết
-    # "không" thì gỡ link rồi gỡ dòng này.
-    ("docs/index.html", "he-dieu-phoi"): 2,
-}
+MIEN_TRU: dict[tuple[str, str], int] = {}  # đang 0 miễn trừ: mọi chỗ khớp đều đỏ
 
 
 def _tracked() -> list[Path]:
