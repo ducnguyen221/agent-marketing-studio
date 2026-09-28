@@ -32,7 +32,7 @@ desktop.ini
 ~$*
 .~lock.*
 
-# Plan/thiet ke noi bo -> luu tap trung o ~/.opcos/repo/<repo>/plans/ (repo opc-os, PRIVATE).
+# Plan/thiet ke noi bo -> luu o kho ho so RIENG ngoai repo nay (PRIVATE).
 # Ly do: plan chua duong dan may + ten to chuc; repo nay public va docs/ duoc GitHub Pages phat ra web.
 docs/plans/
 

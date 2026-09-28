@@ -102,9 +102,11 @@ _KIEM_CHUNG = re.compile(r"\[\s*(?:KIỂM\s*CHỨNG|CẦN\s*KIỂM|CHƯA\s*KIỂ
                          re.I | re.U)
 _OG = re.compile(r'property\s*=\s*"og:', re.I)
 
-# Tên công cụ nội bộ không được lộ ra bản công khai (G21).
+# Tên công cụ nội bộ không được lộ ra bản công khai (G21). Chỉ gồm tên CÔNG KHAI; tên hệ
+# thống riêng của chủ kênh khai ở `brand.internal_tools` trong channel.yml (ngoài repo) —
+# ghi nó vào đây để chặn rò rỉ thì chính dòng mã này đã là rò rỉ.
 TOOL_NOI_BO = ["omnivoice", "hyperframes", "claude code", "codex", "antigravity",
-               "opcos", "giọng ai", "text-to-speech"]
+               "giọng ai", "text-to-speech"]
 # Tên tổ chức (G22) là CẤU HÌNH của kênh, không phải hằng số trong mã: bộ tên của chủ
 # repo này vô nghĩa với người clone về, và để nó trong mã là vừa rò danh tính vừa làm
 # cổng G22 im lặng vô dụng ở mọi máy khác. Nguồn: `brand.org_names` trong channel.yml.
@@ -204,7 +206,8 @@ class SoKetQua:
 
 def run_cmd(folder: Path, home_domain: str, kind: str = "full",
          allow: dict[str, str] | None = None, stage: str = "write",
-         org_names: list[str] | None = None) -> dict:
+         org_names: list[str] | None = None,
+         internal_tools: list[str] | None = None) -> dict:
     """`allow` = {needle: lý do} — MIỄN TRỪ CÓ GHI LÝ DO cho G21.
 
     Vì sao cần: danh sách needle của G21 so khớp chuỗi thô, nên nó không phân biệt được
@@ -218,6 +221,8 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
     gates.json — im lặng bỏ qua và miễn trừ có ghi lý do là hai chuyện khác nhau.
     """
     allow = {k.lower(): v for k, v in (allow or {}).items()}
+    needles = list(dict.fromkeys(TOOL_NOI_BO + [x.lower() for x in (internal_tools or [])
+                                                if x.strip()]))
     d = folder
     s = SoKetQua(stage)
 
@@ -492,7 +497,7 @@ def run_cmd(folder: Path, home_domain: str, kind: str = "full",
     else:
         hit, mien = [], []
         for name, t in cong_khai.items():
-            for x in TOOL_NOI_BO:
+            for x in needles:
                 if x not in t.lower():
                     continue
                 label = f"{name}:{t.lower().count(x)}x'{x}'"
@@ -637,7 +642,8 @@ def main(argv=None) -> int:
                 "và nó sẽ được sao chép sang bài tiếp theo mà không ai xét lại.\n")
             return 2
         allow[name.strip()] = reason.strip()
-    result = run_cmd(d, home, a.kind, allow, a.stage, BR.org_names(brand_cfg))
+    result = run_cmd(d, home, a.kind, allow, a.stage, BR.org_names(brand_cfg),
+                     BR.internal_tools(brand_cfg))
     PP.p(d, "gates").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n",
                                 encoding="utf-8", newline="\n")
 

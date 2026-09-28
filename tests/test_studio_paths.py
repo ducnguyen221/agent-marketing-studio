@@ -304,7 +304,7 @@ def test_che_do_separate_KHONG_doc_env_cua_repo(repo_embedded, tmp_path):
 # điều đó thay vì để người dùng tự đoán.
 
 CAU_HINH_MAY_QUA_ENV = ("CHROME_BIN", "FFMPEG_DIR", "FFPROBE", "VIDEO_FONT",
-                        "AGENT_CALL_ENGINES", "TG_CHAT", "OPCOS_CODEX_BRIDGE")
+                        "AGENT_CALL_ENGINES", "TG_CHAT", "CODEX_BRIDGE")
 
 
 @pytest.fixture
@@ -377,8 +377,8 @@ def test_TG_CHAT_khai_trong_env_thi_bot_chon_dung_chat(repo_env):
     assert bot._chat() == 2
 
 
-def test_OPCOS_CODEX_BRIDGE_khai_trong_env_thi_thanh_mac_dinh_cua_co(repo_env):
-    repo_env.viet(OPCOS_CODEX_BRIDGE="D:/cau/cli.mjs")
+def test_CODEX_BRIDGE_khai_trong_env_thi_thanh_mac_dinh_cua_co(repo_env):
+    repo_env.viet(CODEX_BRIDGE="D:/cau/cli.mjs")
     sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
     import make_fb_image as MF
     assert str(MF._bridge_mac_dinh()) == str(Path("D:/cau/cli.mjs"))

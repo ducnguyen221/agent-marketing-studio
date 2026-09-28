@@ -102,7 +102,7 @@ QUOTA_EXHAUSTED = 4
 
 ENGINES = ("claude", "codex", "agy")
 
-# Thứ tự phân loại CÓ Ý NGHĨA (mượn `bridges/lib/failure.mjs`): một dòng lỗi mạng cũng có
+# Thứ tự phân loại CÓ Ý NGHĨA (cùng thứ tự với lớp phân loại lỗi của cầu gọi agent): một dòng lỗi mạng cũng có
 # thể chứa chữ "limit", nên `network` phải được hỏi TRƯỚC `quota`. Đảo thứ tự là đổi kết
 # luận, không phải đổi thẩm mỹ.
 KIND_ORDER = ("auth", "network", "quota", "model_access", "engine")
@@ -621,7 +621,7 @@ def classify(engine: str, rc: int, stdout: str, stderr: str, *, produced=False) 
     `produced=True` (lượt đã sinh token/artifact) thì KHÔNG bao giờ là `quota`: hết hạn
     mức luôn xảy ra ở đầu lượt, còn đứt giữa chừng sau khi đã chạy là lỗi engine bình
     thường — chuyển engine lúc đó là làm lại từ đầu một việc đã xong nửa chừng.
-    (Cùng điều kiện với `bridges/lib/failure.mjs:72-76`.)
+    (Cùng điều kiện với lớp phân loại lỗi của cầu gọi agent.)
     """
     if rc == 0:
         return {"kind": None, "resets_at": None, "error": ""}

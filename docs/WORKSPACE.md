@@ -81,7 +81,7 @@ dẫn**, file ngoài git giữ **giá trị**. Chi tiết:
 
 | Nhóm biến | `.env` có tác dụng? | Phải đặt ở đâu |
 |---|---|---|
-| Trạm & cấu hình máy — `VOICE_STATION`, `VIDEO_STATION`, `OMNIVOICE_PY`, `VOICES_DIR`, `HYPERFRAMES_VERSION`, `WEB_REPO_DIR`, `TG_CONFIG`, `TG_CHAT`, `CHROME_BIN`, `FFMPEG_DIR`, `FFPROBE`, `VIDEO_FONT`, `AGENT_CALL_ENGINES`, `OPCOS_CODEX_BRIDGE` | **có** | `<repo>/.env` là đủ |
+| Trạm & cấu hình máy — `VOICE_STATION`, `VIDEO_STATION`, `OMNIVOICE_PY`, `VOICES_DIR`, `HYPERFRAMES_VERSION`, `WEB_REPO_DIR`, `TG_CONFIG`, `TG_CHAT`, `CHROME_BIN`, `FFMPEG_DIR`, `FFPROBE`, `VIDEO_FONT`, `AGENT_CALL_ENGINES`, `CODEX_BRIDGE` | **có** | `<repo>/.env` là đủ |
 | Biến của `.ps1` (`$env:X`) — `MARKETING_STUDIO_DATA`, `MARKETING_STUDIO_HOME`, `MARKETING_STUDIO_PY` | **không** | cấp user (`setx`) / môi trường của scheduled task |
 | Đường tới file bí mật mà **hook đăng bài của bạn** đọc — `YT_TOKEN_PATH`, `YT_CLIENT_SECRET`, `FB_CONFIG`, `EMAIL_CONFIG` | **không** | cấp user / plist — hook chạy trong tiến trình con nhận môi trường thật, `.env` không với tới |
 

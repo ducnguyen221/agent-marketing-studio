@@ -162,7 +162,7 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `VIDEO_STATION` | `studio_paths.video_station()`, `scripts/lib/video.py` — gốc trạm video (`agent-video-studio`) | `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station` → coi như chưa cài |
 | `VIDEO_ROOT` | tên CŨ của `VIDEO_STATION`, còn đọc được để không gãy máy đang chạy | — |
 | `HYPERFRAMES_VERSION` | `scripts/lib/video.py` — bản HyperFrames trạm video ghim (chỉ để báo cáo; trạm video mới là nơi dùng nó) | `station.json: hyperframes_version` của trạm video |
-| `OPCOS_CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | đường mặc định trong thư mục nhà |
+| `CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | **không có** — thiếu thì `make` dừng mã 3 và nêu tên biến |
 | `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |
 
 **Biến của TRẠM GIỌNG mà repo này chỉ truyền tiếp** — không script nào ở đây đọc chúng;

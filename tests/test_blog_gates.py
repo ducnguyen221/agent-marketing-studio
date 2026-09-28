@@ -241,6 +241,24 @@ def test_mien_tru_mot_ten_khong_mo_duong_cho_ten_khac(tmp_path):
     assert "omnivoice" in theo["G21"]["note"]
 
 
+def test_g21_chan_them_ten_he_thong_rieng_do_KENH_khai(tmp_path):
+    """Tên hệ thống riêng của chủ kênh không nằm trong mã public — nó đến từ
+    `brand.internal_tools` của channel.yml. Kênh khai thì G21 chặn, không khai thì thôi."""
+    d = _bai_co_ten_tool(tmp_path, name="he-thong-rieng-x")
+    assert _theo_ma(G.run_cmd(d, HOME))["G21"]["status"] == "pass"
+    r = _theo_ma(G.run_cmd(d, HOME, internal_tools=["He-Thong-Rieng-X"]))["G21"]
+    assert r["status"] == "fail" and "he-thong-rieng-x" in r["note"], r
+    r2 = _theo_ma(G.run_cmd(d, HOME, internal_tools=["he-thong-rieng-x"],
+                            allow={"he-thong-rieng-x": "bài giới thiệu chính hệ thống này"}))["G21"]
+    assert r2["status"] == "pass" and "MIỄN TRỪ" in r2["note"]
+
+
+def test_bo_ten_cong_cu_trong_ma_chi_gom_ten_cong_khai():
+    """Danh sách cứng trong mã không được mang tên hệ thống riêng của ai (xem test_no_leak)."""
+    ten_rieng = "".join(map(chr, (111, 112, 99, 111, 115)))
+    assert ten_rieng not in G.TOOL_NOI_BO
+
+
 def test_g17_bat_dang_dict_du_dem_dung_8(tmp_path):
     """Cổng phải đo đúng HỢP ĐỒNG CỦA CÔNG CỤ, không chỉ đếm cho có.
 

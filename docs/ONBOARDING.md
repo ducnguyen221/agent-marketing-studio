@@ -87,7 +87,7 @@ Hai file, hai vai, đừng lẫn:
 
 - **`<kênh>/brand.md`** — NGƯỜI đọc: nhận diện, giọng, chính kiến, những gì không nói.
 - **`<kênh>/channel.yml`** khối `brand:` — MÁY đọc: `site_name`, `author`, `domain`,
-  `og_image`, `footer`, `org_names`. Trang web, ảnh, chân video, cổng chấm bài đều lấy từ
+  `og_image`, `footer`, `org_names`, `internal_tools`. Trang web, ảnh, chân video, cổng chấm bài đều lấy từ
   đây.
 
 **Thiếu khối `brand:` là lỗi, không phải cảnh báo.** Engine dừng với mã 2 thay vì lùi về
