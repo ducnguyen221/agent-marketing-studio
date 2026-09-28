@@ -25,3 +25,6 @@ Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject
 - **`doctor`** khám skill gốc + adapter Claude; việc host nạp skill ghi `NOT_CHECKED`.
 - **Cài đặt agent-first:** `INSTALL.md` (prompt copy-dán VI/EN), `hosts/` cho Claude Code,
   Codex, Antigravity; adapter `.claude/skills/` sinh bằng `scripts/build_host_adapters.py`.
+- **Nâng cấp từ bản cũ:** máy từng cài plugin `auto-marketing` (tiền thân của repo này) thì gỡ
+  nó **sau khi** skill của studio đã nạp được, để hai bộ skill không trùng việc — cách gỡ ở
+  `INSTALL.md` §11.

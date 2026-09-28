@@ -182,6 +182,11 @@ thấy ba trạng thái bài). Lệch thì chép nguyên output, không tự s�
   Đừng xoá thư mục repo để cài lại: ở chế độ `embedded` nội dung nằm trong đó.
 - **Gỡ:** `uninstall.ps1 -DryRun` (xem trước) rồi `uninstall.ps1` (macOS: `./uninstall.sh`). Chỉ gỡ
   `studio.local.json` và hook pre-commit của bộ cài; **giữ** trạm, `.env` và repo.
+- **Nâng cấp từ bản cũ (plugin `auto-marketing`):** bản cũ trùng việc với bốn skill của repo
+  này. Cài và xác nhận skill của studio đã nạp (mục 8) **trước**, rồi mới gỡ bản cũ — hỏi
+  người dùng trước khi gỡ. Claude Code: `claude plugin list` tìm dòng `auto-marketing@…`, rồi
+  `claude plugin uninstall auto-marketing@<marketplace>`. Codex/Antigravity: xoá thư mục skill
+  cũ của `auto-marketing` trong thư mục skill của host. Không đụng trạm nội dung.
 - **Script bị chặn** dù đã `-ExecutionPolicy Bypass`: chính sách nhóm của tổ chức; dừng, nhờ IT.
 - **Repo nằm trong thư mục đồng bộ đám mây:** `doctor` nhắc; clone lại vào thư mục cục bộ.
 - **Tải ZIP thay vì clone:** `studio.py update` không chạy được; cài Git rồi clone.
