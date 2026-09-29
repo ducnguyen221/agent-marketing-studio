@@ -1,0 +1,65 @@
+{
+  "_doc": "Sổ nguồn của phần CHƯNG CẤT từ repo ngoài (xem NOTICE). `files` ghi sha256 của BẢN TRONG REPO NÀY (xuống dòng LF) — commit upstream lúc chưng cất không được ghi lại, nên hash giữ cho mọi lần sửa phải rà lại nguồn và cập nhật sổ trong cùng commit. Cổng: tests/test_upstream_provenance.py.",
+  "sources": {
+    "coreyhaines31/marketingskills": {
+      "url": "https://github.com/coreyhaines31/marketingskills",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2025 Corey Haines",
+      "license_checked": "2026-09-29",
+      "upstream_ref": null,
+      "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "files": {
+        "knowledge/playbooks/COPY_FRAMEWORKS.md": "5222ffd72ff0f35ea5c1f2a09ac746a567e479ab19d3c8aa5ab9ec589f67a856",
+        "knowledge/playbooks/SEO_PLAYBOOK.md": "06c8c9b892d89c0c5f3df5d8ba501fa779e5a1b655adce26fc576050a2519409",
+        "knowledge/psychology/MARKETING_PSYCHOLOGY.md": "d9f6824a825070dca096f74c606d24e0299d60aebe1d8f8ae9e3b52fc9d3a311",
+        "knowledge/toolchains/EMAIL_SEQUENCES.md": "ed1b55496909290b1ffb8b6135c65a28446e0094303ec4a5959c3173c89b0829",
+        ".agents/skills/hook-writer/SKILL.md": "2e94d857c2930f01d8e9ac2e6b3c4501cf1cf22b1dd8c1b2d164dadb4df7b11c"
+      }
+    },
+    "blacktwist/social-media-skills": {
+      "url": "https://github.com/blacktwist/social-media-skills",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Social Media Skills Contributors",
+      "license_checked": "2026-09-29",
+      "upstream_ref": null,
+      "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "files": {
+        ".agents/skills/hook-writer/SKILL.md": "2e94d857c2930f01d8e9ac2e6b3c4501cf1cf22b1dd8c1b2d164dadb4df7b11c",
+        ".agents/skills/thread-writer/SKILL.md": "5c2914d5e121560322cb3268b881d86af011ee3ec24bfcef15cce591feb7c52f"
+      }
+    },
+    "zubair-trabzada/ai-marketing-claude": {
+      "url": "https://github.com/zubair-trabzada/ai-marketing-claude",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 Zubair Trabzada",
+      "license_checked": "2026-09-29",
+      "upstream_ref": null,
+      "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "files": {
+        "knowledge/playbooks/COPY_FRAMEWORKS.md": "5222ffd72ff0f35ea5c1f2a09ac746a567e479ab19d3c8aa5ab9ec589f67a856"
+      }
+    },
+    "AgriciDaniel/claude-youtube": {
+      "url": "https://github.com/AgriciDaniel/claude-youtube",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2025 Daniel Agrici",
+      "license_checked": "2026-09-29",
+      "upstream_ref": null,
+      "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "files": {
+        "knowledge/playbooks/YOUTUBE_PLAYBOOK.md": "bfcf40613196268c20b015767a4c67ba764324b37100aa8cf050e6a3eb05b0a8"
+      }
+    }
+  },
+  "design_references": {
+    "openclaw/openclaw": {
+      "url": "https://github.com/openclaw/openclaw",
+      "license": "Other (GitHub API, 2026-09-29) — chưa kiểm chi tiết",
+      "used_in": [
+        "knowledge/toolchains/APPROVAL_BUS.md"
+      ],
+      "copied_text": false,
+      "note": "mục 5b mô tả cách OpenClaw 2026.5.12 chạy chiều nhận; viết mới, không chép mã hay câu chữ"
+    }
+  }
+}

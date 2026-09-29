@@ -285,6 +285,13 @@ MIEN_TRU = {
     # `git remote -v`, đọc INSTALL.md thô). Bỏ nó đi là bỏ luôn phép kiểm nguồn.
     ("INSTALL.md", "handle"): 8,
     ("README.md", "handle"): 2,
+    # Bản chép ĐÚNG prompt của INSTALL.md (cổng test_install_docs giữ nguyên văn):
+    # START-HERE = prompt VI (2 URL); trang /install/ = 2 prompt × 2 URL + link INSTALL,
+    # START-HERE, troubleshooting trên GitHub.
+    ("START-HERE.md", "handle"): 2,
+    ("docs/install/index.html", "handle"): 7,
+    # Dòng Copyright của repo trong NOTICE — cùng chức năng với LICENSE.
+    ("NOTICE", "ten-nguoi"): 1,
     # `content/` là instance mẫu CỐ Ý đưa vào git (xem .gitignore dòng 1): một bộ nội
     # dung thật để người đọc thấy khuôn được điền ra sao. Nó là DỮ LIỆU, không phải máy.
     (_CT + "/01_" + _TO_CHUC[2] + "_Posts.md", "ten-mien"): 1,

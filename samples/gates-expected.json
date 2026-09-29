@@ -1,0 +1,40 @@
+{
+  "_doc": "Kết quả kỳ vọng CỐ ĐỊNH của bài mẫu samples/bai-mau khi chấm 24 cổng ở bước write. Đổi bài mẫu thì đổi file này trong cùng commit — xem samples/README.md.",
+  "post": "bai-mau",
+  "home_domain": "example.com",
+  "stage": "write",
+  "verdict": "fail",
+  "counts": {
+    "total": 24,
+    "pass": 10,
+    "fail_block": 6,
+    "fail_warn": 1,
+    "missing": 7
+  },
+  "gates": {
+    "G01": "fail_block",
+    "G02": "fail_block",
+    "G03": "pass",
+    "G04": "pass",
+    "G05": "fail_block",
+    "G06": "fail_block",
+    "G07": "pass",
+    "G08": "pass",
+    "G09": "pass",
+    "G10": "fail_warn",
+    "G11": "pass",
+    "G12": "pass",
+    "G13": "fail_block",
+    "G14": "pass",
+    "G15": "missing",
+    "G16": "missing",
+    "G17": "missing",
+    "G18": "missing",
+    "G19": "missing",
+    "G20": "missing",
+    "G21": "pass",
+    "G22": "missing",
+    "G23": "pass",
+    "G24": "fail_block"
+  }
+}

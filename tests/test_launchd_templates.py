@@ -45,6 +45,7 @@ GIA = {
     "__OMNIVOICE_PY__": _NHA + "/tram-giong/omnivoice/.venv/bin/python",
     "__CHANNEL__": "kenh-mau",
     "__CAMPAIGN__": "chien-dich-mau",
+    "__RUNNER__": "run.ps1",
 }
 
 # Lịch đã chốt. Con số ở đây là QUYẾT ĐỊNH, không phải hệ quả của code — đổi giờ chạy mà
@@ -384,3 +385,274 @@ def test_all_thi_nap_du(tmp_path):
 def test_only_goi_dich_danh_thi_van_nap_duoc_job_bi_loai(tmp_path):
     l = IL.KHONG_MAC_DINH[0]
     assert _chon(tmp_path, only=[l]) == [l]
+
+
+# ══ P4 (Mac mini chạy embedded) — PATH, con trỏ bí mật, runner, lịch, trạm ═══════════
+#
+# Kịch bản đích: một Mac mini chạy tự động ở chế độ `embedded` — KHÔNG có biến trạm nào,
+# trạm là `<repo>/workspace/`, cấu hình ở `<repo>/.env`. launchd không đọc `.env` và không
+# đọc `~/.zshrc`, nên mọi thứ job cần phải đi vào plist qua bộ cài — và chỉ TÊN của con trỏ
+# bí mật được khai trong repo, GIÁ TRỊ đến từ máy.
+
+import studio_paths as SP  # noqa: E402
+
+CON_TRO_DAY_DU = ["TG_CONFIG", "TG_CHAT", "YT_CLIENT_SECRET", "YT_TOKEN_PATH", "FB_CONFIG",
+                  "EMAIL_CONFIG", "CODEX_BRIDGE"]
+# Quyền tối thiểu: job nào khai con trỏ nào là QUYẾT ĐỊNH. Poller chỉ nói chuyện Telegram.
+BI_MAT = {**{l: CON_TRO_DAY_DU for l in TIN + TRUYEN + ["studio.marketing.worker"]},
+          "studio.marketing.approve-poller": ["TG_CONFIG", "TG_CHAT"]}
+
+
+@pytest.fixture
+def khong_bien(monkeypatch):
+    """Máy test có thể đặt sẵn biến thật (máy lịch Windows đặt ở cấp user). Gỡ hết."""
+    for n in CON_TRO_DAY_DU + ["MARKETING_STUDIO_DATA", "MARKETING_STUDIO_HOME",
+                               "YT_TOKEN_PATH__TRUYEN"]:
+        monkeypatch.delenv(n, raising=False)
+
+
+@pytest.mark.parametrize("label", LABELS)
+def test_PATH_co_local_bin_DA_MO_RONG_va_homebrew_ca_hai_kien_truc(label):
+    duong = plistlib.loads(IL.render(label, GIA))["EnvironmentVariables"]["PATH"].split(":")
+    assert duong[0] == GIA["__HOME__"] + "/.local/bin", "launchd không tự mở rộng ~"
+    assert "/opt/homebrew/bin" in duong and "/usr/local/bin" in duong
+    assert not any("~" in d or "$" in d for d in duong), duong
+
+
+def test_bang_BI_MAT_phu_kin_moi_mau():
+    assert set(BI_MAT) == set(LABELS)
+
+
+@pytest.mark.parametrize("label", LABELS)
+def test_mau_khai_DUNG_bo_con_tro_bi_mat_cua_job(label):
+    assert IL.ten_bi_mat(label) == BI_MAT[label]
+
+
+@pytest.mark.parametrize("ten", CON_TRO_DAY_DU)
+def test_moi_con_tro_trong_mau_DEU_duoc_tai_lieu_hoa(ten):
+    assert SP.la_con_tro_bi_mat(ten) or ten in IL.KHONG_PHAI_DUONG_DAN
+    for noi in ("knowledge/toolchains/SECRETS.md", ".env.example", "docs/launchd.md"):
+        assert ten in (ROOT / noi).read_text(encoding="utf-8"), f"{noi} thiếu {ten}"
+
+
+@pytest.mark.parametrize("label", LABELS)
+def test_mau_KHONG_chua_gia_tri_bi_mat_nao(label):
+    """Chỉ TÊN nằm trong repo: mọi giá trị con trỏ trong mẫu là chỗ trống `__ENV_TÊN__`."""
+    t = (MAU / f"{label}.plist").read_text(encoding="utf-8")
+    for n in IL.ten_bi_mat(label):
+        assert f"<key>{n}</key><string>__ENV_{n}__</string>" in t
+
+
+@pytest.mark.parametrize("label", LABELS)
+def test_con_tro_CHUA_khai_thi_BO_ca_dong_khong_ghi_chuoi_rong(label):
+    e = plistlib.loads(IL.render(label, GIA))["EnvironmentVariables"]
+    for n in BI_MAT[label]:
+        assert n not in e, f"{n} chưa khai mà vẫn vào plist"
+    assert all(v != "" for v in e.values())
+
+
+def test_con_tro_DA_khai_thi_dien_dung_gia_tri():
+    l = "studio.marketing.daily-story"
+    bi_mat = {"YT_TOKEN_PATH": _NHA + "/khoa/yt & token.json", "TG_CHAT": "mac_dinh"}
+    e = plistlib.loads(IL.render(l, GIA, bi_mat=bi_mat))["EnvironmentVariables"]
+    assert e["YT_TOKEN_PATH"] == bi_mat["YT_TOKEN_PATH"]
+    assert e["TG_CHAT"] == "mac_dinh"
+    assert "FB_CONFIG" not in e
+
+
+def test_gia_tri_chua_chuoi_giong_cho_trong_KHONG_bi_thay_lan_hai():
+    l = "studio.marketing.daily-news-a"
+    bi_mat = {"FB_CONFIG": _NHA + "/__HOME__/fb.json"}
+    e = plistlib.loads(IL.render(l, GIA, bi_mat=bi_mat))["EnvironmentVariables"]
+    assert e["FB_CONFIG"] == bi_mat["FB_CONFIG"]
+
+
+def test_con_tro_THEM_theo_kenh_duoc_chen_dung_cho():
+    l = "studio.marketing.daily-story"
+    bi_mat = {"YT_TOKEN_PATH__TRUYEN": _NHA + "/khoa/truyen.json"}
+    e = plistlib.loads(IL.render(l, GIA, bi_mat=bi_mat, them=["YT_TOKEN_PATH__TRUYEN"]))[
+        "EnvironmentVariables"]
+    assert e["YT_TOKEN_PATH__TRUYEN"] == bi_mat["YT_TOKEN_PATH__TRUYEN"]
+
+
+def test_gia_bi_mat_BIEN_MOI_TRUONG_truoc_roi_toi_env_embedded(tmp_path, monkeypatch,
+                                                              khong_bien):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / SP.LOCAL_CONFIG).write_text('{"mode": "embedded"}', encoding="utf-8")
+    (repo / ".env").write_text("TG_CONFIG=~/khoa/tg.json\nYT_TOKEN_PATH=/khoa/yt.json\n",
+                               encoding="utf-8")
+    monkeypatch.setenv("YT_TOKEN_PATH", "/tu-bien/yt.json")
+    co, thieu = IL.gia_bi_mat(["TG_CONFIG", "YT_TOKEN_PATH", "FB_CONFIG"], repo)
+    assert co["YT_TOKEN_PATH"] == str(Path("/tu-bien/yt.json")), "biến thật phải thắng .env"
+    assert co["TG_CONFIG"] == str(Path("~/khoa/tg.json").expanduser()), "~ phải được mở rộng"
+    assert "~" not in co["TG_CONFIG"]
+    assert thieu == ["FB_CONFIG"]
+
+
+def test_gia_bi_mat_KHONG_doc_env_o_che_do_separate(tmp_path, khong_bien):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / SP.LOCAL_CONFIG).write_text('{"mode": "separate"}', encoding="utf-8")
+    (repo / ".env").write_text("TG_CONFIG=/khoa/tg.json\n", encoding="utf-8")
+    assert IL.gia_bi_mat(["TG_CONFIG"], repo) == ({}, ["TG_CONFIG"])
+
+
+def test_TOKEN_TRAN_thay_cho_duong_dan_la_ma_2_va_KHONG_in_gia_tri(monkeypatch, khong_bien):
+    tho = "123456:bi-mat-khong-duoc-lo"
+    monkeypatch.setenv("TG_CONFIG", tho)
+    with pytest.raises(SC.ContractError) as e:
+        IL.gia_bi_mat(["TG_CONFIG"])
+    assert tho not in str(e.value) and "TG_CONFIG" in str(e.value)
+
+
+def test_log_va_JSON_chi_mang_TEN_bien_khong_mang_gia_tri(tmp_path):
+    import os
+    gia = _NHA + "/khoa/dau-vet-khong-duoc-lo.json"
+    env = {**os.environ, "YT_TOKEN_PATH": gia, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+    r = subprocess.run([sys.executable, str(ROOT / "scripts/runners/install_launchd.py"),
+                        "--station", str(tmp_path), "--dry-run", "--json",
+                        "--map", "studio.marketing.daily-news-a=kenh/chien-dich",
+                        "--only", "studio.marketing.daily-news-a"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       env=env)
+    assert r.returncode == 0, r.stderr
+    assert "YT_TOKEN_PATH" in r.stderr and "YT_TOKEN_PATH" in r.stdout
+    assert "dau-vet-khong-duoc-lo" not in r.stderr + r.stdout
+
+
+# ── runner theo job ──────────────────────────────────────────────────────────
+
+CO_RUNNER = [l for l in LABELS if l in LICH]
+
+
+@pytest.mark.parametrize("label", CO_RUNNER)
+def test_job_theo_lich_goi_RUNNER_khai_duoc(label):
+    a = plistlib.loads(IL.render(label, {**GIA, "__RUNNER__": "run-daily-truyen-p2.ps1"}))[
+        "ProgramArguments"]
+    assert a[-1] == GIA["__STATION__"] + "/kenh-mau/chien-dich-mau/run-daily-truyen-p2.ps1"
+
+
+def test_runner_mac_dinh_la_run_ps1(tmp_path):
+    r = _chay("--station", str(tmp_path), "--dry-run", "--json",
+              "--map", "studio.marketing.daily-story=kenh/chien-dich",
+              "--only", "studio.marketing.daily-story")
+    assert r.returncode == 0, r.stderr
+    assert '"runner": "run.ps1"' in r.stdout
+
+
+def test_runner_doc_tu_launchd_json(tmp_path):
+    (tmp_path / "launchd.json").write_text(json.dumps({"studio.marketing.daily-story": {
+        "channel": "truyen", "campaign": "hang-ngay", "runner": "run-daily-truyen-p2.ps1"}}),
+        encoding="utf-8")
+    r = _chay("--station", str(tmp_path), "--dry-run", "--json",
+              "--only", "studio.marketing.daily-story")
+    assert r.returncode == 0, r.stderr
+    assert '"runner": "run-daily-truyen-p2.ps1"' in r.stdout
+
+
+@pytest.mark.parametrize("runner", ["../ngoai.ps1", "con/run.ps1", "run.sh", "", 7,
+                                    "..\\ngoai.ps1", "..ps1"])
+def test_runner_KHONG_phai_ten_file_ps1_la_ma_2(runner):
+    with pytest.raises(SC.ContractError):
+        IL.muc_khai("studio.marketing.daily-story",
+                    {"channel": "k", "campaign": "c", "runner": runner})
+
+
+@pytest.mark.parametrize("khai", [{"channel": "k", "campaign": "c", "la": 1},
+                                  {"channel": "k"}, {"channel": "..", "campaign": "c"},
+                                  {"channel": "k", "campaign": "c", "env": "YT_TOKEN_PATH"},
+                                  {"channel": "k", "campaign": "c", "env": ["PATH"]},
+                                  {"channel": "k", "campaign": "c", "env": ["HOME"]}])
+def test_khai_sai_hinh_dang_la_ma_2(khai):
+    with pytest.raises(SC.ContractError):
+        IL.muc_khai("studio.marketing.daily-story", khai)
+
+
+def test_map_GIU_runner_cua_launchd_json(tmp_path):
+    (tmp_path / "launchd.json").write_text(json.dumps({"studio.marketing.daily-story": {
+        "channel": "truyen", "campaign": "cu", "runner": "run-p2.ps1"}}), encoding="utf-8")
+    r = _chay("--station", str(tmp_path), "--dry-run", "--json",
+              "--map", "studio.marketing.daily-story=truyen/moi",
+              "--only", "studio.marketing.daily-story")
+    assert r.returncode == 0, r.stderr
+    assert '"campaign": "moi"' in r.stdout and '"runner": "run-p2.ps1"' in r.stdout
+
+
+# ── env thêm theo kênh ───────────────────────────────────────────────────────
+
+def _tram_co_env_them(tmp_path):
+    tram = tmp_path / "tram"
+    tram.mkdir()
+    (tram / "launchd.json").write_text(json.dumps({"studio.marketing.daily-story": {
+        "channel": "k", "campaign": "c", "env": ["YT_TOKEN_PATH__TRUYEN"]}}), encoding="utf-8")
+    return IL._parser().parse_args(["--station", str(tram), "--dry-run",
+                                    "--only", "studio.marketing.daily-story"])
+
+
+def test_env_them_DA_KHAI_ma_THIEU_gia_tri_la_ma_2(tmp_path, khong_bien):
+    with pytest.raises(SC.ContractError) as e:
+        IL.lam(_tram_co_env_them(tmp_path))
+    assert "YT_TOKEN_PATH__TRUYEN" in str(e.value)
+
+
+def test_env_them_CO_gia_tri_thi_vao_ket_qua(tmp_path, monkeypatch, khong_bien):
+    monkeypatch.setenv("YT_TOKEN_PATH__TRUYEN", "/khoa/truyen.json")
+    job = IL.lam(_tram_co_env_them(tmp_path))["jobs"][0]
+    assert job["secret_env"] == ["YT_TOKEN_PATH__TRUYEN"]
+    assert "TG_CONFIG" in job["secret_env_missing"]
+
+
+# ── lịch khai được ───────────────────────────────────────────────────────────
+
+def test_schedule_thay_lich_cua_mau():
+    d = plistlib.loads(IL.render("studio.marketing.daily-story", GIA,
+                                 lich={"Hour": 0, "Minute": 30}))
+    assert d["StartCalendarInterval"] == {"Hour": 0, "Minute": 30}
+    assert d["EnvironmentVariables"]["OMNIVOICE_DTYPE"] == "float16", "đổi lịch không đổi giọng"
+
+
+def test_schedule_tren_job_KHONG_co_lich_la_ma_2():
+    with pytest.raises(SC.ContractError):
+        IL.render("studio.marketing.worker", GIA, lich={"Hour": 1})
+
+
+@pytest.mark.parametrize("lich", [{"Hour": 24}, {"Gio": 1}, {}, [], {"Minute": "5"},
+                                  {"Hour": True}])
+def test_schedule_sai_la_ma_2(lich):
+    with pytest.raises(SC.ContractError):
+        IL.muc_khai("studio.marketing.daily-story",
+                    {"channel": "k", "campaign": "c", "schedule": lich})
+
+
+# ── chế độ embedded: không biến trạm nào ⇒ trạm là <repo>/workspace ──────────
+
+def test_embedded_KHONG_bien_tram_thi_tram_la_repo_workspace(monkeypatch, khong_bien):
+    monkeypatch.setattr(SP, "local_config", lambda repo=None: {})
+    bang, _ = IL.cho_trong(None)
+    assert Path(bang["__STATION__"]) == (ROOT / "workspace").resolve()
+    assert Path(bang["__REPO__"]) == ROOT
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="quyền 600 chỉ có nghĩa trên POSIX")
+def test_plist_ghi_ra_chi_chu_may_doc(tmp_path):
+    import stat
+    ra = tmp_path / "LaunchAgents"
+    r = _chay("--station", str(tmp_path), "--out-dir", str(ra), "--no-load",
+              "--map", "studio.marketing.daily-news-a=kenh/chien-dich",
+              "--only", "studio.marketing.daily-news-a")
+    assert r.returncode == 0, r.stderr
+    f = ra / "studio.marketing.daily-news-a.plist"
+    assert stat.S_IMODE(f.stat().st_mode) == 0o600
+
+
+def test_tai_lieu_dinh_dang_launchd_json_co_vi_du_HOP_LE():
+    """Ví dụ trong docs/launchd.md phải qua được chính bộ kiểm của bộ cài."""
+    import re
+    t = (ROOT / "docs" / "launchd.md").read_text(encoding="utf-8")
+    khoi = re.findall(r"```json\n(.*?)```", t, re.S)
+    assert khoi, "docs/launchd.md phải có ví dụ ```json"
+    for k in khoi:
+        for label, v in json.loads(k).items():
+            assert label in LABELS, label
+            IL.muc_khai(label, v)

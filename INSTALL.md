@@ -23,7 +23,7 @@ agent đọc file này và làm lần lượt từ mục 0 đến mục 10. Wind
 - **Không đăng gì:** cài đặt không bao giờ đăng bài, gửi tin hay gọi API mạng xã hội. Đăng bài luôn
   cần cổng duyệt của người (xem `AGENTS.md`).
 - **Báo đúng sự thật:** chép nguyên các dòng `doctor`; chưa kiểm thì nói chưa kiểm. Gặp lỗi không có
-  trong mục 11 thì dừng và giải thích bằng lời thường.
+  trong [docs/troubleshooting.md](docs/troubleshooting.md) thì dừng và giải thích bằng lời thường.
 
 ## 1. Nhận diện host đang chạy
 
@@ -52,17 +52,43 @@ python --version
 winget --version
 ```
 
-macOS: `git --version` · `python3 --version` · `brew --version`.
+macOS:
+
+```sh
+xcode-select -p
+brew --version
+python3.12 --version
+git --version
+pwsh --version
+zsh -lic 'echo $PATH'
+```
 
 | Thành phần | Khi nào cần | Windows (`winget`) | macOS (`brew`) |
 |---|---|---|---|
 | Git | **Bắt buộc** | `Git.Git` (cài `--scope user`, không cần admin) | có sẵn qua Xcode CLT, hoặc `git` |
 | Python 3.10+ (khuyến nghị 3.12) | **Bắt buộc** | `Python.Python.3.12` (không cần admin) | `python@3.12` |
-| PowerShell | Chạy `.ps1` | Windows PowerShell 5.1 có sẵn | chỉ khi chạy lịch `.ps1`: cask `powershell` |
+| PowerShell | Chạy runner `.ps1` (lịch, chiến dịch) | Windows PowerShell 5.1 có sẵn | `pwsh`: `brew install --cask powershell` |
 
 `python --version` mở Microsoft Store dù `py -0p` trống nghĩa là máy chỉ có "Python giả" của Store —
 coi như chưa có Python. **Không cần** trạm giọng (`agent-voice-studio`) hay trạm video
 (`agent-video-studio`) để cài: viết bài và đăng là lõi; hai trạm kia là năng lực thêm, bật sau.
+
+**Mac mới tinh (Apple Silicon) — năm chỗ hay vấp:**
+
+- **`python3` của Mac mới là 3.9** (đi kèm Command Line Tools), dưới mức tối thiểu 3.10. Trên
+  macOS luôn gọi đích danh **`python3.12`**, không gọi `python3`.
+- **Xcode Command Line Tools** phải có trước (`xcode-select -p` báo lỗi là chưa có). Cài bằng
+  `xcode-select --install`: lệnh mở một hộp thoại, **người dùng** bấm Install và chờ xong.
+- **Homebrew** chưa có (`brew` không tìm thấy): **người dùng tự cài** theo hướng dẫn chính thức ở
+  brew.sh. Agent **không** chạy lệnh cài Homebrew thay họ — đó là lệnh tải-rồi-chạy mà mục 0 cấm.
+  Cài xong, `/opt/homebrew/bin` phải nằm trên `PATH`.
+- **PowerShell 7 (`pwsh`)** cần cho các runner `.ps1` (runner chiến dịch, lịch launchd). Viết bài,
+  `doctor` và bài mẫu thì không cần.
+- **Shell của agent không nạp `~/.zshrc`/`~/.zprofile`**, nên `brew`, `python3.12` hay một biến
+  môi trường có thể "không có" với agent dù người dùng thấy có. Kiểm bằng shell đăng nhập:
+  `zsh -lic 'echo $PATH'` (biến bất kỳ: `zsh -lic 'echo $TÊN_BIẾN'`). Thấy `/opt/homebrew/bin`
+  trong đó mà shell của agent vẫn không thấy thì gọi bằng đường đầy đủ
+  (`/opt/homebrew/bin/python3.12`, `/opt/homebrew/bin/brew`).
 
 ## 3. Trình kế hoạch và chờ đồng ý
 
@@ -74,7 +100,16 @@ winget install --id Git.Git -e --scope user --accept-source-agreements --accept-
 winget install --id Python.Python.3.12 -e --scope user --accept-source-agreements --accept-package-agreements
 ```
 
-Cài xong thì mở cửa sổ PowerShell mới (hoặc nhờ người dùng khởi động lại host) rồi chạy lại mục 2.
+```sh
+xcode-select --install
+brew install python@3.12 git
+brew install --cask powershell
+```
+
+Trên Mac, `xcode-select --install` chỉ chạy khi `xcode-select -p` báo chưa có; `brew` chỉ chạy sau
+khi người dùng đã tự cài Homebrew (mục 2).
+
+Cài xong thì mở cửa sổ terminal mới (hoặc nhờ người dùng khởi động lại host) rồi chạy lại mục 2.
 Host chặn `winget` (ví dụ sandbox) thì **không** lách: đưa đúng lệnh trên để người dùng tự chạy.
 Máy không có `winget`: đưa trang tải chính thức ([Git](https://git-scm.com/download/win),
 [Python](https://www.python.org/downloads/windows/) — tick "Add python.exe to PATH").
@@ -101,7 +136,8 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python -m pip install -r requirements.txt
 ```
 
-macOS: `python3 -m venv .venv` rồi `.venv/bin/python -m pip install -r requirements.txt`.
+macOS: `python3.12 -m venv .venv` rồi `.venv/bin/python -m pip install -r requirements.txt` (đừng
+dùng `python3`: trên Mac mới nó là 3.9).
 
 `.venv/` nằm trong repo và bị git bỏ qua; mọi `.ps1` của repo tự tìm Python ở đó trước.
 
@@ -143,6 +179,7 @@ macOS: `.venv/bin/python scripts/pipeline/doctor.py`. Chép nguyên văn mọi d
 | `nhắc` | cảnh báo, không chặn | báo lại cho người dùng |
 | `NOT_CHECKED` | doctor không đo được từ đây (host có nạp skill không) | **không phải lỗi**; kiểm ở mục 8 |
 | "giọng/video: chưa bật" | năng lực thêm chưa cài | bình thường — viết bài và đăng vẫn chạy |
+| `samples: PASS` | bài mẫu offline chấm lại đúng kết quả kỳ vọng | — (lệch thì dòng `nhắc samples: WARN`, xem [samples/README.md](samples/README.md)) |
 
 ## 8. Khởi động lại host và xác nhận skill
 
@@ -159,6 +196,20 @@ Phiên đang chạy có thể chưa thấy skill của repo. Hướng dẫn ngư
 
 Kết quả phải kết thúc bằng **`0 đỏ · 2 cảnh báo`** (hai bài mẫu chưa có `publish.json` — cố ý, để
 thấy ba trạng thái bài). Lệch thì chép nguyên output, không tự sửa file mẫu cho khớp.
+
+Bài mẫu chấm cổng (offline, không token) — kết quả kỳ vọng cố định ở
+[samples/README.md](samples/README.md): `verdict` là `fail` với 6 cổng chặn, mã thoát 1 là đúng.
+
+```powershell
+.\.venv\Scripts\python scripts\pipeline\blog_gates.py samples\bai-mau --home-domain example.com
+```
+
+macOS: `.venv/bin/python scripts/pipeline/blog_gates.py samples/bai-mau --home-domain example.com`.
+
+**macOS, máy sẽ chạy lịch:** chỉ **xem trước** lịch, không bật, không đụng YouTube:
+`.venv/bin/python scripts/runners/install_launchd.py --dry-run --no-load`. Lệnh dừng mã 2 và nêu
+tên job khi chưa khai kênh/chiến dịch — đó là kết quả đúng của một máy mới; cách khai ở
+[docs/launchd.md](docs/launchd.md). Bật lịch thật là việc người dùng quyết sau.
 
 ## 10. Báo cáo cuối cho người dùng
 
@@ -187,9 +238,9 @@ thấy ba trạng thái bài). Lệch thì chép nguyên output, không tự s�
   người dùng trước khi gỡ. Claude Code: `claude plugin list` tìm dòng `auto-marketing@…`, rồi
   `claude plugin uninstall auto-marketing@<marketplace>`. Codex/Antigravity: xoá thư mục skill
   cũ của `auto-marketing` trong thư mục skill của host. Không đụng trạm nội dung.
-- **Script bị chặn** dù đã `-ExecutionPolicy Bypass`: chính sách nhóm của tổ chức; dừng, nhờ IT.
-- **Repo nằm trong thư mục đồng bộ đám mây:** `doctor` nhắc; clone lại vào thư mục cục bộ.
-- **Tải ZIP thay vì clone:** `studio.py update` không chạy được; cài Git rồi clone.
+- **Vướng khi cài hay khi chạy** (script bị chặn, repo trong thư mục đám mây, tải ZIP thay vì
+  clone, `python3` quá cũ trên Mac, job launchd không thấy lệnh/biến…): tra theo triệu chứng ở
+  [docs/troubleshooting.md](docs/troubleshooting.md).
 
 Chi tiết từng host: [hosts/README.md](hosts/README.md). Dựng kênh đầu tiên: [docs/ONBOARDING.md](docs/ONBOARDING.md).
 

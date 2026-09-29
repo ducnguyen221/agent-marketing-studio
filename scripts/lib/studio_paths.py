@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -187,6 +188,66 @@ def secret_env(name: str, repo=None) -> str | None:
         return gia
     gia = (doc_env_file(repo).get(name) or "").strip()
     return gia or None
+
+
+# ── con trỏ bí mật: biến giữ ĐƯỜNG DẪN tới file bí mật (không bao giờ giữ bí mật) ────────
+#
+# Tên gốc + hậu tố theo kênh/tài khoản (`YT_TOKEN_PATH__KENH_B`, `FB_CONFIG_A` — xem
+# `knowledge/toolchains/SECRETS.md`). Đây là bộ tên mà `hook_env()` được phép mang từ
+# `<repo>/.env` sang tiến trình con và `install_launchd.py` được phép ghi vào plist. Bộ lọc
+# theo TÊN là rào: `.env` có thể chứa thứ khác, và thứ khác không được đi theo.
+CON_TRO_BI_MAT = ("TG_CONFIG", "YT_CLIENT_SECRET", "YT_TOKEN_PATH", "FB_CONFIG",
+                  "EMAIL_CONFIG", "CODEX_BRIDGE")
+_TEN_CON_TRO = re.compile(r"^(?:" + "|".join(CON_TRO_BI_MAT) + r")(?:_[A-Z0-9_]+)?$")
+
+
+def la_con_tro_bi_mat(name: str) -> bool:
+    """Tên có thuộc bộ con trỏ bí mật (kể cả hậu tố theo kênh) không."""
+    return bool(_TEN_CON_TRO.match(name or ""))
+
+
+def la_duong_dan(gia: str) -> bool:
+    """Giá trị trông như một ĐƯỜNG DẪN (tuyệt đối, `~`, hoặc ổ đĩa Windows).
+
+    Dùng để từ chối ghi một token trần vào nơi chỉ được giữ đường dẫn (plist, môi trường
+    của hook): token trần trong biến môi trường thì mọi tiến trình con đều đọc được."""
+    g = (gia or "").strip()
+    return g.startswith(("/", "~")) or bool(re.match(r"^[A-Za-z]:[\\/]", g))
+
+
+def secret_path(name: str, repo=None) -> str:
+    """Đường tới file bí mật mà biến `name` trỏ tới — cùng thứ tự với `secret_env`
+    (biến môi trường → `<repo>/.env` khi embedded), `~` đã mở rộng.
+
+    Thiếu thì NÉM `StudioPathsError` nêu đúng tên biến và hai chỗ đặt nó — không trả chuỗi
+    rỗng để nơi gọi đi tiếp rồi chết bằng một `FileNotFoundError` không ai hiểu. Giá trị
+    không phải đường dẫn cũng ném, và thông báo KHÔNG in giá trị (có thể là token trần)."""
+    gia = secret_env(name, repo)
+    if not gia:
+        raise StudioPathsError(
+            f"thiếu biến {name}: đặt nó (đường dẫn tới file bí mật, không phải bí mật) ở "
+            f"biến môi trường, hoặc trong <repo>/.env nếu cài chế độ embedded. "
+            f"Xem knowledge/toolchains/SECRETS.md")
+    if not la_duong_dan(gia):
+        raise StudioPathsError(
+            f"{name} phải là ĐƯỜNG DẪN tới file bí mật, không phải giá trị bí mật — "
+            f"xem knowledge/toolchains/SECRETS.md")
+    return str(Path(gia).expanduser())
+
+
+def hook_env(repo=None) -> dict:
+    """Môi trường cho tiến trình con (hook đăng bài): `os.environ` + các CON TRỎ bí mật chỉ
+    khai ở `<repo>/.env` (chế độ embedded).
+
+    Biến môi trường thật luôn thắng — cùng luật với `secret_env`. Chỉ tên thuộc
+    `CON_TRO_BI_MAT` (kèm hậu tố kênh) được mang sang, và chỉ khi giá trị là đường dẫn:
+    `.env` không phải kênh để đẩy thứ tuỳ ý vào môi trường của một script đăng bài."""
+    ra = dict(os.environ)
+    for ten, gia in doc_env_file(repo).items():
+        if (la_con_tro_bi_mat(ten) and not (ra.get(ten) or "").strip()
+                and la_duong_dan(gia)):
+            ra[ten] = str(Path(gia.strip()).expanduser())
+    return ra
 
 
 # ── hai trạm năng lực kia (hợp đồng ba trạm, §2.4a của kế hoạch) ───────────────────────

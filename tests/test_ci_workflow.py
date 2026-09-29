@@ -80,3 +80,35 @@ def test_bien_moi_truong_conftest_khop_ten(wf):
     """Tên biến ở workflow và ở conftest phải là MỘT — lệch tên là cổng tắt câm."""
     assert "MARKETING_STUDIO_REQUIRE_POWERSHELL" in (ROOT / "tests" / "conftest.py").read_text(
         encoding="utf-8")
+
+
+# ── A11: mọi nhánh · ghim SHA · ma trận Python ───────────────────────────────
+
+def test_chay_tren_MOI_nhanh(wf):
+    """CI chỉ nhìn `main` thì tới lúc merge mới biết đỏ — quá muộn để còn là cổng."""
+    on = wf.get("on", wf.get(True))
+    assert (on["push"] or {}).get("branches") == ["**"]
+
+
+def test_moi_action_GHIM_SHA_day_du():
+    """Tag `@v4` có thể bị dời sang mã khác; SHA 40 ký tự thì không. Mỗi dòng giữ tag ở
+    chú thích để người đọc biết bản nào."""
+    import re
+    t = WF.read_text(encoding="utf-8")
+    dong = re.findall(r"uses:\s*(\S+)(.*)", t)
+    assert dong
+    for uses, sau in dong:
+        assert re.fullmatch(r"[\w.-]+/[\w.-]+@[0-9a-f]{40}", uses), f"chưa ghim SHA: {uses}"
+        assert re.search(r"#\s*v\d", sau), f"{uses}: thiếu chú thích phiên bản"
+
+
+def test_ma_tran_python_phu_san_va_ban_moi(wf):
+    """Sàn là `requires-python` của pyproject.toml — CI phải chạy đúng bản sàn đó."""
+    import re
+    s = _job(wf)["strategy"]["matrix"]
+    ban = {str(v) for v in s["python-version"]}
+    san = re.search(r'requires-python\s*=\s*">=(\d+\.\d+)"',
+                    (ROOT / "pyproject.toml").read_text(encoding="utf-8")).group(1)
+    assert {san, "3.12", "3.13"} <= ban, ban
+    buoc = [st for st in _steps(wf) if "setup-python" in str(st.get("uses", ""))]
+    assert buoc and buoc[0]["with"]["python-version"] == "${{ matrix.python-version }}"

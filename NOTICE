@@ -1,0 +1,57 @@
+agent-marketing-studio
+Copyright (c) 2026 Duc Nguyen — phát hành theo giấy phép MIT (xem LICENSE).
+
+Repo này KHÔNG chép nguyên văn code hay tài liệu của bên thứ ba. Một số playbook và skill là bản
+CHƯNG CẤT: đọc tri thức từ repo mã nguồn mở dưới đây, rồi viết lại và Việt hoá cho mô hình
+Campaign → Content → Post của repo này. Mỗi file chưng cất ghi nguồn ngay đầu thân bài; danh sách
+file, giấy phép và hash của bản chưng cất đã rà nằm ở `upstream.json` (cổng:
+`tests/test_upstream_provenance.py`). Commit upstream lúc chưng cất không được ghi lại — hash trong
+`upstream.json` là hash của BẢN TRONG REPO NÀY, để mọi lần sửa phải rà lại nguồn.
+
+Phần chưng cất từ nguồn ngoài (giấy phép MIT, ghi công theo đúng điều kiện của MIT):
+
+- coreyhaines31/marketingskills (https://github.com/coreyhaines31/marketingskills)
+  Copyright (c) 2025 Corey Haines — MIT.
+  knowledge/playbooks/COPY_FRAMEWORKS.md, knowledge/playbooks/SEO_PLAYBOOK.md,
+  knowledge/psychology/MARKETING_PSYCHOLOGY.md, knowledge/toolchains/EMAIL_SEQUENCES.md,
+  .agents/skills/hook-writer/SKILL.md (phần hook system).
+
+- blacktwist/social-media-skills (https://github.com/blacktwist/social-media-skills)
+  Copyright (c) 2026 Social Media Skills Contributors — MIT.
+  .agents/skills/hook-writer/SKILL.md, .agents/skills/thread-writer/SKILL.md.
+
+- zubair-trabzada/ai-marketing-claude (https://github.com/zubair-trabzada/ai-marketing-claude)
+  Copyright (c) 2026 Zubair Trabzada — MIT.
+  knowledge/playbooks/COPY_FRAMEWORKS.md.
+
+- AgriciDaniel/claude-youtube (https://github.com/AgriciDaniel/claude-youtube)
+  Copyright (c) 2025 Daniel Agrici — MIT.
+  knowledge/playbooks/YOUTUBE_PLAYBOOK.md.
+
+Tham khảo thiết kế, không chép văn bản:
+
+- OpenClaw (https://github.com/openclaw/openclaw) — `knowledge/toolchains/APPROVAL_BUS.md` mục 5b
+  mô tả cách chiều nhận của bus duyệt chạy, học từ cách OpenClaw 2026.5.12 làm, viết mới bằng số
+  đo của chính repo này. GitHub báo giấy phép của repo đó là "Other" — chưa kiểm chi tiết; không
+  câu chữ hay mã nào của OpenClaw được chép vào đây.
+
+Giấy phép MIT của các nguồn trên (cùng một văn bản, khác dòng Copyright):
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+  and associated documentation files (the "Software"), to deal in the Software without
+  restriction, including without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or
+  substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+  BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Quy tắc cho các bản sau: mọi file chưng cất từ nguồn ngoài phải ghi `Chưng cất từ `<owner>/<repo>``
+ngay đầu thân bài, được liệt kê ở đây kèm giấy phép và dòng Copyright, và có hash trong
+`upstream.json`. Sửa một file chưng cất thì cập nhật hash của nó trong cùng commit.

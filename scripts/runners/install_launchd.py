@@ -19,10 +19,46 @@ từ một nguồn: `studio_paths` — đúng nguồn mà mọi script khác tro
 `--map <label>=<kênh>/<chiến dịch>`, hoặc một lần cho xong trong `<trạm>/launchd.json`:
 
     { "studio.marketing.daily-news-a": "tin/hang-ngay",
-      "studio.marketing.worker":       "tin/hang-ngay" }
+      "studio.marketing.daily-story":  { "channel": "truyen", "campaign": "hang-ngay",
+                                         "runner": "run-daily-truyen-p2.ps1",
+                                         "env": ["YT_TOKEN_PATH__TRUYEN"],
+                                         "schedule": { "Hour": 0, "Minute": 30 } } }
+
+Dạng chuỗi `<kênh>/<chiến dịch>` là dạng rút gọn của object. Khoá của object:
+
+    channel, campaign   bắt buộc
+    runner              tên file `.ps1` trong thư mục chiến dịch mà job gọi; mặc định
+                        `run.ps1`. Chỉ là TÊN FILE (không `/`, không `..`) — job không được
+                        chạy thứ gì nằm ngoài thư mục chiến dịch của nó.
+    env                 tên biến CON TRỎ bí mật thêm cho job này (hậu tố theo kênh/tài
+                        khoản, vd `YT_TOKEN_PATH__TRUYEN`). Chỉ nhận tên thuộc bộ con trỏ
+                        (`studio_paths.CON_TRO_BI_MAT`); giá trị lấy như mọi con trỏ khác, và
+                        thiếu giá trị là mã 2 — bạn đã khai nó, nên thiếu là cấu hình sai.
+    schedule            thay lịch của mẫu: một object (hoặc danh sách object) khoá
+                        `Minute`/`Hour`/`Day`/`Weekday`/`Month`. Bỏ trống = lịch đã chốt
+                        trong mẫu. Job không có lịch (worker, poller) mà khai thì mã 2.
 
 Thiếu khai cho một label được chọn ⇒ **mã 2** và nói rõ thiếu label nào. Không đoán:
 đoán sai thì job chạy đúng giờ vào **nhầm chiến dịch**, và nó vẫn báo ✅.
+
+## Con trỏ bí mật: TÊN ở mẫu, GIÁ TRỊ từ máy
+
+Mẫu khai tên biến (`<key>YT_TOKEN_PATH</key><string>__ENV_YT_TOKEN_PATH__</string>`). Bộ cài
+điền giá trị theo đúng thứ tự của `studio_paths.secret_env`: biến môi trường → `<repo>/.env`
+(chế độ embedded). launchd không đọc `.env` và không đọc `~/.zshrc`, nên đây là chỗ DUY
+NHẤT giá trị đi vào môi trường của job. Ba luật:
+
+    · giá trị phải là ĐƯỜNG DẪN (trừ `TG_CHAT`, là tên chat) — token trần thì mã 2, và
+      thông báo không in giá trị;
+    · chưa khai ở đâu thì BỎ cả dòng khỏi plist (không ghi chuỗi rỗng) và in TÊN ra;
+    · log và JSON kết quả chỉ mang TÊN biến, không bao giờ mang giá trị.
+
+Plist ghi ra có quyền 600: nó chứa đường tới file bí mật của bạn.
+
+## Chế độ embedded
+
+Không có biến trạm nào ⇒ trạm là `<repo>/workspace/` (thứ tự phân giải ở
+`studio_paths.resolve_station`), và `<trạm>/launchd.json` nằm trong đó.
 
 ## Hai pipeline, HAI cấu hình giọng — không gộp
 
@@ -80,6 +116,21 @@ KHONG_MAC_DINH = ("studio.marketing.worker", "studio.marketing.approve-poller",
                   "studio.marketing.daily-story")
 
 _CHO_TRONG = re.compile(r"__[A-Z_]+__")
+
+# Khai theo label trong `<trạm>/launchd.json` — xem docstring.
+KHOA_KHAI = ("channel", "campaign", "runner", "env", "schedule")
+RUNNER_MAC_DINH = "run.ps1"
+_TEN_RUNNER = re.compile(r"^[A-Za-z0-9][\w.-]*\.ps1$")
+KHOA_LICH = {"Minute": (0, 59), "Hour": (0, 23), "Day": (1, 31), "Weekday": (0, 7),
+             "Month": (1, 12)}
+
+# Dòng con trỏ bí mật trong mẫu: `<key>TÊN</key><string>__ENV_TÊN__</string>`.
+_DONG_BI_MAT = re.compile(r"^[ \t]*<key>([A-Z][A-Z0-9_]*)</key><string>__ENV_\1__</string>[ \t]*\r?\n",
+                          re.M)
+_CHO_THEM = re.compile(r"^[ \t]*<!-- __ENV_EXTRA__ -->[ \t]*\r?\n", re.M)
+# Tên duy nhất trong bộ con trỏ mà giá trị KHÔNG phải đường dẫn (tên chat trong file cấu
+# hình Telegram — `telegram_io.py`).
+KHONG_PHAI_DUONG_DAN = ("TG_CHAT",)
 
 
 # ── chỗ trống ────────────────────────────────────────────────────────────────
@@ -144,6 +195,7 @@ def cho_trong(station=None) -> tuple[dict, list[str]]:
 # ── khai kênh/chiến dịch ─────────────────────────────────────────────────────
 
 def doc_khai(station=None) -> dict:
+    """`<trạm>/launchd.json` -> {label: {channel, campaign[, runner, env, schedule]}}."""
     p = SP.root(station) / KHAI_FILE
     if not p.is_file():
         return {}
@@ -153,27 +205,104 @@ def doc_khai(station=None) -> dict:
         raise SC.ContractError(f"{p} không đọc được: {e}") from e
     if not isinstance(d, dict):
         raise SC.ContractError(f"{p} phải là một object {{label: 'kênh/chiến dịch'}}")
-    ra = {}
-    for k, v in d.items():
-        if isinstance(v, str):
-            ra[k] = v
-        elif isinstance(v, dict):
-            ra[k] = f"{v.get('channel', '')}/{v.get('campaign', '')}"
-        else:
-            # Không để `AttributeError` lọt ra: `classify` xếp nó vào mã 1 = thử lại được,
-            # và bộ lập lịch sẽ thử lại mãi một file khai viết sai (REVIEW-P2 Ghi nhận 18).
+    return {k: muc_khai(k, v, nguon=str(p)) for k, v in d.items()}
+
+
+def muc_khai(label: str, v, nguon: str = "--map") -> dict:
+    """Một mục khai -> dict đã kiểm. MỌI lỗi hình dạng là `ContractError` (mã 2).
+
+    Không để `AttributeError`/`TypeError` lọt ra: `classify` xếp nó vào mã 1 = thử lại được,
+    và bộ lập lịch sẽ thử lại mãi một file khai viết sai (REVIEW-P2 Ghi nhận 18)."""
+    if isinstance(v, str):
+        kenh, cd = _tach(v, label)
+        return {"channel": kenh, "campaign": cd}
+    if not isinstance(v, dict):
+        raise SC.ContractError(
+            f"{nguon}: khai {label!r} là {type(v).__name__}, chờ chuỗi `<kênh>/<chiến dịch>` "
+            f"hoặc object {{channel, campaign, runner, env, schedule}}")
+    la = sorted(set(v) - set(KHOA_KHAI))
+    if la:
+        raise SC.ContractError(f"{nguon}: {label} có khoá lạ {la} (nhận: {list(KHOA_KHAI)})")
+    kenh, cd = _tach(f"{v.get('channel') or ''}/{v.get('campaign') or ''}", label)
+    muc = {"channel": kenh, "campaign": cd}
+    if "runner" in v:
+        r = v["runner"]
+        if not (isinstance(r, str) and _TEN_RUNNER.match(r) and ".." not in r):
             raise SC.ContractError(
-                f"{p}: khai {k!r} là {type(v).__name__}, chờ chuỗi `<kênh>/<chiến dịch>` "
-                f"hoặc object {{channel, campaign}}")
-    return ra
+                f"{nguon}: {label}.runner = {r!r} — phải là TÊN FILE `.ps1` trong thư mục "
+                f"chiến dịch (không `/`, không `..`), vd `run.ps1`")
+        muc["runner"] = r
+    if "env" in v:
+        ds = v["env"]
+        if not (isinstance(ds, list) and all(isinstance(x, str) for x in ds)):
+            raise SC.ContractError(f"{nguon}: {label}.env phải là danh sách TÊN biến")
+        sai = [x for x in ds if not SP.la_con_tro_bi_mat(x)]
+        if sai:
+            raise SC.ContractError(
+                f"{nguon}: {label}.env chỉ nhận tên con trỏ bí mật "
+                f"({', '.join(SP.CON_TRO_BI_MAT)} + hậu tố kênh), không nhận {sai}")
+        muc["env"] = list(dict.fromkeys(ds))
+    if "schedule" in v:
+        muc["schedule"] = _lich(label, v["schedule"], nguon)
+    return muc
+
+
+def _lich(label: str, v, nguon: str):
+    ds = v if isinstance(v, list) else [v]
+    if not ds or not all(isinstance(x, dict) and x for x in ds):
+        raise SC.ContractError(
+            f"{nguon}: {label}.schedule phải là object (hoặc danh sách object) khoá "
+            f"{list(KHOA_LICH)}")
+    for x in ds:
+        for k, so in x.items():
+            if k not in KHOA_LICH:
+                raise SC.ContractError(f"{nguon}: {label}.schedule có khoá lạ {k!r}")
+            lo, hi = KHOA_LICH[k]
+            if not (isinstance(so, int) and not isinstance(so, bool) and lo <= so <= hi):
+                raise SC.ContractError(
+                    f"{nguon}: {label}.schedule.{k} = {so!r} — phải là số nguyên {lo}–{hi}")
+    return v if isinstance(v, list) else dict(v)
 
 
 def _tach(gia: str, label: str) -> tuple[str, str]:
     phan = [x for x in gia.replace("\\", "/").split("/") if x]
-    if len(phan) != 2:
+    if len(phan) != 2 or any(x in (".", "..") for x in phan):
         raise SC.ContractError(
             f"{label}: khai {gia!r} không đúng dạng `<kênh>/<chiến dịch>`")
     return phan[0], phan[1]
+
+
+# ── con trỏ bí mật ───────────────────────────────────────────────────────────
+
+def ten_bi_mat(label: str) -> list[str]:
+    """Tên con trỏ bí mật mà MẪU của label khai (theo thứ tự trong file)."""
+    f = MAU_DIR / f"{label}.plist"
+    return _DONG_BI_MAT.findall(f.read_text(encoding="utf-8")) if f.is_file() else []
+
+
+def gia_bi_mat(ten: list[str], repo=None) -> tuple[dict, list[str]]:
+    """-> ({tên: giá trị đã mở rộng ~}, [tên chưa khai ở đâu]).
+
+    Cùng thứ tự với mọi chỗ khác trong repo (`studio_paths.secret_env`): biến môi trường →
+    `<repo>/.env` khi embedded. Giá trị KHÔNG phải đường dẫn là mã 2, và thông báo không
+    in giá trị — một giá trị sai chỗ có thể chính là bí mật, và nó không được đi
+    tiếp vào log."""
+    co, thieu = {}, []
+    for n in ten:
+        g = SP.secret_env(n, repo)
+        if not g:
+            thieu.append(n)
+            continue
+        if n in KHONG_PHAI_DUONG_DAN:
+            co[n] = g
+            continue
+        if not SP.la_duong_dan(g):
+            raise SC.ContractError(
+                f"{n} phải là ĐƯỜNG DẪN tới file bí mật (tuyệt đối hoặc bắt đầu bằng ~), "
+                f"không phải giá trị bí mật — sửa ở biến môi trường hoặc <repo>/.env. "
+                f"Xem knowledge/toolchains/SECRETS.md")
+        co[n] = str(Path(g).expanduser())
+    return co, thieu
 
 
 # ── render ───────────────────────────────────────────────────────────────────
@@ -184,22 +313,53 @@ def nhan() -> list[str]:
     return sorted(p.stem for p in MAU_DIR.glob("*.plist"))
 
 
-def render(label: str, bang: dict) -> bytes:
+def render(label: str, bang: dict, bi_mat: dict | None = None,
+           them: list[str] | None = None, lich=None) -> bytes:
     """Điền một mẫu. Còn sót chỗ trống nào là LỖI — không bao giờ ghi ra một plist dở.
 
     Giá trị được THOÁT XML trước khi thay. `~/Code/AI & Data Studio` là tên thư mục hợp lệ
     trên macOS, và một dấu `&` thô phá cả file: `plistlib.loads` ném `ExpatError`, thứ mà
     `SC.classify` xếp vào **mã 1 = thử lại được**. Bộ lập lịch thử lại mã 1, nên một lỗi
-    cấu hình thành vòng lặp vô hạn trên thứ không bao giờ tự khỏi (REVIEW-P2 N14)."""
+    cấu hình thành vòng lặp vô hạn trên thứ không bao giờ tự khỏi (REVIEW-P2 N14).
+
+    Thay MỘT LƯỢT bằng regex (không `replace` lần lượt từng khoá): giá trị vừa điền không
+    bao giờ bị quét lại, nên một đường dẫn tình cờ chứa `__HOME__` không bị thay lần hai.
+
+    `bi_mat` = {tên: giá trị} của con trỏ bí mật. Dòng `__ENV_<TÊN>__` của mẫu mà tên KHÔNG
+    có trong `bi_mat` thì bị BỎ cả dòng — không ghi chuỗi rỗng: script đọc `os.environ[...]`
+    gặp chuỗi rỗng sẽ chết bằng một lỗi khó hiểu, gặp biến vắng thì nêu đúng tên biến.
+    `them` = tên con trỏ thêm của job (khoá `env` của launchd.json), chèn ở `__ENV_EXTRA__`.
+    `lich` = lịch thay cho `StartCalendarInterval` của mẫu (khoá `schedule`)."""
     f = MAU_DIR / f"{label}.plist"
     if not f.is_file():
         raise SC.StationMissing(f"không có mẫu {f}")
+    bi_mat = dict(bi_mat or {})
     t = f.read_text(encoding="utf-8")
-    for k, v in bang.items():
-        t = t.replace(k, saxutils.escape(str(v)))
-    sot = sorted(set(_CHO_TRONG.findall(t)))
+    t = _DONG_BI_MAT.sub(lambda m: m.group(0) if m.group(1) in bi_mat else "", t)
+    bang = {**bang, **{f"__ENV_{n}__": v for n, v in bi_mat.items()}}
+    sot: set[str] = set()
+
+    def _thay(m):
+        k = m.group(0)
+        if k in bang:
+            return saxutils.escape(str(bang[k]))
+        if k != "__ENV_EXTRA__":
+            sot.add(k)
+        return k
+
+    t = _CHO_TRONG.sub(_thay, t)
+    if them and not _CHO_THEM.search(t):
+        raise SC.ContractError(f"{label}: mẫu không có chỗ `__ENV_EXTRA__` cho khoá env")
+    sot = sorted(sot)
     if sot:
         raise SC.ContractError(f"{label}: còn chỗ trống chưa điền {sot}")
+    dong_them = []
+    for n in them or []:
+        if not SP.la_con_tro_bi_mat(n) or n not in bi_mat:
+            raise SC.ContractError(f"{label}: con trỏ thêm {n} chưa có giá trị")
+        dong_them.append(f"    <key>{n}</key><string>{saxutils.escape(str(bi_mat[n]))}"
+                         f"</string>\n")
+    t = _CHO_THEM.sub(lambda m: "".join(dong_them), t)
     b = t.encode("utf-8")
     try:
         plistlib.loads(b)      # XML hỏng thì hỏng NGAY ở đây, không phải lúc launchctl nạp
@@ -208,6 +368,15 @@ def render(label: str, bang: dict) -> bytes:
             f"{label}: plist dựng ra không phải XML hợp lệ ({e}). Đây là lỗi CẤU HÌNH — "
             f"một giá trị trong bảng thay thế mang ký tự mà XML không chịu; chạy lại "
             f"nguyên trạng là vô ích. Kiểm các đường dẫn trong `studio.local.json`.") from e
+    if lich is not None:
+        d = plistlib.loads(b)
+        if "StartCalendarInterval" not in d:
+            raise SC.ContractError(
+                f"{label}: job này không chạy theo lịch (KeepAlive) — khoá schedule không áp "
+                f"được, bỏ nó khỏi launchd.json")
+        d["StartCalendarInterval"] = lich
+        # Dựng lại từ dict thì mất chú thích của mẫu; chỉ xảy ra khi người dùng tự đổi lịch.
+        b = plistlib.dumps(d)
     return b
 
 
@@ -257,6 +426,8 @@ def lam(a) -> dict:
     if not chon:
         raise SC.ContractError("không chọn được job nào")
 
+    tram, nguon_tram = SP.resolve_station(a.station)
+    SC.log(f"[launchd] trạm: {tram} (nguồn: {nguon_tram})")
     bang, nhac = cho_trong(a.station)
     for d in nhac:
         SC.log(f"[launchd] nhắc: {d}")
@@ -266,7 +437,9 @@ def lam(a) -> dict:
         if "=" not in x:
             raise SC.ContractError(f"--map phải là `<label>=<kênh>/<chiến dịch>`, nhận {x!r}")
         k, v = x.split("=", 1)
-        khai[k.strip()] = v.strip()
+        k = k.strip()
+        # --map chỉ đổi kênh/chiến dịch; runner/env/schedule khai ở launchd.json vẫn giữ.
+        khai[k] = {**khai.get(k, {}), **muc_khai(k, v.strip())}
 
     dich_dir = Path(a.out_dir).expanduser() if a.out_dir else LAUNCH_AGENTS
     ra = []
@@ -289,22 +462,49 @@ def lam(a) -> dict:
         raise SC.ContractError(
             "chưa khai kênh/chiến dịch cho: " + ", ".join(thieu)
             + f" — dùng --map <label>=<kênh>/<chiến dịch>, hoặc khai trong "
-              f"{SP.root(a.station) / KHAI_FILE}")
+              f"{tram / KHAI_FILE} (định dạng: docs/launchd.md)")
 
     for l in chon:
-        kenh, cd = _tach(khai[l], l)
-        noi_dung = render(l, {**bang, "__CHANNEL__": kenh, "__CAMPAIGN__": cd})
+        k = khai[l]
+        kenh, cd = k["channel"], k["campaign"]
+        co_runner = "__RUNNER__" in (MAU_DIR / f"{l}.plist").read_text(encoding="utf-8")
+        runner = k.get("runner") or RUNNER_MAC_DINH
+        if k.get("runner") and not co_runner:
+            SC.log(f"[launchd] nhắc: {l} chạy runner của repo — khoá runner bị bỏ qua")
+        them = k.get("env") or []
+        bi_mat, chua_khai = gia_bi_mat(ten_bi_mat(l) + them)
+        thieu_them = [n for n in them if n in chua_khai]
+        if thieu_them:
+            raise SC.ContractError(
+                f"{l}: launchd.json khai env {thieu_them} nhưng biến chưa có giá trị ở biến "
+                f"môi trường hay <repo>/.env — đặt nó (ĐƯỜNG DẪN tới file bí mật) rồi chạy lại")
+        if chua_khai:
+            SC.log(f"[launchd] nhắc: {l} chưa có {', '.join(chua_khai)} — bỏ dòng đó khỏi "
+                   f"plist; bước nào cần sẽ dừng và nêu tên biến")
+        noi_dung = render(l, {**bang, "__CHANNEL__": kenh, "__CAMPAIGN__": cd,
+                              "__RUNNER__": runner},
+                          bi_mat=bi_mat, them=them, lich=k.get("schedule"))
         dich = dich_dir / f"{l}.plist"
+        # Chỉ TÊN biến đi vào log/JSON — không bao giờ giá trị.
         muc = {"label": l, "channel": kenh, "campaign": cd, "plist": str(dich),
-               "bytes": len(noi_dung)}
+               "bytes": len(noi_dung), "secret_env": sorted(bi_mat),
+               "secret_env_missing": sorted(chua_khai)}
+        if co_runner:
+            muc["runner"] = runner
+        if k.get("schedule") is not None:
+            muc["schedule"] = k["schedule"]
         if a.dry_run:
             SC.log(f"[launchd] (xem trước) {l} → {dich} ({len(noi_dung)} B) "
-                   f"· {kenh}/{cd} · KHÔNG gọi launchctl")
+                   f"· {kenh}/{cd}{'/' + runner if co_runner else ''} "
+                   f"· con trỏ bí mật: {', '.join(sorted(bi_mat)) or '(không)'} "
+                   f"· KHÔNG gọi launchctl")
             muc["dry_run"] = True
             ra.append(muc)
             continue
         dich_dir.mkdir(parents=True, exist_ok=True)
         dich.write_bytes(noi_dung)
+        if os.name != "nt":
+            os.chmod(dich, 0o600)      # chứa đường tới file bí mật: chỉ chủ máy đọc
         (SP.root(a.station) / "logs" / "launchd").mkdir(parents=True, exist_ok=True)
         if a.no_load or not _la_mac():
             SC.log(f"[launchd] {l}: đã ghi {dich} (chưa nạp — "
