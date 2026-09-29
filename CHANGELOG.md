@@ -3,7 +3,7 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
-## 1.0.0 — chưa phát hành (phát hành đầu)
+## 1.0.0 — 2026-09-29 (phát hành đầu)
 
 Đợt chuẩn hóa repo: chạy chuẩn trên Windows, mã sẵn sàng cho macOS, bộ cài/gỡ/kiểm có đủ.
 
