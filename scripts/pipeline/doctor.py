@@ -183,7 +183,10 @@ def _kham_env_khong_ai_doc(so: So, repo: Path) -> None:
     if not khai:
         return
     py, ps = _bien_doc_duoc(repo)
-    cau = sorted(khai - py)
+    # Con trỏ bí mật (`YT_TOKEN_PATH`, `FB_CONFIG`… kèm hậu tố kênh) CÓ đường đi từ `.env`:
+    # `studio_paths.hook_env()` mang chúng sang hook đăng bài, và `install_launchd.py` điền
+    # chúng vào plist. Kêu về chúng là báo oan.
+    cau = sorted(k for k in khai - py if not SP.la_con_tro_bi_mat(k))
     if not cau:
         return
     chi_ps = [b for b in cau if b in ps]
@@ -191,8 +194,8 @@ def _kham_env_khong_ai_doc(so: So, repo: Path) -> None:
             f"{', '.join(cau[:8])}"
             + (f" — trong đó {', '.join(chi_ps[:5])} là biến của `.ps1`, và PowerShell "
                f"không có cách nào đọc .env." if chi_ps else "")
-            + " `.env` chỉ tới được script Python của repo này: không tới `.ps1`, và không "
-              "tới tiến trình con của hook đăng bài. Những dòng đó phải đặt ở cấp user "
+            + " `.env` chỉ tới được script Python của repo này (và con trỏ bí mật tới hook "
+              "đăng bài): không tới `.ps1`. Những dòng đó phải đặt ở cấp user "
               "(setx / khối EnvironmentVariables của plist) mới có tác dụng. "
               "Xem docs/WORKSPACE.md mục `.env`.")
 
@@ -558,6 +561,67 @@ def kham_host(so: So, tram: Path):
 
 
 KHAM_THEM.append(kham_host)
+
+
+# ══ Bài mẫu offline (`samples/`) ═══════════════════════════════════════════════════════
+#
+# Chấm lại `samples/bai-mau` bằng đúng 24 cổng của `blog_gates.py` — TRONG BỘ NHỚ, không
+# ghi `gates.json` (doctor chỉ đọc) — rồi so từng trạng thái với `samples/gates-expected.json`.
+# Không mạng, không token, không trạm giọng/video: đây là phép thử đầu tiên của một máy vừa
+# cài, chạy được ở mọi nơi.
+#
+#   PASS         khớp từng cổng           → một dòng thông tin
+#   WARN         lệch ít nhất một cổng    → cảnh báo (bài mẫu bị sửa, hoặc cổng đổi luật mà
+#                                            chưa cập nhật kỳ vọng); KHÔNG đỏ — bài mẫu là
+#                                            phép thử, không phải điều kiện để chạy
+#   NOT_CHECKED  bản cài không kèm samples/ → nói rõ là chưa kiểm, không giả xanh
+BAI_MAU = "samples"
+KY_VONG = "gates-expected.json"
+
+
+def _trang_thai_cong(r: dict) -> str:
+    return r["status"] if r["status"] != "fail" else f"fail_{r['level']}"
+
+
+def kiem_bai_mau(repo) -> tuple[str, str]:
+    """-> (mức, chi tiết). Mức ∈ `pass` · `warn` · `not_checked`. Không ném lỗi."""
+    goc = Path(repo) / BAI_MAU if repo else None
+    f = goc / KY_VONG if goc else None
+    if not f or not f.is_file():
+        return "not_checked", f"không có {BAI_MAU}/{KY_VONG} (bản cài không kèm bài mẫu)"
+    try:
+        kv = json.loads(f.read_text(encoding="utf-8"))
+        bai = goc / str(kv["post"])
+        if not bai.is_dir():
+            return "warn", f"thiếu thư mục bài mẫu {bai}"
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import blog_gates as BG  # noqa: E402 — nhập muộn: chỉ cần khi có bài mẫu
+        kq = BG.run_cmd(bai, str(kv["home_domain"]), stage=str(kv.get("stage") or "write"))
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        return "warn", f"không chấm được bài mẫu ({e.__class__.__name__}: {e})"
+    thay = {r["id"]: _trang_thai_cong(r) for r in kq["gates"]}
+    cho = dict(kv.get("gates") or {})
+    lech = sorted(k for k in set(thay) | set(cho) if thay.get(k) != cho.get(k))
+    chi_tiet = [f"{x} {thay.get(x)}≠{cho.get(x)}" for x in lech[:6]]
+    if kq["verdict"] != kv.get("verdict"):
+        chi_tiet.insert(0, f"verdict {kq['verdict']}≠{kv.get('verdict')}")
+    if chi_tiet:
+        return "warn", "lệch kỳ vọng ở " + ", ".join(chi_tiet)
+    return "pass", (f"{len(thay)} cổng khớp {BAI_MAU}/{KY_VONG} "
+                    f"(verdict {kq['verdict']}, chấm offline)")
+
+
+def kham_bai_mau(so: So, tram: Path):
+    muc, chi_tiet = kiem_bai_mau(SP.repo_root())
+    if muc == "pass":
+        so.ghi(f"samples: PASS — {chi_tiet}")
+    elif muc == "warn":
+        so.nhac(f"samples: WARN — {chi_tiet}. Xem `git status samples/` và samples/README.md")
+    else:
+        so.chua_kiem(f"samples: {chi_tiet}")
+
+
+KHAM_THEM.append(kham_bai_mau)
 
 
 def _in(kq: dict):

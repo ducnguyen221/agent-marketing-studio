@@ -137,6 +137,13 @@ script dùng đường lùi ghi ở cột cuối.
 | `TG_CONFIG` | `scripts/lib/telegram_io.py` (mọi đường Telegram, kể cả `notify_run.py`) | `~/.secret/telegram/config.json` |
 | `EMAIL_CONFIG` | `templates/station/_channel/send_newsletter.py` | `email-config.json` cạnh script |
 
+**Một thứ tự cho mọi con trỏ ở trên** (kèm hậu tố kênh như `YT_TOKEN_PATH__KENH_B`): biến
+môi trường → `<repo>/.env` (chỉ chế độ embedded) — đúng như `telegram_io.py`. Hai đường
+mang chúng tới tiến trình con: `studio_paths.hook_env()` (hook do bước `release` gọi) và
+`install_launchd.py` (điền giá trị vào plist — [`docs/launchd.md`](../../docs/launchd.md)).
+Code Python cần đọc một con trỏ thì gọi `studio_paths.secret_path("TÊN")`: thiếu biến thì
+nó dừng và nêu đúng tên biến; giá trị không phải đường dẫn thì dừng mà không in giá trị.
+
 **Token Telegram KHÔNG có biến riêng.** `TG_CONFIG` chỉ giữ đường dẫn; token chỉ nằm trong
 file đó. Không có đường lùi đọc token từ biến môi trường — cố ý, vì token trần trong biến
 user thì mọi tiến trình con đọc được và nó lọt vào log.

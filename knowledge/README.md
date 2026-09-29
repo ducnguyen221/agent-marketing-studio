@@ -26,3 +26,7 @@ Một số playbook chưng cất tri thức chuẩn ngành từ các repo market
 - `coreyhaines31/marketingskills` — copy frameworks, hook system, marketing psychology.
 - `zubair-trabzada/ai-marketing-claude`, `blacktwist/social-media-skills` — hook 9 pattern, thread architecture.
 - `AgriciDaniel/claude-youtube` — retention/thumbnail/Shorts playbook.
+
+Dòng Copyright và văn bản giấy phép của từng nguồn: [`NOTICE`](../NOTICE). Danh sách file chưng
+cất kèm hash của bản đã rà: [`upstream.json`](../upstream.json) — sửa một file chưng cất thì cập
+nhật hash của nó trong cùng commit (`tests/test_upstream_provenance.py` canh).

@@ -7,11 +7,16 @@
 # `tests/test_ci_workflow.py`.
 name: tests
 
+# Chạy trên MỌI nhánh, không riêng `main`: công việc thật sống trên nhánh feature, và một CI
+# chỉ nhìn `main` thì tới lúc merge mới biết đỏ — quá muộn để còn là cổng.
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
+# Quyền tối thiểu: job chỉ đọc mã, không ghi gì lên GitHub.
 permissions:
   contents: read
 
@@ -21,19 +26,24 @@ concurrency:
 
 jobs:
   pytest:
-    name: pytest (${{ matrix.os }})
+    name: pytest (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
+        # 3.10 là sàn khai trong pyproject.toml (`requires-python`); 3.12 là bản máy lịch
+        # đang chạy và bản INSTALL.md bảo cài trên Mac; 3.13 giữ cho repo không vỡ âm thầm
+        # khi người mới cài Python mới nhất.
+        python-version: ["3.10", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      # Ghim SHA (kèm tag để đọc): tag có thể bị dời, SHA thì không.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: requirements.txt
 

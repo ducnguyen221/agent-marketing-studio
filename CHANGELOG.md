@@ -3,6 +3,32 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.0.1 — 2026-09-29
+
+Bản vá cho Mac mini chạy tự động ở chế độ `embedded` (không biến trạm, trạm là
+`<repo>/workspace/`, cấu hình ở `<repo>/.env`). Không đổi hành vi trên máy Windows đang chạy lịch.
+
+- **Bài mẫu offline** `samples/`: một bài ngắn + kết quả kỳ vọng cố định của 24 cổng
+  (`samples/gates-expected.json`). `doctor` chấm lại trong bộ nhớ và in `samples: PASS`, `WARN`
+  khi lệch, `NOT_CHECKED` khi không có `samples/`. Cổng `tests/test_samples.py`.
+- **launchd:** PATH của mọi plist có `~/.local/bin` (đã mở rộng), `/opt/homebrew/bin`,
+  `/usr/local/bin`. Tên con trỏ bí mật (`TG_CONFIG`, `TG_CHAT`, `YT_CLIENT_SECRET`,
+  `YT_TOKEN_PATH`, `FB_CONFIG`, `EMAIL_CONFIG`, `CODEX_BRIDGE`; poller chỉ hai biến Telegram)
+  khai ở mẫu, giá trị bộ cài điền từ biến môi trường → `<repo>/.env`; chưa có thì bỏ dòng và nêu
+  tên, không phải đường dẫn thì mã 2 mà không in giá trị; plist ghi ra quyền 600.
+- **`launchd.json`** nhận object `{channel, campaign, runner, env, schedule}`: runner khác
+  `run.ps1` (vd lượt truyện), con trỏ bí mật theo kênh (`YT_TOKEN_PATH__<KÊNH>`), đổi lịch. Tài
+  liệu và ví dụ: `docs/launchd.md`.
+- **Con trỏ bí mật một thứ tự:** `studio_paths.secret_path()` (thiếu thì nêu tên biến) và
+  `studio_paths.hook_env()` — hook đăng bài của bước `release` nhận con trỏ khai ở `.env`.
+- **Tài liệu:** `START-HERE.md`, `docs/troubleshooting.md`, trang `docs/install/`; `INSTALL.md`
+  bổ sung Mac mới tinh (`python3.12`, Xcode CLT, Homebrew do người dùng cài, `/opt/homebrew/bin`,
+  `pwsh`, `zsh -lic`) và bước xem trước lịch `install_launchd.py --dry-run --no-load`.
+- **CI:** ma trận Windows + macOS × Python 3.10/3.12/3.13, `fail-fast: false`, chạy mọi nhánh,
+  mọi action ghim SHA.
+- **Ghi công:** `NOTICE` + `upstream.json` (hash của từng file chưng cất từ repo MIT ngoài);
+  cổng `tests/test_upstream_provenance.py`.
+
 ## 1.0.0 — 2026-09-29 (phát hành đầu)
 
 Đợt chuẩn hóa repo: chạy chuẩn trên Windows, mã sẵn sàng cho macOS, bộ cài/gỡ/kiểm có đủ.

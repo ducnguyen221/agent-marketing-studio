@@ -36,11 +36,13 @@
     <string>pwsh</string>
     <string>-NoProfile</string>
     <string>-File</string>
-    <string>__STATION__/__CHANNEL__/__CAMPAIGN__/run.ps1</string>
+    <string>__STATION__/__CHANNEL__/__CAMPAIGN__/__RUNNER__</string>
   </array>
 
     <!-- PATH: launchd KHÔNG đọc ~/.zshrc. Job chỉ thấy PATH khai ở đây, nên
-         `ffmpeg`, `pwsh`, `node`, `npx` phải nằm trong danh sách này. Đầu log của
+         `ffmpeg`, `pwsh`, `node`, `npx`, `claude` phải nằm trong danh sách này
+         (`~/.local/bin` là chỗ bộ cài Claude Code và pipx đặt lệnh; bộ cài lịch mở
+         rộng `~` thành đường nhà thật vì launchd không tự mở rộng). Đầu log của
          notify_run.py in `which` của từng cái — đọc là biết thiếu gì.
          OMNIVOICE_DEVICE=mps: ép dùng GPU tích hợp của Apple Silicon.
          OMNIVOICE_DTYPE=float32 — ĐÂY LÀ PIPELINE TIN, KHÔNG PHẢI TRUYỆN. Một lượt tin
@@ -52,7 +54,7 @@
          `docs/RUNBOOK-DOI-MAY.md` mục "hai pipeline, hai cấu hình". -->
   <key>EnvironmentVariables</key>
   <dict>
-    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>PATH</key><string>__HOME__/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>HOME</key><string>__HOME__</string>
     <key>PYTHONUTF8</key><string>1</string>
     <key>MARKETING_STUDIO_DATA</key><string>__STATION__</string>
@@ -63,6 +65,19 @@
     <key>OMNIVOICE_PY</key><string>__OMNIVOICE_PY__</string>
     <key>OMNIVOICE_DEVICE</key><string>mps</string>
     <key>OMNIVOICE_DTYPE</key><string>float32</string>
+    <!-- CON TRỎ bí mật: TÊN khai ở đây, GIÁ TRỊ bộ cài lịch điền từ biến môi trường
+         hoặc từ file .env của repo (chế độ embedded). Giá trị là ĐƯỜNG DẪN tới file
+         bí mật, không bao giờ là bí mật. Biến chưa khai ở đâu thì bộ cài BỎ cả dòng
+         (không ghi chuỗi rỗng) và in tên nó ra. Tên thêm theo kênh (hậu tố tài
+         khoản) khai ở khoá env của launchd.json, chèn vào chỗ đánh dấu ngay dưới. -->
+    <key>TG_CONFIG</key><string>__ENV_TG_CONFIG__</string>
+    <key>TG_CHAT</key><string>__ENV_TG_CHAT__</string>
+    <key>YT_CLIENT_SECRET</key><string>__ENV_YT_CLIENT_SECRET__</string>
+    <key>YT_TOKEN_PATH</key><string>__ENV_YT_TOKEN_PATH__</string>
+    <key>FB_CONFIG</key><string>__ENV_FB_CONFIG__</string>
+    <key>EMAIL_CONFIG</key><string>__ENV_EMAIL_CONFIG__</string>
+    <key>CODEX_BRIDGE</key><string>__ENV_CODEX_BRIDGE__</string>
+    <!-- __ENV_EXTRA__ -->
   </dict>
 
   <key>WorkingDirectory</key><string>__STATION__</string>

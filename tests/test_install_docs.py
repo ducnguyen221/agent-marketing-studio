@@ -81,3 +81,61 @@ def test_co_cua_lenh_cai_go_KHOP_script_that():
     for co in set(re.findall(r"\./install\.sh\s+(--[\w-]+)", INSTALL)):
         assert co in sh or co.lstrip("-") in (ROOT / "scripts/pipeline/init_station.py").read_text(
             encoding="utf-8"), f"install.sh/init_station không hiểu {co}"
+
+
+# ── A10: START-HERE · trang /install/ · gỡ vướng — cùng MỘT prompt, cùng một nguồn ──────
+
+def _doc(rel: str) -> str:
+    return (ROOT / rel).read_text(encoding="utf-8").replace("\r\n", "\n")
+
+
+def _pre(page: str, ident: str) -> str:
+    import html
+    m = re.search(rf'<pre id="{ident}">(.*?)</pre>', page, re.S)
+    assert m, f'thiếu <pre id="{ident}">'
+    return html.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip("\n")
+
+
+def test_START_HERE_ngan_va_chep_DUNG_prompt_VI():
+    t = _doc("START-HERE.md")
+    assert len(t.splitlines()) <= 60, "START-HERE.md phải ngắn (≤ 60 dòng)"
+    assert _prompt()[0] in t, "START-HERE phải chép NGUYÊN VĂN prompt VI từ INSTALL.md"
+    for can in ("INSTALL.md", "docs/troubleshooting.md", "samples/README.md", "docs/launchd.md",
+                "python3.12"):
+        assert can in t, f"START-HERE.md thiếu {can}"
+
+
+def test_trang_install_chep_DUNG_hai_prompt_va_duoc_trang_chu_tro_toi():
+    page = _doc("docs/install/index.html")
+    vi, en = (p.strip("\n") for p in _prompt())
+    assert _pre(page, "prompt-vi") == vi
+    assert _pre(page, "prompt-en") == en
+    for host in ("Claude Code", "Codex", "Antigravity", "Claude Desktop"):
+        assert host in page, host
+    assert 'href="install/"' in _doc("docs/index.html"), "trang chủ chưa trỏ tới /install/"
+
+
+def test_trang_go_vuong_ton_tai_va_duoc_tro_toi():
+    t = _doc("docs/troubleshooting.md")
+    for muc in ("## Khi cài", "## Dòng `doctor`", "## Lịch chạy trên macOS (launchd)"):
+        assert muc in t, muc
+    for rel in ("INSTALL.md", "START-HERE.md"):
+        assert "docs/troubleshooting.md" in _doc(rel), f"{rel} chưa trỏ tới docs/troubleshooting.md"
+
+
+@pytest.mark.parametrize("y", [
+    "python3.12 -m venv .venv",        # python3 của Mac mới là 3.9
+    "xcode-select --install",          # Command Line Tools — người dùng bấm Install
+    "brew.sh",                         # Homebrew do NGƯỜI DÙNG cài (lệnh tải-rồi-chạy bị cấm)
+    "/opt/homebrew/bin",               # PATH của Apple Silicon
+    "brew install --cask powershell",  # pwsh cho runner .ps1
+    "zsh -lic",                        # kiểm biến bằng shell đăng nhập
+    "install_launchd.py --dry-run --no-load",
+])
+def test_INSTALL_du_cho_Mac_moi_tinh(y):
+    assert y in INSTALL, f"INSTALL.md thiếu hướng dẫn macOS: {y}"
+
+
+def test_INSTALL_KHONG_bao_agent_tu_cai_Homebrew():
+    """Lệnh cài Homebrew là tải-rồi-chạy — đúng thứ mục 0 cấm. Chỉ trỏ người dùng tới brew.sh."""
+    assert "install.sh)" not in INSTALL and "curl -fsSL" not in INSTALL

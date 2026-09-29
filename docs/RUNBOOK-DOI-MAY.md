@@ -263,7 +263,8 @@ python scripts/runners/install_launchd.py --only studio.marketing.daily-news-a
 ```
 
 - Khai kênh/chiến dịch một lần trong `<trạm>/launchd.json`, hoặc từng lần bằng cờ
-  `--map <label>=<kênh>/<chiến dịch>`. Thiếu khai ⇒ dừng ở **mã 2**, không đoán.
+  `--map <label>=<kênh>/<chiến dịch>`. Thiếu khai ⇒ dừng ở **mã 2**, không đoán. Định dạng
+  đầy đủ (runner khác `run.ps1`, con trỏ bí mật theo kênh, đổi lịch): [`launchd.md`](launchd.md).
 - `worker`, `approve-poller`, `daily-story` **không** nằm trong bộ mặc định: phải gọi đích
   danh bằng `--only`, hoặc `--all`. Ba job đó hoặc chạy liên tục, hoặc chạy hàng giờ giữa
   đêm — bật chúng phải là một câu bạn gõ ra.

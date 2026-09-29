@@ -744,10 +744,17 @@ def step_release(campaign: Path, *, bot, dry_run=False, run_cmd=None,
 
     Báo đã phát hành trong khi chưa là cách hỏng tệ nhất: không ai đi kiểm lại, và bài nằm
     im mãi ở trạng thái "xong" mà thật ra chưa lên kênh nào.
+
+    ## Hook nhận CON TRỎ bí mật từ `<repo>/.env` (chế độ embedded)
+
+    Hook YouTube/Facebook của trạm đọc `YT_TOKEN_PATH`, `FB_CONFIG`… từ môi trường. Ở chế độ
+    embedded các biến đó chỉ nằm trong `<repo>/.env`, nên tiến trình con nhận
+    `studio_paths.hook_env()`: môi trường thật + đúng bộ con trỏ bí mật khai ở `.env`
+    (biến thật luôn thắng, chỉ tên thuộc `CON_TRO_BI_MAT`, chỉ giá trị là đường dẫn).
     """
     run_cmd = run_cmd or (lambda cmd, **kw: subprocess.run(
         cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
-        stdin=subprocess.DEVNULL, **kw))
+        stdin=subprocess.DEVNULL, env=SP.hook_env(), **kw))
     fm_cam, _, _ = _doc(campaign)
     rt = fm_cam.get("runtime") or {}
     channel = [(c, (rt.get(f"{c}_cmd") or "").strip())

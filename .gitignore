@@ -38,3 +38,7 @@ docs/plans/
 
 # Vung nhap/trung gian cua agent — KHONG bao gio commit.
 .tmp/
+
+# Bài mẫu offline (samples/): chạy tay `blog_gates.py samples/bai-mau` ghi nhật ký cổng vào
+# thư mục bài. Kết quả KỲ VỌNG cố định là `samples/gates-expected.json`, không phải file này.
+samples/**/gates.json

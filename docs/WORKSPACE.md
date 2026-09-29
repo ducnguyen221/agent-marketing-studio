@@ -86,7 +86,7 @@ dẫn**, file ngoài git giữ **giá trị**. Chi tiết:
 |---|---|---|
 | Trạm & cấu hình máy — `VOICE_STATION`, `VIDEO_STATION`, `OMNIVOICE_PY`, `VOICES_DIR`, `HYPERFRAMES_VERSION`, `WEB_REPO_DIR`, `TG_CONFIG`, `TG_CHAT`, `CHROME_BIN`, `FFMPEG_DIR`, `FFPROBE`, `VIDEO_FONT`, `AGENT_CALL_ENGINES`, `CODEX_BRIDGE` | **có** | `<repo>/.env` là đủ |
 | Biến của `.ps1` (`$env:X`) — `MARKETING_STUDIO_DATA`, `MARKETING_STUDIO_HOME`, `MARKETING_STUDIO_PY` | **không** | cấp user (`setx`) / môi trường của scheduled task |
-| Đường tới file bí mật mà **hook đăng bài của bạn** đọc — `YT_TOKEN_PATH`, `YT_CLIENT_SECRET`, `FB_CONFIG`, `EMAIL_CONFIG` | **không** | cấp user / plist — hook chạy trong tiến trình con nhận môi trường thật, `.env` không với tới |
+| Đường tới file bí mật mà **hook đăng bài của bạn** đọc — `YT_TOKEN_PATH`, `YT_CLIENT_SECRET`, `FB_CONFIG`, `EMAIL_CONFIG` (kèm hậu tố kênh, vd `YT_TOKEN_PATH__KENH_B`) | **có, qua hai đường** | hook do bước `release` gọi nhận `studio_paths.hook_env()` (môi trường thật + đúng các con trỏ này từ `.env`); job launchd nhận giá trị do `install_launchd.py` điền vào plist ([`launchd.md`](launchd.md)). Script của trạm bạn **chạy tay từ shell** thì không — đặt biến ở shell, hoặc chạy qua lịch |
 
 Không phải đoán: `doctor` liệt kê thẳng dòng **đã điền** nào trong `.env` mà không script
 Python nào đọc, và nói rõ dòng nào là biến của `.ps1`. Dòng `TÊN=` còn để trống thì nó im
