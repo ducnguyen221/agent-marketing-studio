@@ -67,7 +67,7 @@ Mã chiến dịch loại này là **slug chức năng** (`daily-ai-news`, `hot-
 ### Bước 3 — Chiến dịch sống ở TRẠM, không ở repo
 
 Trạm phân giải theo thứ tự, dừng ở cái đầu tiên thấy: `--station` → biến môi trường
-`MARKETING_STUDIO_DATA` → `~/.marketing`.
+`MARKETING_STUDIO_DATA` → `studio.local.json` của bộ cài → `<repo>/workspace/`.
 
 Kênh **không bắt buộc** nằm trong trạm. `CHANNELS.md` là cạnh **duy nhất** được phép trỏ ra
 ngoài; script đọc nó chứ không quét thư mục. Kênh nằm trong trạm thì đường ghi **tương đối**

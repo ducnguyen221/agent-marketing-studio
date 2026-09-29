@@ -123,6 +123,32 @@ def test_prompt_thieu_hoac_con_cho_trong_thi_KHONG_goi_Codex(post):
     assert run.goi == []
 
 
+def test_khong_khai_cau_thi_DUNG_ma_3_neu_ten_bien_khong_doan_duong(post, monkeypatch):
+    """Repo public: không có đường cầu "quen" nào để lùi về. Thiếu cầu phải nói tên biến."""
+    d, _ = post
+    monkeypatch.delenv(M.BIEN_CAU, raising=False)
+    monkeypatch.setattr(M.SP, "doc_env_file", lambda repo=None: {})
+    assert M._bridge_mac_dinh() is None
+    run = _cau_gia()
+    code, kq = M.make(d, cau=None, run=run)
+    assert code == 3 and M.BIEN_CAU in kq["reason"] and "--bridge" in kq["reason"], kq
+    assert run.goi == []
+
+
+def test_CLI_khong_co_bridge_va_khong_bien_thi_ma_3(post, monkeypatch, capsys):
+    d, _ = post
+    monkeypatch.delenv(M.BIEN_CAU, raising=False)
+    monkeypatch.setattr(M.SP, "doc_env_file", lambda repo=None: {})
+    assert M.main(["make", "--post", str(d)]) == 3
+    assert M.BIEN_CAU in capsys.readouterr().out
+
+
+def test_bien_CODEX_BRIDGE_thanh_duong_cau_khi_khong_truyen_co(post, monkeypatch):
+    _, cau = post
+    monkeypatch.setenv(M.BIEN_CAU, str(cau))
+    assert M._bridge_mac_dinh() == cau
+
+
 # ── soát chữ ────────────────────────────────────────────────────────────────
 
 def test_soat_xong_thi_duoc_dang(post):

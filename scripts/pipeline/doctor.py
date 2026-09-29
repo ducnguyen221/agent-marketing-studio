@@ -32,8 +32,9 @@ bước thật sự cần tới chúng.
 
 Bản này khám ba phần: **F17** (hai chế độ cài), **hai trạm năng lực** của hợp đồng ba
 trạm — trạm giọng `agent-voice-studio`, trạm video `agent-video-studio` — và **thư mục
-`<trạm>/engine`** (cuối file). Hai phần sau nối vào qua `KHAM_THEM`, một danh sách, để
-thêm mục không phải sửa lại luồng.
+`<trạm>/engine`** (cuối file), và **skill cho ứng dụng AI** (skill gốc + adapter Claude;
+việc host nạp skill là `NOT_CHECKED`). Các phần sau nối vào qua `KHAM_THEM`, một danh sách,
+để thêm mục không phải sửa lại luồng.
 """
 from __future__ import annotations
 
@@ -86,6 +87,7 @@ class So:
         self.fail: list[str] = []
         self.warn: list[str] = []
         self.info: list[str] = []
+        self.not_checked: list[str] = []
         self.code = SC.OK
 
     def hong(self, msg):
@@ -101,6 +103,11 @@ class So:
 
     def ghi(self, msg):
         self.info.append(msg)
+
+    def chua_kiem(self, msg):
+        """NOT_CHECKED — thứ doctor KHÔNG đo được từ đây. Không đỏ, không xanh: in rõ
+        để không ai đọc "đủ để chạy" thành "đã kiểm hết"."""
+        self.not_checked.append(msg)
 
 
 def _git_bo_qua(repo: Path, duong: str) -> bool | None:
@@ -271,7 +278,7 @@ def kham(station=None) -> dict:
 
     return {"code": so.code, "mode": che_do, "station": str(st), "source": nguon,
             "repo": str(repo) if repo else None,
-            "fail": so.fail, "warn": so.warn, "info": so.info}
+            "fail": so.fail, "warn": so.warn, "info": so.info, "not_checked": so.not_checked}
 
 
 # ══ HAI TRẠM NĂNG LỰC — hợp đồng ba trạm (§2.4) ══════════════════════════════════════
@@ -516,6 +523,43 @@ def kham_engine(so: So, tram: Path):
 KHAM_THEM.append(kham_engine)
 
 
+# ══ Skill cho các ứng dụng AI (host) ═══════════════════════════════════════════════════
+#
+# Đo được từ đây: skill gốc có mặt, adapter của Claude khớp skill gốc. KHÔNG đo được từ
+# đây: host có thật sự nạp skill hay không — việc đó chỉ thấy trong một phiên MỚI của host
+# mở tại thư mục repo. Nên phần đó là NOT_CHECKED, không phải xanh.
+HOSTS = ("claude", "codex", "antigravity")
+
+
+def kham_host(so: So, tram: Path):
+    repo = SP.repo_root()
+    goc = (repo / ".agents" / "skills") if repo else None
+    if not goc or not goc.is_dir():
+        so.nhac("không thấy .agents/skills trong bản clone — ứng dụng AI sẽ không có skill nào")
+        return
+    ten = sorted(p.parent.name for p in goc.glob("*/SKILL.md"))
+    so.ghi(f"skill: {len(ten)} skill gốc ở .agents/skills ({', '.join(ten)})")
+    sinh = repo / "scripts" / "build_host_adapters.py"
+    if sinh.is_file():
+        try:
+            r = subprocess.run([sys.executable, str(sinh), "--check"], capture_output=True,
+                               text=True, encoding="utf-8", errors="replace", timeout=60)
+        except (OSError, subprocess.SubprocessError) as e:
+            so.chua_kiem(f"adapter Claude: không chạy được bộ kiểm ({e.__class__.__name__})")
+        else:
+            if r.returncode == 0:
+                so.ghi("adapter Claude: .claude/skills khớp skill gốc")
+            else:
+                so.nhac("adapter Claude lệch skill gốc — chạy `python scripts/build_host_adapters.py`"
+                        " rồi xem diff: " + " · ".join((r.stdout or r.stderr).split("\n")[:3]))
+    for h in HOSTS:
+        so.chua_kiem(f"host {h}: chưa kiểm việc nạp skill — mở phiên MỚI của {h} tại thư mục "
+                     f"repo và hỏi danh sách skill; doctor không mở ứng dụng AI")
+
+
+KHAM_THEM.append(kham_host)
+
+
 def _in(kq: dict):
     for x in kq["info"]:
         SC.log("  " + x)
@@ -523,6 +567,8 @@ def _in(kq: dict):
         SC.log(f"  ĐỎ   {x}")
     for x in kq["warn"]:
         SC.log(f"  nhắc {x}")
+    for x in kq.get("not_checked", []):
+        SC.log(f"  NOT_CHECKED {x}")
     ket = {SC.OK: "đủ để chạy", SC.CONTRACT_ERROR: "cấu hình SAI — sửa rồi chạy lại",
            SC.STATION_MISSING: "CHƯA CÀI XONG — làm nốt bước còn thiếu"}[kq["code"]]
     SC.log(f"\n  {len(kq['fail'])} đỏ · {len(kq['warn'])} cảnh báo — {ket}")

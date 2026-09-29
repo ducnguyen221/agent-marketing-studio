@@ -66,7 +66,10 @@ Mọi script đi qua **một** hàm (`scripts/lib/studio_paths.py`), theo đúng
 | 2 | biến `MARKETING_STUDIO_DATA` | máy đã đặt biến (máy chạy lịch thật) |
 | 3 | `<repo>/studio.local.json` → `station_path` | bộ cài đã chạy |
 | 4 | `<repo>/workspace/` nếu **có thật** | chế độ embedded, file cấu hình bị mất |
-| 5 | `~/.marketing` | chưa cài gì |
+| 5 | `<repo>/workspace/` (chưa tạo) | chưa cài gì — `doctor` báo thiếu, bộ cài tạo |
+
+**Không có đường lùi về thư mục trong nhà** (`~/.marketing`…): trạm ngoài repo chỉ có khi
+bạn chỉ định — biến, `--station`, hoặc chọn `separate` lúc cài.
 
 Biến đứng **trước** `studio.local.json` là có chủ đích: máy nào đã đặt biến từ trước thì một
 file cấu hình lạc vào repo không được phép cướp trạm.
@@ -81,7 +84,7 @@ dẫn**, file ngoài git giữ **giá trị**. Chi tiết:
 
 | Nhóm biến | `.env` có tác dụng? | Phải đặt ở đâu |
 |---|---|---|
-| Trạm & cấu hình máy — `VOICE_STATION`, `VIDEO_STATION`, `OMNIVOICE_PY`, `VOICES_DIR`, `HYPERFRAMES_VERSION`, `WEB_REPO_DIR`, `TG_CONFIG`, `TG_CHAT`, `CHROME_BIN`, `FFMPEG_DIR`, `FFPROBE`, `VIDEO_FONT`, `AGENT_CALL_ENGINES`, `OPCOS_CODEX_BRIDGE` | **có** | `<repo>/.env` là đủ |
+| Trạm & cấu hình máy — `VOICE_STATION`, `VIDEO_STATION`, `OMNIVOICE_PY`, `VOICES_DIR`, `HYPERFRAMES_VERSION`, `WEB_REPO_DIR`, `TG_CONFIG`, `TG_CHAT`, `CHROME_BIN`, `FFMPEG_DIR`, `FFPROBE`, `VIDEO_FONT`, `AGENT_CALL_ENGINES`, `CODEX_BRIDGE` | **có** | `<repo>/.env` là đủ |
 | Biến của `.ps1` (`$env:X`) — `MARKETING_STUDIO_DATA`, `MARKETING_STUDIO_HOME`, `MARKETING_STUDIO_PY` | **không** | cấp user (`setx`) / môi trường của scheduled task |
 | Đường tới file bí mật mà **hook đăng bài của bạn** đọc — `YT_TOKEN_PATH`, `YT_CLIENT_SECRET`, `FB_CONFIG`, `EMAIL_CONFIG` | **không** | cấp user / plist — hook chạy trong tiến trình con nhận môi trường thật, `.env` không với tới |
 

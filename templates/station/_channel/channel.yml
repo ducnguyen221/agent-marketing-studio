@@ -145,6 +145,10 @@ brand:
   # Bộ tên tổ chức mà cổng G22 đi tìm trong BẢN CÔNG KHAI. Để trống = G22 báo `thiếu`
   # (không đo được), KHÔNG báo xanh — xanh giả còn tệ hơn không có cổng.
   org_names: []     # vd ["Tên Công Ty", "Tên Chương Trình"]
+  # Tên công cụ/hệ thống RIÊNG của bạn mà cổng G21 phải chặn thêm trong bản công khai,
+  # ngoài bộ tên công cụ công khai có sẵn trong mã. Để ở đây (trạm, ngoài git), không
+  # để trong repo: danh sách tên nội bộ nằm trong mã public thì chính nó đã là rò rỉ.
+  internal_tools: []  # vd ["ten-he-thong-rieng"]
   # Nút mạng xã hội ở chân trang. `icon` chọn theo TÊN trong kho
   # `scripts/lib/brand.py:ICON` (website · facebook · youtube · profile) — cố ý không
   # cho dán SVG thô vào đây, vì nội dung file này đi thẳng vào HTML xuất bản.

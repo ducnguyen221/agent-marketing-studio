@@ -52,17 +52,20 @@ import studio_paths as SP  # noqa: E402
 from blog_gates import PROMPT_ANH_TOI_THIEU  # noqa: E402
 
 REPO = _HERE.parents[1]
-CAU_MAC_DINH = Path.home() / ".opcos" / "bridges" / "codex-bridge" / "cli.mjs"
+# Biến khai đường `cli.mjs` của cầu gọi Codex. KHÔNG có đường mặc định: repo này public, và
+# một đường "quen" trong thư mục nhà là đường của một máy cụ thể — ở máy khác nó không tồn
+# tại, còn ở máy có nó thì người dùng không biết mình đang gọi cầu nào.
+BIEN_CAU = "CODEX_BRIDGE"
 
 
-def _bridge_mac_dinh() -> Path:
-    """Đường cầu Codex mặc định cho cờ `--bridge`: `OPCOS_CODEX_BRIDGE` → đường quen.
+def _bridge_mac_dinh() -> Path | None:
+    """Đường cầu Codex cho cờ `--bridge` khi không truyền cờ: `CODEX_BRIDGE`, hoặc None.
 
     Đọc qua `secret_env` nên chế độ cài `embedded` khai được trong `<repo>/.env`;
-    `os.environ` thẳng thì dòng trong `.env` không ai đọc, và không gì báo vì đã có
-    sẵn một đường mặc định trông hợp lệ."""
-    khai = (SP.secret_env("OPCOS_CODEX_BRIDGE") or "").strip()
-    return Path(khai).expanduser() if khai else CAU_MAC_DINH
+    `os.environ` thẳng thì dòng trong `.env` không ai đọc. Không khai → None, và `make`
+    dừng với mã 3 nêu đúng tên biến (fail-closed) thay vì đoán một đường."""
+    khai = (SP.secret_env(BIEN_CAU) or "").strip()
+    return Path(khai).expanduser() if khai else None
 # Cầu tự có trần thời gian cho mỗi lượt. Trần này chỉ chặn tiến trình con treo hẳn.
 TRAN_CHO_GIAY = 900
 ANH_TOI_THIEU = 800            # cùng ngưỡng với G19
@@ -139,7 +142,7 @@ def trang_thai_soat(anh: Path) -> tuple[bool, str]:
     return True, f"chữ trên ảnh đã soát bởi {tc.get('by')} lúc {tc.get('at')}"
 
 
-def make(post: Path, *, cau: Path = CAU_MAC_DINH, force: bool = False,
+def make(post: Path, *, cau: Path | None = None, force: bool = False,
          run=None, now: datetime | None = None) -> tuple[int, dict]:
     """Trả (mã thoát, kết quả). 0 xong hoặc đã có · 1 hỏng · 2 cầu chặn · 3 thiếu đầu vào."""
     run = run or (lambda cmd, **kw: subprocess.run(cmd, **kw))
@@ -155,6 +158,10 @@ def make(post: Path, *, cau: Path = CAU_MAC_DINH, force: bool = False,
     vi_sao = kiem_prompt(prompt)
     if vi_sao:
         return 3, {"status": "failed", "reason": vi_sao}
+    if cau is None:
+        return 3, {"status": "failed",
+                   "reason": f"chưa khai cầu Codex — đặt biến {BIEN_CAU} (đường tới cli.mjs) "
+                             "hoặc truyền --bridge <đường>"}
     if not Path(cau).is_file():
         return 3, {"status": "failed", "reason": f"không thấy cầu Codex: {cau}"}
 
@@ -254,8 +261,8 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="lenh", required=True)
     a_make = sub.add_parser("make", help="sinh ảnh từ facebook/infographic.prompt.txt")
     a_make.add_argument("--post", required=True, type=Path)
-    a_make.add_argument("--bridge", type=Path,
-                        default=_bridge_mac_dinh())
+    a_make.add_argument("--bridge", type=Path, default=None,
+                        help=f"đường cli.mjs của cầu gọi Codex; bỏ trống = đọc biến {BIEN_CAU}")
     a_make.add_argument("--force", action="store_true", help="sinh lại; ảnh cũ được giữ cạnh bên")
     a_ver = sub.add_parser("verify", help="ghi kết quả soát chữ trên ảnh")
     a_ver.add_argument("--post", required=True, type=Path)
@@ -265,7 +272,7 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     if a.lenh == "make":
-        code, kq = make(a.post, cau=a.bridge, force=a.force)
+        code, kq = make(a.post, cau=a.bridge or _bridge_mac_dinh(), force=a.force)
     else:
         code, kq = verify(a.post, by=a.by, quote=a.quote, failed=a.failed)
     print(json.dumps(kq, ensure_ascii=False))

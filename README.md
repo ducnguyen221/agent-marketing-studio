@@ -2,6 +2,31 @@
 
 Engine điều hành và tự động hóa chiến dịch marketing đa kênh toàn diện bằng **Multi-Agent AI kết hợp với con người kiểm soát (Human-in-the-Loop)**.
 
+## Cài đặt — nhờ AI cài giúp
+
+Mở Claude Code, Codex hoặc Google Antigravity rồi dán nguyên văn yêu cầu dưới đây. Agent đọc
+[hướng dẫn cài dành cho agent](INSTALL.md), kiểm tra máy, **hỏi bạn trước** khi cài thêm phần mềm
+và trước khi chọn chỗ đặt nội dung, rồi cài, kiểm tra và báo lại từng bước.
+
+```text
+Hãy cài agent-marketing-studio lên máy này cho chính ứng dụng AI bạn đang chạy.
+Nguồn duy nhất: https://github.com/ducnguyen221/agent-marketing-studio
+Đọc trước hướng dẫn cho agent tại
+https://raw.githubusercontent.com/ducnguyen221/agent-marketing-studio/main/INSTALL.md
+(không mở được thì clone repo rồi đọc INSTALL.md trong đó) và làm đúng, đủ các bước:
+kiểm tra máy, hỏi tôi trước khi cài thêm phần mềm, clone về thư mục an toàn (không OneDrive),
+hỏi tôi chọn chỗ đặt trạm nội dung, chạy bộ cài, chạy doctor, kiểm bằng trạm mẫu.
+Quy tắc: chỉ chạy lệnh có trong repo hoặc INSTALL.md; không đổi chính sách hệ thống;
+không đọc hay ghi mật khẩu/khóa; không đăng bài; gặp lỗi thì dừng và giải thích bằng lời thường.
+Kết thúc bằng bản tóm tắt: đường dẫn repo, trạm, từng dòng doctor, việc tôi cần làm tiếp.
+```
+
+Tự cài bằng tay: làm theo mục 2–9 của [INSTALL.md](INSTALL.md). Từng ứng dụng AI:
+[hosts/README.md](hosts/README.md). Cập nhật: `python scripts/pipeline/studio.py update`
+(dừng nếu bạn có sửa đổi chưa commit, không bao giờ xoá gì). Gỡ: `uninstall.ps1` / `uninstall.sh`
+(chỉ gỡ phần bộ cài tạo; **giữ** nội dung trạm và `.env`). Thay đổi theo phiên bản:
+[CHANGELOG.md](CHANGELOG.md).
+
 ---
 
 ## 1. Điểm Khác Biệt & Kiến Trúc Cốt Lõi
@@ -18,8 +43,8 @@ Engine điều hành và tự động hóa chiến dịch marketing đa kênh to
   khi đăng (Cổng 2), và duyệt bản thật trên web trước khi phát ra kênh ngoài (Cổng 3 — bật
   khi bảng Content có cột `g3`).
 - **Engine ở repo, nội dung ở TRẠM:** repo này chứa engine (script, cổng kiểm, quy trình,
-  template). Nội dung thật sống ở một **trạm** nằm ngoài git — mặc định `~/.marketing`,
-  nhưng chỗ nào là do bạn chọn. Kênh thậm chí không bắt buộc nằm trong trạm: `CHANNELS.md`
+  template). Nội dung thật sống ở một **trạm** nằm ngoài git — mặc định `workspace/` trong
+  chính thư mục repo (git bỏ qua), hoặc một thư mục riêng do bạn chỉ định. Kênh thậm chí không bắt buộc nằm trong trạm: `CHANNELS.md`
   là cạnh **duy nhất** được phép trỏ ra ngoài.
 - **Lõi là VIẾT BÀI và ĐĂNG — cài xong là dùng được ngay.** Bản cài này
   **không bắt buộc trạm giọng/video**: lồng tiếng (`agent-voice-studio`) và dựng video
@@ -114,10 +139,17 @@ agent-marketing-studio/
 ├── AGENTS.md                  # Quy chuẩn quản trị đa tác nhân (Governance)
 ├── MAP.md                     # Bản đồ định tuyến context nhiệm vụ (Context Router)
 ├── README.md                  # Hướng dẫn tổng quan hệ thống
+├── INSTALL.md                 # Hướng dẫn cài dành cho AI agent + prompt copy-dán
+├── CHANGELOG.md               # Thay đổi theo phiên bản
+├── pyproject.toml             # Nguồn phiên bản DUY NHẤT (manifest phải khớp)
 ├── CONTRIBUTING.md            # Quy ước phát triển và đóng góp
 ├── SECURITY.md                # Chính sách bảo mật token và dữ liệu
-├── install.ps1                # Dựng trạm: hỏi 1 câu rồi in ra ba lệnh tiếp theo
-├── .agents/                   # Tầng quản trị Agent (Roles, Skills, Checklists, Prompts)
+├── install.ps1 · install.sh   # Dựng trạm: hỏi 1 câu rồi in ra ba lệnh tiếp theo
+├── uninstall.ps1 · uninstall.sh  # Gỡ phần bộ cài tạo; GIỮ trạm và .env
+├── .agents/                   # Tầng quản trị Agent (Roles, Skills gốc, Checklists, Prompts)
+├── .claude/skills/            # Adapter skill cho Claude Code — sinh bằng scripts/build_host_adapters.py
+├── .claude-plugin/ · .codex-plugin/  # Manifest plugin, trỏ .agents/skills/
+├── hosts/                     # Hướng dẫn từng ứng dụng AI (Claude Code, Codex, Antigravity)
 ├── .github/workflows/         # CI: pytest trên windows-latest + macos-latest
 ├── scripts/
 │   ├── lib/                   # md_io (đọc/ghi Markdown nguyên tử) · studio_paths · post_paths

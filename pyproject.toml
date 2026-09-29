@@ -1,0 +1,21 @@
+# Nguồn phiên bản DUY NHẤT của agent-marketing-studio.
+#
+# Repo này CHƯA phải một gói Python cài được: engine chạy thẳng từ `scripts/` của bản clone,
+# phụ thuộc khai ở `requirements.txt` (CI và bộ cài đọc file đó). File này tồn tại để mọi
+# manifest phát hành (`.claude-plugin/`, `.codex-plugin/`) và CHANGELOG khớp về MỘT số —
+# `tests/test_version_sync.py` đỏ khi một chỗ lệch. Bump version = sửa số ở đây, ở ba
+# manifest, và thêm mục đầu CHANGELOG.md trong cùng một commit.
+#
+# Cố ý không có [build-system] và [tool.pytest.ini_options]: thêm build-system là hứa
+# `pip install .` chạy được (chưa đúng); thêm cấu hình pytest là đổi cách CI thu test.
+
+[project]
+name = "agent-marketing-studio"
+version = "1.0.0"
+description = "Engine điều hành chiến dịch marketing đa kênh: agent AI sản xuất, người duyệt ở ba cổng, nội dung sống ở trạm ngoài git."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+
+[project.urls]
+Repository = "https://github.com/ducnguyen221/agent-marketing-studio"

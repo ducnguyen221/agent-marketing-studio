@@ -145,7 +145,7 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 
 | Biến | Ai đọc | Không đặt thì |
 |---|---|---|
-| `MARKETING_STUDIO_DATA` | `studio_paths.py`, `run.ps1` — gốc trạm | `~/.marketing` (`run.ps1` đi lên tìm `CHANNELS.md` trước) |
+| `MARKETING_STUDIO_DATA` | `studio_paths.py`, `run.ps1` — gốc trạm | script Python: `studio.local.json` → `<repo>/workspace/`; `run.ps1` đi lên tìm `CHANNELS.md` trước |
 | `MARKETING_STUDIO_HOME` | `run.ps1` — thư mục repo | `~/Code/agent-marketing-studio` |
 | `MARKETING_STUDIO_PY` | mọi `.ps1` gọi Python (`Find-Python`) | `<repo>/.venv` → `python` → `python3` → `py`; khai mà hỏng thì DỪNG |
 | `AGENT_CALL_ENGINES` | `agent_call.py` — đường tới `engines.json` (model, thứ tự fallback, đường CLI) | `<gốc trạm>/_agent-call/engines.json` → `<gốc trạm>/engine/engines.json`; thiếu cả hai thì dùng mặc định trong mã. File này là **cấu hình theo MÁY** — nó đi theo gói `station.py export`, nên máy vừa nhận gói đang chạy thứ tự engine của máy cũ; xem `docs/RUNBOOK-DOI-MAY.md` bước 5 |
@@ -162,7 +162,7 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `VIDEO_STATION` | `studio_paths.video_station()`, `scripts/lib/video.py` — gốc trạm video (`agent-video-studio`) | `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station` → coi như chưa cài |
 | `VIDEO_ROOT` | tên CŨ của `VIDEO_STATION`, còn đọc được để không gãy máy đang chạy | — |
 | `HYPERFRAMES_VERSION` | `scripts/lib/video.py` — bản HyperFrames trạm video ghim (chỉ để báo cáo; trạm video mới là nơi dùng nó) | `station.json: hyperframes_version` của trạm video |
-| `OPCOS_CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | đường mặc định trong thư mục nhà |
+| `CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | **không có** — thiếu thì `make` dừng mã 3 và nêu tên biến |
 | `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |
 
 **Biến của TRẠM GIỌNG mà repo này chỉ truyền tiếp** — không script nào ở đây đọc chúng;

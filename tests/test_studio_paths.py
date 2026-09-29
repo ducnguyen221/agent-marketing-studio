@@ -93,7 +93,8 @@ def test_cap_chua_khai_thi_no_loi_chu_khong_doan():
 # F17.3 — MỘT thứ tự phân giải dùng chung cho mọi script (hai chế độ cài embedded/separate)
 #
 # Thứ tự phải đo được từng nhánh, vì mỗi nhánh là một cách người dùng có thể đã cài:
-#   --station → MARKETING_STUDIO_DATA → studio.local.json → <repo>/workspace/ → ~/.marketing
+#   --station → MARKETING_STUDIO_DATA → studio.local.json → <repo>/workspace/ (có thật)
+#   → <repo>/workspace/ (mặc định, chưa tạo). Không có đường lùi về thư mục trong nhà.
 # Nhánh nào lặng lẽ nhảy cóc thì người dùng mất trạm mà không có thông báo nào.
 # ══════════════════════════════════════════════════════════════════════════════════════
 
@@ -159,15 +160,34 @@ def test_nhanh_4_workspace_co_that(repo_gia):
     assert st == (repo_gia / SP.WORKSPACE).resolve() and nguon == SP.WORKSPACE
 
 
-def test_nhanh_5_mac_dinh_home_marketing(repo_gia, tmp_path):
+def test_nhanh_5_khong_khai_gi_thi_tram_la_workspace_cua_repo(repo_gia, tmp_path):
+    """Đ4: người dùng không đặt biến ⇒ trạm là `<repo>/workspace/`, KHÔNG phải ~/.marketing."""
     st, nguon = SP.resolve_station()
-    assert st == (tmp_path / "nha" / ".marketing").resolve() and nguon == "default"
+    assert st == (repo_gia / SP.WORKSPACE).resolve() and nguon == "default"
 
 
-def test_workspace_KHONG_ton_tai_thi_khong_chon(repo_gia, tmp_path):
-    """Chỉ `workspace/` CÓ THẬT mới được chọn — không thì im lặng tạo trạm rỗng trong repo."""
+def test_mac_dinh_KHONG_lui_ve_tram_trong_nha_du_tram_do_co_that(repo_gia, tmp_path):
+    """Máy có sẵn một trạm ở ~/.marketing (của bản cài khác) không được "tự tìm thấy":
+    trạm ngoài repo chỉ có khi người dùng chỉ định."""
+    (tmp_path / "nha" / ".marketing").mkdir()
+    (tmp_path / "nha" / ".marketing" / SP.SO_KENH).write_text("x", encoding="utf-8")
     st, _ = SP.resolve_station()
-    assert st != (repo_gia / SP.WORKSPACE).resolve()
+    assert st == (repo_gia / SP.WORKSPACE).resolve()
+
+
+def test_workspace_chua_co_thi_phan_giai_KHONG_tao_no(repo_gia):
+    """Phân giải chỉ trả đường — tạo trạm là việc của bộ cài, không phải của một lần đọc."""
+    SP.resolve_station()
+    assert not (repo_gia / SP.WORKSPACE).exists()
+
+
+def test_khong_repo_khong_bien_thi_bao_loi_khong_doan(tmp_path, monkeypatch):
+    for b in ("MARKETING_STUDIO_DATA", "MARKETING_STUDIO_HOME"):
+        monkeypatch.delenv(b, raising=False)
+    monkeypatch.setattr(SP, "repo_root", lambda: None)
+    with pytest.raises(SP.StudioPathsError, match="MARKETING_STUDIO_DATA"):
+        SP.resolve_station()
+    assert SP.resolve_station(tmp_path / "tay")[1] == "--station"
 
 
 def test_studio_local_json_hong_thi_bao_loi_chu_khong_nuot(repo_gia):
@@ -304,7 +324,7 @@ def test_che_do_separate_KHONG_doc_env_cua_repo(repo_embedded, tmp_path):
 # điều đó thay vì để người dùng tự đoán.
 
 CAU_HINH_MAY_QUA_ENV = ("CHROME_BIN", "FFMPEG_DIR", "FFPROBE", "VIDEO_FONT",
-                        "AGENT_CALL_ENGINES", "TG_CHAT", "OPCOS_CODEX_BRIDGE")
+                        "AGENT_CALL_ENGINES", "TG_CHAT", "CODEX_BRIDGE")
 
 
 @pytest.fixture
@@ -377,8 +397,8 @@ def test_TG_CHAT_khai_trong_env_thi_bot_chon_dung_chat(repo_env):
     assert bot._chat() == 2
 
 
-def test_OPCOS_CODEX_BRIDGE_khai_trong_env_thi_thanh_mac_dinh_cua_co(repo_env):
-    repo_env.viet(OPCOS_CODEX_BRIDGE="D:/cau/cli.mjs")
+def test_CODEX_BRIDGE_khai_trong_env_thi_thanh_mac_dinh_cua_co(repo_env):
+    repo_env.viet(CODEX_BRIDGE="D:/cau/cli.mjs")
     sys.path.insert(0, str(ROOT / "scripts" / "pipeline"))
     import make_fb_image as MF
     assert str(MF._bridge_mac_dinh()) == str(Path("D:/cau/cli.mjs"))

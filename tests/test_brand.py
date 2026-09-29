@@ -71,6 +71,12 @@ def test_org_names_nhan_ca_chuoi_va_danh_sach():
     assert BR.org_names({}) == []
 
 
+def test_internal_tools_nhan_ca_chuoi_va_danh_sach_va_ha_chu_thuong():
+    assert BR.internal_tools({"internal_tools": "Tool-A, tool-b"}) == ["tool-a", "tool-b"]
+    assert BR.internal_tools({"internal_tools": [" X ", ""]}) == ["x"]
+    assert BR.internal_tools({}) == []
+
+
 # ───────────────────────────────────────────────── 2. fail-closed
 
 def test_khong_co_channel_yml_thi_DUNG(tmp_path):

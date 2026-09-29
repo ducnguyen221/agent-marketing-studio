@@ -55,7 +55,7 @@ KHOA_BAT_BUOC = ("site_name", "author", "site_base")
 # một khoá có tác dụng. `home_domain` khai được ở CẤP KÊNH (ngoài khối `brand:`) — xem
 # `doc()`; liệt kê ở đây để khuôn `channel.yml` luôn có một dòng cho nó.
 KHOA_TUY_CHON = ("home_url", "author_title", "author_avatar", "og_image", "footer",
-                 "org_names", "socials", "badge_default",
+                 "org_names", "internal_tools", "socials", "badge_default",
                  "a", "b", "author_display", "footer_image", "footer_video",
                  "home_domain", "site_home")
 
@@ -136,7 +136,23 @@ def org_names(b: dict) -> list[str]:
     Danh sách này là CẤU HÌNH chứ không phải hằng số trong mã: mỗi chủ repo có bộ tên
     riêng, và bộ tên của người này vô nghĩa với người kia.
     """
-    v = b.get("org_names") or []
+    return _danh_sach(b.get("org_names"))
+
+
+def internal_tools(b: dict) -> list[str]:
+    """Tên công cụ/hệ thống RIÊNG của chủ kênh, cổng G21 chặn thêm ngoài bộ tên công khai.
+
+    Bộ tên sẵn trong mã (`blog_gates.TOOL_NOI_BO`) chỉ gồm công cụ công khai ai cũng có
+    thể dùng. Tên hệ thống nội bộ của một người thì KHÔNG được nằm trong repo public — ghi
+    nó vào mã để chặn rò rỉ thì chính dòng mã đó đã là rò rỉ. Chỗ của nó là `channel.yml`
+    của kênh, nằm ở trạm ngoài git.
+    """
+    return [x.lower() for x in _danh_sach(b.get("internal_tools"))]
+
+
+def _danh_sach(v) -> list[str]:
+    """Nhận cả chuỗi phân tách dấu phẩy và danh sách; bỏ mục rỗng."""
+    v = v or []
     if isinstance(v, str):
         v = [x.strip() for x in v.split(",")]
     return [str(x).strip() for x in v if str(x).strip()]
