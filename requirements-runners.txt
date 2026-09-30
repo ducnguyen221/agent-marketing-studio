@@ -1,0 +1,17 @@
+# Phụ thuộc Python của BỘ CHẠY tin/truyện (`scripts/runners/`) — cài vào VENV GIỌNG, tức
+# python mà `OMNIVOICE_PY` trỏ tới (venv có `voice_studio`/`video_studio`/torch), KHÔNG vào
+# venv của repo này:
+#
+#     <OMNIVOICE_PY> -m pip install -r requirements-runners.txt
+#
+# Runner gọi upload YouTube, đọc truyện, tải clip, ghi Excel bằng CHÍNH python đó. Thiếu một
+# gói thì lượt thật đỏ ở bước đăng — sau khi đã tốn `claude -p` và hàng giờ TTS. `doctor` kiểm
+# từng module bằng python đó và nêu đúng tên module còn thiếu (scripts/lib/runner_deps.py).
+google-api-python-client>=2.100   # youtube_upload.py — Data API v3
+google-auth-oauthlib>=1.0         # youtube_upload.py --auth (đăng nhập một lần)
+google-auth-httplib2>=0.2         # youtube_upload.py — vận chuyển có xác thực
+httplib2>=0.22                    # youtube_upload.py — upload tiếp tục được
+beautifulsoup4>=4.12              # story/read_story.py — đọc trang truyện
+yt-dlp>=2025.1.1                  # prompt nghiên cứu ({{YTDLP}}) — tải clip minh hoạ
+openpyxl>=3.1                     # append_excel_log.py / triage.py — sổ Auto Task
+faster-whisper>=1.0               # story/read_story.py — căn phụ đề theo giọng đọc

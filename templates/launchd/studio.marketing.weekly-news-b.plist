@@ -21,7 +21,7 @@
     <string>--title</string>
     <string>__CHANNEL__ · __CAMPAIGN__</string>
     <string>--composer-dir</string>
-    <string>__STATION__/engine</string>
+    <string>__REPO__/scripts/runners</string>
     <string>--timeout</string>
     <string>10800</string>
     <string>--</string>

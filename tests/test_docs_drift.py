@@ -257,7 +257,8 @@ _BIEN_PY = re.compile(
 _BIEN_PS = re.compile(r"\$env:([A-Z][A-Z0-9_]+)")
 # Biến của HỆ ĐIỀU HÀNH / của Python — không phải thứ người dùng tự đặt.
 BIEN_HE_THONG = {"LOCALAPPDATA", "PROGRAMFILES", "HOME", "USERPROFILE", "PATH",
-                 "PYTHONIOENCODING", "PYTHONUTF8", "TEMP", "TMP"}
+                 "PYTHONIOENCODING", "PYTHONUTF8", "TEMP", "TMP",
+                 "OS"}   # `$env:OS -eq 'Windows_NT'` — phép thử hệ điều hành, không phải cấu hình
 NOI_KHAI_BIEN = ("knowledge/toolchains/SECRETS.md", ".env.example")
 
 

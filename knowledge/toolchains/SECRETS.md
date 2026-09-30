@@ -172,6 +172,29 @@ user thì mọi tiến trình con đọc được và nó lọt vào log.
 | `CODEX_BRIDGE` | `make_fb_image.py make` — đường `cli.mjs` của cầu gọi Codex (hoặc cờ `--bridge`) | **không có** — thiếu thì `make` dừng mã 3 và nêu tên biến |
 | `MARKETING_STUDIO_REQUIRE_POWERSHELL` | `tests/conftest.py` — `=1` thì thiếu PowerShell là lỗi (CI đặt) | test `.ps1` tự bỏ qua khi máy không có PowerShell |
 
+**Bộ chạy tin/truyện (`scripts/runners/`, từ 1.1.0).** Runner PowerShell đọc qua `Get-EnvVar`
+của `brand-paths.ps1`: biến tiến trình → registry User (chỉ Windows) → `<repo>/.env` (chỉ
+embedded) — cùng thứ tự với `studio_paths.secret_env`. Trên macOS, biến vào job launchd qua
+khoá `env`/`vars` của `launchd.json` (`docs/launchd.md`).
+
+| Biến | Ai đọc | Không đặt thì |
+|---|---|---|
+| `L30_SCRIPT` | runner tin (`Find-Last30Days`), `doctor` — script nghiên cứu `last30days` | thư mục plugin của Claude (`<CLAUDE_CONFIG_DIR>` hoặc `~/.claude`)`/plugins/marketplaces/*/…` → `…/plugins/cache/*/last30days/<bản mới nhất>/…`; không thấy thì runner DỪNG trước `claude -p` |
+| `CLAUDE_CONFIG_DIR` | như trên — gốc cấu hình Claude Code nếu không phải `~/.claude` | `~/.claude` |
+| `VOICE_BGM_DIR` | runner tin, `doctor` — thư viện nhạc nền (`bgm-library.json` + `<style>.mp3`) | `<trạm video>/assets/news-bgm` |
+| `YT_TOKEN_PATH__NGHE_TIEN_TRUYEN` | `run-daily-truyen.ps1`, `story/daily_truyen.py`, `story/truyen_publish.py` — token kênh truyện | không đăng (log nêu tên biến); không có đường lùi viết trong mã |
+| `YT_CLIENT_SECRET__NGHE_TIEN_TRUYEN` | `run-daily-truyen.ps1` — thay `YT_CLIENT_SECRET` cho riêng lượt truyện | dùng `YT_CLIENT_SECRET` |
+| `TRUYEN_PUBLISH_PY` | `story/truyen_paths.py` — python cho bước đăng truyện | `python`/`python3`/`py -3` import được `googleapiclient` → python đang chạy |
+| `TRUYEN_FONT` | `story/truyen_paths.py` — font tiêu đề (cần dấu tiếng Việt) | `<engine giọng>/assets/fonts/title.ttf` → Arial Bold hệ thống |
+| `TRUYEN_HOOK_ENGINE` | `story/truyen_publish.py` — engine viết mô tả tập (`engine:model`, `claude-cli` = đường cũ) | `agy:claude-opus-4-6-thinking` rồi lùi theo `order` của `engines.json` |
+| `TRUYEN_HEAL` | `story/heal_agent.py` — `=1` mới cho agent tự sửa mã truyện khi mã nằm trong bản clone git | TẮT trong repo (sửa mã dưới chân máy lịch làm bẩn cây git, không qua review) |
+| `OMNIVOICE_SEED` | `story/read_story.py` — seed TTS cố định | ngẫu nhiên |
+| `NOTIFY_RUN` | `run-weekly-repo.ps1 -Register` (chỉ Windows) — wrapper báo cáo của Task Scheduler | `-Register` dừng mã 2 |
+
+Runner TỰ ĐẶT cho tiến trình con (không khai): `HF_HUB_OFFLINE`, `TRANSFORMERS_OFFLINE`,
+`VOICE_BGM`, `VOICE_BGM_VOL`, `TOPSTORY_ACCENTS` (màu nhấn template topstory), `YT_PLAYLIST_DESC`
+(mô tả playlist khi `youtube_upload.py` phải tạo playlist mới).
+
 **Biến của TRẠM GIỌNG mà repo này chỉ truyền tiếp** — không script nào ở đây đọc chúng;
 `scripts/runners/install_launchd.py` ghi chúng vào khối `EnvironmentVariables` của plist
 để tiến trình con nhận được. Bảng đầy đủ ba trạm:
@@ -207,9 +230,11 @@ CFG = os.environ.get("FB_CONFIG") or os.path.join(THU_MUC_CU, "facebook_config.j
 ```
 
 ```powershell
-# PowerShell — đọc thẳng registry, đừng đọc $env:
-# Biến vừa `setx` thì tiến trình đang chạy CHƯA thấy; đọc registry thì thấy ngay.
-$moi = [Environment]::GetEnvironmentVariable('YT_TOKEN_PATH','User')
+# PowerShell — Get-EnvVar (brand-paths.ps1): tiến trình -> registry User (CHỈ Windows) -> <repo>/.env.
+# Biến vừa `setx` thì tiến trình đang chạy CHƯA thấy; registry thì thấy ngay. Đọc registry TRẦN
+# (không điều kiện Windows) thì macOS nhận chuỗi rỗng và bước đó lặng lẽ bị bỏ — cổng
+# tests/test_runners_portable.py chặn kiểu đó.
+$moi = Get-EnvVar 'YT_TOKEN_PATH'
 if ($moi -and (Test-Path $moi)) { $env:YT_TOKEN_PATH = $moi; $nguon = 'NEW' }
 else { $env:YT_TOKEN_PATH = $duongCu; $nguon = 'OLD' }
 Log ("secret: $nguon  " + $env:YT_TOKEN_PATH)

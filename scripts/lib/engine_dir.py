@@ -32,6 +32,13 @@ Mã thoát 2 (`CONTRACT_ERROR` — "cấu hình SAI, phải sửa") chứ không
 
 Dùng ở hai nơi, một luật: `scripts/pipeline/check_engine.py` (chạy tay, chạy trong CI) và
 `doctor` (`kham_engine`). Test: `tests/test_engine_dir.py`.
+
+## Từ 1.1.0: runner sống trong REPO, `<trạm>/engine` là bản cũ
+
+`run.ps1` tìm runner theo thứ tự thư mục chiến dịch → `<repo>/scripts/runners` →
+`<trạm>/engine`. Từ 1.1.0 bộ chạy tin/truyện nằm ở chỗ thứ hai, nên `<trạm>/engine` chỉ còn
+là đường lùi cuối của máy chưa dọn. Luật trên GIỮ NGUYÊN (một thư mục dở dang vẫn là dấu
+hỏng), và `doctor` nhắc xoá bản đủ bộ sau một lượt xanh bằng bản repo.
 """
 from __future__ import annotations
 

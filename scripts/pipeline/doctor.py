@@ -42,8 +42,10 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
@@ -52,6 +54,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 # lấy đúng thứ gì đang nằm trong `sys.modules` lúc đó, và ai nhập trước sẽ quyết hộ.
 import agent_call as AC  # noqa: E402
 import engine_dir as ED  # noqa: E402
+import runner_deps as RD  # noqa: E402
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import video as VIDEO  # noqa: E402
@@ -435,9 +438,13 @@ def _kham_profile(so: So, goc_giong: Path, khai_kenh):
     # (`voice_studio.profiles.list_profiles` chỉ đếm `.wav`, `_exists` cũng chỉ hỏi `.wav`).
     # Nới ở đây (nhận cả `.txt` lẻ) là tự tạo XANH GIẢ: doctor bảo ổn, rồi `speak` trả mã 2
     # giữa lượt chạy. Cổng phải đo đúng thứ engine đo, không phải thứ trông hợp lý.
-    co = {p.stem for p in kho.glob("*.wav") if not p.name.startswith("_")}
+    # So tên ở dạng NFC CẢ HAI vế (P1-4): file nhập từ Windows sang macOS mang tên tiếng Việt
+    # dạng NFD, còn `channel.yml` viết NFC — so chuỗi thô thì "Giọng tiên hiệp" ≠ "Giọng tiên
+    # hiệp" và doctor đỏ GIẢ trong khi engine giọng vẫn mở được file.
+    co = {unicodedata.normalize("NFC", p.stem) for p in kho.glob("*.wav")
+          if not p.name.startswith("_")}
     for kenh, khai in khai_kenh:
-        ten = str(khai.get("voice_profile") or "").strip()
+        ten = unicodedata.normalize("NFC", str(khai.get("voice_profile") or "").strip())
         if ten and ten not in co:
             so.hong(f"kênh {kenh} khai voice_profile {ten!r} nhưng kho giọng {kho} không có "
                     f"{ten}.wav (đang có: {', '.join(sorted(co)) or '(rỗng)'}). Sửa "
@@ -521,10 +528,88 @@ def kham_engine(so: So, tram: Path):
     if kq["state"] == "vang":
         so.ghi(f"engine: không có {kq['engine']} — `run.ps1` dùng đường lùi (hợp lệ)")
     elif kq["state"] == "du":
-        so.ghi(f"engine: {kq['engine']} đủ bộ chạy ({', '.join(ED.RUNNER_BAT_BUOC)})")
+        repo = SP.repo_root()
+        if repo and all((repo / "scripts" / "runners" / r).is_file() for r in ED.RUNNER_BAT_BUOC):
+            so.nhac(f"engine: {kq['engine']} là BẢN CŨ — từ 1.1.0 `run.ps1` chạy runner trong "
+                    f"{repo / 'scripts' / 'runners'} trước. Xoá thư mục này sau MỘT lượt xanh "
+                    f"bằng bản repo (CHANGELOG 1.1.0, mục nâng cấp).")
+        else:
+            so.ghi(f"engine: {kq['engine']} đủ bộ chạy ({', '.join(ED.RUNNER_BAT_BUOC)})")
 
 
 KHAM_THEM.append(kham_engine)
+
+
+# ══ Bộ chạy tin/truyện (`scripts/runners/`) — thứ ngoài repo mà runner cần ═══════════════
+#
+# Chỉ kiểm khi trạm có chiến dịch dùng runner tin/truyện (`runtime.runner`): người chỉ viết
+# blog không cần venv giọng hay last30days, và một dòng nhắc thường trực là dòng không ai đọc.
+# Không mục nào ở đây đỏ (mã 2/3): thiếu là NHẮC, kèm đúng lệnh sửa. `doctor` không gọi
+# `claude -p` — đăng nhập là NOT_CHECKED (P0-6). Xem `scripts/lib/runner_deps.py`.
+
+def kham_runner(so: So, tram: Path):
+    dung = RD.runner_dang_dung(tram)
+    tin = sorted(dung & set(RD.RUNNER_TIN))
+    truyen = sorted(dung & set(RD.RUNNER_TRUYEN))
+    if not (tin or truyen):
+        return
+    so.ghi(f"runner: chiến dịch đang dùng {', '.join(tin + truyen)} (scripts/runners)")
+
+    # P0-6 — claude CLI: có trên PATH không đo được đăng nhập; đăng nhập = NOT_CHECKED.
+    cl = shutil.which("claude")
+    if not cl:
+        so.nhac("claude-cli: không thấy lệnh `claude` trên PATH — runner tin gọi `claude -p` để "
+                "nghiên cứu; job launchd chỉ thấy PATH khai trong plist (có ~/.local/bin).")
+    so.chua_kiem(f"claude-cli: đăng nhập chưa kiểm (doctor không gọi `claude -p`) — tự chạy: "
+                 f"claude -p \"tra loi dung mot chu: OK\"" + (f"  [{cl}]" if cl else ""))
+
+    # last30days — lớp cài máy cài; repo chỉ tìm.
+    if tin:
+        l30 = RD.tim_last30days()
+        if l30:
+            so.ghi(f"last30days: {l30}")
+        else:
+            so.nhac("last30days: không thấy script — runner tin DỪNG trước `claude -p`. Cài plugin "
+                    "Claude `last30days`, hoặc đặt L30_SCRIPT (env / <repo>/.env / launchd.json vars).")
+
+    # P0-3 — gói Python của runner trong VENV GIỌNG.
+    giong = SP.voice_station()
+    py = None
+    if giong:
+        try:
+            py = VOICE.python_exe(giong)
+        except SC.StudioError:
+            py = None
+    if not py:
+        so.nhac("runner: chưa có python của trạm giọng (OMNIVOICE_PY) — không kiểm được gói của "
+                f"{RD.REQ_FILE}. Xem phần trạm giọng ở trên.")
+    else:
+        thieu = RD.thieu_module(py)
+        repo = SP.repo_root()
+        req = (repo / RD.REQ_FILE) if repo else Path(RD.REQ_FILE)
+        if thieu is None:
+            so.nhac(f"runner: không chạy được {py} để kiểm gói — dựng lại venv giọng.")
+        elif thieu:
+            so.nhac(f"runner: venv giọng {py} THIẾU module {', '.join(thieu)} — bước đăng YouTube/"
+                    f"đọc truyện sẽ đỏ. Chạy:\n  {py} -m pip install -r {req}")
+        else:
+            so.ghi(f"runner: venv giọng đủ gói ({RD.REQ_FILE})")
+
+    # P0-4 — nhạc nền: style khai mà thiếu mp3. Chỉ NHẮC, không có lệnh sinh nhạc.
+    if tin:
+        nn = RD.kiem_nhac_nen(RD.thu_muc_nhac_nen())
+        if not nn["co_thu_vien"]:
+            so.chua_kiem(f"nhạc nền: không thấy bgm-library.json ({nn['dir'] or 'chưa có trạm video'}"
+                         f" — đặt VOICE_BGM_DIR); video tin sẽ không có nhạc nền")
+        elif nn["thieu_mp3"]:
+            so.nhac(f"nhạc nền: {len(nn['thieu_mp3'])}/{len(nn['styles'])} style thiếu mp3 trong "
+                    f"{nn['dir']}: {', '.join(nn['thieu_mp3'])} — AI sẽ không được chọn chúng; chép "
+                    f"<style>.mp3 vào thư viện")
+        else:
+            so.ghi(f"nhạc nền: {len(nn['styles'])} style đủ mp3 ({nn['dir']})")
+
+
+KHAM_THEM.append(kham_runner)
 
 
 # ══ Skill cho các ứng dụng AI (host) ═══════════════════════════════════════════════════

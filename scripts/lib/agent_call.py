@@ -1042,11 +1042,28 @@ def quet_file_cong_khai(paths, *, cwd=None, loc_duoi=True) -> list[dict]:
 # ── Sổ ─────────────────────────────────────────────────────────────────────────────
 
 def ledger_path(cfg: dict, override=None, station=None) -> Path:
+    """Sổ ghi từng lượt gọi. `engines.json: ledger` TƯƠNG ĐỐI tính từ GỐC TRẠM (P1-9).
+
+    Đường tuyệt đối vẫn được dùng, nhưng trỏ RA NGOÀI trạm thì cảnh báo: `engines.json` đi
+    theo gói sang máy khác, và một `~/<thư mục trạm của máy cũ>/_bench/...` ở đó lặng lẽ TẠO
+    một trạm thứ hai trên máy mới. Viết `_bench/agent-call.jsonl` thì máy nào cũng đúng.
+    """
     if override:
         return Path(override).expanduser()
-    tu_cfg = (cfg or {}).get("ledger") or ""
+    tu_cfg = str((cfg or {}).get("ledger") or "").strip()
     if tu_cfg:
-        return Path(str(tu_cfg)).expanduser()
+        p = Path(tu_cfg).expanduser()
+        if not p.is_absolute():
+            return SP.root(station) / p
+        try:
+            goc = SP.root(station)
+            p.resolve().relative_to(goc.resolve())
+        except ValueError:
+            SC.log(f"[agent-call] cảnh báo: engines.json `ledger` = {p} nằm NGOÀI trạm {goc} — "
+                   f"viết đường TƯƠNG ĐỐI (vd `_bench/agent-call.jsonl`) để sổ đi theo trạm.")
+        except SP.StudioPathsError:
+            pass
+        return p
     return SP.root(station) / "_bench" / "agent-call.jsonl"
 
 

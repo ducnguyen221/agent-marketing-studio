@@ -205,12 +205,17 @@ def test_find_python_CHEP_NGUYEN_giua_cac_file():
         goi = any(re.search(r"\bFind-Python\b", d) and not d.lstrip().startswith("#")
                   for d in dong)
         if khoi is None:
-            assert not goi, f"{p.name} gọi Find-Python mà không định nghĩa (PS 5.1 không import chung)"
+            # Runner tin dot-source `brand-paths.ps1` (cùng thư mục) — bản Find-Python của nó là
+            # bản được chép, và chính bản đó bị so ở dưới. Dot-source KHÔNG phải import module.
+            nap_bp = any(re.search(r"^\s*\.\s+\(?\s*Join-Path\s+\$\w+\s+'brand-paths\.ps1'", d)
+                         for d in dong)
+            assert not goi or nap_bp, (
+                f"{p.name} gọi Find-Python mà không định nghĩa (PS 5.1 không import chung)")
             continue
         ban[p.relative_to(ROOT).as_posix()] = "\n".join(dong[khoi[0]:khoi[1] + 1])
     can = {"install.ps1", "templates/station/_channel/_campaign/run.ps1",
            "scripts/runners/run-worker.ps1", "scripts/runners/run-approve-poller.ps1",
-           "scripts/runners/run-blog-campaign.ps1"}
+           "scripts/runners/run-blog-campaign.ps1", "scripts/runners/brand-paths.ps1"}
     assert can <= set(ban), f"thiếu Find-Python ở: {sorted(can - set(ban))}"
     mau = ban["install.ps1"]
     lech = [f for f, b in ban.items() if b != mau]

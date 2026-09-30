@@ -25,7 +25,8 @@ là chuỗi rút gọn `"<kênh>/<chiến dịch>"` hoặc một object:
 | `channel` | có | thư mục kênh trong trạm |
 | `campaign` | có | thư mục chiến dịch trong kênh |
 | `runner` | không | tên file `.ps1` trong thư mục chiến dịch mà job gọi. Mặc định `run.ps1`. Chỉ là **tên file** — không `/`, không `..` |
-| `env` | không | danh sách **tên** con trỏ bí mật thêm cho job này, thường là tên có hậu tố tài khoản (`YT_TOKEN_PATH__TRUYEN`). Chỉ nhận tên thuộc bộ con trỏ bên dưới |
+| `env` | không | con trỏ bí mật thêm cho job này. **Danh sách tên** (`["YT_TOKEN_PATH__NGHE_TIEN_TRUYEN"]`: plist mang đúng tên đó), hoặc **object `{TÊN_TRONG_PLIST: TÊN_NGUỒN}`**: plist mang tên trái, giá trị lấy từ tên phải — để job truyện nhận `YT_CLIENT_SECRET` (tên mã đọc) từ `YT_CLIENT_SECRET__NGHE_TIEN_TRUYEN` trong khi job tin dùng `YT_CLIENT_SECRET` của kênh tin, cùng MỘT lệnh cài. Cả hai vế chỉ nhận tên thuộc bộ con trỏ bên dưới (kèm hậu tố) |
+| `vars` | không | biến **đường dẫn không bí mật** runner cần: object `{TÊN: đường}` (viết thẳng) hoặc danh sách `[TÊN]` (giá trị lấy từ biến môi trường → `<repo>/.env`). Chỉ nhận danh sách trắng `L30_SCRIPT`, `TRUYEN_PUBLISH_PY`, `TRUYEN_FONT`, `VOICE_BGM_DIR`, `WEB_REPO_DIR`, `FFMPEG_DIR`, `NOTIFY_RUN`, `CLAUDE_CONFIG_DIR`; giá trị phải là đường dẫn |
 | `schedule` | không | thay lịch của mẫu: object (hoặc danh sách object) với khoá `Minute`, `Hour`, `Day`, `Weekday`, `Month` — đúng khoá của `StartCalendarInterval` |
 
 Ví dụ đầy đủ (cổng `tests/test_launchd_templates.py` chạy chính ví dụ này qua bộ kiểm):
@@ -37,21 +38,40 @@ Ví dụ đầy đủ (cổng `tests/test_launchd_templates.py` chạy chính v�
   "studio.marketing.daily-story": {
     "channel": "truyen",
     "campaign": "hang-ngay",
-    "runner": "run-daily-truyen-p2.ps1",
-    "env": ["YT_TOKEN_PATH__TRUYEN"],
+    "env": {
+      "YT_TOKEN_PATH__NGHE_TIEN_TRUYEN": "YT_TOKEN_PATH__NGHE_TIEN_TRUYEN",
+      "YT_CLIENT_SECRET": "YT_CLIENT_SECRET__NGHE_TIEN_TRUYEN"
+    },
+    "vars": ["TRUYEN_FONT"],
     "schedule": { "Hour": 0, "Minute": 30 }
+  },
+  "studio.marketing.weekly-repo": {
+    "channel": "tin",
+    "campaign": "repo-tuan",
+    "vars": { "L30_SCRIPT": "~/cong-cu/last30days/scripts/last30days.py" }
   },
   "studio.marketing.worker": "tin/hang-ngay"
 }
 ```
 
 Lỗi hình dạng nào cũng là **mã 2** kèm tên label và khoá sai: khoá lạ, runner có đường dẫn,
-`env` có tên không phải con trỏ bí mật, giờ ngoài khoảng, `schedule` cho job không chạy theo
+`env` có tên không phải con trỏ bí mật, `vars` có tên ngoài danh sách trắng hoặc giá trị không
+phải đường dẫn (khoá này không phải cửa để đẩy `PYTHONPATH`/`DYLD_*` vào job), giờ ngoài khoảng, `schedule` cho job không chạy theo
 lịch (`worker`, `approve-poller` chạy liên tục). Thiếu khai cho một label được chọn cũng là
 mã 2 — bộ cài không đoán job nào thuộc chiến dịch nào.
 
 `--map <label>=<kênh>/<chiến dịch>` đổi kênh/chiến dịch cho một lần chạy; `runner`, `env`,
-`schedule` đã khai trong file vẫn giữ.
+`vars`, `schedule` đã khai trong file vẫn giữ.
+
+### Lượt truyện từ 1.1.0
+
+Mã lượt truyện nằm trong repo (`scripts/runners/run-daily-truyen.ps1` + `scripts/runners/story/`).
+Chiến dịch truyện khai `runtime.runner: run-daily-truyen.ps1` trong `campaign.md`; job launchd
+để `runner` MẶC ĐỊNH (`run.ps1`) — `run.ps1` tìm thấy runner trong repo. Runner cũ trong thư
+mục chiến dịch (`run-daily-truyen-p2.ps1`) chỉ còn cho máy chưa nâng cấp.
+
+Báo cáo Telegram (`compose_report.py`, `triage.py`) cũng ở `scripts/runners/`: mẫu plist gọi
+`notify_run.py --composer-dir __REPO__/scripts/runners`, không còn `<trạm>/engine`.
 
 ### Vì sao `runner` khai được
 
@@ -84,8 +104,20 @@ Giá trị lấy theo thứ tự của `studio_paths.secret_env`: **biến môi 
    cài dừng mã 2 và **không in** giá trị đó ra (nó có thể chính là bí mật).
 2. Tên chưa có giá trị ở đâu thì **bỏ cả dòng** khỏi plist và in tên ra — không ghi chuỗi
    rỗng. Tên khai trong khoá `env` mà thiếu giá trị thì là mã 2: bạn đã nói job cần nó.
-3. Log và dòng JSON kết quả chỉ mang **tên** (`secret_env`, `secret_env_missing`), không
-   bao giờ mang giá trị. Plist ghi ra có quyền `600`.
+3. Log và dòng JSON kết quả chỉ mang **tên** (`secret_env`, `secret_env_missing`,
+   `secret_env_from` = ánh xạ tên → tên, `vars`), không bao giờ mang giá trị. Plist ghi ra có
+   quyền `600`.
+
+## Mã thoát của `notify_run.py` (một hợp đồng cho hai máy)
+
+| Mã | Nghĩa | Tin Telegram |
+|---|---|---|
+| mã của lệnh con | 0 ok · 1 lỗi engine · 2 cấu hình sai · 3 thiếu trạm | ✅ / ❌ |
+| 4 | hết hạn mức — mọi engine trong `order` hết lượt; **không phải hỏng**, không gọi triage | 🟡 HẾT HẠN MỨC |
+| 124 | wrapper giết cả cây tiến trình vì quá `--timeout` (launchd không có `ExecutionTimeLimit`) | ⏳ QUÁ TRẦN |
+
+Wrapper của Task Scheduler trên Windows trả đúng các mã này — sổ Excel, `compose_report.py` và
+`triage.py` phân loại theo mã, nên hai máy phải nói cùng một thứ tiếng.
 
 ## Chạy thử không đụng gì
 
