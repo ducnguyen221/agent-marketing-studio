@@ -131,7 +131,19 @@ def _doi_sang_may(d: dict, may: str) -> None:
         moi["nen_tang"] = khac["nen_tang"]
     else:
         moi.pop("nen_tang", None)
+    if "_doc" in moi:
+        # Lời người viết ở máy nguồn hay nêu đường trạm của máy đó (P3-15) — thay bằng bản
+        # không gắn máy, thay vì sửa văn tự do của người dùng.
+        moi["_doc"] = list(DOC_MAY)
     d["_may"] = moi
+
+
+DOC_MAY = (
+    "FILE NAY LA CAU HINH CUA RIENG MAY NAY, o <tram>/_agent-call/engines.json. Khong co ban",
+    "dung chung, khong sync — khoa `order` la NGUON SU THAT DUY NHAT cho may nay.",
+    "Thu tu cua may KHAC nam o `_may_khac` (luc chay khong ma nao doc; chi",
+    "`station.py export --for-machine` doc khi dong goi cho may do).",
+)
 
 
 def export_station(station, out, *, with_git=False, logs_state=False, dry_run=False,

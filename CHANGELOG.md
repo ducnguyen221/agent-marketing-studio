@@ -3,6 +3,18 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.3 — 2026-09-30
+
+Hai lỗi Mac báo khi nghiệm thu 1.1.2. Lượt đăng truyện thật không đổi.
+
+- **P2-21** `story/truyen_publish.py --dry-run` không gọi agent nữa: `build()` trước đây gọi
+  `gen_hook()` (agent_call → agy/codex/claude, lùi `claude -p`) TRƯỚC khi xét `--dry-run`, nên
+  "xem trước" vẫn tốn hạn mức và ghi ledger. Nay dry-run đi nhánh mô tả tĩnh; muốn xem cả hook
+  thì thêm `--with-hook`. `main(argv)` nhận danh sách tham số (để test). Test
+  `test_story_publish_dryrun.py`.
+- **P3-15** `export --for-machine`: `_may._doc` của máy nguồn (hay nêu đường trạm máy đó, vd
+  `tram = ~/.marketing`) thay bằng lời không gắn máy `station.DOC_MAY`.
+
 ## 1.1.2 — 2026-09-30
 
 Bản vá gói đổi máy (G7 của đợt Mac mini). Chỉ đổi `station.py export`; lượt chạy trên cả hai
