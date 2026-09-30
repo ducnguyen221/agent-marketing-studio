@@ -205,3 +205,14 @@ def test_CLI_nhan_ca_hai_ten_co(tram):
     _engine(tram, "engines.json")
     assert _cli("--station", str(tram)).returncode == \
         _cli("--check-station", str(tram)).returncode == SC.CONTRACT_ERROR
+
+
+def test_khong_co_engine_thi_doctor_noi_runner_chay_tu_repo_KHONG_noi_duong_lui(tram):
+    """P2-20: từ 1.1.0 không còn đường lùi `<trạm>/engine` — thiếu thư mục là trạng thái ĐÚNG.
+    `doctor` phải nói runner chạy từ `<repo>/scripts/runners`, không in lời cũ "đường lùi"."""
+    so = DR.So()
+    DR.kham_engine(so, tram)
+    assert not so.fail and not so.warn, (so.fail, so.warn)
+    chu = "\n".join(so.info)
+    assert "scripts" in chu and "runners" in chu, chu
+    assert "đường lùi" not in chu, chu

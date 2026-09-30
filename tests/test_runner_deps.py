@@ -20,7 +20,8 @@ import doctor as DR  # noqa: E402
 PIP_SANG_IMPORT = {"google-api-python-client": "googleapiclient",
                    "google-auth-oauthlib": "google_auth_oauthlib",
                    "google-auth-httplib2": "google_auth_httplib2", "httplib2": "httplib2",
-                   "beautifulsoup4": "bs4", "yt-dlp": "yt_dlp", "openpyxl": "openpyxl",
+                   "requests": "requests", "beautifulsoup4": "bs4", "lxml": "lxml",
+                   "yt-dlp": "yt_dlp", "openpyxl": "openpyxl",
                    "faster-whisper": "faster_whisper"}
 
 
@@ -28,6 +29,72 @@ def test_requirements_runners_KHOP_danh_sach_module_doctor_kiem():
     goi = RD.doc_requirements(ROOT)
     assert set(goi) == set(PIP_SANG_IMPORT), goi
     assert {PIP_SANG_IMPORT[g] for g in goi} == set(RD.MODULES)
+
+
+# ── Cổng P0-7: MỌI thứ bên thứ ba mà `scripts/runners/**` nạp phải nằm trong MODULES ─────────
+#
+# Sự cố (Mac mini, 30/09/2026): `read_story.py` gọi `BeautifulSoup(…, "lxml")` — `lxml` được
+# nạp bằng TÊN CHUỖI, không phải `import`, nên cổng quét import (`test_gia_dinh_moi_truong`)
+# không thấy; venv giọng Mac không có `lxml`, `doctor` vẫn báo "đủ gói", lượt truyện chết ở bước
+# đọc chương (`FeatureNotFound`). Cổng dưới đo CẢ HAI đường nạp — `import` và tên parser — và
+# đòi mỗi thứ nằm trong `runner_deps.MODULES` (tức cũng trong `requirements-runners.txt`, cổng
+# ngay trên giữ hai danh sách khớp nhau).
+
+RUNNERS = ROOT / "scripts" / "runners"
+# Đến cùng `voice_studio` khi cài trạm giọng (`pip install -e`), không cài qua requirements-runners.
+DO_VENV_GIONG_CAP = {"voice_studio", "numpy", "soundfile", "torch"}
+# Tên import ≠ tên module trong MODULES: `google.oauth2`/`google.auth` là của google-auth, gói
+# mà google-api-python-client kéo theo (và `googleapiclient` nằm trong MODULES).
+BI_DANH_IMPORT = {"google": "googleapiclient"}
+# Parser của BeautifulSoup -> module phải có. `html.parser` là thư viện chuẩn.
+PARSER_BS4 = {"lxml": "lxml", "lxml-xml": "lxml", "xml": "lxml", "html5lib": "html5lib",
+              "html.parser": None}
+
+
+def _thu_ben_thu_ba_runner_nap():
+    """-> {tên module: {file:dòng, …}} cho mọi `import` tuyệt đối và mọi parser BeautifulSoup
+    trong `scripts/runners/**.py`, đã bỏ thư viện chuẩn và module nội bộ của repo."""
+    import ast
+    noi_bo = {p.stem for p in (ROOT / "scripts").rglob("*.py")}
+    ra: dict[str, set[str]] = {}
+
+    def them(ten, f, nut):
+        ra.setdefault(ten, set()).add(f"{f.relative_to(ROOT).as_posix()}:{nut.lineno}")
+
+    for f in sorted(RUNNERS.rglob("*.py")):
+        cay = ast.parse(f.read_text(encoding="utf-8-sig"), filename=str(f))
+        for nut in ast.walk(cay):
+            if isinstance(nut, ast.Import):
+                for a in nut.names:
+                    them(a.name.split(".")[0], f, nut)
+            elif isinstance(nut, ast.ImportFrom) and nut.module and not nut.level:
+                them(nut.module.split(".")[0], f, nut)
+            elif isinstance(nut, ast.Call):
+                ham = (nut.func.attr if isinstance(nut.func, ast.Attribute)
+                       else getattr(nut.func, "id", ""))
+                if ham != "BeautifulSoup":
+                    continue
+                gt = [k.value for k in nut.keywords if k.arg == "features"]
+                gt += nut.args[1:2]
+                for g in gt:
+                    assert isinstance(g, ast.Constant) and isinstance(g.value, str), (
+                        f"{f.name}:{nut.lineno}: parser BeautifulSoup phải là chuỗi hằng để "
+                        f"cổng đo được module nó cần")
+                    assert g.value in PARSER_BS4, f"{f.name}:{nut.lineno}: parser lạ {g.value!r}"
+                    if PARSER_BS4[g.value]:
+                        them(PARSER_BS4[g.value], f, nut)
+    return {k: v for k, v in ra.items()
+            if k not in sys.stdlib_module_names and k not in noi_bo}
+
+
+def test_MOI_import_va_parser_ben_thu_ba_cua_runner_deu_nam_trong_MODULES():
+    dung = _thu_ben_thu_ba_runner_nap()
+    assert "lxml" in dung, "cổng không thấy parser lxml của read_story.py — cổng đang không đo gì"
+    lot = {k: v for k, v in dung.items()
+           if k not in DO_VENV_GIONG_CAP and BI_DANH_IMPORT.get(k, k) not in RD.MODULES}
+    assert not lot, ("runner nạp thứ KHÔNG có trong runner_deps.MODULES / requirements-runners"
+                     ".txt — venv giọng máy mới sẽ thiếu mà doctor vẫn báo đủ: "
+                     + "; ".join(f"{k} ({', '.join(sorted(v))})" for k, v in sorted(lot.items())))
 
 
 def test_thieu_module_neu_dung_ten(tmp_path):

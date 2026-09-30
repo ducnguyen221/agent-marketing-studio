@@ -10,8 +10,8 @@ vào playlist "Phàm Nhân Tu Tiên (P1)".
   # đăng thật (cần youtube_token_truyen.json đã --auth chọn đúng kênh Nghe Tiên Truyện):
   python truyen_publish.py --manifest <...> --video <...>
 
-Token kênh truyện: YT_TOKEN_PATH → YT_TOKEN_PATH__NGHE_TIEN_TRUYEN → kho secret
-~/.secret/youtube-nghe-tien-truyen/token.json (chỉ truyền ĐƯỜNG, script này không đọc token).
+Token kênh truyện: `--token` → YT_TOKEN_PATH__NGHE_TIEN_TRUYEN (riêng kênh, THẮNG) →
+YT_TOKEN_PATH chung (truyen_paths.token_truyen; chỉ truyền ĐƯỜNG, script này không đọc token).
 youtube_upload.py lấy từ `scripts/runners` của repo (truyen_paths.upload_engine_dir); bản đó đòi
 YT_CLIENT_SECRET trong môi trường (không còn đường lùi cạnh file).
 """
@@ -31,7 +31,8 @@ AINEWS = truyen_paths.upload_engine_dir()
 
 # Chỉ là ĐƯỜNG tới token trong kho secret của máy — không mở file ở đây. Không đường lùi
 # viết trong mã: tên tài khoản là dữ liệu của máy, không phải của repo.
-DEFAULT_TOKEN = os.path.expanduser(truyen_paths.getenv("YT_TOKEN_PATH__NGHE_TIEN_TRUYEN") or "")
+# Biến RIÊNG kênh truyện thắng biến chung (P3-12) — xem truyen_paths.token_truyen.
+DEFAULT_TOKEN = truyen_paths.token_truyen()
 PLAYLIST = "Phàm Nhân Tu Tiên (P1)"
 
 # Intro TĨNH (tác phẩm/nhân vật/cấp độ tu luyện) — DỜI sang MÔ TẢ PLAYLIST (main() set
@@ -273,9 +274,9 @@ def main():
                     help="CHỈ đặt LẠI ảnh đại diện cho --video-id (không upload).")
     ap.add_argument("--video-id", dest="video_id", default="",
                     help="ID video YouTube (dùng với --set-thumb-only).")
-    ap.add_argument("--token", default=os.environ.get("YT_TOKEN_PATH") or DEFAULT_TOKEN,
-                    help="đường token kênh truyện (mặc định YT_TOKEN_PATH, rồi "
-                         "YT_TOKEN_PATH__NGHE_TIEN_TRUYEN)")
+    ap.add_argument("--token", default=DEFAULT_TOKEN,
+                    help="đường token kênh truyện (mặc định YT_TOKEN_PATH__NGHE_TIEN_TRUYEN, "
+                         "rồi YT_TOKEN_PATH)")
     ap.add_argument("--playlist", default=PLAYLIST)
     ap.add_argument("--title-prefix", dest="title_prefix", default="PNTT",
                     help="Tiền tố tiêu đề video (P1: 'PNTT', P2: 'PNTT (P2)').")

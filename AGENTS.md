@@ -74,7 +74,7 @@ canonical: true
 
 ---
 
-## 4. Bảy Điều Tuyệt Đối Cần Tuân Thủ
+## 4. Tám Điều Tuyệt Đối Cần Tuân Thủ
 
 1. **Không duyệt hộ:** Không bao giờ tự đặt `status = approved`, ô `g1`/`g3` trong bảng Content, hay `posts[].review.status = approved` trong `publish.json`.
 2. **Không xuất bản chui:** Không đăng thật khi chưa đủ token, chưa qua cổng tương ứng (Cổng 2; Cổng 3 nếu chiến dịch có bật), hoặc chưa có lệnh phê duyệt.
@@ -83,3 +83,4 @@ canonical: true
 5. **Không lộ hạ tầng:** Không để lộ tên công cụ nội bộ (Prompt, Engine, Tool names) trong nội dung gửi khán giả.
 6. **Tái định dạng theo kênh:** Cùng một ý tưởng phải format lại chuẩn bản địa của từng kênh, không copy paste nguyên văn.
 7. **Báo cáo minh bạch:** Báo cáo rõ ràng các ô và dòng đã thay đổi sau mỗi lượt xử lý.
+8. **Bộ chạy sửa trong repo:** Bộ chạy tin và truyện nằm ở `scripts/runners/`: sửa trong repo qua PR có CI 2 OS, không sửa bản trong `<trạm>/engine`; file `.ps1` giữ BOM; đọc biến qua `Get-EnvVar`, không đọc registry trần.

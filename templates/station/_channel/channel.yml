@@ -170,3 +170,7 @@ brand:
   # này có giá trị — nhúng sẵn id của người khác là lặng lẽ gửi dữ liệu người đọc tới một
   # tài khoản quảng cáo mà chủ trang không hề biết.
   fb_pixel_id:      # id Meta Pixel (nếu kênh có đo tương tác từ Facebook)
+  # Màu NÚT ĐĂNG KÝ trên trang tin (`build-index.ps1`: gradient nút, nhịp sáng, chữ báo đã
+  # đăng ký). Để trống = hai màu mặc định trong script.
+  web_cta_from:     # màu đầu gradient, vd "#00f0ff"
+  web_cta_to:       # màu cuối gradient + chữ "đã đăng ký", vd "#39ff7a"

@@ -68,9 +68,15 @@ def _cfg():
     if not brand:
         raise SystemExit("send_newsletter: %s thiếu khối `brand:` — không đủ cấu hình để gửi thư." % cy)
     ra = dict(bi_mat)
-    for x in ("script_url", "site_base", "repo"):
+    # MỌI khoá `_build_email` đọc phải được chép ở đây: thiếu `a`/`b` là thư gửi ra với
+    # "From:  <…>" và tiêu đề không tên kênh; thiếu `gh_repo` là mất link video trong Release.
+    for x in ("script_url", "site_base", "repo", "a", "b", "gh_repo", "email_accent"):
         if brand.get(x):
             ra[x] = brand[x]
+    # `email_accent` là màu kênh — khuôn channel.yml khai ở `theme:`; `brand:` (nếu có) thắng.
+    theme = _kenh.get("theme") or {}
+    if not ra.get("email_accent") and theme.get("email_accent"):
+        ra["email_accent"] = theme["email_accent"]
     if ra.get("repo"):
         ra["repo"] = _no_repo(ra["repo"])
     return ra
