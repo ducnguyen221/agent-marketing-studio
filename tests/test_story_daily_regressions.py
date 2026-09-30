@@ -397,11 +397,21 @@ TAT_CA = ("t1_plain_rmtree_reproduces_winerror5", "t2_rm_path_survives_readonly"
           "tr2_resume_keep_and_sweep")
 
 
+# Dựng lại hiện trường cờ ReadOnly trên THƯ MỤC — hiện tượng của Windows (FILE_ATTRIBUTE_READONLY
+# chặn RemoveDirectory). Trên POSIX `chmod 0400` một thư mục là bỏ luôn quyền liệt kê: một bệnh
+# khác, và bộ kiểm này không mô tả nó.
+CHI_WINDOWS = {"t1_plain_rmtree_reproduces_winerror5", "t2_rm_path_survives_readonly",
+               "t3_sweep_reports_and_does_not_raise", "t4_sweep_shouts_when_it_cannot_clean",
+               "tr2_resume_keep_and_sweep"}
+
+
 @pytest.mark.parametrize("ten", TAT_CA)
 def test_story_regression(ten, monkeypatch, tmp_path):
     """Mỗi hàm kiểm cũ là một test pytest. ENGINE trỏ vào thư mục tạm: không chạm trạm giọng thật."""
     global daily_truyen
     import importlib
+    if ten in CHI_WINDOWS and os.name != "nt":
+        pytest.skip("hiện trường cờ ReadOnly trên thư mục là của Windows")
     monkeypatch.setenv("OMNIVOICE_DIR", str(tmp_path / "engine"))
     if daily_truyen is None:
         daily_truyen = importlib.import_module("daily_truyen")
