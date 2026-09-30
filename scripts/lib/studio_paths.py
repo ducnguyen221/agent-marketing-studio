@@ -155,10 +155,21 @@ def workspace_dir(repo=None) -> Path | None:
 
 # ── bí mật: biến môi trường → <repo>/.env (chỉ embedded) → kho secret của máy ──────────
 
+# Chốt của BỘ TEST (P1-18): `.env` của bản clone ghi trong biến này KHÔNG được đọc. Máy chạy
+# lịch có `.env` điền con trỏ tới secret thật; test lọt ra đọc nó là đọc — và từng GỬI — bằng
+# secret thật. `tests/conftest.py` đặt biến = bản clone đang test, nên chốt đi theo môi trường
+# sang cả tiến trình con. Chạy thật không ai đặt nó; `.env` của repo khác (repo giả trong
+# thư mục tạm) vẫn đọc bình thường.
+BIEN_CHAN_ENV_FILE = "MARKETING_STUDIO_TEST_NO_DOTENV"
+
+
 def env_file(repo=None) -> Path | None:
     """`<repo>/.env` khi và CHỈ KHI chế độ là `embedded` và file có thật; không thì None."""
     repo = Path(repo) if repo else repo_root()
     if not repo or mode(repo) != "embedded":
+        return None
+    chan = (os.environ.get(BIEN_CHAN_ENV_FILE) or "").strip()
+    if chan and Path(chan).expanduser().resolve() == Path(repo).resolve():
         return None
     f = repo / ".env"
     return f if f.is_file() else None

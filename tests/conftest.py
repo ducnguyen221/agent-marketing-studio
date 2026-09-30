@@ -16,14 +16,40 @@ NGAY CẢ KHI biến môi trường bị gỡ sạch.
 """
 import os
 import shutil
+import sys
+from pathlib import Path
 
 import pytest
+
+_REPO_THAT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_REPO_THAT / "scripts" / "lib"))
+import studio_paths as _SP  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
 def _utf8_cho_tien_trinh_con(monkeypatch):
     monkeypatch.setenv("PYTHONUTF8", "1")
     monkeypatch.setenv("PYTHONIOENCODING", "utf-8")
+
+
+@pytest.fixture(autouse=True)
+def _khong_cham_secret_that(monkeypatch):
+    """P1-18 (30/09/2026): test KHÔNG BAO GIỜ thấy con trỏ secret của máy đang chạy.
+
+    Máy chạy lịch (embedded) có `<repo>/.env` điền `TG_CONFIG`, `YT_TOKEN_PATH`… trỏ vào
+    `~/.secret/**` thật. Mac mini: điền `.env` xong thì `pytest` trần đỏ 5 ca, một thông điệp
+    assert in ra mẩu cấu hình Telegram thật, và một test chạy `notify_run.py` như tiến trình
+    con đã có đường gửi tin thật. Hai lớp chặn, cả hai đi theo môi trường nên phủ luôn tiến
+    trình con:
+      · gỡ mọi biến con trỏ bí mật (kể cả hậu tố theo kênh) và `TG_*` của phiên;
+      · `studio_paths.BIEN_CHAN_ENV_FILE` = bản clone đang test ⇒ `.env` CỦA NÓ không được
+        đọc; repo giả trong thư mục tạm vẫn đọc `.env` của chính nó như thường.
+    Test cần con trỏ thì tự `monkeypatch.setenv` sau fixture này. Cổng: job CI "cài embedded
+    rồi pytest" dựng `.env` + `~/.secret` GIẢ trước khi chạy."""
+    for ten in list(os.environ):
+        if _SP.la_con_tro_bi_mat(ten) or ten.startswith("TG_"):
+            monkeypatch.delenv(ten, raising=False)
+    monkeypatch.setenv(_SP.BIEN_CHAN_ENV_FILE, str(_REPO_THAT))
 
 
 def pytest_report_header(config):

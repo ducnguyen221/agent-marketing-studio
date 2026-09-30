@@ -3,6 +3,21 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.4 — 2026-09-30
+
+Bộ test cô lập khỏi secret thật của máy đang chạy. Lượt chạy thật không đổi (biến chốt chỉ
+bộ test đặt).
+
+- **P1-18** Máy chạy lịch `embedded` điền `<repo>/.env` (con trỏ tới `~/.secret/**`) thì
+  `pytest` trần đỏ 5 ca, một assert in ra mẩu cấu hình Telegram thật, và
+  `test_notify_run::test_chay_nhu_lenh_that…` chạy `notify_run.py` như tiến trình con đọc
+  được `TG_CONFIG` thật (có đường gửi tin thật). Sửa: `tests/conftest.py` autouse gỡ mọi biến
+  con trỏ bí mật + `TG_*`, và đặt `studio_paths.BIEN_CHAN_ENV_FILE`
+  (`MARKETING_STUDIO_TEST_NO_DOTENV`) = bản clone đang test ⇒ `.env` của nó không được đọc,
+  kể cả trong tiến trình con. Test `test_co_lap_secret.py`.
+- **Cổng CI**: job "cài embedded rồi pytest" dựng `.env` + `~/.secret` GIẢ trước `pytest` trần
+  — trước bản sửa đỏ đúng 5 ca trên cả hai OS.
+
 ## 1.1.3 — 2026-09-30
 
 Hai lỗi Mac báo khi nghiệm thu 1.1.2. Lượt đăng truyện thật không đổi.
