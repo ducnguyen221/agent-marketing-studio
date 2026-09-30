@@ -110,7 +110,7 @@ Ba gói độc lập. Làm đủ cả ba nếu máy đích chưa có gì; bỏ g
 # 3a. Trạm nội dung — kênh, chiến dịch, engine, trạng thái đã đăng, lịch sử git
 python scripts/pipeline/station.py export \
     --station <trạm> --out <thư mục ngoài trạm>/marketing.zip \
-    --with-git --include-logs-state
+    --with-git --include-logs-state --for-machine <tên máy đích>
 
 # 3b. Gói giọng cá nhân (chạy bằng python của venv trạm giọng)
 <OMNIVOICE_PY> -m voice_studio export --personal --out <…>/voice.zip
@@ -120,12 +120,16 @@ python scripts/pipeline/station.py export \
 ```
 
 - `--out` phải nằm **ngoài** trạm, nếu không gói tự nuốt chính nó.
-- `--with-git` kèm `.git/` — một gói, đủ lịch sử. Bỏ cờ này là bỏ luôn lịch sử.
+- `--with-git` kèm `.git/` — một gói, đủ lịch sử. Bỏ cờ này là bỏ luôn lịch sử. Lịch sử
+  mang theo **mọi** thứ trạm từng commit: trạm nào từng commit secret (vd `subscribe.gs`
+  trước khi bị gỡ khỏi git) thì **đừng** dùng cờ này khi khoá đó chưa được xoay.
+- `--for-machine <tên>` đổi sẵn `engines.json` cho máy đích (mục *Thứ tự engine* ở bước 5).
 - `--include-logs-state` kèm trạng thái trong `logs/` (tin đang chờ duyệt, hàng việc, nhật
   ký sự kiện). **Đổi máy thì luôn bật cờ này**; sao lưu định kỳ thì không cần.
 - `export` **từ chối** đóng gói thứ trông như secret (`*token*.json`, `*client_secret*`,
-  `*credentials*`, mọi đường trong kho secret). Đó là chủ đích: secret đi đường riêng, do
-  chính bạn chép tay (bước 5).
+  `*credentials*`, mọi đường trong kho secret) và **loại** `subscribe.gs` (mã Apps Script mang
+  secret thật, máy đích không cần). Đó là chủ đích: secret đi đường riêng, do chính bạn chép
+  tay (bước 5).
 - Muốn xem trước mà không ghi gì: thêm `--dry-run`.
 
 **Đạt khi:** ba lệnh đều in số file và đường zip; `marketing.zip` **dưới 250 MB**. Lớn hơn
@@ -196,10 +200,12 @@ Claude ở đó rỗi; máy đích có thể muốn engine chạy bằng credit 
 Mỗi máy có **một** `engines.json` riêng trên đĩa, không sync, không dùng chung — nên khoá
 `order` trong file của máy nào là nguồn sự thật của **máy đó**, và không có lớp chọn theo
 hostname nào cả (thêm một lớp như vậy chỉ thêm một chỗ có thể chọn sai âm thầm mà không bỏ
-được bước nào). Thứ tự của các máy khác nằm ở khoá ghi chú `_may_khac` — **không** dòng mã
-nào đọc nó.
+được bước nào). Thứ tự của các máy khác nằm ở khoá ghi chú `_may_khac` — lúc chạy **không**
+dòng mã nào đọc nó; chỉ `station.py export --for-machine` đọc khi đóng gói.
 
-Sau khi import, mở `<trạm>/_agent-call/engines.json` và làm đúng ba việc:
+`export --for-machine <tên máy đích>` làm sẵn ba việc dưới đây trong bản đi theo gói
+(`_may_khac.<tên>` khai `order`, và tuỳ chọn `nen_tang`, `_ly_do`). Gói xuất **không** có cờ
+đó thì sau khi import, mở `<trạm>/_agent-call/engines.json` và tự làm đúng ba việc:
 
 1. Sửa `_may.ten` / `_may.nen_tang` cho đúng máy đang đứng.
 2. Thay mảng `order` bằng mảng `order` trong `_may_khac.<tên máy này>` (nếu có mục đó).

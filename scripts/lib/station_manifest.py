@@ -87,8 +87,12 @@ THU_MUC_BO_MAU = ("_migrated-*", ".tmp*")
 
 # `campaign.html`/`index.html` là trang sinh ra từ nội dung; `*.lock` là khoá của tiến
 # trình máy cũ; `*.bak*` là bản chép tay của một lần sửa đã xong.
+# `subscribe.gs`: mã Apps Script của form đăng ký bản tin — bản ở trạm mang `SECRET` THẬT
+# dán vào mã nguồn, mà tên file không giống secret nên `giong_secret` không bắt. Mã chạy
+# trên Google, máy đích không cần; khuôn trong repo là placeholder. Nên LOẠI, không từ chối:
+# từ chối thì mọi trạm có bản tin đều không export được.
 FILE_BO_MAU = ("*.bak*", "*.pyc", "~$*", "*.log", "*.lock", "campaign.html", "index.html",
-               ".DS_Store", "Thumbs.db")
+               ".DS_Store", "Thumbs.db", "subscribe.gs")
 
 # Bảng tính duy nhất được mang: sổ việc ở gốc trạm. `<chiến dịch>/<id>.xlsx` là bản xuất
 # lại được từ `campaign.md`.

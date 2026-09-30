@@ -73,5 +73,51 @@ def test_export_for_machine_lay_order_cua_may_dich(tmp_path):
     assert ra["order"] == ["claude", "agy"], "máy không khai thì giữ nguyên order"
 
 
+def _eng_hai_may() -> dict:
+    return {
+        "_may": {"ten": "may-nguon", "nen_tang": "win32", "_doc": ["rieng may nay"]},
+        "order": ["claude:opus", "agy:x"],
+        "_order_ly_do": ["ly do cua Windows"],
+        "_may_khac": {"_doc": ["ghi chu"],
+                      "mac-mini": {"order": ["agy:x", "claude:opus"], "nen_tang": "darwin",
+                                   "_ly_do": ["ly do cua Mac"]}},
+        "ledger": "_bench/agent-call.jsonl",
+    }
+
+
+def test_export_for_machine_lam_du_BA_viec_runbook(tmp_path):
+    """P1-17: gói cho máy X phải dùng được ngay — không còn tên/lý do/thứ tự máy nguồn ở
+    chỗ của máy X, và thứ tự mỗi máy xuất hiện đúng một lần (RUNBOOK-DOI-MAY §5)."""
+    ra = json.loads(STATION._engines_cho_may(_eng(_eng_hai_may()), tmp_path.resolve(), "mac-mini"))
+    assert ra["_may"] == {"ten": "mac-mini", "nen_tang": "darwin", "_doc": ["rieng may nay"]}
+    assert ra["order"] == ["agy:x", "claude:opus"]
+    assert ra["_order_ly_do"] == ["ly do cua Mac"]
+    assert "mac-mini" not in ra["_may_khac"]
+    assert ra["_may_khac"]["may-nguon"] == {
+        "order": ["claude:opus", "agy:x"], "nen_tang": "win32", "_ly_do": ["ly do cua Windows"]}
+    assert ra["_may_khac"]["_doc"] == ["ghi chu"]
+    assert list(ra)[:3] == ["_may", "order", "_order_ly_do"], "giữ thứ tự khoá cho người đọc"
+
+
+def test_export_for_machine_khong_khai_nen_tang_thi_BO(tmp_path):
+    d = _eng_hai_may()
+    del d["_may_khac"]["mac-mini"]["nen_tang"]
+    ra = json.loads(STATION._engines_cho_may(_eng(d), tmp_path.resolve(), "mac-mini"))
+    assert "nen_tang" not in ra["_may"], "export không đoán hệ điều hành máy đích"
+
+
+def test_export_for_machine_KHONG_khai_order_thi_giu_nguyen_order(tmp_path):
+    ra = json.loads(STATION._engines_cho_may(_eng(_eng_hai_may()), tmp_path.resolve(), "may-la"))
+    assert ra["order"] == ["claude:opus", "agy:x"]
+    assert ra["_order_ly_do"] == ["ly do cua Windows"]
+    assert set(ra["_may_khac"]) == {"_doc", "mac-mini"}, "không thêm mục máy nguồn trùng order"
+    assert ra["_may"]["ten"] == "may-la" and "nen_tang" not in ra["_may"]
+
+
+def test_export_khong_for_machine_khong_dung_vao_may(tmp_path):
+    ra = json.loads(STATION._engines_cho_may(_eng(_eng_hai_may()), tmp_path.resolve(), None))
+    assert ra["_may"]["ten"] == "may-nguon" and "mac-mini" in ra["_may_khac"]
+
+
 def test_export_json_hong_giu_nguyen_byte(tmp_path):
     assert STATION._engines_cho_may(b"{hong", tmp_path, "x") == b"{hong"

@@ -73,7 +73,15 @@ def _engines_cho_may(raw: bytes, st: Path, may: str | None) -> bytes:
 
       · `ledger` tuyệt đối trong trạm nguồn -> đổi thành TƯƠNG ĐỐI (tính từ gốc trạm);
         tuyệt đối ngoài trạm -> BỎ (máy đích dùng mặc định `<trạm>/_bench/...`).
-      · `--for-machine X` và có `_may_khac.X.order` -> `order` của máy đích thay `order`.
+      · `--for-machine X` -> làm sẵn ba việc của RUNBOOK-DOI-MAY §5 (P1-17), để máy đích
+        nhập gói là dùng được, không sửa tay:
+          1. `_may.ten` = X; `_may.nen_tang` lấy từ `_may_khac.X.nen_tang`, không khai thì
+             BỎ (export không đoán hệ điều hành của máy đích).
+          2. có `_may_khac.X.order` -> thay `order`; `_order_ly_do` thay bằng
+             `_may_khac.X._ly_do` (lý do của máy nguồn không còn đúng ở máy đích).
+          3. mục `_may_khac.X` bị xoá, máy NGUỒN thành một mục `_may_khac` mang thứ tự cũ —
+             thứ tự của mỗi máy xuất hiện đúng một lần trong cả hệ.
+        `_may_khac.X` không có `order` thì giữ `order` và không thêm mục máy nguồn.
     JSON hỏng thì giữ nguyên byte — export không phải chỗ sửa cấu hình người dùng."""
     try:
         d = json.loads(raw.decode("utf-8-sig"))
@@ -90,10 +98,40 @@ def _engines_cho_may(raw: bytes, st: Path, may: str | None) -> bytes:
             except ValueError:
                 d.pop("ledger", None)
     if may:
-        khac = (d.get("_may_khac") or {}).get(may) or {}
-        if isinstance(khac, dict) and khac.get("order"):
-            d["order"] = khac["order"]
+        _doi_sang_may(d, may)
     return (json.dumps(d, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def _doi_sang_may(d: dict, may: str) -> None:
+    """Ba việc RUNBOOK-DOI-MAY §5 trên `engines.json` đã nạp (sửa tại chỗ, giữ thứ tự khoá)."""
+    ds_khac = d.get("_may_khac") if isinstance(d.get("_may_khac"), dict) else {}
+    khac = ds_khac.get(may) if isinstance(ds_khac.get(may), dict) else {}
+    nguon = d.get("_may") if isinstance(d.get("_may"), dict) else {}
+    ten_nguon = str(nguon.get("ten") or "").strip()
+
+    if khac.get("order"):
+        if ten_nguon and ten_nguon != may and d.get("order"):
+            muc = {"order": d["order"]}
+            if nguon.get("nen_tang"):
+                muc["nen_tang"] = nguon["nen_tang"]
+            if d.get("_order_ly_do"):
+                muc["_ly_do"] = d["_order_ly_do"]
+            ds_khac[ten_nguon] = muc
+        d["order"] = khac["order"]
+        if khac.get("_ly_do"):
+            d["_order_ly_do"] = khac["_ly_do"]
+        else:
+            d.pop("_order_ly_do", None)
+        ds_khac.pop(may, None)
+        d["_may_khac"] = ds_khac
+
+    moi = dict(nguon)
+    moi["ten"] = may
+    if khac.get("nen_tang"):
+        moi["nen_tang"] = khac["nen_tang"]
+    else:
+        moi.pop("nen_tang", None)
+    d["_may"] = moi
 
 
 def export_station(station, out, *, with_git=False, logs_state=False, dry_run=False,
@@ -494,8 +532,9 @@ def main(argv=None) -> int:
                    help="kèm trạng thái trong logs/: tin duyệt chờ, việc chờ, nhật ký sự kiện")
     e.add_argument("--dry-run", action="store_true", help="chỉ liệt kê, không ghi gì")
     e.add_argument("--for-machine", metavar="TÊN",
-                   help="máy đích: `order` của engines.json lấy từ `_may_khac.<TÊN>`; `ledger` "
-                        "tuyệt đối luôn được đổi thành tương đối/bỏ")
+                   help="máy đích: engines.json đổi sẵn cho máy đó (`_may`, `order` và lý do "
+                        "lấy từ `_may_khac.<TÊN>`, máy nguồn thành một mục `_may_khac`); "
+                        "`ledger` tuyệt đối luôn được đổi thành tương đối/bỏ")
 
     i = con.add_parser("import", help="mở gói vào một trạm (KHÔNG đè file đã có)")
     i.add_argument("archive", help="file zip do `export` tạo")
