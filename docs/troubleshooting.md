@@ -18,6 +18,7 @@ không đo được từ đây. Trang này giải thích những trường hợp
 | macOS: `pwsh: command not found` khi chạy runner `.ps1` | chưa cài PowerShell 7 | `brew install --cask powershell` |
 | `studio.py update` không chạy được | tải ZIP thay vì `git clone` | cài Git rồi clone lại; chép `workspace/` (nếu có) sang bản clone mới |
 | `doctor` nhắc repo/trạm nằm trong thư mục đồng bộ | clone vào OneDrive/iCloud/Dropbox | clone lại vào thư mục cục bộ; đồng bộ đám mây làm hỏng git và `.venv` |
+| Windows: `git clone`/`git pull` báo `Filename too long`, hoặc `doctor` nhắc "bản clone nằm sâu" | clone vào thư mục có đường dài (~150 ký tự trở lên); file tracked dài nhất của repo ~107 ký tự nên đường đầy đủ vượt 259 ký tự của Windows | `git config --global core.longpaths true` rồi clone lại, hoặc clone vào đường ngắn hơn (ví dụ `C:\src\agent-marketing-studio`) |
 
 ## Dòng `doctor`
 

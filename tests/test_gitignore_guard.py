@@ -47,9 +47,31 @@ def test_gitignore_giu_dung_dong_bat_buoc(dong):
     assert dong in _dong(), f".gitignore thiếu dòng bắt buộc của chế độ embedded: {dong}"
 
 
+# Thứ công cụ tự sinh ngay trong bản clone: `.claude/settings.local.json` (Claude Code ghi khi
+# người dùng cho phép lệnh — chứa lệnh và đường máy riêng), cache linter/coverage, cấu hình IDE,
+# nhật ký. Không phải rào của `embedded` (doctor không đo), nhưng mất dòng là rác lọt lên repo
+# công khai ⇒ cũng canh theo tên.
+DONG_CONG_CU = [".claude/settings.local.json", ".mypy_cache/", ".ruff_cache/", ".coverage",
+                "htmlcov/", ".idea/", ".vscode/", "*.log"]
+
+
+@pytest.mark.parametrize("dong", DONG_CONG_CU)
+def test_gitignore_giu_dong_cong_cu_tu_sinh(dong):
+    assert dong in _dong(), f".gitignore thiếu dòng chặn thứ công cụ tự sinh: {dong}"
+
+
 @pytest.mark.skipif(not (shutil.which("git") and (ROOT / ".git").exists()),
                     reason="cần bản clone git")
 @pytest.mark.parametrize("duong,bi_chan", [
+    (".claude/settings.local.json", True),
+    (".claude/skills/hook-writer/SKILL.md", False),     # skill trong repo vẫn phải commit được
+    (".mypy_cache/3.12/x.json", True),
+    (".ruff_cache/CACHEDIR.TAG", True),
+    (".coverage", True),
+    ("htmlcov/index.html", True),
+    (".idea/workspace.xml", True),
+    (".vscode/settings.json", True),
+    ("logs/run.log", True),
     ("workspace/ai-news/channel.yml", True),
     ("workspace/a.md", True),
     (".env", True),

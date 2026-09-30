@@ -3,6 +3,23 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.5 — 2026-09-30 (chưa phát hành)
+
+Dọn gọn theo review 30/09 — chỉ mục rủi ro không/thấp. Hành vi chạy không đổi (runner, lịch,
+đăng, mã thoát `doctor`).
+
+- **`.gitignore`** chặn thêm thứ công cụ tự sinh: `.claude/settings.local.json`,
+  `.mypy_cache/`, `.ruff_cache/`, `.coverage`, `htmlcov/`, `.idea/`, `.vscode/`, `*.log`.
+  Không file tracked nào khớp. Canh từng dòng + `git check-ignore` trong
+  `tests/test_gitignore_guard.py`.
+- **`doctor` nhắc clone quá sâu trên Windows**: đường repo + đường tracked dài nhất
+  (`DUONG_TRACKED_DAI_NHAT = 110`, thực tế 107) vượt 259 ký tự ⇒ một dòng *nhắc* gợi ý
+  `core.longpaths` hoặc clone vào đường ngắn hơn. Không đỏ, mã thoát không đổi; macOS/Linux
+  không nhắc. Test giả đường dài bằng monkeypatch + test canh hằng không tụt dưới thực tế.
+  Thêm dòng ở `docs/troubleshooting.md` mục *Khi cài*.
+- **CI**: `actions/checkout` v4.2.2 → v5.1.0, `actions/setup-python` v5.6.0 → v6.3.0 (Node 24;
+  Node 20 bị GitHub báo deprecated), vẫn ghim SHA kèm tag.
+
 ## 1.1.4 — 2026-09-30
 
 Bộ test cô lập khỏi secret thật của máy đang chạy. Lượt chạy thật không đổi (biến chốt chỉ

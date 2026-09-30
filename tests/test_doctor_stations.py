@@ -422,3 +422,58 @@ def test_doctor_im_lang_khi_env_toan_bien_doc_duoc(tmp_path):
     so = DR.So()
     DR._kham_env_khong_ai_doc(so, repo)
     assert not so.warn
+
+
+# ══ Đường clone dài trên Windows — chỉ NHẮC, không đổi mã thoát ══
+
+def _dai(n: int) -> Path:
+    """Một đường GIẢ dài đúng n ký tự — không tạo gì trên đĩa."""
+    goc = "C:\\" if sys.platform == "win32" else "/"
+    return Path(goc + "a" * (n - len(goc)))
+
+
+def test_clone_SAU_tren_Windows_thi_NHAC_core_longpaths(monkeypatch):
+    monkeypatch.setattr(DR, "_la_windows", lambda: True)
+    so = DR.So()
+    DR._kham_duong_clone(so, _dai(DR.GIOI_HAN_DUONG_WIN - DR.DUONG_TRACKED_DAI_NHAT))
+    assert len(so.warn) == 1 and "core.longpaths" in so.warn[0], so.warn
+    assert not so.fail and so.code == SC.OK
+
+
+def test_clone_VUA_DU_ngan_tren_Windows_thi_IM(monkeypatch):
+    monkeypatch.setattr(DR, "_la_windows", lambda: True)
+    so = DR.So()
+    DR._kham_duong_clone(so, _dai(DR.GIOI_HAN_DUONG_WIN - DR.DUONG_TRACKED_DAI_NHAT - 1))
+    assert not so.warn
+
+
+def test_clone_sau_nhung_KHONG_phai_Windows_thi_IM(monkeypatch):
+    monkeypatch.setattr(DR, "_la_windows", lambda: False)
+    so = DR.So()
+    DR._kham_duong_clone(so, _dai(400))
+    assert not so.warn
+
+
+def test_kham_NHAC_clone_sau_ma_MA_THOAT_khong_doi(may, monkeypatch):
+    """Nối vào `kham` thật: thêm đúng một dòng nhắc, mã thoát y như khi không nhắc."""
+    monkeypatch.setattr(DR, "_la_windows", lambda: True)
+    truoc = DR.kham()
+    monkeypatch.setattr(DR, "DUONG_TRACKED_DAI_NHAT", DR.GIOI_HAN_DUONG_WIN)   # repo giả "sâu"
+    sau = DR.kham()
+    assert sau["code"] == truoc["code"]
+    assert sau["fail"] == truoc["fail"]
+    moi = [x for x in sau["warn"] if x not in truoc["warn"]]
+    assert len(moi) == 1 and "core.longpaths" in moi[0], moi
+
+
+@pytest.mark.skipif(not (ROOT / ".git").exists(), reason="cần bản clone git")
+def test_hang_duong_tracked_KHONG_ngan_hon_thuc_te():
+    """Thêm một file sâu hơn mà quên nâng hằng ⇒ doctor im lặng đúng lúc cần nhắc."""
+    r = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z"], capture_output=True)
+    if r.returncode != 0:
+        pytest.skip("không chạy được git ls-files")
+    ds = [p for p in r.stdout.decode("utf-8").split("\0") if p]
+    dai_nhat = max(ds, key=len)
+    assert len(dai_nhat) <= DR.DUONG_TRACKED_DAI_NHAT, (
+        f"{dai_nhat} dài {len(dai_nhat)} > DUONG_TRACKED_DAI_NHAT={DR.DUONG_TRACKED_DAI_NHAT}"
+        " — nâng hằng trong scripts/pipeline/doctor.py (hoặc rút ngắn đường)")

@@ -77,6 +77,14 @@ PHAI_BI_IGNORE = (SP.WORKSPACE, ".env", SP.LOCAL_CONFIG)
 # trong lời nhắc thiếu dữ liệu múi giờ, để người đọc thấy đúng thứ sẽ hỏng.
 MUI_GIO_CHUAN = "Asia/Ho_Chi_Minh"
 
+# Windows chưa bật long path thì git/Python không mở được đường dài hơn 259 ký tự (MAX_PATH
+# 260 kể cả ký tự kết thúc — cùng con số `init_station.py:GIOI_HAN_DUONG`, nhưng con số đó chỉ
+# canh đường TRẠM). Đường tracked dài nhất của repo là 107 ký tự (một file trong
+# `examples/example-studio/`); hằng này làm tròn lên có dư. Cổng canh nó không tụt dưới thực
+# tế: `tests/test_doctor_stations.py::test_hang_duong_tracked_KHONG_ngan_hon_thuc_te`.
+GIOI_HAN_DUONG_WIN = 259
+DUONG_TRACKED_DAI_NHAT = 110
+
 # Mỗi mục là `f(so, tram) -> None`; đăng ký ở cuối file. `tram` là gốc trạm nội dung đã
 # phân giải — hàm khám không được tự phân giải lại, nếu không `doctor --station X` sẽ khám
 # một trạm mà nó không được yêu cầu khám.
@@ -225,6 +233,27 @@ def _kham_du_lieu_mui_gio(so: So) -> None:
         so.nhac(AC.THIEU_TZ.format(ten=MUI_GIO_CHUAN))
 
 
+def _la_windows() -> bool:
+    """Tách riêng để test giả được Windows mà không phải sửa `os.name` của cả tiến trình."""
+    return os.name == "nt"
+
+
+def _kham_duong_clone(so: So, repo: Path | None) -> None:
+    """Bản clone nằm sâu tới mức file tracked dài nhất vượt 259 ký tự trên Windows.
+
+    Chỉ NHẮC, không đỏ, mã thoát không đổi: `doctor` chạy được tức checkout đã xong, và máy
+    có thể đã bật `core.longpaths` / LongPathsEnabled — doctor không hỏi git hay registry để
+    biết. Nhắc để người dùng hiểu vì sao `git pull` sau này có thể báo "Filename too long"."""
+    if not repo or not _la_windows():
+        return
+    dai = len(str(repo)) + 1 + DUONG_TRACKED_DAI_NHAT
+    if dai > GIOI_HAN_DUONG_WIN:
+        so.nhac(f"bản clone nằm sâu ({len(str(repo))} ký tự) — file tracked dài nhất sẽ thành "
+                f"~{dai} ký tự, vượt {GIOI_HAN_DUONG_WIN} của Windows nếu chưa bật long path; "
+                "git có thể báo 'Filename too long'. Bật `git config --global core.longpaths "
+                "true`, hoặc clone vào đường ngắn hơn (xem docs/troubleshooting.md).")
+
+
 def kham(station=None) -> dict:
     so = So()
     repo = SP.repo_root()
@@ -275,6 +304,9 @@ def kham(station=None) -> dict:
             if c:
                 so.nhac(f"{ten} nằm trong thư mục đồng bộ {c} ({p}) — git ở đó hay hỏng index, "
                         "và mọi thứ trong đó đi lên cloud. Cân nhắc dời ra ngoài.")
+
+    # 4b. Bản clone nằm quá sâu trên Windows
+    _kham_duong_clone(so, repo)
 
     # 5. Thứ máy được cho là "có sẵn" mà không phải máy nào cũng có
     _kham_du_lieu_mui_gio(so)
