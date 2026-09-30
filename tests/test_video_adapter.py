@@ -144,23 +144,23 @@ def test_project_rong_thi_loi_ngay(tram, tmp_path):
 
 # ── tìm trạm, tìm python ─────────────────────────────────────────────────────────────
 
-def test_chua_cai_tram_video_thi_StationMissing_kem_HUONG_DAN_CAI(tmp_path, monkeypatch):
+def test_chua_cai_tram_video_thi_StationMissing_kem_HUONG_DAN_CAI(tmp_path, monkeypatch, request):
     for b in ("VIDEO_STATION", "VIDEO_ROOT"):
         monkeypatch.delenv(b, raising=False)
-    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(tmp_path))
+    request.getfixturevalue("repo_gia")   # repo giả CÔ LẬP (không anh em, không studio.local.json)
     with pytest.raises(SC.StationMissing) as e:
         VD.station()
     loi = str(e.value)
     assert "agent-video-studio" in loi and "clone" in loi and "VIDEO_STATION" in loi
 
 
-def test_loi_de_nghi_CAI_noi_ro_day_la_NANG_LUC_CHUA_BAT(tmp_path, monkeypatch):
+def test_loi_de_nghi_CAI_noi_ro_day_la_NANG_LUC_CHUA_BAT(tmp_path, monkeypatch, request):
     """Cùng luật với trạm giọng: đề nghị cài chỉ hiện ra ở CHỖ CHẠM, và phải nói rõ lõi
     (viết bài + đăng) không cần trạm video — nếu không, người dùng đọc nó như một bản cài
     hỏng và đi cài một thứ họ chưa dùng tới."""
     for b in ("VIDEO_STATION", "VIDEO_ROOT"):
         monkeypatch.delenv(b, raising=False)
-    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(tmp_path))
+    request.getfixturevalue("repo_gia")   # repo giả CÔ LẬP (không anh em, không studio.local.json)
     with pytest.raises(SC.StationMissing) as e:
         VD.station()
     loi = str(e.value).lower()

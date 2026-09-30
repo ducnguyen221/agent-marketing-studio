@@ -484,7 +484,16 @@ def _lam(args) -> dict:
 
     # Repo web mặc định đọc từ biến môi trường — KHÔNG có đường cứng nào trong mã: bố
     # cục đĩa của một máy không phải hằng số của chương trình.
-    web_repo = args.web_repo or (SP.secret_env("WEB_REPO_DIR") or "").strip() or None
+    # `WEB_REPO_DIR` nhận `${TÊN}` và đường TƯƠNG ĐỐI (theo thư mục cha chứa các repo), như
+    # `brand.repo` — `studio_paths.duong_repo_web`. Cờ `--web-repo` thì tương đối theo thư
+    # mục hiện hành như mọi cờ đường dẫn khác.
+    web_repo = args.web_repo
+    bien_web = (SP.secret_env("WEB_REPO_DIR") or "").strip()
+    if not web_repo and bien_web:
+        try:
+            web_repo = SP.duong_repo_web(bien_web, nguon="WEB_REPO_DIR")
+        except SP.StudioPathsError as e:
+            raise SC.ContractError(str(e))
     anh_xa = {}
     for c in (args.web_channel or []):
         ten, dau, seg = c.partition("=")

@@ -63,7 +63,7 @@ def test_campaign_de_len_kenh(tmp_path):
                 campaign_fm=FM_TOI_THIEU)
     d = json.loads(_chay(campaign).stdout)
     assert d["label"] == "Nhãn thử"      # campaign đè
-    assert d["repo"] == "r"              # khoá kênh vẫn còn
+    assert d["repo_khai"] == "r"         # khoá kênh vẫn còn (giá trị khai, trước khi nở)
 
 
 def test_channel_yml_brand_lam_nen_brand_json_de_len(tmp_path):
@@ -71,7 +71,7 @@ def test_channel_yml_brand_lam_nen_brand_json_de_len(tmp_path):
     campaign = _tram(tmp_path, channel_brand="brand:\n  repo: moi\n  gh_repo: gh\n",
                 brand_json={"repo": "dang-chay"}, campaign_fm=FM_TOI_THIEU)
     d = json.loads(_chay(campaign).stdout)
-    assert d["repo"] == "dang-chay"
+    assert d["repo_khai"] == "dang-chay"
     assert d["gh_repo"] == "gh"          # khoá chỉ có ở channel.yml không bị mất
 
 

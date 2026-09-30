@@ -105,7 +105,7 @@ def test_CLI_thieu_kich_ban_la_ma_2(giong, tmp_path, capsys):
                     "--out", str(tmp_path / "a.mp3")]) == SC.CONTRACT_ERROR
 
 
-def test_CHUA_CAI_TRAM_GIONG_la_ma_3_kem_huong_dan(tmp_path, monkeypatch, capsys):
+def test_CHUA_CAI_TRAM_GIONG_la_ma_3_kem_huong_dan(tmp_path, monkeypatch, request, capsys):
     """Fail-closed: không có trạm giọng thì DỪNG với lời chỉ đúng việc phải làm.
 
     Đây là **chỗ chạm** — bước duy nhất trong repo thật sự cần trạm giọng. `doctor` lúc
@@ -113,7 +113,7 @@ def test_CHUA_CAI_TRAM_GIONG_la_ma_3_kem_huong_dan(tmp_path, monkeypatch, capsys
     này, khi người dùng vừa gọi một lệnh đọc thành tiếng mà máy chưa có gì để đọc."""
     for b in ("VOICE_STATION", "OMNIVOICE_DIR", "OMNIVOICE_PY", "MARKETING_STUDIO_HOME"):
         monkeypatch.delenv(b, raising=False)
-    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(tmp_path))
+    request.getfixturevalue("repo_gia")   # repo giả CÔ LẬP (không anh em, không studio.local.json)
     ma = MP.main(["--script", str(_kich(tmp_path)), "--out", str(tmp_path / "a.mp3")])
     _, err = capsys.readouterr()
     assert ma == SC.STATION_MISSING

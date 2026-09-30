@@ -259,6 +259,20 @@ def test_ghi_lai_tram_giong_video_neu_may_da_co(repo, tmp_path, monkeypatch):
     assert Path(lc["video_station"]) == video.resolve()
 
 
+def test_tram_tu_repo_ANH_EM_thi_KHONG_ghi_duong_tuyet_doi(repo, tmp_path):
+    """Trạm giọng/video tìm ra nhờ repo anh em cùng thư mục cha thì KHÔNG đóng băng vào
+    `studio.local.json`: dời cả thư mục chứa các repo đi thì nấc anh em vẫn tự tìm lại,
+    còn một đường tuyệt đối cũ (đứng trước nấc anh em) sẽ trỏ vào chỗ không còn."""
+    for thu_muc, ten in (("giong-o-day", "agent-voice-studio"), ("video-o-day", "agent-video-studio")):
+        r = tmp_path / thu_muc
+        (r / "workspace").mkdir(parents=True)
+        (r / "pyproject.toml").write_text(f'[project]\nname = "{ten}"\n', encoding="utf-8")
+    assert SP.voice_station() == (tmp_path / "giong-o-day" / "workspace").resolve()
+    IS.do_init(yes=True)
+    lc = doc_local(repo)
+    assert "voice_station" not in lc and "video_station" not in lc, lc
+
+
 # ── cây trạm dựng ra phải qua được cổng thật ──────────────────────────────────────────
 
 @pytest.mark.parametrize("che_do", ["embedded", "separate"])
@@ -381,8 +395,11 @@ def test_hai_VO_deu_chuyen_co_KHONG_TUONG_TAC_vao_LOI():
     assert "--non-interactive" in IS._parser_help()
 
 
-def test_non_interactive_KHONG_doan_che_do(tmp_path, monkeypatch):
-    """`--non-interactive` nghĩa là "đừng hỏi", KHÔNG phải "đoán hộ tôi"."""
+def test_non_interactive_KHONG_doan_che_do(repo, tmp_path, monkeypatch):
+    """`--non-interactive` nghĩa là "đừng hỏi", KHÔNG phải "đoán hộ tôi".
+
+    Chạy trên `repo` GIẢ (chưa có `studio.local.json`): bản clone thật của một máy đã cài
+    embedded có sẵn lựa chọn cũ, và `chon_che_do` đọc nó thay vì dừng (P1-8)."""
     for b in IS.BIEN_NHAN_DIEN:
         monkeypatch.delenv(b, raising=False)
     monkeypatch.setattr(IS, "nha_marketing", lambda: tmp_path / "khong-co")

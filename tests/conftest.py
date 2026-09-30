@@ -45,3 +45,24 @@ def pytest_configure(config):
             # Khong dau co chu dich: pytest in loi nay qua console cp1252 cua runner Windows.
             "MARKETING_STUDIO_REQUIRE_POWERSHELL=1 nhung khong thay `powershell`/`pwsh` "
             "tren PATH - cai PowerShell 7 truoc khi chay test (cac test .ps1 se bi skip).")
+
+
+@pytest.fixture
+def repo_gia(tmp_path, monkeypatch):
+    """Bản clone GIẢ, cô lập: `MARKETING_STUDIO_HOME` trỏ vào nó nên `studio_paths.repo_root()`
+    — và mọi thứ suy từ đó (`workspace/`, `studio.local.json`, `<repo>/.env`, repo anh em cùng
+    thư mục cha) — đều nằm trong cây tạm.
+
+    Vì sao cần (P1-8, 30/09/2026): test nào để `repo_root()` rơi về bản clone THẬT (nơi chính
+    file test nằm) thì đọc `workspace/` + `studio.local.json` của máy đang chạy. CI checkout
+    sạch xanh, còn máy đã `install.sh --mode embedded` — tức mọi máy chạy thật — đỏ 12 ca.
+    Và từ khi trạm giọng/video được suy từ repo anh em, một bản clone thật nằm cạnh
+    `agent-voice-studio` sẽ "có" trạm giọng trong mọi test không cô lập.
+
+    Đặt dưới `tmp_path/xyz/` (tên bất kỳ, không có anh em nào): test cần anh em thì tự dựng
+    cạnh nó. Mốc tối thiểu để `repo_root()` nhận: `scripts/lib/` + `install.ps1`."""
+    r = tmp_path / "xyz" / "agent-marketing-studio"
+    (r / "scripts" / "lib").mkdir(parents=True)
+    (r / "install.ps1").write_text("", encoding="utf-8")
+    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(r))
+    return r
