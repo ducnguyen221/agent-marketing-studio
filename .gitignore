@@ -33,6 +33,17 @@ desktop.ini
 ~$*
 .~lock.*
 
+# ── Thứ công cụ tự sinh (Claude Code, linter, coverage, IDE) ────────────────
+# Cổng canh từng dòng: tests/test_gitignore_guard.py (DONG_CONG_CU).
+.claude/settings.local.json
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+*.log
+
 # Plan/thiet ke noi bo -> luu o kho ho so RIENG ngoai repo nay (PRIVATE).
 # Ly do: plan chua duong dan may + ten to chuc; repo nay public va docs/ duoc GitHub Pages phat ra web.
 docs/plans/
