@@ -5,7 +5,8 @@ Chạy bằng python có google-api-python-client (daily_truyen dò qua truyen_p
 Tự dựng tiêu đề + MÔ TẢ (kèm mốc thời gian từng chương lấy từ manifest) rồi upload công khai
 vào playlist "Phàm Nhân Tu Tiên (P1)".
 
-  # xem trước title + description (KHÔNG upload, KHÔNG cần token):
+  # xem trước title + description (KHÔNG upload, KHÔNG cần token, KHÔNG gọi agent — mô tả tĩnh;
+  # thêm --with-hook để xem cả hook do agent viết, tốn hạn mức + ghi ledger):
   python truyen_publish.py --manifest <mp3.manifest.json> --video <mp4> --dry-run
   # đăng thật (cần youtube_token_truyen.json đã --auth chọn đúng kênh Nghe Tiên Truyện):
   python truyen_publish.py --manifest <...> --video <...>
@@ -193,9 +194,10 @@ def gen_hook(chapters, cache_dir=None):
     return {"title_hook": hook, "summary": summ, "closing": close} if (hook and summ) else None
 
 
-def build(manifest, cache_dir=None, playlist=PLAYLIST, title_prefix="PNTT"):
+def build(manifest, cache_dir=None, playlist=PLAYLIST, title_prefix="PNTT", with_hook=True):
     """Dựng (title, desc). playlist/title_prefix đi từ state của TỪNG PHẦN truyện (P1/P2...);
-    hằng PLAYLIST chỉ còn là mặc định cho lúc gọi tay."""
+    hằng PLAYLIST chỉ còn là mặc định cho lúc gọi tay. `with_hook=False` = không gọi agent,
+    đi thẳng nhánh mô tả tĩnh (dùng cho --dry-run: xem trước không được tốn hạn mức)."""
     man = json.load(open(manifest, encoding="utf-8"))
     chs = man["chapters"]
     first, last = chs[0]["num"], chs[-1]["num"]
@@ -206,7 +208,11 @@ def build(manifest, cache_dir=None, playlist=PLAYLIST, title_prefix="PNTT"):
         lines.append(f"{fmt_ts(float(ch['start']) - off)} Chương {ch['num']} – {ch['name']}")
     ts_block = "\n".join(lines)
 
-    hook = gen_hook(chs, cache_dir)
+    if with_hook:
+        hook = gen_hook(chs, cache_dir)
+    else:
+        print("[hook] bỏ qua (dry-run không --with-hook) — mô tả tĩnh, không gọi agent", flush=True)
+        hook = None
     if hook:
         title = f"{title_prefix} Chương {first}-{last} | {hook['title_hook']}"[:100]
         parts = [hook["summary"], "", ts_block]
@@ -266,7 +272,7 @@ def set_thumbnail(yu, video_id, video_path, thumb_at, attempts=4):
     return False
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default="")
     ap.add_argument("--video", required=True)
@@ -283,11 +289,14 @@ def main():
     ap.add_argument("--privacy", default="public")
     ap.add_argument("--thumb-at", dest="thumb_at", type=float, default=3.0,
                     help="Giây trích frame thẻ mở đầu làm ảnh đại diện (hiện dải chương).")
-    ap.add_argument("--dry-run", action="store_true", help="chỉ in title+desc, không upload")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="chỉ in title+desc, không upload, không gọi agent (mô tả tĩnh)")
+    ap.add_argument("--with-hook", dest="with_hook", action="store_true",
+                    help="dùng với --dry-run: vẫn gọi agent viết hook (tốn hạn mức, ghi ledger)")
     ap.add_argument("--force", action="store_true", help="bỏ qua kiểm tra tên kênh")
     ap.add_argument("--cache-dir", dest="cache_dir", default="",
                     help="Thư mục cache Chuong_*.txt để tóm tắt sâu hơn (tự dò nếu bỏ trống).")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     # Chế độ CHỈ đặt lại ảnh đại diện (sửa video ĐÃ đăng) — không cần manifest, không upload.
     if args.set_thumb_only:
@@ -303,7 +312,8 @@ def main():
     if not args.manifest:
         sys.exit("cần --manifest (hoặc --set-thumb-only --video-id để chỉ đặt ảnh).")
     title, desc, first, last = build(args.manifest, args.cache_dir or None,
-                                     args.playlist, args.title_prefix)
+                                     args.playlist, args.title_prefix,
+                                     with_hook=not args.dry_run or args.with_hook)
     print(f"[playlist] {args.playlist}")   # thấy NGAY đang đăng vào playlist nào (log đêm/Telegram)
     print(f"=== TITLE ===\n{title}\n=== DESCRIPTION ({len(desc)} ký tự) ===\n{desc}\n=== END ===")
     if args.dry_run:
