@@ -405,8 +405,9 @@ def _kham_mot_tram(so: So, ten: str, goc, can: bool, ly_do: str, repo: str,
                     f"\n{huong_dan}")
         else:
             so.ghi(f"{ten}: chưa bật — cần khi bạn muốn {VIEC[ten]}. Viết bài và đăng "
-                   f"KHÔNG cần nó. Bật: cài `{repo}` rồi đặt {BIEN_TRAM[ten]} "
-                   f"(docs/ONBOARDING.md bước 8).")
+                   f"KHÔNG cần nó. Bật: clone `{repo}` vào cùng thư mục cha chứa repo này "
+                   f"rồi `init` nó (embedded) — tự nhận, không cần khai; trạm ở chỗ khác "
+                   f"thì khai {BIEN_TRAM[ten]} trong <repo>/.env (docs/ONBOARDING.md bước 8).")
         return None
     if not goc.is_dir():
         so.nhac(f"{ten}: chưa dùng được — khai ở {goc} nhưng thư mục không tồn tại."

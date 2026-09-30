@@ -197,6 +197,20 @@ def gop(campaign_dir: Path) -> dict:
     if "yt_title_prefix" in ra:
         ra.setdefault("yt_title_prefix_daily", ra["yt_title_prefix"])
 
+    # ── `repo` (repo web của kênh) → đường TUYỆT ĐỐI trong bản chụp.
+    #
+    # `channel.yml` được viết `${WEB_REPO_DIR}/ai` hoặc tương đối `news/ai` (tính theo thư
+    # mục cha chứa các repo) để MỘT file chạy được trên mọi máy, clone ở đâu cũng được.
+    # Runner PowerShell không phải tự hiểu hai dạng đó: nó nhận đường đã nở ở đây. Giá trị
+    # khai giữ nguyên ở `repo_khai` để nhật ký cho thấy người dùng đã viết gì.
+    if str(ra.get("repo") or "").strip():
+        ra["repo_khai"] = ra["repo"]
+        try:
+            ra["repo"] = str(SP.duong_repo_web(
+                ra["repo"], nguon=f"{kenh_dir / SP.MOC_KENH}: brand.repo"))
+        except SP.StudioPathsError as e:
+            raise ValueError(str(e))
+
     # ── Đường ra và log RIÊNG cho từng chiến dịch, đường tuyệt đối.
     #
     # Trước đây hai thứ này nằm ở CẤP KÊNH và dùng chung: `ai-news/daily-out` là của

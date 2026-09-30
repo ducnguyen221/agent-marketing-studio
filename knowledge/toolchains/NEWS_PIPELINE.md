@@ -84,7 +84,7 @@ Chép nó sang chiến dịch mới là chạy được ngay.
 |---|---|
 | Trạm | đi lên từ thư mục chiến dịch tới thư mục có `CHANNELS.md` → `MARKETING_STUDIO_DATA` → `~/.marketing` |
 | Engine | `<trạm>/engine` — tạm thời, chưa có thì lùi về engine cũ trong thư mục nhà và in cảnh báo (đường lùi sẽ gỡ khi engine dời xong) |
-| Repo | `MARKETING_STUDIO_HOME` → `~/Code/agent-marketing-studio` |
+| Repo | `MARKETING_STUDIO_HOME` → đi lên từ thư mục chiến dịch tới thư mục có `scripts/pipeline/campaign_cfg.py` (embedded: cha của trạm) → DỪNG mã 2 |
 
 Task theo lịch vẫn phải đi qua wrapper báo cáo để có tin Telegram (✅ kèm mọi link sản phẩm,
 ❌ kèm bước hỏng). Mã thoát của wrapper = mã của `run.ps1`.

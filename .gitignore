@@ -28,6 +28,7 @@ __pycache__/
 venv/
 .pytest_cache/
 Thumbs.db
+.DS_Store
 desktop.ini
 ~$*
 .~lock.*

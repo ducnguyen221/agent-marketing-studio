@@ -10,7 +10,8 @@ chép file → chạy lệnh hậu kỳ → `git add` đích danh → commit →
 ```yaml
 web_target:
   kind: git_static                      # đợt này chỉ có một loại
-  repo: ~/Code/<repo trang web>
+  repo: <repo trang web>                # tương đối = trong thư mục cha chứa các repo;
+                                        # nhận cả ${TÊN_BIẾN} và ~/…
   content_dir: content/{category}       # {category} lấy từ meta.json của bài
   base_url: https://vi-du.test/content
   post_cmd: node generate-manifest.js   # tuỳ chọn, chạy trong repo
@@ -38,7 +39,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -150,7 +150,14 @@ def dang(post: Path, *, uat=False, dry_run=False, no_push=False,
                           "files": [t for _, t in cap]}, ensure_ascii=False))
         return 0
 
-    repo = Path(os.path.expanduser(str(wt["repo"]))).resolve()
+    # `${TÊN}` và đường TƯƠNG ĐỐI (tính theo thư mục cha chứa các repo) — không giả định
+    # thư mục cha của máy nào (`Code`, `Repo`…). Xem `studio_paths.duong_repo_web`.
+    try:
+        repo = SP.duong_repo_web(wt.get("repo"),
+                                 nguon=f"{channel / 'channel.yml'}: web_target.repo")
+    except SP.StudioPathsError as e:
+        loi(str(e))
+        return 2
     if not (repo / ".git").is_dir():
         loi(f"{repo} không phải repo git.")
         return 2

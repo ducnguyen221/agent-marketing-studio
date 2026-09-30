@@ -77,7 +77,10 @@ $cam = $PSScriptRoot
 #   Trạm   : đi LÊN từ thư mục chiến dịch tới thư mục có CHANNELS.md
 #            -> biến MARKETING_STUDIO_DATA -> $HOME/.marketing
 #   Engine : <trạm>/engine — tên cố định
-#   Repo   : biến MARKETING_STUDIO_HOME -> $HOME/Code/agent-marketing-studio
+#   Repo   : biến MARKETING_STUDIO_HOME -> đi LÊN từ thư mục chiến dịch tới thư mục có
+#            scripts/pipeline/campaign_cfg.py (embedded: repo = CHA của trạm workspace/)
+#            -> không có thì DỪNG. Không đoán thư mục chứa repo (`Code`, `Repo`…): tên đó
+#            là lựa chọn của từng máy, không phải hằng số của chương trình.
 $station = $null
 $d = $cam
 while ($d) {
@@ -100,9 +103,24 @@ if (-not (Test-Path $engine)) {
     $engine = $engineCu
   }
 }
+$cfgRel = Join-Path 'scripts' (Join-Path 'pipeline' 'campaign_cfg.py')
+$repo = $null
 if ($env:MARKETING_STUDIO_HOME) { $repo = $env:MARKETING_STUDIO_HOME }
-else { $repo = Join-Path $HOME (Join-Path 'Code' 'agent-marketing-studio') }
-$cfgpy = Join-Path $repo (Join-Path 'scripts' (Join-Path 'pipeline' 'campaign_cfg.py'))
+else {
+  $d = $cam
+  while ($d) {
+    if (Test-Path (Join-Path $d $cfgRel)) { $repo = $d; break }
+    $cha = Split-Path $d -Parent
+    if ($cha -eq $d) { break }
+    $d = $cha
+  }
+}
+if (-not $repo) {
+  Write-Host ('run.ps1: khong tim ra repo (di len tu ' + $cam + ' khong thay ' + $cfgRel +
+    ') -> DUNG. Tram ngoai repo: dat bien MARKETING_STUDIO_HOME = thu muc repo.')
+  exit 2
+}
+$cfgpy = Join-Path $repo $cfgRel
 Write-Host ('run.ps1: station=' + $station + ' engine=' + $engine + ' repo=' + $repo)
 if (-not (Test-Path $cfgpy)) {
   Write-Host ('run.ps1: khong thay ' + $cfgpy + ' -> DUNG. Dat bien MARKETING_STUDIO_HOME = thu muc repo.')

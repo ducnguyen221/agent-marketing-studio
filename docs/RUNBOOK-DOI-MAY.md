@@ -178,7 +178,7 @@ máy đích chạy trót lọt một lượt thật.
 | Thứ | Cách | Ai làm |
 |---|---|---|
 | Kho secret (`~/.secret/<tài khoản>/`) | chép tay từ máy cũ; đặt quyền `700` cho thư mục, `600` cho file | **người**, không phải script |
-| Repo web đích | `git -C ~/Code/<repo web> pull` (hoặc `clone` nếu chưa có) | bạn |
+| Repo web đích | `git -C <thư mục cha chứa các repo>/<repo web> pull` (hoặc `clone` nếu chưa có). `channel.yml` nên ghi `repo:` TƯƠNG ĐỐI (`news/ai`) hoặc `${WEB_REPO_DIR}/ai` để không phải sửa theo máy | bạn |
 | Biến môi trường | `separate`: `setx` (Windows) / khoá `EnvironmentVariables` trong plist (macOS) · `embedded`: `<repo>/.env` | bạn |
 
 ⚠️ **launchd KHÔNG đọc `~/.zshrc`, `~/.zprofile` hay `~/.bash_profile`.** Biến bạn đặt

@@ -262,11 +262,16 @@ def _cai_hook(repo: Path) -> str:
 
 
 def _tram_nang_luc_da_co(repo: Path | None) -> dict:
-    """Cross-repo (F17.3): máy đã có trạm giọng/video thì ghi lại để `doctor` khỏi dò lại."""
+    """Cross-repo (F17.3): máy đã có trạm giọng/video thì ghi lại để `doctor` khỏi dò lại.
+
+    Trạm tìm ra nhờ repo ANH EM cùng thư mục cha thì KHÔNG ghi: ghi đường tuyệt đối vào đây là
+    đóng băng vị trí thư mục cha — dời cả thư mục chứa các repo đi nơi khác thì đường cũ
+    (đứng trước nấc anh em) sẽ thắng và trỏ vào chỗ không còn."""
     ra = {}
-    for khoa, ham in (("voice_station", SP.voice_station), ("video_station", SP.video_station)):
+    for khoa, ham, ten in (("voice_station", SP.voice_station, SP.REPO_GIONG),
+                           ("video_station", SP.video_station, SP.REPO_VIDEO)):
         p = ham(repo)
-        if p and p.is_dir():
+        if p and p.is_dir() and p != SP.tram_anh_em(ten, repo):
             ra[khoa] = str(p)
     return ra
 

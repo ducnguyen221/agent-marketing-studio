@@ -71,7 +71,38 @@ def _cfg():
     for x in ("script_url", "site_base", "repo"):
         if brand.get(x):
             ra[x] = brand[x]
+    if ra.get("repo"):
+        ra["repo"] = _no_repo(ra["repo"])
     return ra
+
+
+def _no_repo(gia):
+    """`brand.repo` → đường tuyệt đối, theo CÙNG luật với repo engine
+    (`studio_paths.duong_repo_web`): `${TÊN}`, `~`, và đường TƯƠNG ĐỐI tính theo thư mục cha
+    chứa các repo. Không giả định thư mục chứa repo của máy nào.
+
+    Repo engine tìm bằng cách đi LÊN từ file này (trạm embedded = `<repo>/workspace/`) tới
+    thư mục có `scripts/lib/studio_paths.py`. Không thấy (trạm ngoài repo) thì chỉ mở `~` và
+    `${TÊN}` từ môi trường — đường tương đối khi đó là lỗi, nói rõ thay vì đoán."""
+    d = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        lib = os.path.join(d, "scripts", "lib")
+        if os.path.isfile(os.path.join(lib, "studio_paths.py")):
+            sys.path.insert(0, lib)
+            import studio_paths as SP
+            try:
+                return str(SP.duong_repo_web(gia, nguon="channel.yml: brand.repo"))
+            except SP.StudioPathsError as e:
+                raise SystemExit(f"send_newsletter: {e}")
+        cha = os.path.dirname(d)
+        if cha == d:
+            break
+        d = cha
+    p = os.path.expanduser(os.path.expandvars(str(gia)))
+    if not os.path.isabs(p):
+        raise SystemExit("send_newsletter: brand.repo %r là đường tương đối nhưng trạm không "
+                         "nằm trong repo engine — viết đường tuyệt đối hoặc ${TÊN_BIẾN}" % gia)
+    return p
 
 
 def _cfg_cu():

@@ -11,9 +11,14 @@
 
 ## Máy mới: repo, Python, phụ thuộc
 
+Clone vào **thư mục cha chứa các repo** của bạn — tên gì cũng được (`Code`, `Repo`,
+`du-an`…). Không script nào giả định tên đó: repo anh em (giọng, video) và repo web được
+tìm theo chính thư mục cha này.
+
 ```sh
-git clone <repo> ~/Code/agent-marketing-studio
-cd ~/Code/agent-marketing-studio
+cd <thư mục cha chứa các repo>
+git clone <repo> agent-marketing-studio
+cd agent-marketing-studio
 python -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt      # Windows: .venv\Scripts\python.exe
 ```
@@ -148,14 +153,23 @@ nào bạn chạy một bước thật sự cần giọng (ví dụ `make_podcas
 với **mã 3** và in ra đúng các lệnh dưới đây — không ai phải nhớ trước.
 
 ```sh
-git clone <repo giọng> ~/Code/agent-voice-studio
-git clone <repo video> ~/Code/agent-video-studio
+cd <thư mục cha chứa các repo>          # cùng chỗ với agent-marketing-studio
+git clone <repo giọng> agent-voice-studio
+git clone <repo video> agent-video-studio
 
-# MỘT venv chung cho cả hai — torch là phụ thuộc nặng duy nhất và cả hai đều cần
-python -m venv <trạm giọng>/omnivoice/.venv
-<OMNIVOICE_PY> -m pip install -e ~/Code/agent-voice-studio
-<OMNIVOICE_PY> -m pip install -e ~/Code/agent-video-studio
+# MỘT venv chung cho cả hai — torch là phụ thuộc nặng duy nhất và cả hai đều cần.
+# Đặt ở agent-video-studio/.venv (hoặc agent-voice-studio/.venv) thì repo này tự thấy.
+python3.12 -m venv agent-video-studio/.venv
+<OMNIVOICE_PY> -m pip install -e agent-voice-studio
+<OMNIVOICE_PY> -m pip install -e agent-video-studio
 ```
+
+**Cài embedded thì không phải khai gì thêm.** Repo này tự nhận hai repo anh em nằm cùng thư
+mục cha (nhận bằng `pyproject.toml: name`, không bằng tên thư mục), lấy trạm `workspace/`
+mà mỗi repo đã chọn và python của `.venv` bên video (rồi bên giọng). Thứ tự đầy đủ:
+biến môi trường → `<repo>/.env` → `studio.local.json` → repo anh em cùng thư mục cha →
+chưa bật. Trạm/venv ở chỗ khác thì khai `VOICE_STATION`, `VIDEO_STATION`, `OMNIVOICE_PY`
+trong `<repo>/.env` (embedded) — không cần biến shell, không cần `setx`.
 
 ### Ngoại lệ `pip install -e` — và khi nào KHÔNG được dùng nó
 
@@ -170,8 +184,8 @@ sửa dở. Không có gì báo; chỉ có sản phẩm sai.
 ⇒ **Trạm chạy lịch thì cài BẢN SAO, không cài `-e`:**
 
 ```sh
-<OMNIVOICE_PY> -m pip install ~/Code/agent-voice-studio      # không có -e
-<OMNIVOICE_PY> -m pip install ~/Code/agent-video-studio
+<OMNIVOICE_PY> -m pip install <thư mục cha>/agent-voice-studio      # không có -e
+<OMNIVOICE_PY> -m pip install <thư mục cha>/agent-video-studio
 ```
 
 Dùng `-e` cho máy đang phát triển; dùng bản sao cho máy chạy lịch. Nâng cấp bản sao =

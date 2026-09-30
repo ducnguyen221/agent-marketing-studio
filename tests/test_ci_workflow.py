@@ -11,6 +11,8 @@ Repo này chạy lịch thật trên Windows (PowerShell 5.1, Task Scheduler) v�
   `MARKETING_STUDIO_REQUIRE_POWERSHELL=1` (conftest biến thiếu PowerShell thành lỗi).
 · **Chạy đúng `python -m pytest -q`** trên các phụ thuộc khai trong `requirements.txt`.
 · **Quyền tối thiểu** (`contents: read`) — workflow chỉ đọc mã, không cần gì hơn.
+· **Có job "cài embedded rồi pytest trần"** trên cả hai OS (P1-8): bộ test phải xanh trên
+  máy ĐÃ CÀI, không chỉ trên checkout sạch — 12 test từng đọc `workspace/` thật của repo.
 
 File này không chứng minh CI xanh — nó chỉ giữ cho cấu hình CI không trôi khỏi bốn điều đó.
 """
@@ -30,10 +32,14 @@ def wf():
     return yaml.safe_load(WF.read_text(encoding="utf-8"))
 
 
+JOB_CAI = "pytest-embedded"
+
+
 def _job(wf):
+    """Job pytest chính (checkout sạch, ma trận OS × Python)."""
     jobs = wf["jobs"]
-    assert len(jobs) == 1, "một job pytest duy nhất, ma trận theo OS"
-    return next(iter(jobs.values()))
+    assert set(jobs) == {"pytest", JOB_CAI}, sorted(jobs)
+    return jobs["pytest"]
 
 
 def _steps(wf):
@@ -112,3 +118,37 @@ def test_ma_tran_python_phu_san_va_ban_moi(wf):
     assert {san, "3.12", "3.13"} <= ban, ban
     buoc = [st for st in _steps(wf) if "setup-python" in str(st.get("uses", ""))]
     assert buoc and buoc[0]["with"]["python-version"] == "${{ matrix.python-version }}"
+
+
+# ── P1-8: cài embedded rồi pytest TRẦN, trên cả hai OS ─────────────────────────────────
+
+def _job_cai(wf):
+    return wf["jobs"][JOB_CAI]
+
+
+def test_job_cai_roi_test_chay_hai_OS_khong_fail_fast(wf):
+    j = _job_cai(wf)
+    assert set(j["strategy"]["matrix"]["os"]) == {"windows-latest", "macos-latest"}
+    assert j["strategy"]["fail-fast"] is False and j["runs-on"] == "${{ matrix.os }}"
+
+
+def test_job_cai_dung_BO_CAI_THAT_che_do_embedded_TRUOC_pytest(wf):
+    buoc = _job_cai(wf)["steps"]
+    lenh = [str(st.get("run", "")) for st in buoc]
+    i_sh = next(i for i, x in enumerate(lenh) if "install.sh" in x)
+    i_ps = next(i for i, x in enumerate(lenh) if "install.ps1" in x)
+    i_py = next(i for i, x in enumerate(lenh) if "pytest" in x)
+    assert "--mode embedded" in lenh[i_sh] and "macOS" in str(buoc[i_sh].get("if"))
+    assert "-Mode embedded" in lenh[i_ps] and "Windows" in str(buoc[i_ps].get("if"))
+    assert buoc[i_ps].get("shell") == "powershell", "install.ps1 phải chạy bằng PS 5.1 như máy lịch"
+    assert max(i_sh, i_ps) < i_py
+
+
+def test_job_cai_chay_pytest_TRAN_doi_powershell_that(wf):
+    """TRẦN = không chỉ đích `tests/`: chính việc gom nhầm `workspace/` là thứ phải bắt."""
+    buoc = [st for st in _job_cai(wf)["steps"] if "pytest" in str(st.get("run", ""))]
+    assert len(buoc) == 1
+    assert "python -m pytest -q" in buoc[0]["run"] and "tests" not in buoc[0]["run"]
+    assert str((buoc[0].get("env") or {}).get("MARKETING_STUDIO_REQUIRE_POWERSHELL")) == "1"
+    macos = [st for st in _job_cai(wf)["steps"] if "macOS" in str(st.get("if", ""))]
+    assert any("pwsh" in str(st.get("run", "")) for st in macos)

@@ -84,7 +84,7 @@ def _tram(tmp_path: Path, runner_args: str, probe: str = PROBE,
 def _nha(tmp_path: Path) -> Path:
     """Thư mục nhà GIẢ của một lượt test.
 
-    `run.ps1` lùi về `$HOME/.marketing`, `$HOME/Code/agent-marketing-studio` và
+    `run.ps1` lùi về `$HOME/.marketing` và
     `$HOME/.news/engine`. Kế thừa nhà THẬT thì máy nào có sẵn mấy thứ đó sẽ chạy một nhánh
     khác hẳn CI — hai môi trường, hai kết quả, không cổng nào biết. Tệ hơn: một test khai
     `runner` trùng tên với runner thật trong `<nhà>/.news/engine` sẽ CHẠY runner thật.
@@ -347,3 +347,61 @@ def test_khong_khai_MARKETING_STUDIO_PY_van_tim_duoc_Python(tmp_path):
         pytest.skip("PATH cua may test khong co python/python3/py: " + r.stdout)
     assert r.returncode == 0, r.stdout + r.stderr
     assert "Brand=[ai]" in r.stdout, r.stdout
+
+
+# ── Repo: suy từ vị trí trạm (embedded), KHÔNG từ tên thư mục chứa repo của máy nào ──
+#
+# Bản trước lùi về `<nhà>/Code/agent-marketing-studio` khi không có `MARKETING_STUDIO_HOME`:
+# máy clone ở chỗ khác (Mac: `~/Repo`) phải khai biến trong plist mới chạy được, dù ở chế
+# độ embedded `run.ps1` nằm ngay TRONG repo (`<repo>/workspace/<kênh>/<chiến dịch>/`).
+
+def _repo_embedded(tmp_path: Path, runner_args: str = "-Brand ai") -> tuple[Path, Path]:
+    """Repo giả đặt dưới thư mục cha tên bất kỳ (`xyz/bat-ky`), trạm = `<repo>/workspace/`.
+    Chép đúng phần `campaign_cfg.py` cần để chạy (lib + pipeline/campaign_cfg.py)."""
+    repo = tmp_path / "xyz" / "bat-ky"
+    (repo / "scripts" / "pipeline").mkdir(parents=True)
+    shutil.copytree(GOC / "scripts" / "lib", repo / "scripts" / "lib")
+    shutil.copyfile(GOC / "scripts" / "pipeline" / "campaign_cfg.py",
+                    repo / "scripts" / "pipeline" / "campaign_cfg.py")
+    (repo / "install.ps1").write_text("", encoding="utf-8")
+    campaign = _tram(repo / "workspace", runner_args)
+    return repo, campaign
+
+
+def _chay_khong_HOME_repo(campaign: Path):
+    moi = {k: v for k, v in _moi_truong(campaign).items() if k != "MARKETING_STUDIO_HOME"}
+    return subprocess.run(
+        [PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(campaign / "run.ps1")],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(campaign),
+        env=moi)
+
+
+def test_embedded_KHONG_khai_MARKETING_STUDIO_HOME_van_tim_ra_repo_la_cha_cua_tram(tmp_path):
+    repo, campaign = _repo_embedded(tmp_path)
+    r = _chay_khong_HOME_repo(campaign)
+    assert r.returncode == 0, r.stdout + r.stderr
+    m = _DONG.search(r.stdout)
+    assert m and Path(m.group(3).strip()).resolve() == repo.resolve(), r.stdout
+    assert "Brand=[ai]" in r.stdout, r.stdout
+
+
+def test_tram_ngoai_repo_khong_khai_bien_thi_DUNG_khong_doan_thu_muc_nha(tmp_path):
+    """Không đi lên được tới repo, không biến ⇒ exit 2 nêu `MARKETING_STUDIO_HOME`. Mồi nhử:
+    một repo ĐẦY ĐỦ ở `<nhà giả>/Code/agent-marketing-studio` — đường lùi cũ — KHÔNG được dùng."""
+    campaign = _tram(tmp_path, "-Brand ai")
+    moi = _nha(tmp_path) / "Code" / "agent-marketing-studio" / "scripts" / "pipeline"
+    moi.mkdir(parents=True)
+    shutil.copyfile(GOC / "scripts" / "pipeline" / "campaign_cfg.py", moi / "campaign_cfg.py")
+    r = _chay_khong_HOME_repo(campaign)
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "MARKETING_STUDIO_HOME" in r.stdout, r.stdout
+    assert "PROBE" not in r.stdout, r.stdout
+
+
+def test_MARKETING_STUDIO_HOME_van_THANG_duong_suy_tu_tram(tmp_path):
+    """Biến khai tường minh đứng trước: máy chạy lịch đã khai thì giữ đúng đường đó."""
+    _repo, campaign = _repo_embedded(tmp_path)
+    r = _chay(campaign)                       # _moi_truong đặt MARKETING_STUDIO_HOME = GOC
+    assert r.returncode == 0, r.stdout + r.stderr
+    m = _DONG.search(r.stdout)
+    assert m and Path(m.group(3).strip()).resolve() == GOC.resolve(), r.stdout

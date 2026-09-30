@@ -35,6 +35,17 @@ Bí mật đi theo thứ tự riêng: biến môi trường → `<repo>/.env` (*
 → kho secret của máy. Luật ba tầng không đổi: biến/`.env` giữ **đường dẫn**, file ngoài git
 giữ **giá trị**. Chế độ `separate` KHÔNG bao giờ tự nạp `.env` — ở đó repo có thể là repo
 public của chính người dùng, và tự nạp một file lạ trong repo là mở cửa cho nó.
+
+## Repo anh em và repo web: theo THƯ MỤC CHA, không theo tên thư mục của máy nào
+
+Không đường nào trong repo được giả định tên thư mục chứa các bản clone (`Code`, `Repo`…). Trạm
+giọng/video và python của trạm giọng đi theo thứ tự:
+
+    biến môi trường → <repo>/.env (embedded) → studio.local.json
+    → repo anh em cùng thư mục cha (nhận bằng pyproject.toml: name) → chưa có
+
+Đường repo web (`brand.repo`, `web_target.repo`, `WEB_REPO_DIR`) nhận `${TÊN}` và đường
+TƯƠNG ĐỐI — tương đối tính theo thư mục cha của bản clone này (`duong_repo_web`).
 """
 from __future__ import annotations
 
@@ -269,16 +280,129 @@ def _tram_ngoai(ten_moi, ten_cu, khoa, len_mot_cap=False, repo=None) -> Path | N
 
 def voice_station(repo=None) -> Path | None:
     """Trạm giọng: `VOICE_STATION` → `OMNIVOICE_DIR` (tên CŨ = thư mục ENGINE, lùi một cấp)
-    → `studio.local.json: voice_station` → None (chưa cài `agent-voice-studio`)."""
-    return _tram_ngoai(secret_env("VOICE_STATION", repo), secret_env("OMNIVOICE_DIR", repo),
-                       "voice_station", len_mot_cap=True, repo=repo)
+    → `studio.local.json: voice_station` → trạm của repo anh em `agent-voice-studio` (cùng
+    thư mục cha) → None (chưa cài `agent-voice-studio`)."""
+    return (_tram_ngoai(secret_env("VOICE_STATION", repo), secret_env("OMNIVOICE_DIR", repo),
+                        "voice_station", len_mot_cap=True, repo=repo)
+            or tram_anh_em(REPO_GIONG, repo))
 
 
 def video_station(repo=None) -> Path | None:
     """Trạm video: `VIDEO_STATION` → `VIDEO_ROOT` (tên cũ) → `studio.local.json: video_station`
-    → None (chưa cài `agent-video-studio`)."""
-    return _tram_ngoai(secret_env("VIDEO_STATION", repo), secret_env("VIDEO_ROOT", repo),
-                       "video_station", repo=repo)
+    → trạm của repo anh em `agent-video-studio` (cùng thư mục cha) → None (chưa cài)."""
+    return (_tram_ngoai(secret_env("VIDEO_STATION", repo), secret_env("VIDEO_ROOT", repo),
+                        "video_station", repo=repo)
+            or tram_anh_em(REPO_VIDEO, repo))
+
+
+# ── repo anh em: suy từ THƯ MỤC CHA của bản clone, không từ một tên thư mục cố định ─────
+#
+# Máy nào cũng được clone các repo vào một thư mục tuỳ ý (`Code`, `Repo`, `D:\du-an`…).
+# Tên thư mục cha KHÔNG phải hằng số của chương trình: mọi đường tới repo anh em suy ra từ
+# vị trí thật của bản clone đang chạy. Repo anh em được nhận bằng DẤU HIỆU NỘI DUNG
+# (`pyproject.toml: name`), nên đổi tên thư mục clone (`agent-voice-studio-2`) vẫn nhận ra.
+REPO_GIONG = "agent-voice-studio"
+REPO_VIDEO = "agent-video-studio"
+_TEN_DU_AN = re.compile(r'^\s*name\s*=\s*["\']([^"\']+)["\']', re.M)
+
+
+def thu_muc_cha(repo=None) -> Path | None:
+    """Thư mục CHA chứa bản clone repo này (nơi các repo anh em nằm cạnh nhau)."""
+    repo = Path(repo) if repo else repo_root()
+    return repo.resolve().parent if repo else None
+
+
+def _ten_du_an(d: Path) -> str | None:
+    """`[project] name` trong `<d>/pyproject.toml`; None nếu không có/không đọc được."""
+    f = d / "pyproject.toml"
+    try:
+        if not f.is_file():
+            return None
+        m = _TEN_DU_AN.search(f.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return None
+    return m.group(1).strip() if m else None
+
+
+def repo_anh_em(ten: str, repo=None) -> Path | None:
+    """Bản clone `ten` (vd `agent-voice-studio`) nằm CÙNG thư mục cha với repo này.
+
+    Thử thư mục cùng tên trước (rẻ), rồi quét một tầng các thư mục con của thư mục cha.
+    Cả hai đều phải qua dấu hiệu nội dung — một thư mục trùng tên mà không phải repo đó
+    thì không được nhận. Không có ⇒ None (người gọi rơi về nấc sau)."""
+    goc = Path(repo).resolve() if repo else repo_root()
+    cha = thu_muc_cha(goc)
+    if not cha or not cha.is_dir():
+        return None
+    ung = [cha / ten]
+    try:
+        ung += sorted(d for d in cha.iterdir()
+                      if d.name != ten and not d.name.startswith(".") and d.is_dir())
+    except OSError:
+        pass
+    for d in ung:
+        if d.is_dir() and d.resolve() != goc and _ten_du_an(d) == ten:
+            return d.resolve()
+    return None
+
+
+def tram_cua_repo(r: Path) -> Path | None:
+    """Trạm mà một repo anh em đã CHỌN: `studio.local.json: station_path` (tương đối tính
+    từ repo đó) → `<repo>/workspace/` nếu có. Chưa chọn/chưa init ⇒ None — không đoán."""
+    try:
+        sp = str(_doc_json(Path(r) / LOCAL_CONFIG).get("station_path") or "").strip()
+    except StudioPathsError:
+        return None
+    q = Path(r) / WORKSPACE
+    if sp:
+        q = Path(sp).expanduser()
+        q = q if q.is_absolute() else Path(r) / q
+    return q.resolve() if q.is_dir() else None
+
+
+def tram_anh_em(ten: str, repo=None) -> Path | None:
+    """Trạm của repo anh em `ten` (xem `repo_anh_em`, `tram_cua_repo`); None nếu không có."""
+    r = repo_anh_em(ten, repo)
+    return tram_cua_repo(r) if r else None
+
+
+# ── đường repo web (`brand.repo`, `web_target.repo`, `WEB_REPO_DIR`) ──────────────────
+_BIEN_TRONG_DUONG = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
+
+
+def duong_repo_web(gia, repo=None, nguon: str = "repo") -> Path:
+    """Đường tới một repo web khai trong cấu hình, KHÔNG giả định thư mục cha của máy nào.
+
+        `${TÊN}`   → giá trị biến (môi trường → `<repo>/.env` khi embedded, như `secret_env`)
+        `~`        → thư mục nhà
+        tương đối  → tính theo THƯ MỤC CHA của bản clone repo này (vd `news/ai` →
+                     `<thư mục chứa các repo>/news/ai`)
+
+    Biến chưa đặt hoặc đường rỗng ⇒ `StudioPathsError` nêu đúng tên biến và nơi khai —
+    không để một `${X}` sống sót thành tên thư mục thật."""
+    s = str(gia or "").strip()
+    if not s:
+        raise StudioPathsError(f"{nguon}: đường repo web rỗng")
+
+    def _thay(m):
+        v = secret_env(m.group(1), repo)
+        if not v:
+            raise StudioPathsError(
+                f"{nguon}: {s!r} dùng biến {m.group(1)} nhưng biến chưa đặt — đặt nó ở biến "
+                f"môi trường hoặc trong <repo>/.env (chế độ embedded)")
+        return v
+    s = _BIEN_TRONG_DUONG.sub(_thay, s)
+    q = Path(s).expanduser()
+    if q.is_absolute():
+        return q.resolve()
+    if re.match(r"^[A-Za-z]:[\\/]", s):
+        return q                    # đường ổ đĩa Windows đọc trên máy khác: giữ nguyên
+    cha = thu_muc_cha(repo)
+    if not cha:
+        raise StudioPathsError(
+            f"{nguon}: {s!r} là đường tương đối (tính theo thư mục cha của repo) nhưng không "
+            f"xác định được bản clone repo — đặt MARKETING_STUDIO_HOME hoặc viết đường tuyệt đối")
+    return (cha / q).resolve()
 
 
 def _no_duong(p: str, src: Path) -> Path:

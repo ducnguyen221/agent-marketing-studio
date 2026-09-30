@@ -39,13 +39,15 @@ STATION_FILE = "station.json"
 HUONG_DAN = (
     "Năng lực LỒNG TIẾNG chưa bật — bước bạn vừa chạy cần nó.\n"
     "Viết bài và đăng không cần trạm giọng; chỉ bước tạo giọng đọc (podcast, video có\n"
-    "giọng) mới cần. Bật nó bằng năm bước sau, rồi chạy lại đúng lệnh vừa rồi:\n"
-    "  1. git clone <url>/agent-voice-studio ~/Code/agent-voice-studio\n"
-    "  2. python -m venv <trạm>/omnivoice/.venv   (trạm mặc định: ~/.voice)\n"
-    "  3. <venv>/python -m pip install -e ~/Code/agent-voice-studio\n"
-    "  4. <venv>/python -m voice_studio init --station <trạm>\n"
-    "  5. đặt VOICE_STATION=<trạm>  (Windows: setx · macOS: khoá EnvironmentVariables "
-    "trong plist)\n"
+    "giọng) mới cần. Bật nó bằng ba bước sau, rồi chạy lại đúng lệnh vừa rồi:\n"
+    "  1. git clone <url>/agent-voice-studio vào CÙNG thư mục cha chứa repo này (thư mục\n"
+    "     chứa các repo — tên gì cũng được), rồi tạo venv + `pip install -e` theo\n"
+    "     INSTALL.md của repo đó (hoặc cài chung venv của agent-video-studio)\n"
+    "  2. <python của venv đó> -m voice_studio init --yes   (embedded: trạm = "
+    "<repo giọng>/workspace/)\n"
+    "  3. xong — repo này tự nhận repo anh em cùng thư mục cha, trạm workspace/ và .venv\n"
+    "     của nó. Trạm/venv ở chỗ khác thì khai VOICE_STATION=<trạm>, OMNIVOICE_PY=<python>\n"
+    "     trong <repo>/.env (embedded) hoặc biến môi trường.\n"
     "Hướng dẫn đầy đủ: skills/voice-routing/references/install-omnivoice.md của repo đó."
 )
 
@@ -84,7 +86,9 @@ def python_in_venv(venv: Path) -> Path | None:
 
 
 def python_exe(goc: Path | None = None) -> str:
-    """Python của venv trạm giọng: `OMNIVOICE_PY` → `station.json: venv` → dò `omnivoice/.venv`.
+    """Python của venv trạm giọng: `OMNIVOICE_PY` → `station.json: venv` → dò `omnivoice/.venv`
+    → `.venv` của repo anh em `agent-video-studio` rồi `agent-voice-studio` (cùng thư mục
+    cha với repo này — bố cục "voice cài chung venv video" của `agent-video-studio/INSTALL.md`).
 
     Biến đặt tay thắng `station.json`: máy đang chạy lịch thật khai đường tường minh, và
     một file cấu hình trong trạm không được phép đổi interpreter dưới chân nó.
@@ -99,6 +103,10 @@ def python_exe(goc: Path | None = None) -> str:
         q = Path(khai).expanduser()
         ung.append(q if q.is_absolute() else goc / q)
     ung.append(goc / "omnivoice" / ".venv")
+    for ten in (SP.REPO_VIDEO, SP.REPO_GIONG):
+        r = SP.repo_anh_em(ten)
+        if r:
+            ung.append(r / ".venv")
     for venv in ung:
         py = python_in_venv(venv)
         if py:

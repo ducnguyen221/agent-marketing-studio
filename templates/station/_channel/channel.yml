@@ -70,7 +70,7 @@ platforms:
 #
 # web_target:
 #   kind: git_static            # đợt này chỉ có một loại
-#   repo: ~/Code/<repo trang web>
+#   repo: <repo trang web>     # TƯƠNG ĐỐI = trong thư mục cha chứa các repo; nhận ${WEB_REPO_DIR}/…, ~/…
 #   content_dir: content/{category}     # {category} lấy từ meta.json của bài
 #   base_url: https://example.vn/content
 #   branch: main
@@ -153,7 +153,8 @@ brand:
   # `scripts/lib/brand.py:ICON` (website · facebook · youtube · profile) — cố ý không
   # cho dán SVG thô vào đây, vì nội dung file này đi thẳng vào HTML xuất bản.
   socials: []       # vd [{icon: website, url: "https://…", label: Website}]
-  repo:             # thư mục repo web trên máy (nếu kênh có trang web)
+  repo:             # repo web của kênh (nếu có trang web): TƯƠNG ĐỐI theo thư mục cha chứa
+                    # các repo (vd `news/ai`), hoặc `${WEB_REPO_DIR}/ai`, hoặc đường tuyệt đối
   gh_repo:          # owner/repo trên GitHub
   site_base:        # BẮT BUỘC. URL gốc, KHÔNG dấu / cuối — site_root và page_weekly_base
                     # suy ra từ đây; <link canonical> và og:url cũng ghép từ đây

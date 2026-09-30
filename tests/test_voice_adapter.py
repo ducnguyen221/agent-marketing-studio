@@ -192,17 +192,17 @@ def test_file_kich_ban_khong_co_that_la_loi(tram, tmp_path):
 
 # ── tìm trạm và tìm python ───────────────────────────────────────────────────────────
 
-def test_chua_cai_tram_giong_thi_StationMissing_kem_HUONG_DAN_CAI(tmp_path, monkeypatch):
+def test_chua_cai_tram_giong_thi_StationMissing_kem_HUONG_DAN_CAI(tmp_path, monkeypatch, request):
     for b in ("VOICE_STATION", "OMNIVOICE_DIR", "OMNIVOICE_PY", "MARKETING_STUDIO_HOME"):
         monkeypatch.delenv(b, raising=False)
-    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(tmp_path))     # repo giả, không có studio.local.json
+    request.getfixturevalue("repo_gia")   # repo giả CÔ LẬP (không anh em, không studio.local.json)
     with pytest.raises(SC.StationMissing) as e:
         V.station()
     loi = str(e.value)
     assert "agent-voice-studio" in loi and "clone" in loi and "VOICE_STATION" in loi
 
 
-def test_loi_de_nghi_CAI_noi_ro_day_la_NANG_LUC_CHUA_BAT(tmp_path, monkeypatch):
+def test_loi_de_nghi_CAI_noi_ro_day_la_NANG_LUC_CHUA_BAT(tmp_path, monkeypatch, request):
     """Đây là chỗ DUY NHẤT được phép hỏi người dùng có muốn cài trạm giọng không, và nó
     chỉ nói khi một bước THẬT SỰ chạm tới giọng.
 
@@ -212,7 +212,7 @@ def test_loi_de_nghi_CAI_noi_ro_day_la_NANG_LUC_CHUA_BAT(tmp_path, monkeypatch):
     BẰNG LỆNH NÀO, và rằng lõi (viết bài + đăng) không hề cần cái này."""
     for b in ("VOICE_STATION", "OMNIVOICE_DIR", "OMNIVOICE_PY", "MARKETING_STUDIO_HOME"):
         monkeypatch.delenv(b, raising=False)
-    monkeypatch.setenv("MARKETING_STUDIO_HOME", str(tmp_path))
+    request.getfixturevalue("repo_gia")   # repo giả CÔ LẬP (không anh em, không studio.local.json)
     with pytest.raises(SC.StationMissing) as e:
         V.station()
     loi = str(e.value).lower()
@@ -244,7 +244,10 @@ def test_bien_OMNIVOICE_PY_thang_station_json(tmp_path, monkeypatch):
     assert V.python_exe() == sys.executable
 
 
-def test_khong_thay_python_nao_thi_StationMissing_chi_ro_cho_thieu(tmp_path, monkeypatch):
+def test_khong_thay_python_nao_thi_StationMissing_chi_ro_cho_thieu(tmp_path, monkeypatch,
+                                                                 repo_gia):
+    # `repo_gia`: bản clone thật nằm cạnh `agent-video-studio` có `.venv` thì python_exe
+    # tìm được python ở repo anh em — test này đo đúng ca KHÔNG có gì.
     for b in ("OMNIVOICE_PY", "OMNIVOICE_DIR"):
         monkeypatch.delenv(b, raising=False)
     goc = tmp_path / "v"
