@@ -3,6 +3,22 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.2 — 2026-09-30
+
+Bản vá gói đổi máy (G7 của đợt Mac mini). Chỉ đổi `station.py export`; lượt chạy trên cả hai
+máy không đổi.
+
+- **P1-17** `export --for-machine <máy>` làm đủ ba việc RUNBOOK-DOI-MAY §5 trên
+  `engines.json` đi theo gói: `_may.ten` = máy đích (`nen_tang` lấy từ `_may_khac.<máy>`,
+  không khai thì bỏ); `order` + `_order_ly_do` lấy từ `_may_khac.<máy>`; mục máy đích bị
+  xoá khỏi `_may_khac` và máy NGUỒN thành một mục mang thứ tự cũ. Trước đây chỉ đổi
+  `order`, nên máy đích nhận file tự xưng là máy nguồn, mang lý do của máy nguồn và thứ tự
+  của chính nó hai lần.
+- **Gói đổi máy loại `subscribe.gs`**: bản Apps Script ở trạm mang `SECRET` thật trong mã
+  nguồn; tên file không giống secret nên bộ lọc theo tên không bắt. Loại, không từ chối.
+  RUNBOOK Bước 3 thêm cảnh báo: `--with-git` mang cả lịch sử, trạm từng commit secret thì
+  không dùng khi khoá chưa xoay.
+
 ## 1.1.1 — 2026-09-30
 
 Bản vá từ nghiệm thu 1.1.0 trên Mac (P5-1.1.0). Hành vi trên Windows không đổi: venv giọng

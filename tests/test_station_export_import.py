@@ -245,6 +245,18 @@ def test_tu_choi_chi_xet_thu_nhung_gi_THUC_SU_vao_goi(tram, tmp_path):
     assert out.exists()
 
 
+def test_subscribe_gs_KHONG_di_theo_goi(tram, tmp_path):
+    """Bản `subscribe.gs` ở trạm mang SECRET thật trong mã nguồn — tên file không giống
+    secret nên phải loại đích danh (1.1.2). Loại chứ không từ chối: trạm có bản tin vẫn
+    export được."""
+    _ghi(tram / "kenh-a" / "subscribe.gs", "var SECRET = 'that';")
+    assert "kenh-a/subscribe.gs" not in _rel(SM.chon(tram))
+    out = tmp_path / "goi.zip"
+    STN.export_station(tram, out)
+    with zipfile.ZipFile(out) as f:
+        assert not [n for n in f.namelist() if n.endswith("subscribe.gs")]
+
+
 def test_env_example_KHONG_bi_coi_la_secret():
     assert not SM.giong_secret(".env.example")
     assert SM.giong_secret(".env")
