@@ -3,6 +3,34 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.1 — 2026-09-30
+
+Bản vá từ nghiệm thu 1.1.0 trên Mac (P5-1.1.0). Hành vi trên Windows không đổi: venv giọng
+Windows đã có `lxml`/`requests`, trạm Windows dùng bản script kênh của chính nó (khuôn
+`templates/station/_channel/` chỉ dùng cho kênh mới), và `daily_truyen.py` vẫn ép cùng token.
+
+- **P0-7** `requirements-runners.txt` + `runner_deps.MODULES` thêm `lxml` (parser
+  `BeautifulSoup(…, "lxml")` của `story/read_story.py` — giữ nguyên parser) và `requests`
+  (`read_story.py` import thẳng). Cổng mới `test_runner_deps.py`: MỌI `import` bên thứ ba và
+  mọi parser BeautifulSoup trong `scripts/runners/**` phải nằm trong `MODULES` — thứ nạp bằng
+  tên chuỗi không còn lọt khỏi `doctor`.
+- **P1-15** khuôn `send_newsletter.py`: `_cfg()` chép thêm `a`, `b`, `gh_repo`, `email_accent`
+  (`brand:` thắng `theme:`) — thư gửi ra có tên kênh và link video trong Release.
+- **P2-19** khuôn `build-index.ps1`: gradient nút đăng ký, nhịp sáng và chữ "đã đăng ký" qua
+  `web_cta_from`/`web_cta_to` (khai ở `channel.yml:brand` hoặc `brand.md`); không khai = đúng
+  hai màu cũ, trang ra giống từng byte. Cổng giữ mọi regex đường dẫn trong khuôn nhận cả `\`
+  lẫn `/` (họ lỗi P1-16).
+- **P2-20** `doctor`: không có `<trạm>/engine` nay in "runner chạy từ `<repo>/scripts/runners`"
+  thay cho lời cũ về đường lùi.
+- **P3-12** `truyen_publish.py --token` mặc định: `YT_TOKEN_PATH__NGHE_TIEN_TRUYEN` THẮNG
+  `YT_TOKEN_PATH` chung (`truyen_paths.token_truyen`; biến chung không đọc registry).
+- `AGENTS.md` §4 thêm điều 8: bộ chạy sửa trong repo qua PR có CI 2 OS, `.ps1` giữ BOM, đọc
+  biến qua `Get-EnvVar`.
+
+**Nâng cấp máy đang chạy:** cài lại gói bộ chạy vào venv giọng (thêm `lxml`):
+`<python của venv giọng> -m pip install -r requirements-runners.txt`, rồi `doctor` phải báo
+"venv giọng đủ gói".
+
 ## 1.1.0 — 2026-09-30
 
 Bộ chạy tin/truyện vào repo, và mọi đường suy từ biến + thư mục cha của bản clone — Windows và

@@ -77,6 +77,11 @@ $NDleadName = _v 'pixel_lead_name' 'newsletter'
 $NDac1      = _v 'web_accent'  '#00f0ff'
 $NDac2      = _v 'web_accent2' '#bd00ff'
 $NDac3      = _v 'web_accent3' '#ff5a3c'
+# Nút/khung ĐĂNG KÝ (gradient nút, nhịp sáng, chữ báo đã đăng ký). Khai `web_cta_from` /
+# `web_cta_to` ở `channel.yml:brand` (hoặc `brand.md`) — bản chụp `-Config` trải phẳng hai
+# chỗ đó. Không khai = đúng hai màu cũ, trang dựng ra giống hệt từng byte.
+$NDcta1     = _v 'web_cta_from' '#00f0ff'
+$NDcta2     = _v 'web_cta_to'   '#39ff7a'
 
 # Khối Meta Pixel chỉ sinh ra khi kênh KHAI id. Nhúng sẵn id của người khác là lặng lẽ gửi
 # dữ liệu người đọc tới một tài khoản quảng cáo mà chủ trang không hề biết.
@@ -96,6 +101,10 @@ $NDtoken = @{
   '{{AC1_05}}' = (_rgba $NDac1 '.05')
   '{{AC2_04}}' = (_rgba $NDac2 '.04')
   '{{AC3_40}}' = (_rgba $NDac3 '.4')
+  '{{CTA1}}'    = $NDcta1
+  '{{CTA2}}'    = $NDcta2
+  '{{CTA1_45}}' = (_rgba $NDcta1 '.45')
+  '{{CTA1_0}}'  = (_rgba $NDcta1 '0')
   '{{BRAND_A}}'   = $NDbrandA
   '{{BRAND_B}}'   = $NDbrandB
   '{{BRAND}}'     = ($NDbrandA + ' ' + $NDbrandB)
@@ -280,9 +289,9 @@ transition:transform .45s cubic-bezier(.175,.885,.32,1.275)}
 .nav{display:flex;gap:8px}
 .nav a{padding:8px 14px;border:1px solid var(--line);border-radius:8px;font-size:.85rem;color:var(--muted);transition:.2s}
 .nav a:hover{color:var(--cyan);border-color:var(--cyan-glow)}
-.nav .sub-cta{color:#04060a;font-weight:800;border:0;background:linear-gradient(90deg,#00f0ff,#39ff7a);animation:ctaPulse 2.2s ease-in-out infinite}
+.nav .sub-cta{color:#04060a;font-weight:800;border:0;background:linear-gradient(90deg,{{CTA1}},{{CTA2}});animation:ctaPulse 2.2s ease-in-out infinite}
 .nav .sub-cta:hover{color:#04060a;filter:brightness(1.12)}
-@keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 rgba(0,240,255,.45)}55%{box-shadow:0 0 0 8px rgba(0,240,255,0)}}
+@keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 {{CTA1_45}}}55%{box-shadow:0 0 0 8px {{CTA1_0}}}}
 .subscribe{scroll-margin-top:20px}
 .hero{margin-top:34px}
 .label{font-family:var(--font-mono);font-size:.72rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px}
@@ -308,10 +317,10 @@ background:linear-gradient(135deg,rgba(189,0,255,.07),var(--panel));padding:18px
 .sub-box input{flex:1;min-width:220px;background:#0a0f1c;border:1px solid var(--line);border-radius:9px;
 padding:11px 14px;color:var(--ink);font-family:var(--font-body);font-size:.95rem;outline:none}
 .sub-box input:focus{border-color:var(--cyan-glow)}
-.sub-box button{background:linear-gradient(90deg,#00f0ff,#39ff7a);color:#04060a;font-weight:800;border:0;
+.sub-box button{background:linear-gradient(90deg,{{CTA1}},{{CTA2}});color:#04060a;font-weight:800;border:0;
 border-radius:9px;padding:11px 22px;font-size:.95rem;cursor:pointer}
 .sub-box button:hover{filter:brightness(1.1)}
-#subMsg{font-size:.88rem;color:#39ff7a;font-weight:600}
+#subMsg{font-size:.88rem;color:{{CTA2}};font-weight:600}
 .sub-note{color:var(--muted);font-size:.82rem;margin-top:8px}
 .archive{margin-top:40px}
 .year-h{font-family:var(--font-heading);font-size:1.15rem;font-weight:800;color:#fff;margin:26px 0 12px;display:flex;align-items:center;gap:10px}
@@ -403,7 +412,7 @@ if ($entries) {
     [void]$sb.Append('<section class="subscribe" id="subscribe"><div class="label">▍Nhận bản tin qua email</div>')
     [void]$sb.Append('<form id="subForm" class="sub-box"><input type="email" id="subEmail" placeholder="email-cua-ban@example.com" required autocomplete="email"><button type="submit">Đăng ký</button><span id="subMsg"></span></form>')
     [void]$sb.Append('<p class="sub-note">Mỗi tuần đúng 1 email: tổng quan + top 5 tin nóng + link bản tin và video. Hủy đăng ký bất cứ lúc nào bằng link trong email.</p></section>')
-    [void]$sb.Append('<script>document.getElementById("subForm").addEventListener("submit",function(ev){ev.preventDefault();var em=document.getElementById("subEmail").value.trim();var ms=document.getElementById("subMsg");if(!em)return;ms.style.color="#94a3b8";ms.textContent="Đang gửi…";fetch("' + $scriptUrl + '",{method:"POST",mode:"no-cors",body:new URLSearchParams({email:em})}).then(function(){ms.style.color="#39ff7a";ms.textContent="✓ Đã đăng ký! Hẹn thứ 6 này.";document.getElementById("subEmail").value="";if(window.fbq)fbq("track","Lead",{content_name:"' + $NDleadName + '",content_category:"' + $NDbrandA + ' ' + $NDbrandB + '"});}).catch(function(){ms.style.color="#ff4757";ms.textContent="Lỗi mạng, thử lại nhé.";});});</script>')
+    [void]$sb.Append('<script>document.getElementById("subForm").addEventListener("submit",function(ev){ev.preventDefault();var em=document.getElementById("subEmail").value.trim();var ms=document.getElementById("subMsg");if(!em)return;ms.style.color="#94a3b8";ms.textContent="Đang gửi…";fetch("' + $scriptUrl + '",{method:"POST",mode:"no-cors",body:new URLSearchParams({email:em})}).then(function(){ms.style.color="{{CTA2}}";ms.textContent="✓ Đã đăng ký! Hẹn thứ 6 này.";document.getElementById("subEmail").value="";if(window.fbq)fbq("track","Lead",{content_name:"' + $NDleadName + '",content_category:"' + $NDbrandA + ' ' + $NDbrandB + '"});}).catch(function(){ms.style.color="#ff4757";ms.textContent="Lỗi mạng, thử lại nhé.";});});</script>')
   }
 
   # archive grid grouped by year
@@ -471,7 +480,7 @@ h1 span{color:#00f0ff}
 p{color:#94a3b8;margin-top:10px}
 .url{display:flex;gap:10px;margin-top:18px}
 .url input{flex:1;background:#0a0f1c;border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:11px 14px;color:#a5f3fc;font-family:Consolas,monospace;font-size:.9rem}
-.url button{background:linear-gradient(90deg,#00f0ff,#39ff7a);color:#04060a;font-weight:800;border:0;border-radius:9px;padding:11px 18px;cursor:pointer}
+.url button{background:linear-gradient(90deg,{{CTA1}},{{CTA2}});color:#04060a;font-weight:800;border:0;border-radius:9px;padding:11px 18px;cursor:pointer}
 .readers{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px}
 .readers a{border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:6px 16px;color:#cbd5e1;text-decoration:none;font-size:.88rem}
 .readers a:hover{border-color:rgba(0,240,255,.4);color:#00f0ff}

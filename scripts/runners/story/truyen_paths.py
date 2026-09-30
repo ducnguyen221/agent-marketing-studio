@@ -71,6 +71,22 @@ def getenv(name, env=None, registry=True):
         return ""
 
 
+TOKEN_VAR_TRUYEN = "YT_TOKEN_PATH__NGHE_TIEN_TRUYEN"
+
+
+def token_truyen(env=None, registry=True):
+    """ĐƯỜNG token kênh truyện (không mở file): `YT_TOKEN_PATH__NGHE_TIEN_TRUYEN` (tiến trình →
+    registry User chỉ trên Windows) THẮNG `YT_TOKEN_PATH` chung (chỉ tiến trình) → "".
+
+    Vì sao biến riêng kênh phải thắng (P3-12): env plist/tác vụ truyện có thể mang
+    `YT_TOKEN_PATH` của kênh KHÁC (kênh tin) — chạy tay `truyen_publish.py` trong env đó mà
+    ưu tiên biến chung là đăng nhầm kênh. `YT_TOKEN_PATH` chung KHÔNG đọc registry: trên
+    Windows registry giữ token của kênh tin, không phải kênh truyện."""
+    env_ = os.environ if env is None else env
+    v = getenv(TOKEN_VAR_TRUYEN, env, registry) or (env_.get("YT_TOKEN_PATH") or "").strip()
+    return os.path.expanduser(v) if v else ""
+
+
 def engine_dir(env=None, registry=True, sp=None):
     eng = getenv("OMNIVOICE_DIR", env, registry)
     if eng:

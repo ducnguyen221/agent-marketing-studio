@@ -525,10 +525,12 @@ def kham_engine(so: So, tram: Path):
     kq = ED.kiem(tram)
     for x in kq["fail"]:
         so.hong(x)
+    repo = SP.repo_root()
     if kq["state"] == "vang":
-        so.ghi(f"engine: không có {kq['engine']} — `run.ps1` dùng đường lùi (hợp lệ)")
+        # Trạng thái ĐÚNG từ 1.1.0: không còn `<trạm>/engine`, runner nằm trong repo.
+        noi = repo / "scripts" / "runners" if repo else "`<repo>/scripts/runners`"
+        so.ghi(f"engine: không có {kq['engine']} — runner chạy từ {noi} (đúng từ 1.1.0)")
     elif kq["state"] == "du":
-        repo = SP.repo_root()
         if repo and all((repo / "scripts" / "runners" / r).is_file() for r in ED.RUNNER_BAT_BUOC):
             so.nhac(f"engine: {kq['engine']} là BẢN CŨ — từ 1.1.0 `run.ps1` chạy runner trong "
                     f"{repo / 'scripts' / 'runners'} trước. Xoá thư mục này sau MỘT lượt xanh "

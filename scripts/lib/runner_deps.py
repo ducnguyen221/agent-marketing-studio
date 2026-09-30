@@ -29,10 +29,12 @@ import md_io  # noqa: E402
 import studio_paths as SP  # noqa: E402
 
 REQ_FILE = "requirements-runners.txt"
-# Tên IMPORT (không phải tên gói pip) — đúng thứ runner `import`. Giữ khớp REQ_FILE: cổng
-# `tests/test_runner_deps.py` so hai danh sách.
+# Tên IMPORT (không phải tên gói pip) — đúng thứ runner `import`, KỂ CẢ thứ nạp bằng TÊN
+# CHUỖI (parser `BeautifulSoup(…, "lxml")` — P0-7: thiếu `lxml` thì lượt truyện chết ở bước
+# đọc chương mà doctor vẫn báo đủ). Giữ khớp REQ_FILE: cổng `tests/test_runner_deps.py` so hai
+# danh sách và quét mã `scripts/runners/**` để không import/parser nào lọt ngoài danh sách.
 MODULES = ("googleapiclient", "google_auth_oauthlib", "google_auth_httplib2", "httplib2",
-           "bs4", "yt_dlp", "openpyxl", "faster_whisper")
+           "requests", "bs4", "lxml", "yt_dlp", "openpyxl", "faster_whisper")
 # Runner tin/truyện của repo: chiến dịch khai một trong các tên này thì `doctor` kiểm bộ trên.
 RUNNER_TIN = ("run-toptoday-hot.ps1", "run-weekly-news.ps1", "run-weekly-repo.ps1")
 RUNNER_TRUYEN = ("run-daily-truyen.ps1",)
