@@ -1,0 +1,239 @@
+# -*- coding: utf-8 -*-
+"""compose_report.py — biến log máy thành TIN NGƯỜI ĐỌC cho Telegram.
+
+VÌ SAO CÓ FILE NÀY:
+Tin báo cũ dán thẳng marker (`FB_POST_ID=... FB_MODE=... STATUS=...`) và danh sách link.
+Đọc lúc 6 giờ sáng thì không trả lời được câu duy nhất cần biết: **việc của tôi xong chưa,
+có gì cần làm không?** Người phải tự dịch marker sang nghĩa — đó là việc của máy.
+
+File này đọc log, đối chiếu ĐIỀU KIỆN CỤ THỂ, rồi viết câu tiếng Việt. Nguyên tắc:
+- Chỉ kể thứ THẬT SỰ xảy ra. Không có bước nào thì không nhắc bước đó.
+- Bất thường phải nói TRƯỚC cái bình thường (người đọc lướt, đọc 2 dòng đầu là đóng).
+- Vẫn giữ ĐỦ LINK sản phẩm (luật E2) nhưng để cuối, sau phần diễn giải.
+- Hỏng thì nói HỎNG Ở ĐÂU + ĐÃ XONG TỚI ĐÂU, không dán traceback.
+
+DÙNG (notify-run.ps1 gọi, đọc kết quả qua FILE để tránh mojibake console):
+    python compose_report.py --title "..." --exit 0 --duration "00:29:13" \
+        --log <file.log> --out <report.txt>
+
+Kỷ luật: hỏng thì KHÔNG ghi gì ra --out, để notify-run rơi về định dạng cũ.
+Một cải tiến báo cáo mà làm mất luôn báo cáo thì tệ hơn không có.
+"""
+import argparse
+import io
+import os
+import re
+import sys
+
+
+def esc(s):
+    return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def humanize_duration(d):
+    """'00:29:13' -> '29 phút'. Người không cần độ chính xác tới giây."""
+    m = re.match(r"(\d+):(\d+):(\d+)", d or "")
+    if not m:
+        return d or ""
+    h, mi, s = (int(x) for x in m.groups())
+    if h:
+        return f"{h} tiếng {mi} phút" if mi else f"{h} tiếng"
+    if mi:
+        return f"{mi} phút"
+    return f"{s} giây"
+
+
+def _khi(iso):
+    """'2026-08-18T20:10' -> 'hôm nay lúc 20:10' / 'ngày mai lúc 09:00' / '20/08 lúc 09:00'.
+
+    Người đọc tin lúc nửa đêm cần biết 'bao giờ' theo cách người nói, không phải ISO.
+    """
+    import datetime as dt
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})", iso or "")
+    if not m:
+        return iso
+    y, mo, d, hh, mi = (int(x) for x in m.groups())
+    try:
+        day = dt.date(y, mo, d)
+    except ValueError:
+        return iso
+    delta = (day - dt.date.today()).days
+    khi = {0: "hôm nay", 1: "ngày mai", -1: "hôm qua"}.get(delta, f"{d:02d}/{mo:02d}")
+    return f"{khi} lúc {hh:02d}:{mi:02d}"
+
+
+def find(rx, text, group=1, default=""):
+    m = re.search(rx, text)
+    return m.group(group) if m else default
+
+
+def build(title, code, duration, log):
+    ok = code == 0
+    L = []                                   # các câu kể
+    warn = []                                # bất thường -> đẩy lên đầu
+    links = []
+
+    # ── YouTube ──────────────────────────────────────────────────────────────
+    yt = re.findall(r"PUBLISHED (https://youtu\.be/[\w-]+)", log)
+    if not yt:
+        yt = ["https://youtu.be/" + v for v in re.findall(r"VIDEO_ID=([\w-]{6,})", log)]
+    yt = list(dict.fromkeys(yt))
+    if len(yt) >= 2:
+        L.append("Video dài và bản ngắn đã lên YouTube.")
+    elif len(yt) == 1:
+        L.append("Video đã lên YouTube.")
+        warn.append("Chỉ thấy 1 video trên YouTube — thường phải có cả bản dài và bản ngắn.")
+    elif "skip YouTube upload" in log or "bo qua upload" in log:
+        L.append("Bỏ qua YouTube (chạy ở chế độ không upload).")
+    links += yt
+
+    # ── Facebook ─────────────────────────────────────────────────────────────
+    mode = find(r"FB_MODE=([a-z-]+)", log)
+    status = find(r"FB_REEL_COVER=\S+\s+(?:FB_REEL_AT=\S+\s+)?(?:FB_MODE=\S+\s+)?"
+                  r"(?:FB_COMMENT_ID=\S+\s+)?STATUS=(.+)", log).strip()
+    if not status:
+        status = find(r"FB status: (.+)", log).strip()
+    reel_id = find(r"FB_REEL_ID=(\d+)", log)
+    cmt_id = find(r"FB_COMMENT_ID=([\w-]+)", log)
+    fb_txt = find(r"FB: (chưa thiết lập token|thiếu facebook_post|brief không có facebook_post)", log)
+
+    if fb_txt:
+        warn.append(f"Không đăng được Facebook: {fb_txt}.")
+    elif status.startswith("error"):
+        chi_tiet = status[6:].strip()
+        # PHÂN BIỆT cho rõ: lỗi comment ≠ mất bài. Gộp chung làm người đọc tưởng
+        # bài không lên, hốt hoảng vô ích lúc nửa đêm.
+        if chi_tiet.startswith("comment:") and reel_id:
+            L.append("Trên Facebook, Reel đã đăng kèm bài viết đầy đủ.")
+            warn.append("Reel LÊN BÌNH THƯỜNG, nhưng comment chứa link không gắn được: "
+                        + chi_tiet[8:].strip()[:140]
+                        + ". Người xem sẽ không có đường về website.")
+            links.append(f"https://www.facebook.com/reel/{reel_id}")
+        else:
+            warn.append("Đăng Facebook LỖI: " + chi_tiet[:160] + ".")
+    elif status.startswith("scheduled@"):
+        L.append(f"Bài Facebook đã hẹn đăng {_khi(status.split('@', 1)[1])}.")
+        if reel_id:
+            links.append(f"https://www.facebook.com/reel/{reel_id}")
+    elif reel_id:
+        if mode == "reel-main":
+            L.append("Trên Facebook, Reel đã đăng kèm bài viết đầy đủ.")
+        else:
+            L.append("Đã đăng Facebook.")
+        if cmt_id and cmt_id != "-":
+            L.append("Comment chứa link cũng đã tự gắn ngay dưới bài.")
+        elif "--comment-file" in log or "fb-comment" in log:
+            warn.append("Reel đã lên nhưng COMMENT LINK không gắn được — người xem sẽ "
+                        "không có đường về website.")
+        links.append(f"https://www.facebook.com/reel/{reel_id}")
+
+    if "FB_REEL_COVER=failed" in log:
+        warn.append("Ảnh bìa Reel đặt không thành công (Reel vẫn lên bình thường).")
+
+    # ── Web + sổ sách ────────────────────────────────────────────────────────
+    if re.search(r"git: .*main -> main", log) or "DONE. Page:" in log:
+        L.append("Trang web đã cập nhật.")
+    page = find(r"DONE\. Page: (\S+)", log)
+    if page:
+        links.append(page)
+    if "EXCEL_OK" in log:
+        L.append("Đã ghi sổ Auto Task.")
+    elif "xlsx-pending" in log or "pending" in log.lower() and "EXCEL" in log:
+        warn.append("Không ghi được Excel — file đang mở? Bản tạm đã lưu cạnh script.")
+
+    covered = find(r"Covered log: \+(\S+) \(tong (\d+)", log)
+    if covered:
+        n = find(r"Covered log: \+\S+ \(tong (\d+)", log)
+        L.append(f"Đã ghi repo <b>{esc(covered)}</b> vào sổ chống lặp (tổng {n}).")
+
+    # ── Hậu kiểm độ phủ (bài của LẦN TRƯỚC) ──────────────────────────────────
+    rs = find(r"FB_REACH_STATUS=(\w+)", log)
+    rn = find(r"FB_REACH_STATUS=\w+ n=(\d+)", log)
+    rl = find(r"FB_REACH_STATUS=\w+ n=\d+ low=(\d+)", log)
+    reach = ""
+    if rs == "low" and rl and rn:
+        # Vách ngăn "LƯỢT TRƯỚC" là BẮT BUỘC, không phải trang trí: khối này nói về bài CŨ,
+        # nhưng nó nằm ngay dưới đoạn báo thành công của lượt HIỆN TẠI. Đêm 05/09/2026 Đức
+        # đọc tin ✅ của số W36 và tưởng lượt chạy hỏng, chỉ vì dòng 📉 đứng sát bên dưới.
+        reach = (f"📉 <b>Các bài đăng TRƯỚC ĐÓ</b> (không liên quan lượt này): "
+                 f"<b>{rl}/{rn} bài chưa có ai xem hay tương tác.</b> "
+                 "Bài lên được nhưng Facebook chưa đẩy tới ai.")
+    elif rs == "ok" and rn:
+        reach = f"📈 {rn} bài đăng trước đó đều có người xem — phân phối đang chạy."
+    elif rs == "error":
+        warn.append("Không kiểm được độ phủ của bài trước.")
+
+    # ── Ráp tin ──────────────────────────────────────────────────────────────
+    icon = "✅" if ok else "❌"
+    out = [f"{icon} <b>{esc(title)}</b>"]
+
+    if ok:
+        out.append(f"Chạy xong sau {humanize_duration(duration)}.")
+    else:
+        # 'failed'/'complete' là dấu KẾT THÚC, không phải tên bước — nói "dừng ở bước
+        # failed" thì vô nghĩa với người đọc. Lùi lại tới mốc bước thật gần nhất.
+        steps = [s.strip() for s in re.findall(r"=== ([^=]+?) ===", log)]
+        steps = [s for s in steps if s.lower() not in ("failed", "complete", "done")]
+        last = steps[-1] if steps else ""
+        out.append(f"<b>Chạy thất bại</b> sau {humanize_duration(duration)}"
+                   + (f", dừng ở bước “{esc(last)}”." if last else "."))
+        err = [l for l in log.splitlines() if re.search(r"\bERROR\b", l)]
+        if err:
+            # bỏ timestamp đầu dòng + nhãn ERROR: cho gọn, giữ nguyên nội dung lỗi
+            msg = re.sub(r"^\d{2}:\d{2}:\d{2}\s+", "", err[-1].strip())
+            msg = re.sub(r"^(ERROR|WARN)\s*:\s*", "", msg)
+            out.append("Nguyên nhân: " + esc(msg[:200]))
+
+    if warn:
+        out.append("")
+        out += ["⚠️ " + esc(w) if not w.startswith(("Reel", "Đăng")) else "⚠️ " + esc(w) for w in warn]
+
+    if L:
+        out.append("")
+        out.append(" ".join(L))
+
+    if reach:
+        out.append("")
+        out.append(reach)
+
+    links = [l for l in dict.fromkeys(links) if l]
+    if links:
+        out.append("")
+        out.append("<b>Xem tại:</b>")
+        out += ["• " + esc(l) for l in links]
+
+    return "\n".join(out)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--title", required=True)
+    ap.add_argument("--exit", type=int, default=0)
+    ap.add_argument("--duration", default="")
+    ap.add_argument("--log", required=True)
+    ap.add_argument("--out", required=True)
+    a = ap.parse_args()
+
+    if not os.path.isfile(a.log):
+        return 1
+    with open(a.log, encoding="utf-8", errors="replace") as f:
+        log = f.read()
+
+    msg = build(a.title, a.exit, a.duration, log)
+    if not msg or len(msg) < 20:            # soạn ra rỗng -> để notify dùng bản cũ
+        return 1
+    io.open(a.out, "w", encoding="utf-8", newline="\n").write(msg)
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except Exception:
+        raise SystemExit(1)              # im lặng thất bại -> notify-run rơi về bản cũ

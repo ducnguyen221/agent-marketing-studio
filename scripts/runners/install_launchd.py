@@ -20,8 +20,11 @@ từ một nguồn: `studio_paths` — đúng nguồn mà mọi script khác tro
 
     { "studio.marketing.daily-news-a": "tin/hang-ngay",
       "studio.marketing.daily-story":  { "channel": "truyen", "campaign": "hang-ngay",
-                                         "runner": "run-daily-truyen-p2.ps1",
-                                         "env": ["YT_TOKEN_PATH__TRUYEN"],
+                                         "env": { "YT_TOKEN_PATH__NGHE_TIEN_TRUYEN":
+                                                    "YT_TOKEN_PATH__NGHE_TIEN_TRUYEN",
+                                                  "YT_CLIENT_SECRET":
+                                                    "YT_CLIENT_SECRET__NGHE_TIEN_TRUYEN" },
+                                         "vars": { "L30_SCRIPT": "~/tools/last30days.py" },
                                          "schedule": { "Hour": 0, "Minute": 30 } } }
 
 Dạng chuỗi `<kênh>/<chiến dịch>` là dạng rút gọn của object. Khoá của object:
@@ -30,10 +33,22 @@ Dạng chuỗi `<kênh>/<chiến dịch>` là dạng rút gọn của object. Kh
     runner              tên file `.ps1` trong thư mục chiến dịch mà job gọi; mặc định
                         `run.ps1`. Chỉ là TÊN FILE (không `/`, không `..`) — job không được
                         chạy thứ gì nằm ngoài thư mục chiến dịch của nó.
-    env                 tên biến CON TRỎ bí mật thêm cho job này (hậu tố theo kênh/tài
-                        khoản, vd `YT_TOKEN_PATH__TRUYEN`). Chỉ nhận tên thuộc bộ con trỏ
-                        (`studio_paths.CON_TRO_BI_MAT`); giá trị lấy như mọi con trỏ khác, và
-                        thiếu giá trị là mã 2 — bạn đã khai nó, nên thiếu là cấu hình sai.
+    env                 CON TRỎ bí mật thêm cho job này. Hai dạng:
+                          · danh sách tên — `["YT_TOKEN_PATH__NGHE_TIEN_TRUYEN"]`: plist mang
+                            đúng tên đó, giá trị lấy từ chính tên đó;
+                          · object `{TÊN_TRONG_PLIST: TÊN_NGUỒN}` — plist mang tên trái, giá trị
+                            lấy từ tên phải. Nhờ vậy job truyện nhận `YT_CLIENT_SECRET` (tên mã
+                            đọc) từ đường dẫn mà `YT_CLIENT_SECRET__NGHE_TIEN_TRUYEN` giữ, cùng một
+                            lệnh cài với các job tin dùng `YT_CLIENT_SECRET` của kênh khác.
+                        Cả hai vế chỉ nhận tên thuộc bộ con trỏ (`studio_paths.CON_TRO_BI_MAT`
+                        + hậu tố); giá trị lấy như mọi con trỏ khác (biến môi trường →
+                        `<repo>/.env`), và thiếu giá trị là mã 2 — bạn đã khai nó.
+    vars                biến ĐƯỜNG DẪN không bí mật mà runner cần (`BIEN_DUONG_DAN`: L30_SCRIPT,
+                        TRUYEN_PUBLISH_PY, TRUYEN_FONT, VOICE_BGM_DIR, WEB_REPO_DIR, FFMPEG_DIR,
+                        NOTIFY_RUN, CLAUDE_CONFIG_DIR). Object `{TÊN: đường}` — giá trị viết thẳng;
+                        hoặc danh sách `[TÊN]` — giá trị lấy từ biến môi trường → `<repo>/.env`.
+                        Tên ngoài danh sách, hoặc giá trị không phải đường dẫn, là mã 2: khoá
+                        này không phải cửa để đẩy biến tuỳ ý (`PYTHONPATH`, `DYLD_*`) vào job.
     schedule            thay lịch của mẫu: một object (hoặc danh sách object) khoá
                         `Minute`/`Hour`/`Day`/`Weekday`/`Month`. Bỏ trống = lịch đã chốt
                         trong mẫu. Job không có lịch (worker, poller) mà khai thì mã 2.
@@ -118,7 +133,12 @@ KHONG_MAC_DINH = ("studio.marketing.worker", "studio.marketing.approve-poller",
 _CHO_TRONG = re.compile(r"__[A-Z_]+__")
 
 # Khai theo label trong `<trạm>/launchd.json` — xem docstring.
-KHOA_KHAI = ("channel", "campaign", "runner", "env", "schedule")
+KHOA_KHAI = ("channel", "campaign", "runner", "env", "vars", "schedule")
+# Biến ĐƯỜNG DẪN không bí mật được phép vào plist qua khoá `vars` (P1-2). DANH SÁCH TRẮNG có
+# chủ đích: một khoá nhận tên tuỳ ý là cửa để đẩy `PYTHONPATH`/`DYLD_INSERT_LIBRARIES` vào
+# một job chạy không người xem.
+BIEN_DUONG_DAN = ("L30_SCRIPT", "TRUYEN_PUBLISH_PY", "TRUYEN_FONT", "VOICE_BGM_DIR",
+                  "WEB_REPO_DIR", "FFMPEG_DIR", "NOTIFY_RUN", "CLAUDE_CONFIG_DIR")
 RUNNER_MAC_DINH = "run.ps1"
 _TEN_RUNNER = re.compile(r"^[A-Za-z0-9][\w.-]*\.ps1$")
 KHOA_LICH = {"Minute": (0, 59), "Hour": (0, 23), "Day": (1, 31), "Weekday": (0, 7),
@@ -172,13 +192,15 @@ def cho_trong(station=None) -> tuple[dict, list[str]]:
     tram = SP.root(station)
     voice = SP.voice_station()
     video = SP.video_station()
+    # Không đoán một thư mục trong nhà: chưa thấy trạm (biến → .env → studio.local.json → repo
+    # anh em) thì plist mang chuỗi RỖNG — mọi nơi đọc coi rỗng là "chưa đặt" và nêu tên biến.
     if voice is None:
-        voice = Path.home() / ".voice"
-        nhac.append(f"chưa khai VOICE_STATION — plist tạm ghi {voice} (kiểm bằng doctor)")
+        nhac.append("chưa thấy trạm giọng (VOICE_STATION / repo anh em agent-voice-studio) — "
+                    "plist để trống (kiểm bằng doctor)")
     if video is None:
-        video = Path.home() / ".video"
-        nhac.append(f"chưa khai VIDEO_STATION — plist tạm ghi {video} (kiểm bằng doctor)")
-    ovpy = _omnivoice_py(voice)
+        nhac.append("chưa thấy trạm video (VIDEO_STATION / repo anh em agent-video-studio) — "
+                    "plist để trống (kiểm bằng doctor)")
+    ovpy = _omnivoice_py(voice) if voice is not None else ""
     if not (ovpy and Path(ovpy).is_file()):
         nhac.append(f"OMNIVOICE_PY chưa chạy được ({ovpy or 'rỗng'}) — job có giọng sẽ đỏ")
     return {
@@ -186,8 +208,8 @@ def cho_trong(station=None) -> tuple[dict, list[str]]:
         "__REPO__": str(REPO),
         "__STATION__": str(tram),
         "__PY__": _python_tram(),
-        "__VOICE_STATION__": str(voice),
-        "__VIDEO_STATION__": str(video),
+        "__VOICE_STATION__": str(voice) if voice is not None else "",
+        "__VIDEO_STATION__": str(video) if video is not None else "",
         "__OMNIVOICE_PY__": ovpy,
     }, nhac
 
@@ -234,17 +256,65 @@ def muc_khai(label: str, v, nguon: str = "--map") -> dict:
         muc["runner"] = r
     if "env" in v:
         ds = v["env"]
-        if not (isinstance(ds, list) and all(isinstance(x, str) for x in ds)):
-            raise SC.ContractError(f"{nguon}: {label}.env phải là danh sách TÊN biến")
-        sai = [x for x in ds if not SP.la_con_tro_bi_mat(x)]
+        if isinstance(ds, dict):
+            cap = ds
+        elif isinstance(ds, list):
+            cap = {x: x for x in ds}
+        else:
+            cap = None
+        if cap is None or not all(isinstance(a, str) and isinstance(b, str) for a, b in cap.items()):
+            raise SC.ContractError(
+                f"{nguon}: {label}.env phải là danh sách TÊN biến, hoặc object "
+                f"{{TÊN_TRONG_PLIST: TÊN_NGUỒN}}")
+        sai = sorted({x for ab in cap.items() for x in ab if not SP.la_con_tro_bi_mat(x)})
         if sai:
             raise SC.ContractError(
                 f"{nguon}: {label}.env chỉ nhận tên con trỏ bí mật "
                 f"({', '.join(SP.CON_TRO_BI_MAT)} + hậu tố kênh), không nhận {sai}")
-        muc["env"] = list(dict.fromkeys(ds))
+        muc["env"] = list(dict.fromkeys(cap))
+        muc["env_nguon"] = dict(cap)
+    if "vars" in v:
+        muc["vars"] = _bien_khai(label, v["vars"], nguon)
     if "schedule" in v:
         muc["schedule"] = _lich(label, v["schedule"], nguon)
     return muc
+
+
+def _bien_khai(label: str, v, nguon: str) -> dict:
+    """Khoá `vars` -> {TÊN: giá trị literal | None (lấy từ env/.env)}. Mọi sai là mã 2."""
+    if isinstance(v, list):
+        cap = {x: None for x in v} if all(isinstance(x, str) for x in v) else None
+    elif isinstance(v, dict):
+        cap = dict(v) if all(isinstance(k, str) and isinstance(g, str) for k, g in v.items()) else None
+    else:
+        cap = None
+    if cap is None:
+        raise SC.ContractError(f"{nguon}: {label}.vars phải là object {{TÊN: đường}} hoặc "
+                               f"danh sách [TÊN]")
+    la = sorted(set(cap) - set(BIEN_DUONG_DAN))
+    if la:
+        raise SC.ContractError(f"{nguon}: {label}.vars chỉ nhận {list(BIEN_DUONG_DAN)}, không "
+                               f"nhận {la}")
+    xau = sorted(k for k, g in cap.items() if g is not None and not SP.la_duong_dan(g))
+    if xau:
+        raise SC.ContractError(f"{nguon}: {label}.vars {xau} phải là ĐƯỜNG DẪN (tuyệt đối "
+                               f"hoặc bắt đầu bằng ~)")
+    return cap
+
+
+def gia_bien(cap: dict, repo=None) -> dict:
+    """{TÊN: giá trị|None} -> {TÊN: đường đã mở ~}. None = lấy từ env → `<repo>/.env`;
+    thiếu hoặc không phải đường dẫn là mã 2 (bạn đã khai nó trong launchd.json)."""
+    ra = {}
+    for n, g in cap.items():
+        gia = g if g is not None else SP.secret_env(n, repo)
+        if not gia:
+            raise SC.ContractError(f"vars {n}: chưa có giá trị ở biến môi trường hay <repo>/.env "
+                                   f"— đặt nó hoặc viết thẳng đường trong launchd.json")
+        if not SP.la_duong_dan(gia):
+            raise SC.ContractError(f"vars {n}: giá trị phải là ĐƯỜNG DẪN")
+        ra[n] = str(Path(gia).expanduser())
+    return ra
 
 
 def _lich(label: str, v, nguon: str):
@@ -314,7 +384,7 @@ def nhan() -> list[str]:
 
 
 def render(label: str, bang: dict, bi_mat: dict | None = None,
-           them: list[str] | None = None, lich=None) -> bytes:
+           them: list[str] | None = None, lich=None, bien: dict | None = None) -> bytes:
     """Điền một mẫu. Còn sót chỗ trống nào là LỖI — không bao giờ ghi ra một plist dở.
 
     Giá trị được THOÁT XML trước khi thay. `~/Code/AI & Data Studio` là tên thư mục hợp lệ
@@ -329,6 +399,7 @@ def render(label: str, bang: dict, bi_mat: dict | None = None,
     có trong `bi_mat` thì bị BỎ cả dòng — không ghi chuỗi rỗng: script đọc `os.environ[...]`
     gặp chuỗi rỗng sẽ chết bằng một lỗi khó hiểu, gặp biến vắng thì nêu đúng tên biến.
     `them` = tên con trỏ thêm của job (khoá `env` của launchd.json), chèn ở `__ENV_EXTRA__`.
+    `bien` = biến đường dẫn không bí mật (khoá `vars`), chèn cùng chỗ.
     `lich` = lịch thay cho `StartCalendarInterval` của mẫu (khoá `schedule`)."""
     f = MAU_DIR / f"{label}.plist"
     if not f.is_file():
@@ -348,8 +419,8 @@ def render(label: str, bang: dict, bi_mat: dict | None = None,
         return k
 
     t = _CHO_TRONG.sub(_thay, t)
-    if them and not _CHO_THEM.search(t):
-        raise SC.ContractError(f"{label}: mẫu không có chỗ `__ENV_EXTRA__` cho khoá env")
+    if (them or bien) and not _CHO_THEM.search(t):
+        raise SC.ContractError(f"{label}: mẫu không có chỗ `__ENV_EXTRA__` cho khoá env/vars")
     sot = sorted(sot)
     if sot:
         raise SC.ContractError(f"{label}: còn chỗ trống chưa điền {sot}")
@@ -359,6 +430,10 @@ def render(label: str, bang: dict, bi_mat: dict | None = None,
             raise SC.ContractError(f"{label}: con trỏ thêm {n} chưa có giá trị")
         dong_them.append(f"    <key>{n}</key><string>{saxutils.escape(str(bi_mat[n]))}"
                          f"</string>\n")
+    for n, g in (bien or {}).items():
+        if n not in BIEN_DUONG_DAN:
+            raise SC.ContractError(f"{label}: biến {n} không thuộc BIEN_DUONG_DAN")
+        dong_them.append(f"    <key>{n}</key><string>{saxutils.escape(str(g))}</string>\n")
     t = _CHO_THEM.sub(lambda m: "".join(dong_them), t)
     b = t.encode("utf-8")
     try:
@@ -472,23 +547,39 @@ def lam(a) -> dict:
         if k.get("runner") and not co_runner:
             SC.log(f"[launchd] nhắc: {l} chạy runner của repo — khoá runner bị bỏ qua")
         them = k.get("env") or []
-        bi_mat, chua_khai = gia_bi_mat(ten_bi_mat(l) + them)
-        thieu_them = [n for n in them if n in chua_khai]
+        nguon_env = k.get("env_nguon") or {n: n for n in them}
+        tren_mau = ten_bi_mat(l)
+        bi_mat, chua_khai = gia_bi_mat(tren_mau)
+        # Con trỏ khai ở launchd.json: giá trị lấy từ TÊN NGUỒN, ghi vào plist dưới TÊN ĐÍCH.
+        # Đích trùng một tên của mẫu thì THAY giá trị dòng đó (không chèn dòng thứ hai).
+        gia_them, thieu_nguon = gia_bi_mat(sorted({nguon_env[n] for n in them}))
+        thieu_them = [n for n in them if nguon_env[n] in thieu_nguon]
         if thieu_them:
             raise SC.ContractError(
-                f"{l}: launchd.json khai env {thieu_them} nhưng biến chưa có giá trị ở biến "
-                f"môi trường hay <repo>/.env — đặt nó (ĐƯỜNG DẪN tới file bí mật) rồi chạy lại")
+                f"{l}: launchd.json khai env {thieu_them} nhưng biến nguồn "
+                f"{sorted({nguon_env[n] for n in thieu_them})} chưa có giá trị ở biến môi trường "
+                f"hay <repo>/.env — đặt nó (ĐƯỜNG DẪN tới file bí mật) rồi chạy lại")
+        for n in them:
+            bi_mat[n] = gia_them[nguon_env[n]]
+        chua_khai = [n for n in chua_khai if n not in bi_mat]
+        them_dong = [n for n in them if n not in tren_mau]
+        bien = gia_bien(k.get("vars") or {})
         if chua_khai:
             SC.log(f"[launchd] nhắc: {l} chưa có {', '.join(chua_khai)} — bỏ dòng đó khỏi "
                    f"plist; bước nào cần sẽ dừng và nêu tên biến")
         noi_dung = render(l, {**bang, "__CHANNEL__": kenh, "__CAMPAIGN__": cd,
                               "__RUNNER__": runner},
-                          bi_mat=bi_mat, them=them, lich=k.get("schedule"))
+                          bi_mat=bi_mat, them=them_dong, lich=k.get("schedule"), bien=bien)
         dich = dich_dir / f"{l}.plist"
         # Chỉ TÊN biến đi vào log/JSON — không bao giờ giá trị.
         muc = {"label": l, "channel": kenh, "campaign": cd, "plist": str(dich),
                "bytes": len(noi_dung), "secret_env": sorted(bi_mat),
                "secret_env_missing": sorted(chua_khai)}
+        doi_ten = {a: b for a, b in nguon_env.items() if a != b}
+        if doi_ten:
+            muc["secret_env_from"] = doi_ten          # chỉ TÊN -> TÊN, không giá trị
+        if bien:
+            muc["vars"] = sorted(bien)
         if co_runner:
             muc["runner"] = runner
         if k.get("schedule") is not None:

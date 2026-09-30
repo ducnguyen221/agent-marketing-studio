@@ -2,7 +2,7 @@
 """Chạy một lệnh con rồi báo kết quả về Telegram — wrapper cho bộ lập lịch.
 
     python notify_run.py --title "Tin hằng ngày" \\
-        [--composer-dir <trạm>/engine] [--link-domains blog.example.com] \\
+        [--composer-dir <repo>/scripts/runners] [--link-domains blog.example.com] \\
         [--timeout 7200] -- pwsh -NoProfile -File <chiến dịch>/run.ps1
 
 ## Vì sao có file này
@@ -12,12 +12,14 @@ của một cái máy). Trên macOS/launchd không có Windows PowerShell 5.1, v
 tự đủ — nên đây là bản Python, cùng hợp đồng:
 
 · **Mã thoát = mã của lệnh con, nguyên vẹn** (0 ok · 1 lỗi engine · 2 hợp đồng sai · 3 trạm
-  thiếu). Bộ lập lịch chỉ nhìn mã thoát; đổi nó là nói dối về lượt chạy.
+  thiếu · 4 hết hạn mức). Bộ lập lịch chỉ nhìn mã thoát; đổi nó là nói dối về lượt chạy.
+  **Mã 4 = hết hạn mức** (mọi engine trong `order` hết lượt): KHÔNG phải pipeline hỏng — tin
+  🟡 "HẾT HẠN MỨC" đặt lên đầu, không gọi triage (không có sự cố nào để phân loại).
 · **✅** tiêu đề + MỌI link sản phẩm trích từ log (YouTube, Facebook, và các miền khai qua
   `--link-domains`). **❌** hỏng ở bước nào + đã xong bước nào + (log đuôi | báo cáo triage).
 · **Báo cáo không bao giờ làm hỏng lượt chạy.** Thiếu cấu hình, mạng lỗi, composer hỏng —
   tất cả chỉ in cảnh báo ra stderr; mã thoát vẫn là mã con.
-· Đầu log in `which` của `pwsh node ffprobe python npx`: launchd chạy với PATH tối thiểu, và
+· Đầu log in `which` của `pwsh node ffprobe python3 npx`: launchd chạy với PATH tối thiểu, và
   "không thấy ffprobe" là lỗi phổ biến nhất khi dời máy — đọc đầu log là biết ngay.
 
 ## `--timeout` — vì sao wrapper phải tự canh giờ
@@ -33,8 +35,10 @@ hết giờ thì giết **cả nhóm tiến trình** con (không chỉ tiến tr
 node, python; giết mỗi vỏ là để lại một đàn mồ côi), rồi gửi tin ❌ nói rõ "quá <giây>s".
 
 **Đây là NGOẠI LỆ DUY NHẤT của luật "mã thoát = mã con".** Quá giờ thì không có mã con để
-trả: tiến trình bị giết. Wrapper trả **1** (lỗi engine, thử lại được) và nói rõ lý do trong
-cả log lẫn tin báo. Không đặt `--timeout` thì hành vi y như trước: chờ đến khi nào xong.
+trả: tiến trình bị giết. Wrapper trả **124** (quy ước của `timeout(1)`, và đúng mã wrapper
+Windows trả) và nói rõ lý do trong cả log lẫn tin báo (⏳). Hai máy, MỘT hợp đồng mã thoát:
+`compose_report.py`, sổ Excel và `triage.py` phân loại theo mã — lệch mã là lệch báo cáo.
+Không đặt `--timeout` thì hành vi y như trước: chờ đến khi nào xong.
 
 ## Ba tầng soạn tin (giống wrapper Windows)
 
@@ -67,7 +71,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import telegram_io as tg  # noqa: E402
 
-CONG_CU = ("pwsh", "node", "ffprobe", "python", "npx")
+# `python3`, không `python`: macOS không có lệnh `python` — dòng đầu log từng luôn ghi "không
+# thấy python" trên máy vẫn chạy tốt, và dòng báo sai thường trực thì không ai đọc nữa.
+CONG_CU = ("pwsh", "node", "ffprobe", "python3", "npx")
+MA_HET_HAN_MUC = 4      # agent_call: mọi engine trong `order` hết lượt — KHÔNG phải hỏng
+MA_QUA_GIO = 124        # quy ước `timeout(1)`; wrapper Windows trả cùng mã
 TRAN_TIN = 3900
 TRAN_COMPOSE = 120      # giây
 TRAN_TRIAGE = 180       # giây — notify không được phép treo bộ lập lịch
@@ -234,7 +242,7 @@ def chay_lenh(cmd: list[str], tran: int | None = None) -> tuple[int, list[str], 
              f"(launchd không có ExecutionTimeLimit — trần giờ nằm ở wrapper).")
         dong.append(d)
         print(d, flush=True)
-        ma = 1
+        ma = MA_QUA_GIO
     return ma, dong, qua_gio.is_set()
 
 
@@ -285,7 +293,7 @@ def _cat(t: str) -> str:
 
 
 def soan_tin(title: str, ma: int, dur: str, dong: list[str], mien: list[str],
-             composer: Path | None) -> str:
+             composer: Path | None, qua_gio: bool = False) -> str:
     links = trich_link(dong, mien)
     buoc = trich_buoc(dong)
     log_txt = "\n".join(dong)
@@ -296,8 +304,9 @@ def soan_tin(title: str, ma: int, dur: str, dong: list[str], mien: list[str],
                             ["--title", title, "--exit", str(ma), "--duration", dur],
                             log_txt, TRAN_COMPOSE)
     composed = bool(msg)
+    het_han_muc = ma == MA_HET_HAN_MUC and not qua_gio
     if not composed:
-        icon = "✅" if ma == 0 else "❌"
+        icon = ("✅" if ma == 0 else "🟡" if het_han_muc else "⏳" if qua_gio else "❌")
         msg = (f"{icon} <b>{_esc(title)}</b>\n"
                f"{_dt.datetime.now():%d/%m/%Y %H:%M} · chạy {dur} · exit {ma}")
         if links:
@@ -305,7 +314,16 @@ def soan_tin(title: str, ma: int, dur: str, dong: list[str], mien: list[str],
         elif ma == 0:
             msg += "\n(không phát hiện link sản phẩm trong log)"
 
-    if ma != 0:
+    # Hai tình huống KHÔNG phải "pipeline hỏng" — nói thẳng ra, đặt lên đầu, vì hướng xử lý
+    # khác hẳn: hết hạn mức thì CHỜ, quá giờ thì XEM NÓ TREO Ở ĐÂU. Cùng câu với wrapper Windows.
+    if het_han_muc:
+        msg = ("🟡 <b>HẾT HẠN MỨC</b> — mọi engine trong <code>order</code> đều hết lượt "
+               "(exit 4). Pipeline KHÔNG hỏng; lượt sau tự chạy lại khi hạn mức hồi.\n\n" + msg)
+    elif qua_gio:
+        msg = ("⏳ <b>QUÁ TRẦN — wrapper đã giết cả cây tiến trình</b> (exit 124). Xem các bước "
+               "bên dưới để biết nó đứng ở đâu.\n\n" + msg)
+
+    if ma != 0 and not het_han_muc:
         if not composed:
             if buoc:
                 msg += f"\n\n<b>Hỏng ở bước:</b> <code>{_esc(buoc[-1])}</code>"
@@ -374,7 +392,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="miền web của thương hiệu, tính là link sản phẩm (lặp hoặc dấu phẩy)")
     ap.add_argument("--timeout", type=int, default=0, metavar="GIÂY",
                     help="trần giờ cho lệnh con (launchd KHÔNG có ExecutionTimeLimit); "
-                         "quá giờ = giết cả nhóm con, tin ❌, mã thoát 1")
+                         "quá giờ = giết cả nhóm con, tin ⏳, mã thoát 124")
     if "--" in argv:
         i = argv.index("--")
         opts, cmd = argv[:i], argv[i + 1:]
@@ -401,7 +419,7 @@ def main(argv: list[str] | None = None) -> int:
 
     tieu_de = f"{a.title} — QUÁ GIỜ {a.timeout}s" if qua_gio else a.title
     try:
-        tin = soan_tin(tieu_de, ma, dur, dong, _mien(a.link_domains), composer)
+        tin = soan_tin(tieu_de, ma, dur, dong, _mien(a.link_domains), composer, qua_gio)
         gui(tin)
     except Exception as e:  # noqa: BLE001 — báo cáo hỏng không được đổi mã thoát
         _loi(f"notify: soạn/gửi tin lỗi — {e}")

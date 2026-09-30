@@ -202,7 +202,7 @@ def test_output_lenh_con_van_in_ra_stdout_cho_log_cua_bo_lap_lich(cau_hinh, mang
 def test_in_which_cong_cu_o_dau_log(cau_hinh, mang, capsys):
     NR.main(["--title", "T", *_py("print('dong-cua-con')")])
     out = capsys.readouterr().out
-    for ten in ("pwsh", "node", "ffprobe", "python", "npx"):
+    for ten in ("pwsh", "node", "ffprobe", "python3", "npx"):
         assert f"which {ten}=" in out
     assert out.index("which pwsh=") < out.index("dong-cua-con"), "which phải in TRƯỚC lệnh con"
 
@@ -357,7 +357,7 @@ def test_chay_nhu_lenh_that_giu_ma_va_bao_thieu_cau_hinh(tmp_path):
                        capture_output=True, text=True, encoding="utf-8", env=env, timeout=60)
     assert r.returncode == 3
     assert "https://youtu.be/x" in r.stdout
-    assert "which python=" in r.stdout
+    assert "which python3=" in r.stdout
     assert "không thấy cấu hình Telegram" in r.stderr
 
 
@@ -366,12 +366,32 @@ def test_chay_nhu_lenh_that_giu_ma_va_bao_thieu_cau_hinh(tmp_path):
 # một lượt treo giữ nguyên nhãn job và lượt kế tiếp bị bỏ qua LẶNG LẼ. Trần giờ vì thế
 # phải nằm ở wrapper — và phải giết CẢ NHÓM con, không chỉ cái vỏ.
 
-def test_timeout_giet_lenh_con_va_tra_ma_1(cau_hinh, mang):
-    """Ngoại lệ DUY NHẤT của luật 'mã thoát = mã con': bị giết thì không có mã con."""
+def test_timeout_giet_lenh_con_va_tra_ma_124(cau_hinh, mang):
+    """Ngoại lệ DUY NHẤT của luật 'mã thoát = mã con': bị giết thì không có mã con.
+    Mã 124 = quy ước `timeout(1)` VÀ đúng mã wrapper Windows trả (P1-11): hai máy một hợp đồng."""
     ma = NR.main(["--title", "T", "--timeout", "1",
                   "--", PY, "-c", "import time; time.sleep(60)"])
-    assert ma == 1
-    assert "QUÁ GIỜ" in mang.tin
+    assert ma == 124
+    assert "QUÁ GIỜ" in mang.tin and "⏳" in mang.tin and "exit 124" in mang.tin
+
+
+def test_ma_4_het_han_muc_GIU_MA_va_tin_VANG_khong_triage(cau_hinh, mang, tmp_path):
+    """Hết hạn mức (exit 4) KHÔNG phải pipeline hỏng: mã giữ nguyên 4, tin 🟡 đặt lên đầu,
+    và triage KHÔNG được gọi (không có sự cố nào để phân loại) — cùng hợp đồng wrapper Windows."""
+    d = tmp_path / "composer"
+    d.mkdir()
+    (d / "triage.py").write_text("raise SystemExit('triage KHONG duoc goi')\n", encoding="utf-8")
+    goi = []
+    goc = NR._goi_composer
+    NR._goi_composer = lambda s, *a, **k: goi.append(s.name) or goc(s, *a, **k)
+    try:
+        ma = NR.main(["--title", "T", "--composer-dir", str(d), *_py("import sys; sys.exit(4)")])
+    finally:
+        NR._goi_composer = goc
+    assert ma == 4
+    assert mang.tin.startswith("🟡") and "HẾT HẠN MỨC" in mang.tin
+    assert "❌" not in mang.tin
+    assert "triage.py" not in goi
 
 
 def test_timeout_khong_can_thiep_khi_lenh_con_xong_som(cau_hinh, mang):
@@ -404,7 +424,7 @@ def test_timeout_giet_CA_CHUM_khong_chi_tien_trinh_vo(cau_hinh, mang, tmp_path):
     cha = ("import subprocess, sys, time\n"
            f"subprocess.Popen([sys.executable, '-c', {chau!r}])\n"
            "time.sleep(60)\n")
-    assert NR.main(["--title", "T", "--timeout", "2", "--", PY, "-c", cha]) == 1
+    assert NR.main(["--title", "T", "--timeout", "2", "--", PY, "-c", cha]) == 124
     time.sleep(1.0)
     a = dau.stat().st_size if dau.exists() else 0
     time.sleep(1.5)

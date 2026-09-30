@@ -141,6 +141,17 @@ dùng `python3`: trên Mac mới nó là 3.9).
 
 `.venv/` nằm trong repo và bị git bỏ qua; mọi `.ps1` của repo tự tìm Python ở đó trước.
 
+**Chỉ khi máy chạy LỊCH tin/truyện** (bộ chạy `scripts/runners/`, cần trạm giọng): cài thêm gói
+của bộ chạy vào **venv giọng** — python mà `OMNIVOICE_PY` trỏ tới, KHÔNG phải `.venv` ở trên:
+
+```
+<python của venv giọng> -m pip install -r requirements-runners.txt
+```
+
+Bộ chạy tin còn cần script nghiên cứu `last30days` (plugin Claude) — lớp cài máy cài plugin, repo
+này chỉ tìm (`~/.claude/plugins/…`, hoặc biến `L30_SCRIPT`) và `doctor` báo thiếu. Người chỉ viết
+bài và đăng thì bỏ qua đoạn này.
+
 ## 6. Chọn chỗ đặt trạm nội dung — hỏi người dùng đúng một câu
 
 **Trạm** là nơi chứa kênh, chiến dịch, bài và sản phẩm đã dựng. Hỏi người dùng chọn một trong hai:
@@ -177,7 +188,9 @@ macOS: `.venv/bin/python scripts/pipeline/doctor.py`. Chép nguyên văn mọi d
 | `ĐỎ` + mã thoát **3** | chưa cài xong (chưa có trạm) | chạy lại mục 6 |
 | `ĐỎ` + mã thoát **2** | cấu hình sai (hai nguồn sự thật, rào `.gitignore` thủng) | đọc dòng đỏ, hỏi người dùng trước khi sửa |
 | `nhắc` | cảnh báo, không chặn | báo lại cho người dùng |
-| `NOT_CHECKED` | doctor không đo được từ đây (host có nạp skill không) | **không phải lỗi**; kiểm ở mục 8 |
+| `NOT_CHECKED` | doctor không đo được từ đây (host có nạp skill không; `claude-cli` đã đăng nhập chưa) | **không phải lỗi**; kiểm ở mục 8, hoặc tự chạy đúng lệnh dòng đó in |
+| `runner: venv giọng … THIẾU module …` | máy chạy lịch tin/truyện thiếu gói của bộ chạy | chạy đúng lệnh `pip install -r requirements-runners.txt` dòng đó in |
+| `last30days: không thấy script` · `nhạc nền: … thiếu mp3` | bộ chạy tin thiếu công cụ nghiên cứu / file nhạc nền | cài plugin `last30days` hoặc đặt `L30_SCRIPT`; chép mp3 vào thư viện nhạc |
 | "giọng/video: chưa bật" | năng lực thêm chưa cài | bình thường — viết bài và đăng vẫn chạy |
 | `samples: PASS` | bài mẫu offline chấm lại đúng kết quả kỳ vọng | — (lệch thì dòng `nhắc samples: WARN`, xem [samples/README.md](samples/README.md)) |
 

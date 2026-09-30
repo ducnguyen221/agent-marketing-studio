@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import platform
@@ -64,7 +65,39 @@ DUOI_DOI_DUONG = (".yml", ".yaml", ".md", ".py", ".ps1", ".json")
 
 # ══ export ═══════════════════════════════════════════════════════════════════════════
 
-def export_station(station, out, *, with_git=False, logs_state=False, dry_run=False) -> dict:
+ENGINES_REL = "_agent-call/engines.json"
+
+
+def _engines_cho_may(raw: bytes, st: Path, may: str | None) -> bytes:
+    """Bản `engines.json` ĐI THEO GÓI (P1-9): cấu hình theo máy không được mang nguyên sang.
+
+      · `ledger` tuyệt đối trong trạm nguồn -> đổi thành TƯƠNG ĐỐI (tính từ gốc trạm);
+        tuyệt đối ngoài trạm -> BỎ (máy đích dùng mặc định `<trạm>/_bench/...`).
+      · `--for-machine X` và có `_may_khac.X.order` -> `order` của máy đích thay `order`.
+    JSON hỏng thì giữ nguyên byte — export không phải chỗ sửa cấu hình người dùng."""
+    try:
+        d = json.loads(raw.decode("utf-8-sig"))
+    except (ValueError, UnicodeDecodeError):
+        return raw
+    if not isinstance(d, dict):
+        return raw
+    lg = str(d.get("ledger") or "").strip()
+    if lg:
+        p = Path(lg).expanduser()
+        if p.is_absolute():
+            try:
+                d["ledger"] = p.resolve().relative_to(st).as_posix()
+            except ValueError:
+                d.pop("ledger", None)
+    if may:
+        khac = (d.get("_may_khac") or {}).get(may) or {}
+        if isinstance(khac, dict) and khac.get("order"):
+            d["order"] = khac["order"]
+    return (json.dumps(d, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+
+
+def export_station(station, out, *, with_git=False, logs_state=False, dry_run=False,
+                   for_machine=None) -> dict:
     st = Path(station).expanduser().resolve()
     if not st.is_dir():
         raise SC.StationMissing(
@@ -102,6 +135,12 @@ def export_station(station, out, *, with_git=False, logs_state=False, dry_run=Fa
     try:
         with zipfile.ZipFile(tam, "w", zipfile.ZIP_DEFLATED) as z:
             for f, rel in files:
+                if rel == ENGINES_REL:
+                    b = _engines_cho_may(f.read_bytes(), st, for_machine)
+                    muc.append({"path": rel, "size": len(b),
+                                "sha256": hashlib.sha256(b).hexdigest()})
+                    z.writestr(rel, b)
+                    continue
                 muc.append({"path": rel, "size": f.stat().st_size, "sha256": SM.sha256(f)})
                 z.write(f, rel)
             z.writestr(SM.MANIFEST, json.dumps({
@@ -454,6 +493,9 @@ def main(argv=None) -> int:
     e.add_argument("--include-logs-state", action="store_true",
                    help="kèm trạng thái trong logs/: tin duyệt chờ, việc chờ, nhật ký sự kiện")
     e.add_argument("--dry-run", action="store_true", help="chỉ liệt kê, không ghi gì")
+    e.add_argument("--for-machine", metavar="TÊN",
+                   help="máy đích: `order` của engines.json lấy từ `_may_khac.<TÊN>`; `ledger` "
+                        "tuyệt đối luôn được đổi thành tương đối/bỏ")
 
     i = con.add_parser("import", help="mở gói vào một trạm (KHÔNG đè file đã có)")
     i.add_argument("archive", help="file zip do `export` tạo")
@@ -469,7 +511,8 @@ def main(argv=None) -> int:
     def chay(a):
         if a.cmd == "export":
             kq = export_station(a.station or SP.root(), a.out, with_git=a.with_git,
-                                logs_state=a.include_logs_state, dry_run=a.dry_run)
+                                logs_state=a.include_logs_state, dry_run=a.dry_run,
+                                for_machine=a.for_machine)
             _in_export(kq)
         else:
             kq = import_station(a.archive, a.station)

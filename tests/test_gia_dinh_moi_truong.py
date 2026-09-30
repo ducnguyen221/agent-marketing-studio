@@ -49,12 +49,13 @@ import doctor as DR  # noqa: E402
 import studio_contract as SC  # noqa: E402
 
 REQ = ROOT / "requirements.txt"
+REQ_RUNNER = ROOT / "requirements-runners.txt"
 
 
-def _khai_requirements() -> dict[str, str]:
-    """`requirements.txt` -> {tên gói chữ thường: dòng nguyên văn}."""
+def _khai_requirements(req: Path = REQ) -> dict[str, str]:
+    """`requirements*.txt` -> {tên gói chữ thường: dòng nguyên văn}."""
     ra = {}
-    for dong in REQ.read_text(encoding="utf-8").splitlines():
+    for dong in req.read_text(encoding="utf-8").splitlines():
         than = dong.split("#", 1)[0].strip()
         if not than:
             continue
@@ -106,9 +107,24 @@ def test_moi_goi_ngoai_ma_scripts_import_deu_duoc_khai():
     khai = set(_khai_requirements())
     # Tên `import` ≠ tên gói pip. Thiếu bảng này thì cổng bắt oan `PIL` và `yaml`.
     bi_danh = {"PIL": "pillow", "yaml": "pyyaml"}
+    # Bộ chạy tin/truyện (`scripts/runners/`) chạy bằng python của VENV GIỌNG: gói của nó khai
+    # ở `requirements-runners.txt` (cài vào venv đó), và numpy/soundfile/torch đến cùng
+    # `voice_studio` — không khai lại ở đây.
+    khai_runner = khai | set(_khai_requirements(REQ_RUNNER))
+    bi_danh_runner = {**bi_danh, "googleapiclient": "google-api-python-client",
+                      "google": "google-api-python-client",       # google.oauth2 / google.auth
+                      "google_auth_oauthlib": "google-auth-oauthlib",
+                      "google_auth_httplib2": "google-auth-httplib2",
+                      "bs4": "beautifulsoup4", "yt_dlp": "yt-dlp",
+                      "faster_whisper": "faster-whisper"}
+    ngoai_le_runner = ngoai_le | {"numpy", "soundfile", "torch"}
 
     thieu = {}
     for f in sorted((ROOT / "scripts").rglob("*.py")):
+        la_runner = "runners" in f.relative_to(ROOT / "scripts").parts
+        k_ = khai_runner if la_runner else khai
+        b_ = bi_danh_runner if la_runner else bi_danh
+        n_ = ngoai_le_runner if la_runner else ngoai_le
         cay = ast.parse(f.read_text(encoding="utf-8"), filename=str(f))
         for nut in ast.walk(cay):
             if isinstance(nut, ast.Import):
@@ -118,10 +134,10 @@ def test_moi_goi_ngoai_ma_scripts_import_deu_duoc_khai():
             else:
                 continue
             for t in ten:
-                if (t in sys.stdlib_module_names or t in noi_bo or t in ngoai_le
-                        or bi_danh.get(t, t).lower() in khai):
+                if (t in sys.stdlib_module_names or t in noi_bo or t in n_
+                        or b_.get(t, t).lower() in k_):
                     continue
-                thieu.setdefault(bi_danh.get(t, t), set()).add(
+                thieu.setdefault(b_.get(t, t), set()).add(
                     str(f.relative_to(ROOT)).replace("\\", "/"))
 
     assert not thieu, ("gói bên thứ ba được import mà KHÔNG khai trong requirements.txt: "

@@ -3,6 +3,72 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.0 — 2026-09-30
+
+Bộ chạy tin/truyện vào repo, và mọi đường suy từ biến + thư mục cha của bản clone — Windows và
+Mac chạy CÙNG một mã, lấy bằng `git`, không còn chép tay `engine/` giữa hai máy.
+
+**Bộ chạy vào repo (P1-10).** 22 file của `<trạm>/engine` (7 `.ps1` + 15 `.py`) vào
+`scripts/runners/` (phẳng — `run.ps1` đã tìm runner ở đây TRƯỚC `<trạm>/engine`), mã truyện vào
+`scripts/runners/story/` (7 `.py`) kèm runner chung mới `run-daily-truyen.ps1`. Bộ test của
+engine/truyện vào `tests/test_runner_*.py`, `tests/test_story_*.py` (hai file đọc nguồn truyện
+cần venv giọng, tự bỏ qua trên CI). KHÔNG mang: `backfill_content.py` (công cụ chạy một lần),
+runbook token Facebook, `pham_nhan_tu_tien_phan_1/`. Ba script cấp kênh (`send_newsletter.py`,
+`build-index.ps1`, `build_yt_desc.py`) và `viet-bai.ps1`/`write-post.ps1` của kênh blog ở lại
+trạm (nội dung + nhận diện của kênh); khuôn trung tính là `templates/station/_channel/`.
+- **P0-1** runner đọc con trỏ bí mật qua `Get-EnvVar` (tiến trình → registry User CHỈ trên
+  Windows → `<repo>/.env` embedded) — macOS không còn nhận chuỗi rỗng rồi bỏ upload mà vẫn ✅.
+- **P0-2** `Join-Path` lồng từng đoạn (`hot-today/hot-news.json`) — trang Hot Today cập nhật được
+  trên macOS.
+- **P0-3** `requirements-runners.txt` (cài vào VENV GIỌNG); `doctor` kiểm từng module qua
+  python đó và nêu đúng tên module thiếu + lệnh `pip install -r`.
+- **P0-4** nhạc nền kiểm TRƯỚC `claude -p`: ép style không có mp3 thì dừng ngay; AI chỉ được
+  chọn style có mp3; `doctor` nhắc style thiếu mp3 (không có lệnh sinh nhạc).
+- **P0-6** `doctor` có dòng `NOT_CHECKED claude-cli` kèm lệnh tự kiểm đăng nhập.
+- **last30days**: `L30_SCRIPT` → thư mục plugin Claude (hai OS) → runner dừng, nêu tên biến;
+  `doctor` + `INSTALL.md` kiểm.
+- **P1-5/P1-14** trạm, trạm giọng/video, python giọng, repo web: biến → `<repo>/.env` → repo anh
+  em cùng thư mục cha (theo `pyproject.toml: name`) → đường cũ CHỈ khi có thật, kèm `WARN`.
+  `Get-Cfg` hiểu `${TÊN}` và đường tương đối theo thư mục cha (như `studio_paths.duong_repo_web`).
+  Sửa lỗi ẩn: `$Engine` (không phân biệt hoa thường với `$engine` của runner) nay là thư mục CODE,
+  không phải `<trạm>/engine`.
+- **P1-12** danh tính commit web lấy từ `channel.yml brand.git_author` ("Tên <email>"); không khai
+  = tên "<site_name> Bot" + email git của máy. Tác giả/mô tả YouTube/link trang tin/thẻ YouTube
+  lấy từ cấu hình kênh, không viết trong mã (cổng `test_no_leak`/`test_no_identity_leak` xanh).
+- **P1-2** `launchd.json`: khoá `vars` (danh sách trắng biến đường dẫn: `L30_SCRIPT`,
+  `TRUYEN_PUBLISH_PY`, `TRUYEN_FONT`, `VOICE_BGM_DIR`, `WEB_REPO_DIR`, …) và `env` dạng
+  `{TÊN_TRONG_PLIST: TÊN_NGUỒN}`; mẫu plist gọi `--composer-dir __REPO__/scripts/runners`.
+  **P2-9** ví dụ dùng tên thật `YT_TOKEN_PATH__NGHE_TIEN_TRUYEN`.
+- **P1-9** `engines.json: ledger` tương đối tính từ gốc trạm, tuyệt đối ngoài trạm thì cảnh báo;
+  `station.py export --for-machine <máy>` đổi `order` theo `_may_khac.<máy>` và bỏ ledger tuyệt đối.
+- **P1-11** `notify_run.py` cùng hợp đồng với wrapper Windows: quá giờ trả **124** (⏳), mã **4**
+  giữ nguyên + tin 🟡 HẾT HẠN MỨC (không triage); `which python3`.
+- **P1-4** `doctor` so tên profile giọng ở dạng NFC (file NFD nhập từ Windows không còn đỏ giả).
+- **P3-1/P3-11** file vào repo đều LF + BOM cho `.ps1`; cổng `tests/test_runners_portable.py`
+  quét mọi thư mục runner + khuôn trạm (registry `'User'` phải sau điều kiện Windows, thư mục cũ
+  chỉ ở nấc cuối có WARN, bộ chạy tối thiểu có trong repo). Mã truyện trong repo KHÔNG tự sửa
+  mình (`heal_agent`) trừ khi `TRUYEN_HEAL=1`.
+
+**Gộp PR #5 (Mac, P1-6/P1-7/P1-8/P2-10/P2-11).** `run.ps1` tìm repo bằng cách đi lên tới
+`scripts/pipeline/campaign_cfg.py` (bỏ đường lùi `~/Code`); `studio_paths.repo_anh_em`/
+`tram_anh_em`/`duong_repo_web`; `campaign_cfg` ghi `repo` tuyệt đối vào bản chụp; fixture
+`repo_gia` + `collect_ignore` gốc + job CI "cài embedded rồi pytest"; cổng
+`test_khong_gia_dinh_thu_muc_cha.py`.
+
+**Nâng cấp — Windows (máy lịch hiện tại):** `git pull` bản này là đủ để `run.ps1` của trạm chạy
+runner trong repo; biến User giữ nguyên. Khác biệt nhìn thấy được: commit web kênh Data mang
+tên "Data News Bot" (trước là tên bot của kênh AI); thẻ YouTube thêm tên trang của kênh (khai
+`runtime.yt_tags` để ép). Wrapper báo cáo của Task Scheduler vẫn đọc `compose_report.py`/
+`triage.py` ở `-ComposerDir` đang khai (thường là `<trạm>/engine`): TRƯỚC khi xoá thư mục đó, đổi
+`-ComposerDir` của các task sang `<repo>/scripts/runners`. Sau MỘT lượt xanh của mỗi task: xoá
+`<trạm>/engine` (doctor nhắc).
+Truyện: đổi `runtime.runner` trong `campaign.md` của phần đang chạy thành `run-daily-truyen.ps1`
+khi muốn dùng mã trong repo (runner cũ trong thư mục chiến dịch vẫn chạy mã cũ tới lúc đó).
+**Nâng cấp — Mac:** `git fetch --tags && git checkout v1.1.0`; `<OMNIVOICE_PY> -m pip install -r
+requirements-runners.txt`; xoá `workspace/engine`; khai `L30_SCRIPT`/`TRUYEN_FONT`… qua `vars`
+và con trỏ truyện qua `env` trong `launchd.json` (một lệnh cài); `install_launchd.py --dry-run
+--no-load` rồi cài lại plist.
+
 ## 1.0.1 — 2026-09-29
 
 Bản vá cho Mac mini chạy tự động ở chế độ `embedded` (không biến trạm, trạm là
