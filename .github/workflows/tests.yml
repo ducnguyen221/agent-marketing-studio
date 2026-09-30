@@ -114,6 +114,30 @@ jobs:
         shell: powershell
         run: .\install.ps1 -Mode embedded
 
+      # Cổng P1-18: máy chạy thật có `<repo>/.env` điền con trỏ và `~/.secret/**` có thật. Test
+      # nào lọt ra đọc chúng (kể cả qua tiến trình con) thì đỏ ở đây — trên CI chỉ là file GIẢ
+      # (token giả, gửi thử cũng chỉ nhận 401), trên máy người dùng là secret thật.
+      - name: Máy như máy thật — .env + kho secret GIẢ
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          nha = pathlib.Path.home() / ".secret"
+          cfg = nha / "telegram" / "config.json"
+          cfg.parent.mkdir(parents=True, exist_ok=True)
+          cfg.write_text(json.dumps({"bot_token": "000000:CI-GIA",
+                                     "chats": {"mac_dinh": {"chat_id": 1}}}), encoding="utf-8")
+          dong = {"TG_CONFIG": cfg}
+          for ten in ("YT_TOKEN_PATH", "YT_CLIENT_SECRET", "FB_CONFIG", "EMAIL_CONFIG",
+                      "YT_TOKEN_PATH__NGHE_TIEN_TRUYEN", "YT_CLIENT_SECRET__NGHE_TIEN_TRUYEN"):
+              f = nha / "ci-gia" / (ten.lower() + ".json")
+              f.parent.mkdir(parents=True, exist_ok=True)
+              f.write_text("{}", encoding="utf-8")
+              dong[ten] = f
+          pathlib.Path(".env").write_text(
+              "".join(f"{k}={v.as_posix()}\n" for k, v in dong.items()), encoding="utf-8")
+          PY
+
       - name: pytest trần sau khi cài
         env:
           MARKETING_STUDIO_REQUIRE_POWERSHELL: "1"
