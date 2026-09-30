@@ -149,5 +149,5 @@ def doc_requirements(repo: Path) -> list[str]:
     for dong in f.read_text(encoding="utf-8").splitlines():
         d = dong.split("#", 1)[0].strip()
         if d:
-            ra.append(re.split(r"[<>=!~\[; ]", d, 1)[0].strip().lower())
+            ra.append(re.split(r"[<>=!~\[; ]", d, maxsplit=1)[0].strip().lower())
     return ra
