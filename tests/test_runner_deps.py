@@ -22,7 +22,7 @@ PIP_SANG_IMPORT = {"google-api-python-client": "googleapiclient",
                    "google-auth-httplib2": "google_auth_httplib2", "httplib2": "httplib2",
                    "requests": "requests", "beautifulsoup4": "bs4", "lxml": "lxml",
                    "yt-dlp": "yt_dlp", "openpyxl": "openpyxl",
-                   "faster-whisper": "faster_whisper"}
+                   "faster-whisper": "faster_whisper", "av": "av"}
 
 
 def test_requirements_runners_KHOP_danh_sach_module_doctor_kiem():

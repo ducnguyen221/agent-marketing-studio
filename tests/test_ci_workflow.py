@@ -38,7 +38,7 @@ JOB_CAI = "pytest-embedded"
 def _job(wf):
     """Job pytest chính (checkout sạch, ma trận OS × Python)."""
     jobs = wf["jobs"]
-    assert set(jobs) == {"pytest", JOB_CAI}, sorted(jobs)
+    assert set(jobs) == {"pytest", JOB_CAI, "runtime-truyen"}, sorted(jobs)
     return jobs["pytest"]
 
 
@@ -152,3 +152,29 @@ def test_job_cai_chay_pytest_TRAN_doi_powershell_that(wf):
     assert str((buoc[0].get("env") or {}).get("MARKETING_STUDIO_REQUIRE_POWERSHELL")) == "1"
     macos = [st for st in _job_cai(wf)["steps"] if "macOS" in str(st.get("if", ""))]
     assert any("pwsh" in str(st.get("run", "")) for st in macos)
+
+
+# ── Cổng P0-8 + P0-9: smoke runtime truyện chạy THẬT trên hai OS ─────────────────────────
+
+JOB_RUNTIME = "runtime-truyen"
+
+
+def test_job_runtime_truyen_hai_OS_doi_cong_cu_that(wf):
+    j = wf["jobs"][JOB_RUNTIME]
+    assert set(j["strategy"]["matrix"]["os"]) == {"windows-latest", "macos-latest"}
+    assert j["strategy"]["fail-fast"] is False
+    buoc = j["steps"]
+    lenh = [str(st.get("run", "")) for st in buoc]
+    mac = next(i for i, st in enumerate(buoc) if "macOS" in str(st.get("if", ""))
+               and "ffmpeg" in lenh[i])
+    win = next(i for i, st in enumerate(buoc) if "Windows" in str(st.get("if", ""))
+               and "ffmpeg" in lenh[i])
+    # macOS cài ĐÚNG bản INSTALL dạy, và KHÔNG tự thêm keg vào PATH (repo phải tự dò).
+    assert "brew install ffmpeg-full" in lenh[mac]
+    assert "GITHUB_PATH" not in "\n".join(lenh)
+    assert "ffmpeg-full" in lenh[win]
+    i_req = next(i for i, x in enumerate(lenh) if "requirements-runners.txt" in x)
+    i_py = next(i for i, x in enumerate(lenh) if "pytest" in x)
+    assert max(mac, win, i_req) < i_py
+    assert "tests/test_runtime_smoke.py" in lenh[i_py]
+    assert str((buoc[i_py].get("env") or {}).get("MARKETING_STUDIO_REQUIRE_RUNTIME")) == "1"

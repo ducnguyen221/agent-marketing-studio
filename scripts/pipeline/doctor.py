@@ -49,6 +49,10 @@ import unicodedata
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+# Đuôi danh sách (không chen trước `lib/`): `install_launchd` (đọc launchd.json như bộ cài) và
+# `truyen_paths` (dò ffmpeg như make_video) — doctor phải hỏi ĐÚNG thứ runner sẽ dùng.
+sys.path.append(str(Path(__file__).resolve().parents[1] / "runners"))
+sys.path.append(str(Path(__file__).resolve().parents[1] / "runners" / "story"))
 # `agent_call` NẰM Ở `lib/`, và `pipeline/` có một file trùng tên (CLI mỏng). Nhập ở đây,
 # ngay sau khi `lib/` lên đầu `sys.path`, thay vì nhập muộn trong thân hàm: nhập muộn thì
 # lấy đúng thứ gì đang nằm trong `sys.modules` lúc đó, và ai nhập trước sẽ quyết hộ.
@@ -578,8 +582,69 @@ KHAM_THEM.append(kham_engine)
 #
 # Chỉ kiểm khi trạm có chiến dịch dùng runner tin/truyện (`runtime.runner`): người chỉ viết
 # blog không cần venv giọng hay last30days, và một dòng nhắc thường trực là dòng không ai đọc.
-# Không mục nào ở đây đỏ (mã 2/3): thiếu là NHẮC, kèm đúng lệnh sửa. `doctor` không gọi
-# `claude -p` — đăng nhập là NOT_CHECKED (P0-6). Xem `scripts/lib/runner_deps.py`.
+# Thiếu gói/last30days/nhạc nền là NHẮC, kèm đúng lệnh sửa. ĐỎ (mã 2) chỉ cho thứ CHẮC CHẮN
+# giết lượt đã bật — sau hàng giờ TTS, khi không còn ai ngồi xem (01/10/2026, Mac mini, ba lỗi
+# liên tiếp của lượt truyện đầu):
+#   P1-19  job launchd gọi `<chiến dịch>/run.ps1` không có          → `kham_run_ps1`
+#   P0-8   faster-whisper + PyAV 19: import được, `decode_audio` vỡ → kiểm HÀNH VI
+#   P0-9   ffmpeg Homebrew core thiếu drawtext/subtitles/ass         → kiểm BỘ LỌC
+# `doctor` không gọi `claude -p` — đăng nhập là NOT_CHECKED (P0-6). Xem `scripts/lib/runner_deps.py`.
+
+def kham_run_ps1(so: So, tram: Path):
+    """Job launchd đã khai (`<trạm>/launchd.json`) gọi file không có ⇒ ĐỎ. Chiến dịch khai
+    `runtime.runner` mà thiếu `run.ps1` (điểm vào chuẩn) ⇒ NHẮC: lịch Windows có thể gọi
+    thẳng runner, nhưng sang máy launchd là hỏng ngay lượt đầu."""
+    repo = SP.repo_root()
+    try:
+        import install_launchd as IL  # noqa: E402 — nhập muộn: `scripts/runners` vào path ở đầu file
+        khai = IL.doc_khai(tram)
+        thieu = IL.runner_thieu(tram, khai)
+    except SC.StudioError as e:
+        so.hong(f"launchd.json: {e}")
+        return
+    for label, p in thieu:
+        so.hong(f"run.ps1: job {label} sẽ gọi {p} — KHÔNG có (launchd mã 64 sau 0 s, P1-19). "
+                + (f"Tạo điểm vào chuẩn: {RD.lenh_scaffold_run_ps1(repo, p.parent)}"
+                   if p.name == RD.RUN_PS1 else "Sửa `runner` trong launchd.json."))
+    da_bao = {p.parent.resolve() for _, p in thieu}
+    for c in RD.chien_dich_co_runner(tram):
+        if Path(c["dir"]).resolve() in da_bao or (c["dir"] / RD.RUN_PS1).is_file():
+            continue
+        so.nhac(f"run.ps1: chiến dịch {c['dir']} khai runner {c['runner']} nhưng KHÔNG có "
+                f"run.ps1 — lịch launchd gọi run.ps1 sẽ hỏng. Tạo: "
+                f"{RD.lenh_scaffold_run_ps1(repo, c['dir'])}")
+
+
+KHAM_THEM.append(kham_run_ps1)
+
+
+def _kham_truyen(so: So, py: str | None):
+    """Hai thứ `make_video.py`/`read_story.py` cần mà import thành công KHÔNG chứng minh được."""
+    # P0-9 — ffmpeg ĐÚNG file pipeline truyện sẽ gọi, đủ bộ lọc.
+    import truyen_paths as TP  # noqa: E402 — `scripts/runners/story` vào path ở đầu file
+    ff = TP.ff_exe("ffmpeg")
+    thieu = RD.ffmpeg_thieu_bo_loc(ff)
+    if thieu is None:
+        so.hong(f"ffmpeg: không chạy được `{ff}` — truyện dựng video bằng ffmpeg. Cài: "
+                f"{RD.lenh_cai_ffmpeg()}")
+    elif thieu:
+        so.hong(f"ffmpeg: {ff} THIẾU bộ lọc {', '.join(thieu)} — make_video.py chết ở pass 1 "
+                f"SAU khi đọc xong cả lượt (P0-9). Cài: {RD.lenh_cai_ffmpeg()}")
+    else:
+        so.ghi(f"ffmpeg: {ff} đủ bộ lọc {', '.join(RD.BO_LOC_TRUYEN)}")
+    # P0-8 — faster-whisper + PyAV: gọi đúng `decode_audio` trên wav 1 giây.
+    if not py:
+        return
+    ok, chi_tiet = RD.kiem_decode_audio(py)
+    if ok:
+        so.ghi(f"faster-whisper: decode_audio chạy được ({chi_tiet})")
+    elif ok is None:
+        so.nhac(f"faster-whisper: không chạy được {py} để kiểm decode_audio ({chi_tiet})")
+    else:
+        so.hong(f"faster-whisper: decode_audio HỎNG trong {py} — {chi_tiet}. Truyện chết ở bước "
+                f"căn phụ đề (P0-8: PyAV ngoài khoảng ghim). Chạy: {py} -m pip install -r "
+                f"{(SP.repo_root() or Path('.')) / RD.REQ_FILE}")
+
 
 def kham_runner(so: So, tram: Path):
     dung = RD.runner_dang_dung(tram)
@@ -628,6 +693,9 @@ def kham_runner(so: So, tram: Path):
                     f"đọc truyện sẽ đỏ. Chạy:\n  {py} -m pip install -r {req}")
         else:
             so.ghi(f"runner: venv giọng đủ gói ({RD.REQ_FILE})")
+
+    if truyen:
+        _kham_truyen(so, py if (py and RD.thieu_module(py, ("faster_whisper",)) == []) else None)
 
     # P0-4 — nhạc nền: style khai mà thiếu mp3. Chỉ NHẮC, không có lệnh sinh nhạc.
     if tin:

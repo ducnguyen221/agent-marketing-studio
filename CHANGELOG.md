@@ -3,7 +3,38 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
-## 1.1.5 — 2026-09-30 (chưa phát hành)
+## 1.1.6 — 2026-10-01
+
+Repo tự khai và tự kiểm ĐỦ công cụ + thư viện mà lượt truyện dùng. Lượt truyện đầu trên Mac
+mini (01/10) hỏng 3 lần liên tiếp, cả ba vì một thứ bắt buộc repo không khai hoặc không kiểm;
+Windows không lộ vì đã cài tay từ trước. Lượt chạy thật trên máy đã đủ không đổi.
+
+- **P0-8 — ghim cặp `faster-whisper` + `av`** trong `requirements-runners.txt`:
+  `faster-whisper>=1.2,<1.3`, `av>=15,<19` (PyAV 19 bỏ `metadata_errors` mà
+  `faster_whisper.audio.decode_audio` truyền ⇒ `TypeError` ở bước căn phụ đề). `av` vào
+  `runner_deps.MODULES`. `doctor` thêm phép kiểm **hành vi**: gọi `decode_audio` trên wav 1 giây
+  bằng `OMNIVOICE_PY` — hỏng là **ĐỎ** khi trạm có chiến dịch truyện.
+- **P0-9 — ffmpeg đủ bộ lọc**: `doctor` chạy `ffmpeg -hide_banner -filters` trên ĐÚNG file
+  pipeline truyện gọi và đòi `drawtext`, `subtitles`, `ass`; thiếu là **ĐỎ** kèm lệnh cài theo
+  OS (macOS `brew install ffmpeg-full`, Windows Gyan full). Dò ffmpeg gom về
+  `truyen_paths.ff_exe`: `FFMPEG_DIR` → (macOS) keg-only `ffmpeg-full` → PATH; keg thắng
+  ffmpeg core trên PATH, nên không cần symlink tay. `make_video.py` dùng đúng hàm đó.
+- **P1-19 — `run.ps1`**: `install_launchd.py` (cả `--dry-run`) trả **mã 2** khi job sẽ gọi
+  `<trạm>/<kênh>/<chiến dịch>/<runner|run.ps1>` không có, kèm lệnh chép `run.ps1` mẫu.
+  `doctor` đỏ cho cùng lỗi với label khai trong `<trạm>/launchd.json`; chiến dịch khai
+  `runtime.runner` mà thiếu `run.ps1` (máy gọi thẳng runner) là *nhắc*. `station.py export`
+  liệt kê chiến dịch thiếu `run.ps1` (`missing_run_ps1`); RUNBOOK-DOI-MAY §5 thêm hai dòng.
+- **Nhận diện truyện**: chiến dịch dùng runner RIÊNG (vd `run-daily-truyen-p2.ps1`) gọi engine
+  truyện giờ được tính là truyện — trước đây `doctor` bỏ qua mọi phép kiểm truyện với trạm này.
+- **Cổng CI `runtime-truyen`** (Windows + macOS): cài ffmpeg đúng như INSTALL (macOS
+  `ffmpeg-full` KHÔNG thêm vào PATH) + `requirements-runners.txt`, rồi CHẠY THẬT `make_video.py`
+  (video 5 giây: tiêu đề `drawtext` + font + phụ đề libass, đo phụ đề bằng điểm ảnh) và
+  `decode_audio`. `MARKETING_STUDIO_REQUIRE_RUNTIME=1` biến skip thành đỏ.
+- **Nâng cấp máy đang chạy**: `<OMNIVOICE_PY> -m pip install -r requirements-runners.txt` (đưa
+  `av` về trong khoảng ghim); macOS cài `ffmpeg-full` rồi gỡ symlink tạm ở `~/.local/bin` nếu
+  có; chép `run.ps1` vào chiến dịch mà `doctor` nhắc.
+
+## 1.1.5 — 2026-09-30
 
 Dọn gọn theo review 30/09 — chỉ mục rủi ro không/thấp. Hành vi chạy không đổi (runner, lịch,
 đăng, mã thoát `doctor`).

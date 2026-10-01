@@ -16,4 +16,11 @@ beautifulsoup4>=4.12              # story/read_story.py — đọc trang truyệ
 lxml>=5                           # story/read_story.py — parser `BeautifulSoup(…, "lxml")`
 yt-dlp>=2025.1.1                  # prompt nghiên cứu ({{YTDLP}}) — tải clip minh hoạ
 openpyxl>=3.1                     # append_excel_log.py / triage.py — sổ Auto Task
-faster-whisper>=1.0               # story/read_story.py — căn phụ đề theo giọng đọc
+# Ghim THEO CẶP đã đo (P0-8, Mac mini 01/10/2026): `faster-whisper` gọi
+# `av.open(..., metadata_errors=...)` (faster_whisper/audio.py), PyAV 19.0 đã BỎ tham số đó —
+# khai `faster-whisper>=1.0` không ghim `av` thì pip kéo PyAV 19 và lượt truyện chết ở bước
+# căn phụ đề với `TypeError`, sau hàng giờ TTS. 1.2.1 là bản faster-whisper mới nhất lúc đo;
+# `av` 15–18 có wheel cho macOS arm64 + Windows (14.3/14.4 không có wheel macOS arm64).
+# Nới trần chỉ sau khi `doctor` (phép kiểm hành vi `decode_audio`) xanh với bản mới.
+faster-whisper>=1.2,<1.3          # story/read_story.py — căn phụ đề theo giọng đọc
+av>=15,<19                        # faster_whisper.audio.decode_audio — xem chú thích trên

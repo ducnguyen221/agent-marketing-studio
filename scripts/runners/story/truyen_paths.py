@@ -199,6 +199,31 @@ def title_font(engine, env=None, system_fonts=None):
                      "Đã thử: " + " | ".join(cands))
 
 
+# `brew install ffmpeg-full` là keg-only: KHÔNG link vào /opt/homebrew/bin. Bản core ở đó (nếu
+# có) thiếu drawtext/libass (P0-9), nên keg phải thắng PATH — nếu không, máy có cả hai bản dựng
+# video bằng bản thiếu bộ lọc.
+_KEG_FFMPEG_FULL = ("/opt/homebrew/opt/ffmpeg-full/bin", "/usr/local/opt/ffmpeg-full/bin")
+
+
+def ff_exe(name, env=None, registry=True, platform=None, is_file=os.path.isfile,
+           which=shutil.which):
+    """`ffmpeg`/`ffprobe` mà pipeline truyện gọi: FFMPEG_DIR → (macOS) keg `ffmpeg-full` →
+    PATH → tên trần (lỗi nổ ở chỗ gọi). `doctor` kiểm bộ lọc của ĐÚNG file này."""
+    platform = platform or sys.platform
+    duoi = ".exe" if platform == "win32" else ""
+    thu = []
+    d = getenv("FFMPEG_DIR", env, registry)
+    if d:
+        thu.append(_expand(d))
+    if platform == "darwin":
+        thu += list(_KEG_FFMPEG_FULL)
+    for x in thu:
+        p = os.path.join(x, name + duoi)
+        if is_file(p):
+            return p
+    return which(name) or name
+
+
 def upload_engine_dir(env=None, registry=True, home=None, here=None):
     cands = [os.path.normpath(os.path.join(here or HERE, ".."))]      # repo: scripts/runners
     data = getenv("MARKETING_STUDIO_DATA", env, registry)
