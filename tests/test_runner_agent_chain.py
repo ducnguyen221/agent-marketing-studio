@@ -123,8 +123,14 @@ def _ps(tmp_path, f_cfg, prompt, expect):
         "if ($r.result) { Write-Output ('ENGINE=' + $r.result.engine) }\n",
         encoding="utf-8-sig")
     (tmp_path / "prompt.txt").write_text(prompt, encoding="utf-8")
+    # `brand-paths.ps1` phân giải trạm NGAY khi được nạp và ném nếu không thấy. Checkout sạch
+    # (CI) không có trạm nào — máy dev có `~/.marketing` nên không lộ. Trạm giả, tường minh:
+    # test không được dựa vào trạm thật của máy đang chạy.
+    tram = tmp_path / "tram"
+    tram.mkdir(exist_ok=True)
+    (tram / "CHANNELS.md").write_text("---\nchannels: []\n---\n", encoding="utf-8")
     env = {**os.environ, "AGENT_CALL_ENGINES": str(f_cfg), "PYTHONUTF8": "1",
-           "PYTHONIOENCODING": "utf-8"}
+           "PYTHONIOENCODING": "utf-8", "MARKETING_STUDIO_DATA": str(tram)}
     r = subprocess.run([PS, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(kich)],
                        capture_output=True, text=True, encoding="utf-8", errors="replace",
                        env=env, timeout=300)
