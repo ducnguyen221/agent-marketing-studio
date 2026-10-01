@@ -48,6 +48,9 @@ $self    = Join-Path $engine 'run-toptoday-hot.ps1'
 # Script nghiên cứu last30days: L30_SCRIPT -> thư mục plugin của Claude (Find-Last30Days).
 $l30     = Find-Last30Days
 $ovpy    = Find-OmniVoicePython
+# Python của repo — chạy `agent_call.py` (bước nghiên cứu đi theo `order`, P1-21).
+$syspy   = Find-Python -Repo $script:RepoRoot
+if (-not $syspy) { throw 'khong thay Python 3.10+ (dat MARKETING_STUDIO_PY).' }
 # Bộ dựng video = `video-studio render --project topstory` qua python của trạm giọng — xem
 # Invoke-TopstoryRender trong brand-paths.ps1 (spec ghép bởi engine/topstory_spec.py).
 # Đường ra/log RIÊNG của chiến dịch khi có -Config; không có thì giữ đường cũ ở cấp
@@ -156,7 +159,9 @@ if ($SkipResearch -and (JsonOk)) {
   $viewpoint = if (Test-Path $vpFile) { (Get-Content $vpFile -Raw -Encoding UTF8).Trim() } else { '' }
   Log ('Viewpoint digest: ' + $viewpoint.Length + ' chars')
 
-  $allowed = @('WebSearch','WebFetch','Write','Edit','Read','Bash(curl:*)','Bash(python:*)',"Bash($($ovpy):*)")
+  # Tập tool trừu tượng của agent_call (= allowlist cũ: WebSearch/WebFetch, Read, Write/Edit,
+  # Bash(curl|python|<python giọng>)) — agent_call map sang cờ của từng engine.
+  $tools = 'web,read,write,shell:curl,shell:python,shell:' + $ovpy
   $chk = Join-Path $engine 'check_duplicate.py'
 
   # Sinh tin + KIEM TRA TRUNG CUNG: trung tin da dang -> xoa & sinh lai (toi da 3 lan).
@@ -166,13 +171,18 @@ if ($SkipResearch -and (JsonOk)) {
     $seenFull = $seen.Trim(); if ($exclude) { $seenFull += "`n" + $exclude.TrimEnd() }
     $prompt = $tmpl.Replace('{{DISPLAY_DATE}}', $dispDate).Replace('{{JSON_PATH}}', $jsonPath).Replace('{{DIR}}', $outDir).Replace('{{DATE}}', $Date).Replace('{{L30_SCRIPT}}', $l30).Replace('{{YTDLP}}', $ovpy).Replace('{{SEEN_LIST}}', $seenFull).Replace('{{VIEWPOINT}}', $viewpoint).Replace('{{BGM_LIST}}', $bgmListText)
 
-    Log ("Launching claude -p (headless, allowlist) ... [lan $att/3]")
-    $prompt | claude -p --allowedTools $allowed 2>&1 | ForEach-Object { Log ('claude: ' + $_) }
-    if (-not (JsonOk)) {
-      Log 'WARN: allowlisted run produced no JSON - retry with bypassPermissions.'
-      $prompt | claude -p --permission-mode bypassPermissions 2>&1 | ForEach-Object { Log ('claude: ' + $_) }
+    Log ("Nghien cuu qua agent_call (engine theo order) ... [lan $att/3]")
+    $ac = Invoke-AgentCall -Python $syspy -Prompt $prompt -Tools $tools -Cwd $outDir `
+      -Expect @($jsonPath + ':800') -OnLine { param($s) Log ('agent: ' + $s) }
+    if ($ac.code -eq 4) {
+      $mo = if ($ac.result -and $ac.result.resets_at) { [string]$ac.result.resets_at } else { '?' }
+      Log ("HET HAN MUC moi engine trong order (mo lai $mo) - dung, khong dang."); Log '=== failed ==='; exit 4
     }
-    if (-not (JsonOk)) { Log "WARN: lan $att khong sinh duoc JSON."; continue }
+    if ($ac.code -ne 0 -or -not (JsonOk)) {
+      # agent_call DA thu lai + lui het chuoi engine: chay lai ngay cung la lam lai mot viec vua hong.
+      Log ("ERROR: agent_call ma $($ac.code) - khong sinh duoc JSON. Abort."); Log '=== failed ==='
+      exit $(if ($ac.code -in 2, 3) { $ac.code } else { 1 })
+    }
 
     $dup = (& $ovpy $chk $jsonPath $hotJson $Date 2>&1 | Out-String).Trim()
     Log ("Dedup check: $dup")

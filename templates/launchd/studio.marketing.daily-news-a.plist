@@ -83,7 +83,11 @@
   <key>WorkingDirectory</key><string>__STATION__</string>
   <key>StandardOutPath</key><string>__STATION__/logs/launchd/studio.marketing.daily-news-a.out.log</string>
   <key>StandardErrorPath</key><string>__STATION__/logs/launchd/studio.marketing.daily-news-a.err.log</string>
-  <key>ProcessType</key><string>Background</string>
+  <!-- ProcessType=Interactive: job NẶNG (TTS + dựng video). `Background` làm macOS hãm CPU
+       + I/O và dồn sang nhân tiết kiệm — P0-10 (Mac mini 01/10/2026): dựng 10 chương mất
+       5 h 16 thay vì ~40 phút, tải trung bình 2,1 suốt 7 h, 0 cảnh báo nhiệt. Worker và
+       poller (nhẹ, chạy liên tục) giữ Background. Cổng: tests/test_launchd_templates.py. -->
+  <key>ProcessType</key><string>Interactive</string>
   <key>RunAtLoad</key><false/>
   <key>StartCalendarInterval</key>
   <dict>

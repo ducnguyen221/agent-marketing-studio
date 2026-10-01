@@ -216,6 +216,23 @@ def resolve_model(engine: str, model: str, cfg: dict) -> str:
     return best
 
 
+def dau_order(cfg) -> tuple[str, str]:
+    """Mục ĐẦU của `order` -> (engine, model). `--engine order` dùng nó, để script trạm (runner
+    tin) đi đúng thứ tự Đức chốt trong `engines.json` mà không khoá cứng engine nào trong mã.
+    `order` rỗng/hỏng là lỗi hợp đồng — không đoán một engine thay."""
+    tho = cfg.get("order") or []
+    if isinstance(tho, str):
+        tho = [x for x in tho.split(",") if x.strip()]
+    if not tho:
+        raise SC.ContractError("engines.json không có `order` — khai thứ tự engine, hoặc truyền "
+                               "--engine tường minh")
+    eng, _, mdl = str(tho[0]).partition(":")
+    eng = eng.strip()
+    if eng not in ENGINES:
+        raise SC.ContractError(f"`order` mục đầu có engine lạ: {tho[0]!r} (chỉ có {', '.join(ENGINES)})")
+    return eng, (mdl.strip() or "best")
+
+
 def build_chain(engine, model, cfg, fallback=None) -> list[tuple[str, str]]:
     """-> [(engine, model)…] — engine được yêu cầu đứng đầu, phần còn lại là dây an toàn.
 
@@ -1085,12 +1102,22 @@ def append_ledger(path, record: dict) -> None:
 
 # ── Vòng gọi chính ──────────────────────────────────────────────────────────────────
 
-# Lỗi nào thì đi tiếp trong chuỗi, lỗi nào thì dừng ngay. Nguyên tắc: chuyển engine chỉ
-# đáng khi engine HIỆN TẠI chắc chắn không dùng được lúc này (hết hạn mức, chưa đăng nhập,
-# không có model đó). Một lỗi engine bình thường thì chuyển sang engine khác chỉ là đốt
-# thêm một lượt nữa cho cùng một nguyên nhân — đó là việc của lịch chạy lại, không phải
-# của lớp này.
-CHUYEN_ENGINE = ("quota", "auth", "model_access", "station")
+# Lỗi nào thì đi tiếp trong chuỗi, lỗi nào thì dừng ngay.
+#   CHUYEN_ENGINE  engine HIỆN TẠI chắc chắn không dùng được lúc này (hết hạn mức, chưa đăng
+#                  nhập, không có model đó, không cài, prompt quá trần argv của nó) ⇒ sang
+#                  engine kế ngay.
+#   TAM_THOI       lỗi tạm của engine/mạng (`ERROR` rỗng, CLI thoát ≠ 0, mã 0 mà thiếu
+#                  artifact) ⇒ thử LẠI chính engine đó MỘT lần, rồi sang engine kế. Hết trần
+#                  `--timeout` thì sang thẳng engine kế — thử lại là đợi thêm nguyên một trần.
+#   còn lại        (`content`: bản công khai lọt chữ nội bộ) ⇒ dừng: engine khác viết từ cùng
+#                  prompt, cùng khuôn — việc của lịch soạn lại.
+# P1-22 (Mac mini 01/10/2026): bản cũ coi `engine`/`network` là "việc của lịch chạy lại" và
+# dừng ngay. Lượt truyện 20:59: agy (đứng đầu `order`) trả `timeout waiting for response` sau
+# 7 s — không tái hiện được, thử lại 4 lần đều OK — vậy mà chuỗi KHÔNG sang codex/claude, video
+# lên YouTube với mô tả tĩnh. Lượt lịch không có "lần chạy lại" nào: lùi là việc của lớp này.
+CHUYEN_ENGINE = ("quota", "auth", "model_access", "station", "too_long")
+TAM_THOI = ("network", "engine")
+NGHI_THU_LAI = 15  # giây giữa hai lần thử cùng một engine sau lỗi tạm
 MA_CUOI = {"auth": STATION_MISSING, "station": STATION_MISSING,
            "model_access": CONTRACT_ERROR, "quota": QUOTA_EXHAUSTED}
 
@@ -1133,7 +1160,7 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
 
     chuoi = build_chain(engine, model, cfg, fallback)
     so = ledger_path(cfg, ledger, station)
-    tried, da_cho = [], False
+    tried, da_cho, da_thu_lai = [], False, set()
 
     i = 0
     while i < len(chuoi):
@@ -1145,6 +1172,18 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
             if ds_skill and skills_mode == "native":
                 SC.log(f"[agent-call] {eng} không có đường skill native — nhúng vào prompt")
             p_eng = prompt_inline
+        if eng == "agy" and len(p_eng) > AGY_ARGV_LIMIT and i + 1 < len(chuoi):
+            # agy chỉ nhận prompt qua argv. Prompt dài (runner tin: khuôn + hồ sơ tác giả +
+            # danh sách đã đăng) không phải lỗi cấu hình khi chuỗi còn engine đọc stdin — bỏ
+            # qua agy, đừng dừng cả chuỗi bằng mã 2. Engine CUỐI thì để `build_command` nổ.
+            luot = {"engine": eng, "model": mdl, "ms": 0, "rc": None, "kind": "too_long",
+                    "resets_at": None, "usage": None,
+                    "error": f"prompt {len(p_eng)} ký tự vượt trần argv của agy ({AGY_ARGV_LIMIT})"}
+            tried.append(luot)
+            SC.log(f"[agent-call] bỏ qua {eng}:{mdl} — {luot['error']} -> "
+                   f"{chuoi[i + 1][0]}:{chuoi[i + 1][1]}")
+            i += 1
+            continue
         argv, stdin_text = build_command(eng, mdl, p_eng, tools=tools, cwd=cwd, cfg=cfg,
                                          native_skill=native)
         # Đồng hồ im lặng CHỈ vũ trang cho engine thật sự phát sóng tiến độ (docstring đầu
@@ -1227,11 +1266,26 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
                 SC.log(f"[agent-call] chuyển engine ({ly_do}) -> {chuoi[i + 1][0]}:{chuoi[i + 1][1]}")
             i += 1
             continue
+        if loai["kind"] in TAM_THOI:
+            if not r.get("timed_out") and i not in da_thu_lai:
+                da_thu_lai.add(i)
+                SC.log(f"[agent-call] {eng}: lỗi tạm ({loai['kind']}: {loai['error'][:120]}) — "
+                       f"thử lại chính engine này sau {NGHI_THU_LAI}s")
+                sleep(NGHI_THU_LAI)
+                continue
+            if i + 1 < len(chuoi):
+                SC.log(f"[agent-call] {eng}: lỗi tạm lặp lại/hết trần — chuyển engine -> "
+                       f"{chuoi[i + 1][0]}:{chuoi[i + 1][1]}")
+                i += 1
+                continue
         break
 
     cuoi = tried[-1] if tried else {"kind": "engine", "error": "không lượt nào chạy"}
     loai_cuoi = cuoi.get("kind") or "engine"
-    het_quota = all(t.get("kind") == "quota" for t in tried) and bool(tried)
+    # Engine bị BỎ QUA vì prompt quá trần không phải là "chưa hết hạn mức": chuỗi mà mọi engine
+    # còn lại đều hết hạn mức vẫn là mã 4 (đợi `resets_at`), không phải mã 1.
+    het_quota = (any(t.get("kind") == "quota" for t in tried)
+                 and all(t.get("kind") in ("quota", "too_long") for t in tried))
     if het_quota:
         ma = QUOTA_EXHAUSTED
     else:

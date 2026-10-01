@@ -14,10 +14,17 @@ của kênh, state truyện.
 
 | Runner | Chiến dịch | Việc |
 |---|---|---|
-| `run-toptoday-hot.ps1` | tin nóng hằng ngày (`-Brand ai|data -Publish`) | nghiên cứu (`claude -p` + last30days) → dựng video (`video-studio render`) → `publish-hot-news.ps1` |
+| `run-toptoday-hot.ps1` | tin nóng hằng ngày (`-Brand ai|data -Publish`) | nghiên cứu (`agent_call --engine order` + last30days) → dựng video (`video-studio render`) → `publish-hot-news.ps1` |
 | `run-weekly-news.ps1` | bản tin tuần | nghiên cứu → media (audio + recap + short) → YouTube → web → email → Facebook |
 | `run-weekly-repo.ps1` | repo tuần | nghiên cứu một repo → video → YouTube → Facebook → sổ chống lặp |
 | `run-daily-truyen.ps1` | truyện hằng ngày | `story/daily_truyen.py --state <chiến dịch>/truyen-state.json` |
+
+Bước nghiên cứu của ba runner tin đi qua `Invoke-AgentCall` (`brand-paths.ps1`) →
+`scripts/pipeline/agent_call.py --engine order`: engine chạy theo `order` trong
+`<trạm>/_agent-call/engines.json`, lỗi tạm được thử lại rồi lùi sang engine kế, hết hạn mức ở
+MỌI engine thì runner thoát **mã 4** (🟡, không phải hỏng). Không runner tin nào gọi `claude -p`
+thô nữa (P1-21: Hot Data 01/10 chết vì hạn mức `claude` dùng chung với phiên tương tác, trong khi
+agy đứng đầu `order` chạy được).
 
 `brand-paths.ps1` là chỗ DUY NHẤT phân giải đường cho mọi runner PowerShell; `paths.py` và
 `story/truyen_paths.py` là bản Python của cùng luật.
@@ -50,7 +57,9 @@ Bảng biến đầy đủ: `knowledge/toolchains/SECRETS.md`. Cổng giữ lu�
 - gói Python của bộ chạy trong **venv giọng**: `requirements-runners.txt`;
 - script `last30days` (plugin Claude);
 - mp3 của từng style trong `bgm-library.json` — style thiếu mp3 thì AI không được chọn;
-- `claude` CLI đã đăng nhập (`NOT_CHECKED`: doctor không gọi `claude -p`).
+- các CLI agent trong `order` (`agy`, `codex`, `claude`) đã đăng nhập (`NOT_CHECKED`: doctor
+  không gọi agent — tự kiểm bằng `python scripts/pipeline/agent_call.py --engine <tên>
+  --on-quota fail` với một prompt ngắn).
 
 ## Chạy tay / UAT
 

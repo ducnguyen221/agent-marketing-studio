@@ -48,9 +48,11 @@ PROG = "agent-call"
 def _parser():
     ap = argparse.ArgumentParser(prog=PROG, description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--engine", choices=AC.ENGINES,
+    ap.add_argument("--engine", choices=(*AC.ENGINES, "order"),
                     help="engine chạy lượt đầu; phần còn lại của chuỗi đọc từ engines.json "
-                         "(bắt buộc, trừ khi chỉ chạy --check-text)")
+                         "(bắt buộc, trừ khi chỉ chạy --check-text). `order` = mục đầu của "
+                         "`order` trong engines.json — script trạm dùng giá trị này để không "
+                         "khoá cứng engine nào")
     ap.add_argument("--model", default="best",
                     help="`best` = model tốt nhất mà trạm khai cho engine đó (mặc định)")
     ap.add_argument("--prompt-file", help="tệp prompt; bỏ trống ⇒ đọc stdin")
@@ -130,8 +132,12 @@ def main(argv=None) -> int:
         if not prompt.strip():
             raise SC.ContractError("prompt rỗng")
         cfg = AC.load_config(args.engines_config)
+        eng, mdl = args.engine, args.model
+        if eng == "order":
+            eng, mdl_order = AC.dau_order(cfg)
+            mdl = mdl if mdl != "best" else mdl_order
         ra = AC.call(
-            prompt, engine=args.engine, model=args.model, tools=args.tools,
+            prompt, engine=eng, model=mdl, tools=args.tools,
             skills=args.skills, skills_mode=args.skills_mode, cwd=args.cwd,
             timeout=args.timeout, stall=args.stall, expect=args.expect,
             on_quota=args.on_quota, fallback=args.fallback, cfg=cfg, ledger=args.ledger,
