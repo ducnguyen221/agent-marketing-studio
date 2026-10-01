@@ -124,20 +124,26 @@ else {
   $vpFile = Join-Path $Station 'AUTHOR.md'
   $viewpoint = if (Test-Path $vpFile) { (Get-Content $vpFile -Raw -Encoding UTF8).Trim() } else { '' }
   $dMinus60 = ((Get-Date $Date).AddDays(-60)).ToString('yyyy-MM-dd')
-  $allowed = @('WebSearch','WebFetch','Write','Edit','Read','Bash(curl:*)','Bash(python:*)',"Bash($($ovpy):*)")
+  # Tập tool trừu tượng của agent_call (= allowlist cũ) — map sang cờ từng engine (P1-21).
+  $tools = 'web,read,write,shell:curl,shell:python,shell:' + $ovpy
 
   $exclude = ''; $genOk = $false
   for ($att = 1; $att -le 3; $att++) {
     $seenFull = $seen.Trim(); if ($exclude) { $seenFull += "`n" + $exclude.TrimEnd() }
     $prompt = $tmpl.Replace('{{DISPLAY_DATE}}', $dispDate).Replace('{{JSON_PATH}}', $jsonPath).Replace('{{DIR}}', $outDir).Replace('{{DATE}}', $Date).Replace('{{DATE_MINUS_60}}', $dMinus60).Replace('{{L30_SCRIPT}}', $l30).Replace('{{YTDLP}}', $ovpy).Replace('{{SEEN_LIST}}', $seenFull).Replace('{{VIEWPOINT}}', $viewpoint).Replace('{{BGM_LIST}}', $bgmListText)
 
-    Log ("Launching claude -p (headless) ... [lan $att/3]")
-    $prompt | claude -p --allowedTools $allowed 2>&1 | ForEach-Object { Log ('claude: ' + $_) }
-    if (-not (JsonOk)) {
-      Log 'WARN: allowlist run khong ra JSON - retry bypassPermissions.'
-      $prompt | claude -p --permission-mode bypassPermissions 2>&1 | ForEach-Object { Log ('claude: ' + $_) }
+    Log ("Nghien cuu qua agent_call (engine theo order) ... [lan $att/3]")
+    $ac = Invoke-AgentCall -Python $syspy -Prompt $prompt -Tools $tools -Cwd $outDir `
+      -Expect @($jsonPath + ':800') -OnLine { param($s) Log ('agent: ' + $s) }
+    if ($ac.code -eq 4) {
+      $mo = if ($ac.result -and $ac.result.resets_at) { [string]$ac.result.resets_at } else { '?' }
+      Log ("HET HAN MUC moi engine trong order (mo lai $mo) - dung, khong dang."); Log '=== failed ==='; exit 4
     }
-    if (-not (JsonOk)) { Log "WARN: lan $att khong sinh duoc JSON."; continue }
+    if ($ac.code -ne 0 -or -not (JsonOk)) {
+      # agent_call DA thu lai + lui het chuoi engine: chay lai ngay cung la lam lai mot viec vua hong.
+      Log ("ERROR: agent_call ma $($ac.code) - khong sinh duoc JSON. Abort."); Log '=== failed ==='
+      exit $(if ($ac.code -in 2, 3) { $ac.code } else { 1 })
+    }
 
     # DEDUP CỨNG: full_name đã có trong sổ -> huỷ, sinh lại
     $rname = ''

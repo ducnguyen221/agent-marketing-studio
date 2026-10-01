@@ -143,13 +143,17 @@ if (BriefOk) {
   $prompt = $prompt.Replace('{{VIEWPOINT}}', $viewpoint)
   $prompt = $prompt.Replace('{{BGM_LIST}}', $bgmListText)
   Log ('Viewpoint digest: ' + $viewpoint.Length + ' chars')
-  $allowed = @('WebSearch', 'WebFetch', 'Write', 'Edit', 'Read', 'Bash(curl:*)', 'Bash(python:*)')
-  Log 'Launching claude -p (headless, tool allowlist) ...'
-  $prompt | claude -p --allowedTools $allowed 2>&1 | ForEach-Object { Log ('claude: ' + $_) }
-  if (-not (BriefOk)) {
-    Log 'WARN: allowlisted run produced no brief - retry bypassPermissions.'
-    $prompt | claude -p --permission-mode bypassPermissions 2>&1 | ForEach-Object { Log ('claude: ' + $_) }
+  # Bước nghiên cứu đi theo `order` của engines.json, không `claude -p` thô (P1-21). Tập tool
+  # trừu tượng = allowlist cũ. -NoContentGate: giữ nguyên hành vi trang tuần như trước — cổng
+  # chữ nội bộ của agent_call chưa từng áp cho trang này.
+  Log 'Nghien cuu qua agent_call (engine theo order) ...'
+  $ac = Invoke-AgentCall -Python $syspy -Prompt $prompt -Tools 'web,read,write,shell:curl,shell:python' `
+    -Cwd $folder -Expect @($target + ':1000') -NoContentGate -OnLine { param($s) Log ('agent: ' + $s) }
+  if ($ac.code -eq 4) {
+    $mo = if ($ac.result -and $ac.result.resets_at) { [string]$ac.result.resets_at } else { '?' }
+    Log ("HET HAN MUC moi engine trong order (mo lai $mo) - dung, khong dang."); Log '=== run failed ==='; exit 4
   }
+  if ($ac.code -in 2, 3) { Log ("ERROR: agent_call ma $($ac.code)."); Log '=== run failed ==='; exit $ac.code }
 }
 if (-not (BriefOk)) { Log 'ERROR: briefing missing/too small.'; Log '=== run failed ==='; exit 1 }
 Log ('Briefing OK, ' + (Get-Item $target).Length + ' bytes')

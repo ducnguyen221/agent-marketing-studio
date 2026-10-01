@@ -3,6 +3,32 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.7 — 2026-10-01
+
+Ba lỗi Mac mini báo tối 01/10 (P4-RUNS: P5-01/10-TOI, P5-AGENT-CHAIN).
+
+- **P0-10 — job nặng chạy `ProcessType=Interactive`.** Sáu mẫu `templates/launchd/`
+  (daily-news-a/b, daily-story, weekly-news-a/b, weekly-repo) khai `Background` ⇒ macOS hãm CPU
+  + I/O, dồn sang nhân tiết kiệm: dựng 10 chương mất 5 h 16 thay vì ~40 phút (tải trung bình 2,1
+  suốt 7 h, 0 cảnh báo nhiệt). Worker + approve-poller (nhẹ, chạy liên tục) giữ `Background`.
+  Cổng `tests/test_runner_agent_chain.py` xếp loại MỌI mẫu. **Mac**: cài lại plist bằng
+  `install_launchd.py` để bỏ bản vá tay.
+- **P1-21 — runner tin đi qua `agent_call` theo `order`.** `run-toptoday-hot.ps1`,
+  `run-weekly-news.ps1`, `run-weekly-repo.ps1` không còn gọi `claude -p` thô: bước nghiên cứu đi
+  qua `Invoke-AgentCall` (`brand-paths.ps1`) → `agent_call.py --engine order --expect <json>`.
+  Tool giữ tương đương allowlist cũ (`web,read,write,shell:curl,shell:python[,shell:<python
+  giọng>]`). Hết hạn mức ở MỌI engine ⇒ runner thoát **mã 4** (🟡). Lỗi khác sau khi `agent_call`
+  đã lùi hết chuỗi ⇒ abort ngay (không lặp lại cả chuỗi ba lần). Hot Data 01/10 chết vì hạn mức
+  `claude` dùng chung với phiên tương tác, trong khi agy (đầu `order`) chạy được.
+  `agent_call.py` nhận `--engine order` (= mục đầu của `order`). Trang tuần (`.html`) chạy với
+  `--no-content-gate` để giữ nguyên hành vi cũ.
+- **P1-22 — chuỗi lùi bắt cả lỗi engine/mạng TẠM.** `network`/`engine` (ERROR rỗng, timeout của
+  agy, CLI thoát ≠ 0, mã 0 mà thiếu artifact) ⇒ thử lại chính engine đó MỘT lần (nghỉ 15 s), rồi
+  sang engine kế; hết trần `--timeout` thì sang thẳng. `content` (lọt chữ nội bộ) vẫn dừng. Prompt
+  vượt trần argv của agy (30 000 ký tự) mà chuỗi còn engine khác ⇒ bỏ qua agy thay vì mã 2. Lượt
+  truyện 01/10 20:59: agy `timeout waiting for response` sau 7 s ⇒ trước đây dừng, hook YouTube
+  rơi về mô tả tĩnh dù codex/claude chạy được.
+
 ## 1.1.6 — 2026-10-01
 
 Repo tự khai và tự kiểm ĐỦ công cụ + thư viện mà lượt truyện dùng. Lượt truyện đầu trên Mac

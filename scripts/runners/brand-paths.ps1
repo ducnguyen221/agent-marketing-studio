@@ -687,6 +687,53 @@ function Invoke-VideoStudio {
   return [pscustomobject]@{ code = $code; result = $res }
 }
 
+function Invoke-AgentCall {
+  <#
+    Bước nghiên cứu của runner tin đi qua `scripts/pipeline/agent_call.py --engine order` —
+    chuỗi engine theo `order` trong `<trạm>/_agent-call/engines.json`, KHÔNG gọi `claude -p` thô.
+
+    P1-21 (Mac mini 01/10/2026): Hot Data 19:00 gọi `claude -p` thô, chung hạn mức với phiên
+    Claude tương tác cùng tài khoản ⇒ "hit your session limit" ×3, abort, không đăng — trong
+    khi `order` xếp agy đứng đầu và agy chạy được. Lớp agent_call lo: thứ tự engine, hết hạn
+    mức (mã 4 + resets_at), lỗi tạm (thử lại rồi lùi), cổng artifact (`-Expect`).
+
+    Prompt đi qua TỆP tạm (`--prompt-file`), không qua đường ống: PS 5.1 đẩy chuỗi vào stdin
+    của lệnh ngoài bằng bảng mã console, tiếng Việt vỡ trên máy Windows chưa đặt UTF-8.
+    -Tools là tập trừu tượng của agent_call (`web,read,write,shell:<lệnh>`), map sang cờ từng
+    engine. Mọi dòng ra đi qua -OnLine để vào log của runner.
+    -> @{ code; result }   code: 0 xong + artifact đạt · 1 lỗi engine (đã lùi hết chuỗi) ·
+                           2 cấu hình sai · 3 thiếu CLI/đăng nhập · 4 MỌI engine hết hạn mức
+  #>
+  param([Parameter(Mandatory)][string]$Python, [Parameter(Mandatory)][string]$Prompt,
+        [Parameter(Mandatory)][string[]]$Expect, [string]$Tools = 'web,read,write',
+        [string]$Cwd, [int]$Timeout = 2700, [switch]$NoContentGate, [scriptblock]$OnLine)
+  $ErrorActionPreference = 'Continue'
+  $ac = Join-Path (Join-Path (Join-Path $script:RepoRoot 'scripts') 'pipeline') 'agent_call.py'
+  $tmp = [System.IO.Path]::GetTempFileName()
+  [System.IO.File]::WriteAllText($tmp, $Prompt, (New-Object System.Text.UTF8Encoding $false))
+  $doi = @($ac, '--engine', 'order', '--prompt-file', $tmp, '--tools', $Tools,
+           '--timeout', [string]$Timeout, '--json')
+  foreach ($e in $Expect) { $doi += @('--expect', $e) }
+  if ($Cwd) { $doi += @('--cwd', $Cwd) }
+  if ($NoContentGate) { $doi += '--no-content-gate' }
+  $cuoi = $null
+  try {
+    & $Python @doi 2>&1 | ForEach-Object {
+      $s = Format-NativeLine $_
+      if ($null -eq $s) { return }
+      if ($OnLine) { & $OnLine $s }
+      $t = $s.Trim()
+      if ($t.StartsWith('{') -and $t.EndsWith('}')) { $cuoi = $t }
+    }
+    $code = $LASTEXITCODE
+  } finally {
+    Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
+  }
+  $res = $null
+  if ($cuoi) { try { $res = $cuoi | ConvertFrom-Json } catch { $res = $null } }
+  return [pscustomobject]@{ code = $code; result = $res }
+}
+
 function Format-NativeLine {
   <#
     Một phần tử của `lệnh-ngoài 2>&1` -> chuỗi để ghi log, hoặc $null nếu là dòng trống.

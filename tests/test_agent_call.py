@@ -387,10 +387,12 @@ def test_parse_expect_khong_nham_o_dia_windows_voi_nguong_byte(monkeypatch):
 def test_expect_thieu_artifact_la_ma_1_du_CLI_tra_0(shim, tmp_path):
     cfg = _cfg(shim, claude={})
     ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
-                 expect=[str(tmp_path / "ra.json") + ":800"],
+                 expect=[str(tmp_path / "ra.json") + ":800"], sleep=lambda s: None,
                  ledger=tmp_path / "so.jsonl", env=_env(OK_CLAUDE))
     assert ra["code"] == AC.ENGINE_ERROR and not ra["ok"]
     assert "thiếu artifact" in ra["error"]
+    # Thiếu artifact là lỗi TẠM (P1-22): thử lại chính engine một lần.
+    assert [t["engine"] for t in ra["tried"]] == ["claude", "claude"]
 
 
 def test_expect_du_lon_thi_ma_0(shim, tmp_path):
@@ -419,15 +421,18 @@ def test_het_han_muc_thi_chuyen_sang_engine_ke_tiep(shim, tmp_path):
 
 
 def test_ma_4_chi_khi_MOI_engine_het_han_muc(shim, tmp_path):
-    """Một engine hết hạn mức, engine sau lỗi thật ⇒ mã 1, không phải 4: mã 4 bảo lịch
-    'đợi tới giờ X', và giờ đó không chữa được một lỗi engine."""
+    """Lỗi engine thật ở mọi engine ⇒ mã 1, không phải 4: mã 4 bảo lịch 'đợi tới giờ X', và
+    giờ đó không chữa được một lỗi engine. Từ P1-22 lỗi engine tạm được thử lại MỘT lần rồi
+    sang engine kế — hết chuỗi vẫn là mã 1."""
     cfg = _cfg(shim, claude={}, agy={})
     cfg["order"] = ["agy:best"]
+    ngu = []
     ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
-                 ledger=tmp_path / "so.jsonl",
+                 ledger=tmp_path / "so.jsonl", sleep=ngu.append,
                  env=_env({"rc": 1, "stderr": ["Segmentation fault"]}))
     assert ra["code"] == AC.ENGINE_ERROR
-    assert len(ra["tried"]) == 1, "lỗi engine thường KHÔNG chuyển engine — đó là việc của lịch"
+    assert [t["engine"] for t in ra["tried"]] == ["claude", "claude", "agy", "agy"]
+    assert ngu == [AC.NGHI_THU_LAI, AC.NGHI_THU_LAI]
 
 
 def test_on_quota_fail_thi_dung_ngay_khong_thu_engine_khac(shim, tmp_path):
@@ -448,7 +453,9 @@ def test_on_quota_wait_ngu_toi_gio_mo_lai_roi_thu_lai_CHINH_engine_do(shim, tmp_
     AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
             on_quota="wait", ledger=tmp_path / "so.jsonl", sleep=da_ngu.append,
             env=_env({"rc": 1, "stderr": ["Segmentation fault at 2026-09-24T03:30:00Z"]}))
-    assert not da_ngu
+    # Chỉ có nhịp nghỉ ngắn của lần thử lại lỗi tạm (P1-22) — không bao giờ chờ tới "giờ mở lại".
+    assert set(da_ngu) <= {AC.NGHI_THU_LAI}
+    da_ngu.clear()
     ra = AC.call("x", engine="claude", cfg=cfg, cwd=tmp_path, timeout=60, stall=30,
                  on_quota="wait", ledger=tmp_path / "so.jsonl", sleep=da_ngu.append,
                  env=_env({"rc": 1, "stderr": [
