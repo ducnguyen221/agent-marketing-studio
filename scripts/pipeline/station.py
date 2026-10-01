@@ -38,6 +38,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import runner_deps as RD  # noqa: E402
 import station_manifest as SM  # noqa: E402
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
@@ -172,9 +173,17 @@ def export_station(station, out, *, with_git=False, logs_state=False, dry_run=Fa
 
     dem = SM.kiem_ke(rels)
     thu_muc = SM.thu_muc_giu(st, rels)
+    # RUNBOOK-DOI-MAY §5 (P1-19): máy đích chạy lịch launchd gọi `<chiến dịch>/run.ps1`. Chiến
+    # dịch máy nguồn gọi thẳng runner (Task Scheduler) thì chưa từng có file đó — nói NGAY ở
+    # export, không đợi job đầu tiên trên máy đích chết mã 64.
+    thieu_run = sorted(Path(c["dir"]).resolve().relative_to(st).as_posix()
+                       for c in RD.chien_dich_co_runner(st)
+                       if not (Path(c["dir"]) / RD.RUN_PS1).is_file()
+                       and st in Path(c["dir"]).resolve().parents)
     if dry_run:
         mot_so = [{"path": rel, "size": f.stat().st_size} for f, rel in files]
         return {"out": str(out), "station": str(st), "dry_run": True,
+                "missing_run_ps1": thieu_run,
                 "count": len(files), "bytes": sum(m["size"] for m in mot_so),
                 "with_git": bool(with_git), "logs_state": bool(logs_state),
                 "state_files": dem, "dirs": thu_muc, "files": mot_so}
@@ -209,7 +218,8 @@ def export_station(station, out, *, with_git=False, logs_state=False, dry_run=Fa
     finally:
         if tam.exists():
             tam.unlink()
-    return {"out": str(out), "station": str(st), "dry_run": False, "count": len(muc),
+    return {"out": str(out), "station": str(st), "dry_run": False, "missing_run_ps1": thieu_run,
+            "count": len(muc),
             "bytes": sum(m["size"] for m in muc), "with_git": bool(with_git),
             "logs_state": bool(logs_state), "state_files": dem, "dirs": thu_muc,
             "files": muc}
@@ -496,6 +506,10 @@ def _in_export(kq: dict):
     # không còn máy cũ để lấy lại thứ thiếu (REVIEW-P2 Ghi nhận 2).
     for dong in SM.thieu(kq["state_files"]):
         SC.log(f"[export] ⚠ {dong}")
+    for cd in kq.get("missing_run_ps1") or []:
+        SC.log(f"[export] ⚠ {cd} khai runtime.runner nhưng KHÔNG có run.ps1 — lịch launchd ở "
+               f"máy đích gọi run.ps1 sẽ chết mã 64. Chép {RD.MAU_RUN_PS1.as_posix()} của repo "
+               f"vào đó (RUNBOOK-DOI-MAY §5).")
     if kq["dry_run"]:
         SC.log("[export] --dry-run: chưa ghi gì.")
     else:

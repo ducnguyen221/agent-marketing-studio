@@ -56,6 +56,10 @@ Dạng chuỗi `<kênh>/<chiến dịch>` là dạng rút gọn của object. Kh
 Thiếu khai cho một label được chọn ⇒ **mã 2** và nói rõ thiếu label nào. Không đoán:
 đoán sai thì job chạy đúng giờ vào **nhầm chiến dịch**, và nó vẫn báo ✅.
 
+File mà job sẽ gọi (`<trạm>/<kênh>/<chiến dịch>/<runner>`, mặc định `run.ps1`) không có ⇒
+**mã 2**, kể cả `--dry-run`, kèm lệnh chép `run.ps1` mẫu (P1-19: truyện P2 chưa từng có
+`run.ps1`, job chết mã 64 sau 0 s mà bộ cài lẫn `doctor` đều không bắt).
+
 ## Con trỏ bí mật: TÊN ở mẫu, GIÁ TRỊ từ máy
 
 Mẫu khai tên biến (`<key>YT_TOKEN_PATH</key><string>__ENV_YT_TOKEN_PATH__</string>`). Bộ cài
@@ -116,6 +120,7 @@ from xml.parsers.expat import ExpatError
 from xml.sax import saxutils
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+import runner_deps as RD  # noqa: E402
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
 import voice as VOICE  # noqa: E402
@@ -455,6 +460,21 @@ def render(label: str, bang: dict, bi_mat: dict | None = None,
     return b
 
 
+def runner_thieu(tram: Path, khai: dict) -> list[tuple[str, Path]]:
+    """[(label, đường)] — job có `__RUNNER__` trong mẫu mà file nó sẽ gọi
+    (`<trạm>/<kênh>/<chiến dịch>/<runner|run.ps1>`, ĐÚNG chuỗi plist ghép) không có.
+    Dùng chung cho bộ cài (kể cả `--dry-run`) và `doctor`."""
+    ra = []
+    for l, k in khai.items():
+        f = MAU_DIR / f"{l}.plist"
+        if not k or not f.is_file() or "__RUNNER__" not in f.read_text(encoding="utf-8"):
+            continue
+        p = Path(tram) / k["channel"] / k["campaign"] / (k.get("runner") or RUNNER_MAC_DINH)
+        if not p.is_file():
+            ra.append((l, p))
+    return ra
+
+
 # ── launchctl ────────────────────────────────────────────────────────────────
 
 def _la_mac() -> bool:
@@ -538,6 +558,18 @@ def lam(a) -> dict:
             "chưa khai kênh/chiến dịch cho: " + ", ".join(thieu)
             + f" — dùng --map <label>=<kênh>/<chiến dịch>, hoặc khai trong "
               f"{tram / KHAI_FILE} (định dạng: docs/launchd.md)")
+
+    thieu_file = runner_thieu(tram, {l: khai[l] for l in chon})
+    if thieu_file:
+        repo = SP.repo_root() or REPO
+        raise SC.ContractError(
+            "job sẽ gọi file KHÔNG có (launchd trả mã 64 sau 0 s, không ai thấy cho tới sáng — "
+            "P1-19): " + "; ".join(f"{l} → {p}" for l, p in thieu_file)
+            + ". Chiến dịch trước đây gọi runner trực tiếp thì tạo `run.ps1` (điểm vào chuẩn, "
+              "đọc `runtime.runner` của campaign.md): "
+            + " · ".join(RD.lenh_scaffold_run_ps1(repo, p.parent) for _, p in thieu_file
+                         if p.name == RD.RUN_PS1)
+            + " — hoặc khai `runner` đúng tên file trong launchd.json.")
 
     for l in chon:
         k = khai[l]

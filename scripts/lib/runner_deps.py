@@ -34,16 +34,24 @@ REQ_FILE = "requirements-runners.txt"
 # đọc chương mà doctor vẫn báo đủ). Giữ khớp REQ_FILE: cổng `tests/test_runner_deps.py` so hai
 # danh sách và quét mã `scripts/runners/**` để không import/parser nào lọt ngoài danh sách.
 MODULES = ("googleapiclient", "google_auth_oauthlib", "google_auth_httplib2", "httplib2",
-           "requests", "bs4", "lxml", "yt_dlp", "openpyxl", "faster_whisper")
+           "requests", "bs4", "lxml", "yt_dlp", "openpyxl", "faster_whisper", "av")
 # Runner tin/truyện của repo: chiến dịch khai một trong các tên này thì `doctor` kiểm bộ trên.
 RUNNER_TIN = ("run-toptoday-hot.ps1", "run-weekly-news.ps1", "run-weekly-repo.ps1")
 RUNNER_TRUYEN = ("run-daily-truyen.ps1",)
+# Runner RIÊNG của chiến dịch (file `.ps1` nằm trong thư mục chiến dịch, vd truyện P2 khai
+# `run-daily-truyen-p2.ps1`) là truyện khi nó gọi engine truyện. Không dò dấu này thì `doctor`
+# không biết trạm có truyện, và mọi phép kiểm truyện bên dưới im lặng (P0-9 lọt như thế).
+DAU_TRUYEN = ("daily_truyen", "run-daily-truyen")
+# Điểm vào DUY NHẤT của mọi chiến dịch chạy theo lịch: plist launchd gọi
+# `<trạm>/<kênh>/<chiến dịch>/run.ps1`; `run.ps1` đọc `runtime.runner` rồi gọi runner. Bản mẫu:
+RUN_PS1 = "run.ps1"
+MAU_RUN_PS1 = Path("templates") / "station" / "_channel" / "_campaign" / RUN_PS1
 _DUOI_L30 = Path("skills") / "last30days" / "scripts" / "last30days.py"
 
 
-def runner_dang_dung(station) -> set[str]:
-    """Tên runner (`runtime.runner`) mà các chiến dịch của trạm đang khai. Trạm rỗng -> set()."""
-    ra: set[str] = set()
+def chien_dich_co_runner(station) -> list[dict]:
+    """Mọi chiến dịch khai `runtime.runner` -> [{dir, runner, truyen}]. Trạm rỗng -> []."""
+    ra: list[dict] = []
     try:
         kenh = SP.channels(station)
     except Exception:  # noqa: BLE001 — CHANNELS.md hỏng thì phần khác của doctor đã báo
@@ -59,8 +67,115 @@ def runner_dang_dung(station) -> set[str]:
                 continue
             r = str(((fm or {}).get("runtime") or {}).get("runner") or "").strip()
             if r:
-                ra.add(r)
+                ra.append({"dir": cd, "runner": r, "truyen": la_truyen(cd, r)})
     return ra
+
+
+def la_truyen(cd: Path, runner: str) -> bool:
+    """Runner của repo tên `run-daily-truyen.ps1`, hoặc runner riêng trong thư mục chiến dịch
+    mà mã của nó gọi engine truyện (`DAU_TRUYEN`)."""
+    if runner in RUNNER_TRUYEN:
+        return True
+    f = Path(cd) / runner
+    try:
+        ma = f.read_text(encoding="utf-8-sig", errors="replace") if f.is_file() else ""
+    except OSError:
+        return False
+    return any(x in ma for x in DAU_TRUYEN)
+
+
+def runner_dang_dung(station) -> set[str]:
+    """Tên runner (`runtime.runner`) mà các chiến dịch của trạm đang khai, cộng
+    `run-daily-truyen.ps1` khi có chiến dịch truyện dùng runner riêng. Trạm rỗng -> set()."""
+    ra: set[str] = set()
+    for c in chien_dich_co_runner(station):
+        ra.add(c["runner"])
+        if c["truyen"]:
+            ra.add(RUNNER_TRUYEN[0])
+    return ra
+
+
+def lenh_scaffold_run_ps1(repo, dich: Path) -> str:
+    """Lệnh chép `run.ps1` mẫu vào thư mục chiến dịch — theo shell của máy đang chạy."""
+    mau = (Path(repo) / MAU_RUN_PS1) if repo else MAU_RUN_PS1
+    if os.name == "nt":
+        return f'Copy-Item "{mau}" "{Path(dich) / RUN_PS1}"'
+    return f'cp "{mau}" "{Path(dich) / RUN_PS1}"'
+
+
+# ══ ffmpeg — ĐỦ BỘ LỌC, không chỉ "có lệnh" (P0-9) ═══════════════════════════════════════
+#
+# Sự cố (Mac mini, 01/10/2026): `brew install ffmpeg` (core) không còn freetype/libass ⇒ không
+# có `drawtext`/`subtitles`/`ass`. Lượt truyện đọc xong 10 chương (6 h 58) rồi chết ở
+# `make_video.py` pass 1: `No such filter: 'drawtext'`. `doctor` khi đó chỉ hỏi có lệnh ffmpeg.
+BO_LOC_TRUYEN = ("drawtext", "subtitles", "ass")
+_DONG_BO_LOC = re.compile(r"^\s*[A-Z.|]{2,4}\s+([A-Za-z0-9_]+)\s+\S+->\S+", re.M)
+
+
+def ten_bo_loc(van_ban: str) -> set[str]:
+    """Tên bộ lọc trong đầu ra `ffmpeg -hide_banner -filters`."""
+    return set(_DONG_BO_LOC.findall(van_ban or ""))
+
+
+def ffmpeg_thieu_bo_loc(ffmpeg: str, can=BO_LOC_TRUYEN) -> list[str] | None:
+    """Bộ lọc nào trong `can` mà `ffmpeg` KHÔNG có. None = không chạy được ffmpeg đó."""
+    try:
+        r = subprocess.run([ffmpeg, "-hide_banner", "-filters"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    co = ten_bo_loc(r.stdout)
+    if r.returncode != 0 or not co:
+        return None
+    return [x for x in can if x not in co]
+
+
+def lenh_cai_ffmpeg(he: str | None = None) -> str:
+    """Cách cài ffmpeg CÓ libfreetype + libass theo hệ điều hành."""
+    he = he or sys.platform
+    if he == "darwin":
+        return ("brew install ffmpeg-full — bản keg-only, KHÔNG tự lên PATH; repo tự dò "
+                "/opt/homebrew/opt/ffmpeg-full/bin, hoặc đặt FFMPEG_DIR trỏ tới đó "
+                "(launchd.json `vars`). `brew install ffmpeg` (core) thiếu drawtext/libass.")
+    if he == "win32":
+        return ("bản Gyan FULL: `winget install Gyan.FFmpeg` (hoặc `choco install ffmpeg-full`), "
+                "rồi đặt FFMPEG_DIR trỏ tới thư mục bin nếu nó chưa lên PATH.")
+    return "cài ffmpeg build kèm --enable-libfreetype --enable-libass (gói distro thường đủ)."
+
+
+# ══ faster-whisper + PyAV — kiểm HÀNH VI, không chỉ import (P0-8) ═══════════════════════
+#
+# Import được không chứng minh chạy được: PyAV 19 import ngon, rồi `decode_audio` ném
+# `TypeError` vì faster-whisper truyền tham số PyAV 19 đã bỏ. Phép kiểm dưới gọi đúng hàm
+# `read_story.py` gọi, trên một wav 1 giây sinh bằng thư viện chuẩn (không cần ffmpeg).
+_MA_DECODE = r"""
+import os, sys, tempfile, wave, struct
+from faster_whisper.audio import decode_audio
+d = tempfile.mkdtemp()
+f = os.path.join(d, "1s.wav")
+w = wave.open(f, "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+w.writeframes(struct.pack("<16000h", *([0] * 16000))); w.close()
+try:
+    a = decode_audio(f, sampling_rate=16000)
+finally:
+    os.remove(f); os.rmdir(d)
+n = len(a)
+print("DECODE_OK %d" % n if 15000 <= n <= 17000 else "DECODE_SAI %d mau" % n)
+"""
+
+
+def kiem_decode_audio(py: str) -> tuple[bool | None, str]:
+    """-> (True, chi tiết) · (False, lỗi đọc được) · (None, không chạy nổi python đó)."""
+    try:
+        r = subprocess.run([py, "-c", _MA_DECODE], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=180)
+    except (OSError, subprocess.SubprocessError) as e:
+        return None, f"{e.__class__.__name__}: {e}"
+    ra = (r.stdout or "").strip().splitlines()
+    if r.returncode == 0 and ra and ra[-1].startswith("DECODE_OK"):
+        return True, ra[-1]
+    loi = [x for x in (r.stderr or "").strip().splitlines() if x.strip()]
+    return False, (loi[-1] if loi else (ra[-1] if ra else f"mã {r.returncode}"))[:300]
 
 
 def tim_last30days(env=None, home=None) -> Path | None:

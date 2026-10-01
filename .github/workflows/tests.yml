@@ -142,3 +142,54 @@ jobs:
         env:
           MARKETING_STUDIO_REQUIRE_POWERSHELL: "1"
         run: python -m pytest -q -rs
+
+  # Cổng P0-8 + P0-9 (01/10/2026): lượt truyện đầu trên Mac mini chết 2 lần vì CÔNG CỤ NGOÀI
+  # repo — PyAV 19 (pip tự kéo bản mới nhất) và ffmpeg Homebrew core thiếu drawtext/libass. Hai
+  # job trên không chạm tới chúng: test đơn vị giả mọi lệnh ngoài. Job này cài ĐÚNG như INSTALL
+  # dạy rồi CHẠY THẬT `make_video.py` (video 5 giây: drawtext + font + phụ đề libass, đo phụ đề
+  # bằng điểm ảnh) và `decode_audio`. `MARKETING_STUDIO_REQUIRE_RUNTIME=1` biến "skip vì thiếu
+  # công cụ" thành ĐỎ — trên CI skip trông y hệt xanh.
+  runtime-truyen:
+    name: smoke make_video + decode_audio (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-runners.txt
+
+      # macOS: ĐÚNG lệnh INSTALL dạy. `ffmpeg-full` là keg-only — CỐ Ý không thêm vào PATH:
+      # repo phải tự dò `/opt/homebrew/opt/ffmpeg-full/bin` (truyen_paths.ff_exe), như launchd.
+      - name: ffmpeg có libfreetype + libass (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          brew install ffmpeg-full
+          "$(brew --prefix ffmpeg-full)/bin/ffmpeg" -hide_banner -filters | grep -E ' (drawtext|subtitles|ass) '
+
+      - name: ffmpeg có libfreetype + libass (Windows — bản Gyan full)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install ffmpeg-full -y --no-progress
+          ffmpeg -hide_banner -filters | Select-String -Pattern ' (drawtext|subtitles|ass) '
+
+      - name: Cài phụ thuộc + phụ thuộc runner (requirements-runners.txt)
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-runners.txt
+
+      - name: smoke runtime truyện
+        env:
+          MARKETING_STUDIO_REQUIRE_RUNTIME: "1"
+        run: python -m pytest -q -rs tests/test_runtime_smoke.py tests/test_runtime_deps_truyen.py

@@ -39,6 +39,10 @@ def _tram(tmp_path, khai):
     tram = tmp_path / "tram"
     tram.mkdir()
     (tram / "launchd.json").write_text(json.dumps({TRUYEN: khai}), encoding="utf-8")
+    if isinstance(khai, dict) and khai.get("channel") and khai.get("campaign"):
+        d = tram / khai["channel"] / khai["campaign"]           # file job sẽ gọi (P1-19)
+        d.mkdir(parents=True)
+        (d / (khai.get("runner") or "run.ps1")).write_text("# gia", encoding="utf-8")
     return IL._parser().parse_args(["--station", str(tram), "--dry-run", "--only", TRUYEN])
 
 

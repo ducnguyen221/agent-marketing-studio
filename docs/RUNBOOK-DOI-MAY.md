@@ -184,6 +184,8 @@ máy đích chạy trót lọt một lượt thật.
 | Kho secret (`~/.secret/<tài khoản>/`) | chép tay từ máy cũ; đặt quyền `700` cho thư mục, `600` cho file | **người**, không phải script |
 | Repo web đích | `git -C <thư mục cha chứa các repo>/<repo web> pull` (hoặc `clone` nếu chưa có). `channel.yml` nên ghi `repo:` TƯƠNG ĐỐI (`news/ai`) hoặc `${WEB_REPO_DIR}/ai` để không phải sửa theo máy | bạn |
 | Biến môi trường | `separate`: `setx` (Windows) / khoá `EnvironmentVariables` trong plist (macOS) · `embedded`: `<repo>/.env` | bạn |
+| `run.ps1` cho MỌI chiến dịch chạy theo lịch | plist launchd gọi `<trạm>/<kênh>/<chiến dịch>/run.ps1`. Chiến dịch máy nguồn gọi thẳng runner (vd truyện P2 gọi `run-daily-truyen-p2.ps1`) chưa từng có file này: chép `templates/station/_channel/_campaign/run.ps1` của repo vào đó — nó đọc `runtime.runner` của `campaign.md` rồi gọi đúng runner. `station.py export` liệt kê chiến dịch thiếu; `install_launchd.py` (kể cả `--dry-run`) và `doctor` báo **mã 2** cho job đã khai mà thiếu file (P1-19) | bạn |
+| Công cụ chạy thật: ffmpeg **có libfreetype + libass**, `requirements-runners.txt` vào venv giọng | macOS: `brew install ffmpeg-full` (keg-only — repo tự dò `/opt/homebrew/opt/ffmpeg-full/bin`; `brew install ffmpeg` bản core thiếu `drawtext`/`subtitles`) · Windows: Gyan full. Rồi `<OMNIVOICE_PY> -m pip install -r requirements-runners.txt`. `doctor` đỏ khi có chiến dịch truyện mà thiếu bộ lọc hoặc `decode_audio` vỡ (P0-8, P0-9) | bạn |
 
 ⚠️ **launchd KHÔNG đọc `~/.zshrc`, `~/.zprofile` hay `~/.bash_profile`.** Biến bạn đặt
 trong shell chỉ tồn tại trong shell. Job theo lịch chỉ thấy những gì khai trong

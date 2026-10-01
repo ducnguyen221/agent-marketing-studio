@@ -255,6 +255,14 @@ def test_thieu_cho_trong_la_LOI_chu_khong_phai_plist_do_dang():
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
+def _co_runner(tram, kenh="kenh", cd="chien-dich", runner="run.ps1"):
+    """Chiến dịch giả CÓ file job sẽ gọi — từ 1.1.6 bộ cài đỏ mã 2 khi file đó vắng (P1-19)."""
+    d = Path(tram) / kenh / cd
+    d.mkdir(parents=True, exist_ok=True)
+    (d / runner).write_text("# gia", encoding="utf-8")
+    return d
+
+
 def _chay(*doi, cwd=None):
     return subprocess.run([sys.executable, str(ROOT / "scripts/runners/install_launchd.py"),
                            *doi], capture_output=True, text=True, encoding="utf-8",
@@ -276,6 +284,7 @@ def test_thieu_khai_kenh_chien_dich_la_ma_2(tmp_path):
 
 def test_dry_run_KHONG_ghi_file_va_KHONG_goi_launchctl(tmp_path, monkeypatch):
     ra = tmp_path / "LaunchAgents"
+    _co_runner(tmp_path)
     r = _chay("--station", str(tmp_path), "--out-dir", str(ra), "--dry-run",
               "--map", "studio.marketing.daily-news-a=kenh/chien-dich",
               "--only", "studio.marketing.daily-news-a")
@@ -289,6 +298,7 @@ def test_dry_run_khong_goi_launchctl_KE_CA_khi_launchctl_ton_tai(monkeypatch, tm
     goi = []
     monkeypatch.setattr(IL, "_launchctl", lambda *a: goi.append(a) or (0, ""))
     monkeypatch.setattr(IL, "_la_mac", lambda: True)
+    _co_runner(tmp_path)
     ap = IL.argparse.Namespace(
         station=str(tmp_path), only=["studio.marketing.daily-news-a"], all=False,
         map=["studio.marketing.daily-news-a=kenh/chien-dich"], out_dir=str(tmp_path / "la"),
@@ -298,6 +308,7 @@ def test_dry_run_khong_goi_launchctl_KE_CA_khi_launchctl_ton_tai(monkeypatch, tm
 
 
 def test_khai_trong_launchd_json_cua_tram_duoc_doc(tmp_path):
+    _co_runner(tmp_path)
     (tmp_path / "launchd.json").write_text(
         '{"studio.marketing.daily-news-a": "kenh/chien-dich"}', encoding="utf-8", newline="\n")
     r = _chay("--station", str(tmp_path), "--dry-run", "--json",
@@ -358,6 +369,7 @@ def _khai_du(tmp_path):
     tram.mkdir()
     (tram / IL.KHAI_FILE).write_text(
         json.dumps({l: "kenh-mau/chien-dich-mau" for l in LABELS}), encoding="utf-8")
+    _co_runner(tram, "kenh-mau", "chien-dich-mau")
     return tram
 
 
@@ -510,6 +522,7 @@ def test_log_va_JSON_chi_mang_TEN_bien_khong_mang_gia_tri(tmp_path):
     import os
     gia = _NHA + "/khoa/dau-vet-khong-duoc-lo.json"
     env = {**os.environ, "YT_TOKEN_PATH": gia, "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+    _co_runner(tmp_path)
     r = subprocess.run([sys.executable, str(ROOT / "scripts/runners/install_launchd.py"),
                         "--station", str(tmp_path), "--dry-run", "--json",
                         "--map", "studio.marketing.daily-news-a=kenh/chien-dich",
@@ -534,6 +547,7 @@ def test_job_theo_lich_goi_RUNNER_khai_duoc(label):
 
 
 def test_runner_mac_dinh_la_run_ps1(tmp_path):
+    _co_runner(tmp_path)
     r = _chay("--station", str(tmp_path), "--dry-run", "--json",
               "--map", "studio.marketing.daily-story=kenh/chien-dich",
               "--only", "studio.marketing.daily-story")
@@ -545,6 +559,7 @@ def test_runner_doc_tu_launchd_json(tmp_path):
     (tmp_path / "launchd.json").write_text(json.dumps({"studio.marketing.daily-story": {
         "channel": "truyen", "campaign": "hang-ngay", "runner": "run-daily-truyen-p2.ps1"}}),
         encoding="utf-8")
+    _co_runner(tmp_path, "truyen", "hang-ngay", "run-daily-truyen-p2.ps1")
     r = _chay("--station", str(tmp_path), "--dry-run", "--json",
               "--only", "studio.marketing.daily-story")
     assert r.returncode == 0, r.stderr
@@ -572,6 +587,7 @@ def test_khai_sai_hinh_dang_la_ma_2(khai):
 def test_map_GIU_runner_cua_launchd_json(tmp_path):
     (tmp_path / "launchd.json").write_text(json.dumps({"studio.marketing.daily-story": {
         "channel": "truyen", "campaign": "cu", "runner": "run-p2.ps1"}}), encoding="utf-8")
+    _co_runner(tmp_path, "truyen", "moi", "run-p2.ps1")
     r = _chay("--station", str(tmp_path), "--dry-run", "--json",
               "--map", "studio.marketing.daily-story=truyen/moi",
               "--only", "studio.marketing.daily-story")
@@ -586,6 +602,7 @@ def _tram_co_env_them(tmp_path):
     tram.mkdir()
     (tram / "launchd.json").write_text(json.dumps({"studio.marketing.daily-story": {
         "channel": "k", "campaign": "c", "env": ["YT_TOKEN_PATH__TRUYEN"]}}), encoding="utf-8")
+    _co_runner(tram, "k", "c")
     return IL._parser().parse_args(["--station", str(tram), "--dry-run",
                                     "--only", "studio.marketing.daily-story"])
 
@@ -638,6 +655,7 @@ def test_embedded_KHONG_bien_tram_thi_tram_la_repo_workspace(monkeypatch, khong_
 def test_plist_ghi_ra_chi_chu_may_doc(tmp_path):
     import stat
     ra = tmp_path / "LaunchAgents"
+    _co_runner(tmp_path)
     r = _chay("--station", str(tmp_path), "--out-dir", str(ra), "--no-load",
               "--map", "studio.marketing.daily-news-a=kenh/chien-dich",
               "--only", "studio.marketing.daily-news-a")

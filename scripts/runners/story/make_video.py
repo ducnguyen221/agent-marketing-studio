@@ -6,7 +6,8 @@ MP4 like the YouTube reference:
   - per-chapter title overlay "CHƯƠNG <số>" + "<tên>" that fades IN/OUT at each chapter start
   - outro audio appended at the very end
   - video + audio fade in at start and fade out at the end
-Uses the system (Gyan) ffmpeg.
+Uses ffmpeg WITH libfreetype + libass (drawtext/subtitles) — resolved by truyen_paths.ff_exe:
+FFMPEG_DIR -> (macOS) keg-only `ffmpeg-full` -> PATH. Homebrew core `ffmpeg` lacks both (P0-9).
 
 Example:
   python make_video.py --manifest ".../sample_voice.mp3.manifest.json" --out ".../sample.mp4"
@@ -51,7 +52,7 @@ TITLE_DIR = os.path.join(ENGINE, "_vtitles")   # KHONG hardcode duong dan may
 
 
 def ffexe(name):
-    return shutil.which(name) or name
+    return truyen_paths.ff_exe(name)
 
 
 def dur(path):

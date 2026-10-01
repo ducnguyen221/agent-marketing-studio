@@ -24,7 +24,10 @@ python -m venv .venv
 ```
 
 Cần thêm: **pwsh ≥ 7.4** (mọi `.ps1` của repo chạy được ở cả PowerShell 5.1 lẫn pwsh 7),
-**Node ≥ 22**, **ffmpeg + ffprobe**. Thiếu cái nào thì `doctor` ở bước 7 nói rõ.
+**Node ≥ 22**, **ffmpeg + ffprobe bản có libfreetype + libass** (bộ lọc `drawtext`,
+`subtitles`, `ass` — video truyện dùng): macOS `brew install ffmpeg-full` (bản core
+`brew install ffmpeg` thiếu cả hai), Windows bản Gyan full. Thiếu cái nào thì `doctor` ở bước 7
+nói rõ.
 
 ---
 
