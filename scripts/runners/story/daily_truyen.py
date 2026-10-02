@@ -374,6 +374,17 @@ def main():
     log(f"[daily] video -> {final_mp4}")
 
     # ---- 3) publish công khai lên @nghe-tien-truyen (best-effort; cần manifest còn sống) ----
+    # Dấu pha "publish" vào _resume.json TRƯỚC khi upload: lượt bị giết từ đây trở đi có thể đã
+    # lên YouTube mà chưa kịp ghi state — `resume_once.py` thấy pha này thì KHÔNG tự chạy tiếp
+    # (chạy tiếp = dựng lại + upload lần hai = video trùng công khai). Người kiểm kênh rồi chạy tay.
+    try:
+        with open(mark_path, encoding="utf-8") as _f:
+            _m = json.load(_f)
+        _m["phase"] = "publish"
+        with open(mark_path, "w", encoding="utf-8", newline="\n") as _f:
+            json.dump(_m, _f, ensure_ascii=False)
+    except (OSError, ValueError) as e:
+        log(f"[daily] WARN: không ghi được pha publish vào dấu resume ({e}).")
     pub_ok = False
     if os.path.isfile(TOKEN_TRUYEN) and os.path.isfile(manifest):
         cache_dir = os.path.join(ENGINE, "truyen-out", slug + vtag.replace("_", "__"), "cache")

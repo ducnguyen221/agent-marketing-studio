@@ -807,8 +807,13 @@ function Invoke-RenderPreflight {
 
     Trần phép thử: 30 s; đặt `RENDER_PROBE_TIMEOUT` (giây) để đổi — đặt 1 là cách GIẢ LẬP máy kẹt
     khi nghiệm thu (phép thử quá giờ ⇒ đúng nhánh kẹt, đúng tin ❌).
-    -> mã thoát cho runner: 0 đi tiếp · 5 môi trường render kẹt/hỏng (DỪNG, không thử lại) ·
-       3 thiếu công cụ render. video-studio cũ (< 0.2.5, chưa có `probe`) ⇒ nhắc rồi đi tiếp.
+    -> mã thoát cho runner (DỪNG khi khác 0, không thử lại):
+       0 đi tiếp · 5 môi trường render KẸT (`RENDER_STUCK`) — khởi động lại máy ·
+       1 phép thử hỏng kiểu khác (đuôi log nói vì sao) · 2 cấu hình sai (probe trả JSON lỗi, vd
+       `HYPERFRAMES_VERSION=latest`) · 3 thiếu công cụ (npx/Node, Chromium, gói `video_studio`).
+       Chỉ `RENDER_STUCK` mới là mã 5 — mã 5 nghĩa là "khởi động lại máy", nói câu đó cho một
+       lỗi cấu hình là chỉ sai hướng (review 02/10).
+       video-studio cũ (< 0.2.5): mã 2 mà KHÔNG có dòng JSON (lệnh lạ) ⇒ nhắc rồi đi tiếp.
   #>
   param([Parameter(Mandatory)][string]$Python, [scriptblock]$OnLine)
   $cb = $OnLine
@@ -822,25 +827,31 @@ function Invoke-RenderPreflight {
   $dong = New-Object System.Collections.Generic.List[string]
   $r = Invoke-VideoStudio -Python $Python -OnLine { param($l) $dong.Add([string]$l) }.GetNewClosure() `
          -Arguments @('probe', '--timeout', [string]$t, '--json')
-  if ($r.code -ne 2) { foreach ($l in $dong) { & $ghi ('probe: ' + $l) } }
+  $cu = ($r.code -eq 2 -and -not $r.result)          # lệnh lạ của video-studio cũ: không JSON
+  if (-not $cu) { foreach ($l in $dong) { & $ghi ('probe: ' + $l) } }
   $err = ''
   if ($r.result -and $r.result.error) { $err = [string]$r.result.error }
-  switch ($r.code) {
-    0 { & $ghi 'RENDER_PREFLIGHT=ok'; return 0 }
-    1 {
-      if ($err -like 'RENDER_STUCK*') {
-        & $ghi 'ERROR: moi truong render ket (HyperFrames khong mo duoc trang) - khoi dong lai may roi chay lai.'
-        & $ghi 'RENDER_PREFLIGHT=stuck'
-      } else {
-        & $ghi ('ERROR: phep thu render hong truoc buoc ton kem: ' + $err + ' - chay video-studio doctor --hf; khong ro nguyen nhan thi khoi dong lai may.')
-        & $ghi 'RENDER_PREFLIGHT=failed'
-      }
-      return 5
-    }
-    3 { & $ghi ('ERROR: thieu cong cu render (npx/Node): ' + $err + ' - chay video-studio doctor.'); & $ghi 'RENDER_PREFLIGHT=missing'; return 3 }
-    2 { & $ghi 'WARN: video-studio chua co lenh probe (can >= 0.2.5) - bo qua phep thu render.'; return 0 }
-    default { & $ghi ('WARN: phep thu render tra ma la ' + $r.code + ' - bo qua.'); return 0 }
+  $khongModule = (-not $r.result) -and (($dong -join "`n") -match 'No module named')
+  if ($r.code -eq 0) { & $ghi 'RENDER_PREFLIGHT=ok'; return 0 }
+  if ($r.code -eq 1 -and $err -like 'RENDER_STUCK*') {
+    & $ghi 'ERROR: moi truong render ket (HyperFrames khong mo duoc trang) - khoi dong lai may roi chay lai.'
+    & $ghi 'RENDER_PREFLIGHT=stuck'
+    return 5
   }
+  if ($r.code -eq 3 -or $khongModule) {
+    & $ghi ('ERROR: thieu cong cu render (npx/Node, Chromium hoac goi video_studio trong venv tram giong): ' + $err + ' - chay video-studio doctor.')
+    & $ghi 'RENDER_PREFLIGHT=missing'
+    return 3
+  }
+  if ($cu) { & $ghi 'WARN: video-studio chua co lenh probe (can >= 0.2.5) - bo qua phep thu render.'; & $ghi 'RENDER_PREFLIGHT=skipped'; return 0 }
+  if ($r.code -eq 2) {
+    & $ghi ('ERROR: cau hinh render sai (video-studio probe ma 2): ' + $err + ' - sua cau hinh, chay lai vo ich.')
+    & $ghi 'RENDER_PREFLIGHT=config'
+    return 2
+  }
+  & $ghi ('ERROR: phep thu render hong truoc buoc ton kem (ma ' + $r.code + '): ' + $err + ' - chay video-studio doctor --hf.')
+  & $ghi 'RENDER_PREFLIGHT=failed'
+  return 1
 }
 
 function Get-VideoStudioCodeText {

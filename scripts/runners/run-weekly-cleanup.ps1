@@ -27,7 +27,8 @@ $engine = $PSScriptRoot
 . (Join-Path $engine 'brand-paths.ps1')
 
 # -Register: task Chủ nhật, QUA wrapper báo cáo (NOTIFY_RUN — luật E2 của máy chạy lịch). Ngoài
-# giờ các job khác: tin 18:00–21:00, repo tuần CN 20:00, truyện từ 00:00/03:00 (~6–9 h).
+# giờ các job tin; lượt truyện (từ 00:00/03:00) có thể đang chạy — weekly_cleanup.py không cắt log
+# vừa ghi trong 1 giờ và chỉ dời media đã đăng + quá 14 ngày.
 if ($Register) {
   if ($env:OS -ne 'Windows_NT') { Write-Output '-Register chi co tren Windows. macOS: scripts/runners/install_launchd.py --only studio.marketing.weekly-cleanup'; exit 2 }
   $notify = Get-EnvVar 'NOTIFY_RUN'

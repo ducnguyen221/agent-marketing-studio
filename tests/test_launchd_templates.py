@@ -715,3 +715,9 @@ def test_tai_lieu_dinh_dang_launchd_json_co_vi_du_HOP_LE():
         for label, v in json.loads(k).items():
             assert label in LABELS, label
             IL.muc_khai(label, v)
+
+
+def test_uninstall_all_GO_CA_job_chi_dich_danh(tmp_path):
+    """Review 02/10 NS3: công tắc tắt phải tắt được mọi thứ đã bật."""
+    (tmp_path / "x").mkdir()
+    assert "studio.marketing.weekly-cleanup" in _chon(tmp_path / "x", all=True, uninstall=True)

@@ -252,7 +252,13 @@ chỗ dễ sai nhất khi dựng trạm trên Mac, và sai thì cả hai bên v�
   "quá trần — đang chạy tiếp từ chương X" ⇒ chạy lại dùng cache chương (trần 3 h) ⇒ ✅/❌ như
   thường. Lượt chạy tiếp lại 124 ⇒ dừng, không lặp. Không còn ai phải `launchctl kickstart`
   tay. Trần của wrapper (plist 42300 s; Windows `ExecutionTimeLimit` do `-Register` tính) phải
-  ≥ tổng hai trần, nếu không nó giết luôn lượt chạy tiếp.
+  ≥ tổng hai trần, nếu không nó giết luôn lượt chạy tiếp. **Windows đã có task truyện cũ**
+  (tạo tay, trần 6 h): `run-daily-truyen.ps1 -Register -Campaign <thư mục> -TaskName '<tên task
+  cũ>'` để GHI ĐÈ đúng task đó; `-Register` in WARN nếu thấy task khác trỏ cùng chiến dịch — hai
+  task cùng giờ chạy song song cùng dải và xoá `_work` của nhau.
+- **Không tự chạy tiếp khi bị giết lúc ĐANG ĐĂNG:** `daily_truyen.py` ghi `phase: publish` vào
+  `_resume.json` ngay trước khi upload; quá trần từ đó trở đi thì bộ canh KHÔNG chạy tiếp (video
+  có thể đã lên mà chưa ghi state — chạy tiếp là đăng trùng). Tin báo bảo kiểm kênh rồi chạy tay.
 - `worker` và `approve-poller` **không khai** cả hai biến: chúng không chạy TTS.
 
 Cấu hình này nằm trong `templates/launchd/*.plist`; `tests/test_launchd_templates.py`

@@ -133,7 +133,7 @@ Giá trị lấy theo thứ tự của `studio_paths.secret_env`: **biến môi 
 |---|---|---|
 | mã của lệnh con | 0 ok · 1 lỗi engine · 2 cấu hình sai · 3 thiếu trạm | ✅ / ❌ |
 | 4 | hết hạn mức — mọi engine trong `order` hết lượt; **không phải hỏng**, không gọi triage | 🟡 HẾT HẠN MỨC |
-| 5 | runner tin: **môi trường render kẹt** — `video-studio probe` hỏng TRƯỚC nghiên cứu/TTS (P1-24); khởi động lại máy rồi chạy lại. Giả lập khi nghiệm thu: `RENDER_PROBE_TIMEOUT=1` | ❌ MÔI TRƯỜNG RENDER KẸT |
+| 5 | runner tin: **môi trường render kẹt** — `video-studio probe` báo `RENDER_STUCK` TRƯỚC nghiên cứu/TTS (P1-24); khởi động lại máy rồi chạy lại. Giả lập khi nghiệm thu: `RENDER_PROBE_TIMEOUT=1`. Rào render hỏng kiểu khác dừng với 1 (phép thử hỏng) / 2 (cấu hình render sai) / 3 (thiếu npx, Chromium, gói `video_studio`) — không phải 5 | ❌ MÔI TRƯỜNG RENDER KẸT |
 | 124 | wrapper giết cả cây tiến trình vì quá `--timeout` (launchd không có `ExecutionTimeLimit`) — hoặc lượt truyện quá trần cả sau lượt chạy tiếp | ⏳ QUÁ TRẦN |
 
 Wrapper của Task Scheduler trên Windows trả đúng các mã này — sổ Excel, `compose_report.py` và

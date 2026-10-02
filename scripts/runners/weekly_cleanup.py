@@ -26,7 +26,9 @@ truyện, lớn mãi).
    theo đó là xoá luôn thứ vừa dời hôm nay). Tên không phải ngày ⇒ không đụng.
 3. **Xoay vòng log**: `<trạm giọng>/omnivoice/truyen-out/daily-logs/` và `<trạm>/logs/launchd/`:
    file cũ hơn `--log-days` (60) bị xoá; file lớn hơn `--log-max-mb` (5) bị CẮT, giữ 1 MB cuối
-   (log của launchd mở chế độ nối đuôi — cắt tại chỗ, không xoá, nên job đang ghi vẫn ghi tiếp).
+   (cắt tại chỗ, không xoá, không đổi inode). File vừa ghi trong `DANG_GHI_GIAY` (1 h) thì KHÔNG
+   cắt: job này chạy CN 04:00 khi lượt truyện (00:00, tới ~11:30 nếu chạy tiếp) có thể đang ghi —
+   `daily-logs` mở chế độ `"w"` chứ không nối đuôi, cắt dưới chân nó để lại một khoảng byte 0.
 4. **Báo cỡ** từng trạm + `_trash`. Dòng `CLEANUP_*` ra stdout cho `compose_report.py`: cả
    wrapper launchd (`notify_run.py`) lẫn wrapper Task Scheduler gọi nó, nên tin Telegram của hai
    máy cùng một nội dung.
@@ -58,6 +60,8 @@ PRUNE = REPO / "scripts" / "pipeline" / "prune_media.py"
 TRASH = "_trash"
 NGAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 GIU_DUOI = 1024 * 1024            # cắt log lớn: giữ ngần này byte cuối
+DANG_GHI_GIAY = 3600              # log sửa trong ngần này giây = có thể đang được ghi ⇒ không cắt
+TRAN_PRUNE = 2400                 # giây cho prune_media (wrapper ngoài: 1 h cho cả job)
 # Thư mục cấp một của trạm marketing KHÔNG quét media: thùng rác của chính job này, log, sổ
 # kê khai của prune_media, và mọi thứ bắt đầu bằng `_`/`.` (state nội bộ: `_agent-call`…).
 KHONG_QUET = {"logs", "prune-media-log"}
@@ -120,8 +124,12 @@ def so_dang(tram: Path) -> list[str]:
     return ra
 
 
-def doi_media(tram: Path, goc: list[str], dich: Path, days: int, dry: bool) -> tuple[int, dict]:
-    """Gọi prune_media (tiến trình con — cách ly, đúng dòng lệnh người chạy tay). -> (mã, kq)."""
+def doi_media(tram: Path, goc: list[str], dich: Path, days: int, dry: bool,
+              ke_khai: Path | None = None) -> tuple[int, dict]:
+    """Gọi prune_media (tiến trình con — cách ly, đúng dòng lệnh người chạy tay). -> (mã, kq).
+
+    `ke_khai`: tên kê khai RIÊNG cho lượt này (có giờ) — chạy hai lần trong ngày cùng dời vào
+    `_trash/<hôm nay>`, kê khai chung một tên thì lượt sau ghi đè danh sách hoàn tác của lượt đầu."""
     if not goc:
         SC.log("[dọn] 1. không có thư mục media nào để quét")
         return 0, {}
@@ -133,10 +141,16 @@ def doi_media(tram: Path, goc: list[str], dich: Path, days: int, dry: bool) -> t
         cmd += ["--evidence", e]
     if not dry:
         cmd += ["--move-to", str(dich)]
+        if ke_khai is not None:
+            cmd += ["--manifest", str(ke_khai)]
     SC.log(f"[dọn] 1. prune_media ({'chỉ in' if dry else 'DỜI → ' + str(dich)}) · "
            f"{len(goc)} gốc · quá {days} ngày + có bằng chứng đã đăng")
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                       env=dict(os.environ, PYTHONIOENCODING="utf-8"))
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           env=dict(os.environ, PYTHONIOENCODING="utf-8"), timeout=TRAN_PRUNE)
+    except subprocess.TimeoutExpired:
+        SC.log(f"[dọn] 1. prune_media quá {TRAN_PRUNE}s — dừng bước này (có thể đã dời một phần)")
+        return SC.ENGINE_ERROR, {}
     for d in (r.stderr or "").splitlines():
         SC.log("    " + d)
     kq = {}
@@ -214,6 +228,9 @@ def xoay_log(thu_muc: list[Path], tran_ngay: int, tran_mb: float, bay_gio: float
                     if not dry:
                         f.unlink()
                     xoa.append(f)
+                elif st.st_size > tran_b and bay_gio - st.st_mtime < DANG_GHI_GIAY:
+                    SC.log(f"[dọn] 3. bỏ qua cắt {f} — vừa ghi trong {DANG_GHI_GIAY // 60} phút, "
+                           f"có thể đang được ghi; tuần sau cắt")
                 elif st.st_size > tran_b:
                     if not dry:
                         cat_duoi(f)
@@ -240,34 +257,60 @@ def lam(a) -> dict:
     hom_nay = _dt.date.today()
     rac = tram / TRASH
     dich = rac / hom_nay.isoformat()
+    ke_khai = dich / f"manifest-prune-media-{_dt.datetime.now():%H%M%S}.json"
     dry = a.dry_run
     SC.log(f"[dọn] {'XEM TRƯỚC (dry-run) — không chạm gì' if dry else 'chạy thật'} · trạm {tram}")
     do: list[str] = []
     ma_prune = 0
+    # Trạm chưa phân giải được = phần đó KHÔNG được quét/xoay/đo — nói ra, đừng ✅ im lặng.
+    for nhan, p, bien in (("giong", giong, "VOICE_STATION"), ("video", video, "VIDEO_STATION")):
+        if p is None or not Path(p).is_dir():
+            SC.log(f"[dọn] BỎ QUA trạm {nhan}: chưa phân giải được ({bien}) — không quét, không đo")
+            _in(f"CLEANUP_SKIP label={nhan} reason=no-station var={bien}")
 
-    # 1
-    ma_prune, kq = doi_media(tram, goc_quet(tram, giong, video), dich, a.days, dry)
+    # 1 — mỗi bước bọc riêng: ngoại lệ ở bước này không được chặn các bước sau
+    doi_f = doi_b = giu_f = 0
+    kq: dict = {}
+    try:
+        ma_prune, kq = doi_media(tram, goc_quet(tram, giong, video), dich, a.days, dry,
+                                 None if dry else ke_khai)
+    except Exception as e:  # noqa: BLE001
+        ma_prune = SC.ENGINE_ERROR
+        SC.log(f"[dọn] 1. lỗi: {e.__class__.__name__}: {e}")
     t = (kq.get("totals") or {})
     doi_f = (t.get("prune") or {}).get("files", 0)
     doi_b = (t.get("prune") or {}).get("bytes", 0)
     giu_f = (t.get("keep") or {}).get("files", 0)
     if ma_prune:
         do.append(f"prune_media mã {ma_prune} (xem log phía trên)")
-    _in(f"CLEANUP_PRUNE mode={'dry-run' if dry else 'move'} files={doi_f} bytes={doi_b} "
-        f"kept={giu_f} code={ma_prune}")
+    if ma_prune and not dry:
+        # Hỏng giữa chừng: số liệu không tin được, nhưng KÊ KHAI (ghi trước byte đầu tiên) thì có.
+        _in(f"CLEANUP_PRUNE mode=move files=? bytes=0 kept=0 code={ma_prune} manifest={ke_khai}")
+    else:
+        _in(f"CLEANUP_PRUNE mode={'dry-run' if dry else 'move'} files={doi_f} bytes={doi_b} "
+            f"kept={giu_f} code={ma_prune}")
 
     # 2
-    xoa_rac, loi_rac = do_rac(rac, a.trash_days, hom_nay, dry)
-    do += loi_rac
+    xoa_rac: list = []
+    try:
+        xoa_rac, loi_rac = do_rac(rac, a.trash_days, hom_nay, dry)
+        do += loi_rac
+    except OSError as e:
+        do.append(f"đổ thùng rác: {e}")
     for d, b in xoa_rac:
         SC.log(f"[dọn] 2. {'sẽ xoá' if dry else 'đã xoá'} {d} ({_mb(b)})")
     _in(f"CLEANUP_TRASH mode={'dry-run' if dry else 'purge'} dirs={len(xoa_rac)} "
-        f"bytes={sum(b for _d, b in xoa_rac)}")
+        f"bytes={sum(b for _d, b in xoa_rac)} days={a.trash_days}")
 
     # 3
-    xoa_log, cat_log, loi_log = xoay_log(thu_muc_log(tram, giong), a.log_days, a.log_max_mb,
-                                         _dt.datetime.now().timestamp(), dry)
-    do += loi_log
+    xoa_log: list = []
+    cat_log: list = []
+    try:
+        xoa_log, cat_log, loi_log = xoay_log(thu_muc_log(tram, giong), a.log_days, a.log_max_mb,
+                                             _dt.datetime.now().timestamp(), dry)
+        do += loi_log
+    except OSError as e:
+        do.append(f"xoay vòng log: {e}")
     for f in xoa_log:
         SC.log(f"[dọn] 3. {'sẽ xoá' if dry else 'đã xoá'} log {f}")
     for f in cat_log:
@@ -290,7 +333,7 @@ def lam(a) -> dict:
     ra = {"dry_run": dry, "moved": {"files": doi_f, "bytes": doi_b}, "kept_files": giu_f,
           "trash_purged": len(xoa_rac), "logs_deleted": len(xoa_log),
           "logs_truncated": len(cat_log), "sizes": co,
-          "manifest": kq.get("manifest")}
+          "manifest": kq.get("manifest") or (None if dry or not ma_prune else str(ke_khai))}
     if ma_prune == SC.CONTRACT_ERROR:
         raise SC.ContractError("prune_media từ chối (cầu dao hoặc tham số) — KHÔNG dời gì; "
                                "đọc log phía trên rồi xem tay")

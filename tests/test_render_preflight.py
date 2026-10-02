@@ -70,6 +70,10 @@ if argv[:1] != ["probe"]:
     sys.exit(9)
 if mode == "old":
     print("lệnh lạ: 'probe'", file=sys.stderr); sys.exit(2)
+if mode == "config":
+    print(json.dumps({"ok": False, "code": 2, "error": "HYPERFRAMES_VERSION='latest' không phải một bản cụ thể"}, ensure_ascii=False)); sys.exit(2)
+if mode == "nomodule":
+    print("No module named video_studio", file=sys.stderr); sys.exit(1)
 if mode == "ok":
     print("[probe] render thử OK sau 7.2s", file=sys.stderr)
     print(json.dumps({"ok": True, "seconds": 7.2, "hyperframes": "0.8.54"})); sys.exit(0)
@@ -129,9 +133,11 @@ def test_ket_thi_ma_5_va_noi_khoi_dong_lai_may(tmp_path):
 
 
 @pytest.mark.skipif(not PS, reason="khong co PowerShell")
-def test_hong_kieu_khac_van_ma_5_nhung_KHONG_goi_la_ket(tmp_path):
+def test_hong_kieu_khac_la_ma_1_KHONG_goi_la_ket(tmp_path):
+    """Mã 5 = "khởi động lại máy". Hỏng kiểu khác vẫn DỪNG, nhưng không được nói câu đó."""
     rc, ra, _ = _preflight(tmp_path, "fail")
-    assert rc == 5 and "RENDER_PREFLIGHT=failed" in ra and "doctor --hf" in ra
+    assert rc == 1 and "RENDER_PREFLIGHT=failed" in ra and "doctor --hf" in ra
+    assert "RENDER_PREFLIGHT=stuck" not in ra
 
 
 @pytest.mark.skipif(not PS, reason="khong co PowerShell")
@@ -188,3 +194,32 @@ def test_notify_run_du_phong_ma_5_noi_khoi_dong_lai():
     import notify_run as NR
     msg = NR.soan_tin("Daily Hot AI", 5, "00:00:31", ["RENDER_PREFLIGHT=stuck"], [], None)
     assert "MÔI TRƯỜNG RENDER KẸT" in msg and "khởi động lại" in msg and "exit 5" in msg
+
+
+@pytest.mark.skipif(not PS, reason="khong co PowerShell")
+def test_ma_2_CO_json_la_cau_hinh_sai_DUNG_khong_phai_ban_cu(tmp_path):
+    """Review 02/10 RF1: `HYPERFRAMES_VERSION=latest` ⇒ probe mã 2 KÈM JSON. Coi là "bản cũ" rồi
+    đi tiếp là đốt agent + TTS + 40 phút để chết ở render với đúng lỗi đó."""
+    rc, ra, _ = _preflight(tmp_path, "config")
+    assert rc == 2 and "RENDER_PREFLIGHT=config" in ra and "latest" in ra
+
+
+@pytest.mark.skipif(not PS, reason="khong co PowerShell")
+def test_venv_thieu_goi_video_studio_la_ma_3(tmp_path):
+    rc, ra, _ = _preflight(tmp_path, "nomodule")
+    assert rc == 3 and "RENDER_PREFLIGHT=missing" in ra
+
+
+@pytest.mark.parametrize("ten", TIN)
+def test_thieu_python_giong_va_pf_khong_phai_so_KHONG_bao_gio_exit_0(ten):
+    """Review 02/10 PS1: `exit $null` = mã 0 = tin ✅ cho một lượt đã dừng."""
+    t = _doc(ten)
+    assert re.search(r"if \(-not \$ovpy\) \{ Log .*exit 3 \}", t)
+    assert "if ($pf -isnot [int]) { $pf = 1 }" in t
+    assert t.index("$pf -isnot [int]") < t.index("exit $pf")
+
+
+def test_compose_report_cau_hinh_render_sai_KHONG_bao_khoi_dong_lai():
+    import compose_report as CR
+    msg = CR.build("T", 2, "00:00:05", "RENDER_PREFLIGHT=config\n=== failed ===")
+    assert "Cấu hình render sai" in msg and "KẸT" not in msg

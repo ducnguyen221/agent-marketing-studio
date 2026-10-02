@@ -191,10 +191,14 @@ def _giet_chum(p: "subprocess.Popen") -> None:
         _loi(f"notify: không giết được tiến trình con — {e}")
 
 
-def chay_lenh(cmd: list[str], tran: int | None = None) -> tuple[int, list[str], bool]:
+def chay_lenh(cmd: list[str], tran: int | None = None,
+             dang_chay: list | None = None) -> tuple[int, list[str], bool]:
     """Chạy lệnh con, gộp stderr vào stdout, vừa in ra (cho log của bộ lập lịch) vừa gom lại.
 
     `tran` (giây) > 0 ⇒ quá giờ thì giết cả nhóm con. Trả `(mã, dòng, quá_giờ)`.
+    `dang_chay`: danh sách người gọi giữ — tiến trình con nằm trong đó suốt lúc chạy, để người gọi
+    giết được nhóm của nó khi CHÍNH người gọi bị dừng (macOS: nhóm con là session riêng, tín hiệu
+    gửi cho nhóm của người gọi không tới được nó — `story/resume_once.py`).
     """
     env = dict(os.environ, PYTHONIOENCODING="utf-8")
     # Nhóm tiến trình riêng — chỉ khi có trần giờ, để không đổi hành vi của lượt chạy
@@ -214,6 +218,8 @@ def chay_lenh(cmd: list[str], tran: int | None = None) -> tuple[int, list[str], 
         return 1, [d], False
 
     qua_gio = threading.Event()
+    if dang_chay is not None:
+        dang_chay.append(p)
 
     def _het_gio():
         qua_gio.set()
@@ -236,6 +242,8 @@ def chay_lenh(cmd: list[str], tran: int | None = None) -> tuple[int, list[str], 
     finally:
         if dong_ho:
             dong_ho.cancel()
+        if dang_chay is not None and p in dang_chay:
+            dang_chay.remove(p)
     if ma < 0:                       # POSIX: chết vì tín hiệu -> quy ước shell 128+N
         ma = 128 - ma
     if qua_gio.is_set():

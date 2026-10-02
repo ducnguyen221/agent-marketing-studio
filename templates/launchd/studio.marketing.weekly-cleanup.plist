@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- studio.marketing.weekly-cleanup
-     Dọn dung lượng hằng tuần, Chủ nhật 04:00 — ngoài giờ mọi job khác (tin 18:00–21:00, repo
-     tuần CN 20:00, truyện từ 00:00). Dời media ĐÃ ĐĂNG và quá 14 ngày sang `<trạm>/_trash/<ngày>`
+     Dọn dung lượng hằng tuần, Chủ nhật 04:00 — ngoài giờ các job tin (18:00–21:00, repo tuần CN
+     20:00). Lượt truyện (00:00, tới ~11:30 nếu chạy tiếp) CÓ THỂ đang chạy: job không cắt log vừa
+     ghi trong 1 giờ, và chỉ dời media đã đăng + quá 14 ngày, nên không đụng thứ lượt đó đang dùng. Dời media ĐÃ ĐĂNG và quá 14 ngày sang `<trạm>/_trash/<ngày>`
      (prune_media, theo bằng chứng đã đăng), đổ `_trash` cũ hơn 30 ngày, xoay vòng log (60 ngày,
      cắt file trên 5 MB), báo dung lượng qua Telegram. Xem `scripts/runners/weekly_cleanup.py`.
 

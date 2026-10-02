@@ -120,4 +120,10 @@ kế hoạch xoá.
 trên các thư mục của trạm marketing + trạm giọng + trạm video, tự nhặt `truyen-state.json` /
 `playlist-youtube.json` làm `--evidence`. Thùng rác đổ sau 30 ngày tính từ NGÀY DỜI — đó là cửa
 sổ hoàn tác. Job chỉ nạp khi gọi đích danh; chạy `-DryRun` đọc báo cáo trước khi bật (bước 1
-ở trên). Cầu dao giữ mặc định (200 file / 50 GB): vượt trần ⇒ job ❌ mã 2, không dời gì.
+ở trên). Cầu dao giữ mặc định (200 file / 50 GB): vượt trần ⇒ job ❌ mã 2, không dời gì — trạm
+tồn nhiều file thì lượt ĐẦU dễ vượt: chạy `-DryRun`, rồi dời tay một lần bằng `prune_media.py
+--max-files <cỡ thật>` trước khi bật lịch, nếu không tuần nào cũng ❌.
+
+Hai điều nữa: mỗi lượt ghi kê khai riêng `manifest-prune-media-<giờ>.json` trong `_trash/<ngày>`
+(hai lượt cùng ngày không ghi đè nhau); trạm giọng/video nằm KHÁC ổ với trạm marketing thì "dời"
+thành chép-rồi-xoá — chậm, và chiếm chỗ trên ổ của trạm marketing cho tới khi thùng rác được đổ.

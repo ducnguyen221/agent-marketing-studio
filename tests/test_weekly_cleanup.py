@@ -92,7 +92,9 @@ def test_chay_that_doi_vao_trash_hom_nay_kem_ke_khai(may, capsys):
     assert not (may["ngay"] / "bai.mp4").exists()
     assert (dich / "kenh" / "hang-ngay" / "out" / "2026-09-01" / "bai.mp4").is_file(), \
         "DỜI, không xoá — cấu trúc tương đối giữ nguyên để hoàn tác"
-    ke_khai = json.loads((dich / "manifest-prune-media.json").read_text(encoding="utf-8"))
+    ds = sorted(dich.glob("manifest-prune-media-*.json"))
+    assert len(ds) == 1, "kê khai mang giờ của lượt — hai lượt trong ngày không ghi đè nhau"
+    ke_khai = json.loads(ds[0].read_text(encoding="utf-8"))
     assert ke_khai["status"] == "done"
     assert (may["mkt"] / "kenh" / "hang-ngay" / "out" / "2026-09-02" / "hong.mp4").is_file(), \
         "không bằng chứng đã đăng ⇒ GIỮ"
@@ -203,3 +205,41 @@ def test_register_windows_CN_qua_NOTIFY_RUN_va_IgnoreNew():
     t = _ps1()
     assert "-DaysOfWeek Sunday" in t and "[string]$Time = '04:00'" in t
     assert "NOTIFY_RUN" in t and "MultipleInstances IgnoreNew" in t
+
+
+def test_log_TO_nhung_VUA_GHI_thi_KHONG_cat(may, capsys):
+    """Review 02/10 NS2: lượt truyện còn chạy lúc CN 04:00, daily-logs mở `"w"` — cắt dưới chân
+    nó để lại một khoảng byte 0. Vừa ghi trong 1 h ⇒ để tuần sau."""
+    dang = may["giong"] / "omnivoice" / "truyen-out" / "daily-logs" / "dang_chay.log"
+    _file(dang, 0.001, b"z" * (6 * 1024 * 1024))
+    _chay(may, capsys=capsys)
+    assert dang.stat().st_size == 6 * 1024 * 1024
+
+
+def test_thieu_tram_giong_thi_NOI_RA_khong_im_lang(may, capsys, monkeypatch):
+    monkeypatch.delenv("VOICE_STATION")
+    monkeypatch.setattr(WC.SP, "voice_station", lambda *a, **k: None)
+    _, out = _chay(may, capsys=capsys)
+    assert "CLEANUP_SKIP label=giong reason=no-station var=VOICE_STATION" in out
+    import compose_report as CR
+    assert "Bỏ qua trạm giọng" in CR.build("Dọn", 0, "00:00:10", out)
+
+
+def test_prune_hong_giua_chung_bao_KHONG_RO_va_chi_ke_khai(may, capsys, monkeypatch):
+    monkeypatch.setattr(WC, "doi_media", lambda *a, **k: (1, {}))
+    ma, out = _chay(may, capsys=capsys)
+    assert ma == 1
+    assert "CLEANUP_PRUNE mode=move files=? " in out and "manifest=" in out
+    import compose_report as CR
+    msg = CR.build("Dọn", 1, "00:00:10", out)
+    assert "chưa rõ đã dời bao nhiêu file" in msg and "manifest-prune-media-" in msg
+
+
+def test_ngoai_le_buoc_1_KHONG_chan_buoc_2_3(may, capsys, monkeypatch):
+    def no(*a, **k):
+        raise OSError("đĩa hỏng")
+    monkeypatch.setattr(WC, "doi_media", no)
+    ma, out = _chay(may, capsys=capsys)
+    assert ma == 1
+    assert not may["log_cu"].exists(), "bước 3 vẫn phải chạy"
+    assert not (may["mkt"] / "_trash" / "2026-01-01").exists(), "bước 2 vẫn phải chạy"

@@ -43,8 +43,25 @@ P5-02/10-TOI). Mọi thay đổi chạy giống nhau dưới Task Scheduler lẫ
 - **Khởi động lại định kỳ**: chỉ ghi thành bước tài liệu cho Đức quyết (`docs/RUNBOOK-DOI-MAY.md`
   mục "Khởi động lại định kỳ máy chạy lịch") — `pmset repeat restart` cần admin, kèm ba điều phải
   kiểm (tự đăng nhập, không cắt ngang lượt truyện, Windows).
+- **Sau review độc lập (02/10)** — 4 Phải sửa + các Nên sửa:
+  - rào render: chỉ `RENDER_STUCK` mới là mã 5; `probe` mã 2 KÈM JSON = cấu hình sai ⇒ dừng mã 2
+    (trước đó bị coi là "video-studio cũ" và cho qua); thiếu gói `video_studio` ⇒ 3; hỏng khác ⇒ 1;
+    runner kiểm `$ovpy` (thiếu ⇒ 3) và ép `$pf` là số — `exit $null` từng ra mã 0 (✅ giả);
+  - truyện: `daily_truyen.py` ghi `phase: publish` vào `_resume.json` TRƯỚC khi upload ⇒ bộ canh
+    KHÔNG chạy tiếp lượt bị giết lúc đang đăng (chống video trùng công khai); `read_story.py` ghi
+    `Chuong_<n>.wav` nguyên tử (tên tạm + `os.replace`) — file cụt không còn bị dùng lại như chương
+    xong; bộ canh bắt SIGTERM/SIGHUP để giết nhóm con (macOS: session riêng, wrapper không với tới);
+    tin báo lượt chạy tiếp lại quá trần / quá trần không còn dấu / quá trần lúc đăng;
+  - job dọn: không cắt log vừa ghi trong 1 h (lượt truyện có thể đang chạy lúc CN 04:00); kê khai
+    mang giờ (hai lượt cùng ngày không ghi đè); mỗi bước bọc riêng; `prune_media` có trần 2400 s;
+    trạm giọng/video chưa phân giải ⇒ `CLEANUP_SKIP` + cảnh báo thay vì ✅ im lặng; `prune_media`
+    hỏng giữa chừng ⇒ tin nói "chưa rõ đã dời bao nhiêu" + đường kê khai; số ngày thùng rác theo cờ;
+  - `install_launchd.py --uninstall --all` gỡ cả job chỉ-đích-danh; `-Register` của truyện cảnh
+    báo task cũ trỏ cùng chiến dịch.
 - Test mới: `test_resume_once.py`, `test_weekly_cleanup.py`, `test_render_preflight.py`; cập nhật
   `test_launchd_templates.py` (9 mẫu, trần truyện, job chỉ-đích-danh), `test_runner_agent_chain.py`.
+- **Còn mở (không làm đợt này):** `truyen_publish.py` chưa tự chống đăng trùng (đợt này chặn ở
+  tầng resume); `RENDER_PROBE_TIMEOUT` chỉ giả lập nhánh quá giờ của phép thử.
 
 **Mac cần làm:** checkout `v1.1.8` (+ video `v0.2.5`); cài lại plist `daily-story`
 (`install_launchd.py --only studio.marketing.daily-story`); chạy `run-weekly-cleanup.ps1 -DryRun`,

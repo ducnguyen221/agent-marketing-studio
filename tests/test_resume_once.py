@@ -184,3 +184,90 @@ def test_register_windows_tinh_ExecutionTimeLimit_tu_hai_tran():
     t = _ps1()
     assert re.search(r"New-TimeSpan\s+-Seconds\s+\(\$Budget\s*\+\s*\$ResumeBudget\s*\+\s*\d+\)", t)
     assert "NOTIFY_RUN" in t, "-Register phải đi qua wrapper báo cáo (luật E2 của máy chạy lịch)"
+
+
+def test_bi_giet_luc_DANG_DANG_thi_KHONG_chay_tiep(tmp_path, capsys):
+    """Review 02/10: dấu `phase=publish` ⇒ có thể đã lên YouTube mà chưa ghi state; chạy tiếp =
+    dựng lại + upload lần hai = video trùng công khai."""
+    m = _mark(tmp_path)
+    d = json.loads(Path(m).read_text(encoding="utf-8"))
+    d["phase"] = "publish"
+    Path(m).write_text(json.dumps(d), encoding="utf-8")
+    tin, run = [], Run(124, 0)
+    assert RO.chay(["x"], "T", 30600, 10800, m, run=run, send=tin.append) == 124
+    assert len(run.trans) == 1 and tin == []
+    out = capsys.readouterr().out
+    assert "RESUME_ONCE=skip reason=publish range=301-310" in out
+    import compose_report as CR
+    assert "KHÔNG tự chạy tiếp để tránh đăng trùng" in CR.build("T", 124, "08:30:00", out)
+
+
+def test_daily_truyen_ghi_pha_publish_TRUOC_khi_dang():
+    t = (STORY / "daily_truyen.py").read_text(encoding="utf-8")
+    assert t.index('_m["phase"] = "publish"') < t.index("truyen_publish.py")
+
+
+def test_khong_con_dau_va_chay_tiep_lai_124_deu_co_loi_huong_dan(tmp_path, capsys):
+    import compose_report as CR
+    RO.chay(["x"], "T", 30600, 10800, str(tmp_path / "khong.json"), run=Run(124),
+            send=lambda _t: None)
+    assert "không còn dấu dải dở" in CR.build("T", 124, "08:30", capsys.readouterr().out)
+    RO.chay(["x"], "T", 30600, 10800, _mark(tmp_path), run=Run(124, 124), send=lambda _t: None)
+    assert "CŨNG quá trần" in CR.build("T", 124, "11:30", capsys.readouterr().out)
+
+
+def test_chuong_ghi_NGUYEN_TU(tmp_path):
+    """Có `Chuong_<n>.wav` = chương xong. Bị giết giữa lúc ghi không được để lại file cụt mang
+    tên thật — lượt chạy tiếp sẽ dùng nó như chương hoàn chỉnh."""
+    t = (STORY / "read_story.py").read_text(encoding="utf-8")
+    assert "ov_engine.save(wav, tmp_wav, sr)" in t and "os.replace(tmp_wav, per_wav)" in t
+    assert "ov_engine.save(wav, per_wav, sr)" not in t
+
+
+def test_qua_tran_giet_CA_CHAU_khong_chi_con(tmp_path):
+    """Con đẻ cháu (như daily_truyen → audio_truyen → ffmpeg); quá trần phải giết cả cháu."""
+    nhip = tmp_path / "nhip.txt"
+    chau = tmp_path / "chau.py"
+    chau.write_text(textwrap.dedent(f"""
+        import pathlib, time
+        p = pathlib.Path(r"{nhip}")
+        for i in range(600):
+            p.write_text(str(i)); time.sleep(0.1)
+    """), encoding="utf-8")
+    con = tmp_path / "con.py"
+    con.write_text(textwrap.dedent(f"""
+        import subprocess, sys, time
+        subprocess.Popen([sys.executable, r"{chau}"])
+        time.sleep(60)
+    """), encoding="utf-8")
+    import time
+    RO.chay([sys.executable, str(con)], "T", 2, 30, None, send=lambda _t: None)
+    time.sleep(1.5)
+    truoc = nhip.read_text()
+    time.sleep(1.5)
+    assert nhip.read_text() == truoc, "tiến trình cháu vẫn sống sau khi quá trần"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX: session riêng của nhóm con")
+def test_bo_canh_bi_SIGTERM_thi_giet_nhom_con(tmp_path):
+    """Review 02/10 NS1: wrapper launchd giết nhóm của nó; nhóm con (session riêng) phải bị bộ
+    canh giết theo, không thì daily_truyen + TTS mồ côi chạy đè lượt hôm sau."""
+    import signal
+    import time
+    nhip = tmp_path / "nhip.txt"
+    con = tmp_path / "con.py"
+    con.write_text(textwrap.dedent(f"""
+        import pathlib, time
+        p = pathlib.Path(r"{nhip}")
+        for i in range(600):
+            p.write_text(str(i)); time.sleep(0.1)
+    """), encoding="utf-8")
+    p = subprocess.Popen([sys.executable, str(STORY / "resume_once.py"), "--budget", "60",
+                          "--mark", str(tmp_path / "khong.json"), "--", sys.executable, str(con)])
+    time.sleep(2)
+    p.send_signal(signal.SIGTERM)
+    p.wait(timeout=30)
+    time.sleep(1)
+    truoc = nhip.read_text()
+    time.sleep(1)
+    assert nhip.read_text() == truoc

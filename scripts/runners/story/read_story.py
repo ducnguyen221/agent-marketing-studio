@@ -917,8 +917,16 @@ def main():
                                       preview_sents=args.preview_sents,
                                       verify_fn=verify_fn, title_retries=args.title_retries)
             if not preview:  # preview never writes per-chapter files (no split, no cache clobber)
-                ov_engine.save(wav, per_wav, sr)
-                json.dump(cues, open(per_cue, "w", encoding="utf-8", newline="\n"), ensure_ascii=False)
+                # NGUYÊN TỬ: có `Chuong_<n>.wav` = chương đã xong — resume (story/resume_once.py)
+                # bỏ qua đúng chương đó. Bị giết giữa lúc ghi thì file cụt mang tên thật sẽ được
+                # dùng lại như chương hoàn chỉnh. Ghi ra tên tạm rồi `os.replace` (cues trước, wav
+                # sau cùng — wav là dấu "xong").
+                tmp_cue, tmp_wav = per_cue + ".tmp", per_wav[:-4] + ".tmp.wav"
+                with open(tmp_cue, "w", encoding="utf-8", newline="\n") as _fc:
+                    json.dump(cues, _fc, ensure_ascii=False)
+                os.replace(tmp_cue, per_cue)
+                ov_engine.save(wav, tmp_wav, sr)
+                os.replace(tmp_wav, per_wav)
                 print(f"[ok] Chương {ch['no']} -> {per_wav} ({len(wav) / sr / 60:.1f} phút)")
         wav = np.asarray(wav, dtype=np.float32)
         dur = len(wav) / sr

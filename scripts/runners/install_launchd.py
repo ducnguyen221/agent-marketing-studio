@@ -532,8 +532,10 @@ def lam(a) -> dict:
             SC.log(f"  {l}{ghi}")
         return {"labels": co}
 
-    chon = list(a.only) if a.only else [l for l in co if l not in CHI_DICH_DANH
-                                        and (a.all or l not in KHONG_MAC_DINH)]
+    # GỠ thì `--all` là gỡ HẾT, kể cả job chỉ-đích-danh: công tắc tắt phải tắt được mọi thứ đã bật.
+    chon = list(a.only) if a.only else [l for l in co
+                                        if (a.uninstall and a.all) or (l not in CHI_DICH_DANH
+                                        and (a.all or l not in KHONG_MAC_DINH))]
     la = [l for l in chon if l not in co]
     if la:
         raise SC.ContractError(f"không có mẫu cho: {la} (xem --list)")

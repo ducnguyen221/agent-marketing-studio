@@ -29,6 +29,11 @@ thì cả hai chạy y hệt, và wrapper ngoài chỉ còn là lưới an toàn
   `--resume-budget`. `daily_truyen.py` thấy dấu khớp dải ⇒ chừa cache ⇒ `read_story` bỏ qua mọi
   chương đã có `Chuong_<n>.wav`: không đọc lại chương nào.
 · Không còn `_resume.json` ⇒ KHÔNG chạy tiếp (dải đã xong, hoặc hỏng trước khi ghi dấu): trả 124.
+· Dấu mang `"phase": "publish"` (daily_truyen ghi ngay TRƯỚC khi upload) ⇒ KHÔNG chạy tiếp: lượt
+  bị giết lúc đang đăng có thể đã lên YouTube mà chưa ghi state — chạy tiếp là dựng lại và upload
+  lần hai, video trùng công khai. Người kiểm kênh rồi chạy tay. Trả 124.
+· Bộ canh bị chính wrapper ngoài dừng (SIGTERM/SIGHUP, POSIX) ⇒ giết nhóm tiến trình con trước khi
+  thoát: trên macOS nhóm con là session riêng, tín hiệu của wrapper không tới được nó.
 · Lượt chạy tiếp lại 124 ⇒ DỪNG, không lặp. Cache vẫn nằm đó cho lượt theo lịch kế tiếp.
 · Mã thoát = mã của lượt cuối cùng đã chạy. Tin ✅/❌ của lượt chạy tiếp do wrapper gửi như mọi
   lượt (nó thấy mã thoát + log, gồm hai dòng `RESUME_ONCE=…` cho `compose_report.py`).
@@ -40,6 +45,7 @@ import argparse
 import html
 import json
 import os
+import signal
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -96,8 +102,36 @@ def tin_cho(title: str, budget: int, resume_budget: int, mark: dict, tiep: int |
             f"cache chương đã đọc, trần {resume_budget}s). Tin ✅/❌ của lượt chạy tiếp sẽ tới sau.")
 
 
+# Tiến trình con đang chạy — để bộ xử lý tín hiệu giết được nhóm của nó (xem `_bat_tin_hieu`).
+DANG_CHAY: list = []
+
+
+def _chay_mac_dinh(cmd, tran):
+    return notify_run.chay_lenh(cmd, tran, dang_chay=DANG_CHAY)
+
+
+def _bat_tin_hieu() -> None:
+    """POSIX: bị wrapper ngoài dừng thì giết nhóm con (session riêng) rồi mới thoát.
+
+    `notify_run.chay_lenh` có trần ⇒ con chạy trong session MỚI. Wrapper launchd giết nhóm của
+    nó (gồm pwsh + bộ canh này) nhưng không với tới session của con: `daily_truyen` + TTS +
+    ffmpeg sẽ mồ côi và chạy đè lên lượt hôm sau. Windows không cần: `taskkill /T` đi theo cây.
+    """
+    if os.name == "nt":
+        return
+
+    def _xu_ly(so, _khung):
+        for p in list(DANG_CHAY):
+            notify_run._giet_chum(p)
+        print(f"[resume] bị dừng (tín hiệu {so}) — đã giết nhóm tiến trình con.", flush=True)
+        sys.exit(128 + so)
+
+    for so in (signal.SIGTERM, signal.SIGHUP):
+        signal.signal(so, _xu_ly)
+
+
 def chay(cmd: list[str], title: str, budget: int, resume_budget: int, mark_path: str | None,
-         run=notify_run.chay_lenh, send=notify_run.gui) -> int:
+         run=_chay_mac_dinh, send=notify_run.gui) -> int:
     """Lõi: trả mã thoát. `run`/`send` mở cho test."""
     ma, _dong, qua = run(cmd, budget or None)
     if ma != MA_QUA_GIO and not qua:
@@ -106,6 +140,13 @@ def chay(cmd: list[str], title: str, budget: int, resume_budget: int, mark_path:
     if mark is None:
         print(f"[resume] quá trần (mã {MA_QUA_GIO}) nhưng không còn dấu dải dở "
               f"({mark_path or 'chưa biết trạm giọng'}) — KHÔNG chạy tiếp.", flush=True)
+        print("RESUME_ONCE=skip reason=no-mark", flush=True)
+        return MA_QUA_GIO
+    if mark.get("phase") == "publish":
+        print(f"[resume] quá trần lúc ĐANG ĐĂNG (dải {mark['start']}-{mark['end']}) — KHÔNG tự chạy "
+              f"tiếp: video có thể đã lên YouTube mà chưa ghi state, chạy tiếp là đăng trùng. Kiểm "
+              f"kênh rồi chạy tay.", flush=True)
+        print(f"RESUME_ONCE=skip reason=publish range={mark['start']}-{mark['end']}", flush=True)
         return MA_QUA_GIO
     tiep = chuong_tiep(mark, mark_path)
     print(f"[resume] ⏳ quá trần {budget}s — chạy tiếp MỘT lần từ chương "
@@ -149,6 +190,7 @@ def main(argv: list[str] | None = None) -> int:
         ap.error("thiếu lệnh con sau `--`")
     if a.budget < 0 or a.resume_budget < 1:
         ap.error("--budget phải ≥ 0 và --resume-budget phải ≥ 1")
+    _bat_tin_hieu()
     return chay(cmd, a.title, a.budget, a.resume_budget, a.mark or duong_dau())
 
 

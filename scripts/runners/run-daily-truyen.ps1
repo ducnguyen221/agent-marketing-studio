@@ -62,6 +62,15 @@ if ($Register) {
   if (Test-Path -LiteralPath $runPs1) { $target = $runPs1; $sargs = '' }
   else { $target = Join-Path $PSScriptRoot 'run-daily-truyen.ps1'; $sargs = '-Campaign \"' + $Campaign + '\"' }
   $argStr = "-NoProfile -ExecutionPolicy Bypass -File `"$notify`" -Title `"$TaskName`" -Script `"$target`" -ScriptArgs `"$sargs`""
+  # Task cũ (tạo tay / bởi wrapper máy) trỏ CÙNG chiến dịch mà tên khác ⇒ hai task cùng giờ chạy
+  # song song cùng dải (sweep_old của task này xoá _work của task kia), và task cũ giữ
+  # ExecutionTimeLimit cũ (giết lượt chạy tiếp). Không tự gỡ task của người khác — nói ra.
+  $leaf = Split-Path $Campaign -Leaf
+  $trung = @(Get-ScheduledTask -ErrorAction SilentlyContinue | Where-Object {
+      $_.TaskName -ne $TaskName -and (@($_.Actions | ForEach-Object { [string]$_.Arguments }) -join ' ') -match [regex]::Escape($leaf) })
+  foreach ($x in $trung) {
+    Write-Output ("WARN: task '" + $x.TaskPath + $x.TaskName + "' cung tro chien dich " + $leaf + " (trang thai " + $x.State + ", tran " + $x.Settings.ExecutionTimeLimit + ") - Disable/Unregister no, hoac dat -TaskName trung ten de ghi de.")
+  }
   $limit = New-TimeSpan -Seconds ($Budget + $ResumeBudget + 1800)
   # Trình PowerShell ĐANG chạy file này — không viết cứng tên chương trình.
   $act = New-ScheduledTaskAction -Execute ((Get-Process -Id $PID).Path) -Argument $argStr
