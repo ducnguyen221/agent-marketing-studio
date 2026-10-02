@@ -805,8 +805,10 @@ function Invoke-RenderPreflight {
     — môi trường macOS kẹt, mọi project đều hỏng, khởi động lại máy là hết. Không có rào này thì
     lượt chạy đốt agent + TTS + 40 phút rồi mới biết.
 
-    Trần phép thử: 30 s; đặt `RENDER_PROBE_TIMEOUT` (giây) để đổi — đặt 1 là cách GIẢ LẬP máy kẹt
-    khi nghiệm thu (phép thử quá giờ ⇒ đúng nhánh kẹt, đúng tin ❌).
+    Trần phần RENDER của phép thử: 30 s; đặt `RENDER_PROBE_TIMEOUT` (giây) để đổi — đặt 1 là cách
+    GIẢ LẬP máy kẹt khi nghiệm thu (đúng nhánh kẹt, đúng tin ❌). Trước đó probe LÀM ẤM npx +
+    Chromium ngoài trần đó (thường vài giây; lần đầu sau nâng bản ghim có thể vài phút, mỗi bước
+    trần 600 s ⇒ mã 3) — runner không đặt trần ngoài cho preflight, wrapper của job là trần cuối.
     -> mã thoát cho runner (DỪNG khi khác 0, không thử lại):
        0 đi tiếp · 5 môi trường render KẸT (`RENDER_STUCK`) — khởi động lại máy ·
        1 phép thử hỏng kiểu khác (đuôi log nói vì sao) · 2 cấu hình sai (probe trả JSON lỗi, vd

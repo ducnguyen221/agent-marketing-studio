@@ -283,12 +283,18 @@ def lam(a) -> dict:
     giu_f = (t.get("keep") or {}).get("files", 0)
     if ma_prune:
         do.append(f"prune_media mã {ma_prune} (xem log phía trên)")
-    if ma_prune and not dry:
+    if ma_prune == SC.CONTRACT_ERROR:
+        # Cầu dao / tham số: prune_media từ chối TRƯỚC byte đầu tiên — không dời gì.
+        _in(f"CLEANUP_PRUNE mode={'dry-run' if dry else 'move'} files=0 bytes=0 kept={giu_f} "
+            f"code={ma_prune}")
+    elif ma_prune and not dry:
         # Hỏng giữa chừng: số liệu không tin được, nhưng KÊ KHAI (ghi trước byte đầu tiên) thì có.
         _in(f"CLEANUP_PRUNE mode=move files=? bytes=0 kept=0 code={ma_prune} manifest={ke_khai}")
     else:
         _in(f"CLEANUP_PRUNE mode={'dry-run' if dry else 'move'} files={doi_f} bytes={doi_b} "
             f"kept={giu_f} code={ma_prune}")
+    if ma_prune == SC.CONTRACT_ERROR:
+        _in("CLEANUP_PRUNE_REFUSED")
 
     # 2
     xoa_rac: list = []

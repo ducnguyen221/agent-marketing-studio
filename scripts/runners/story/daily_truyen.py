@@ -284,6 +284,17 @@ def main():
         _mark = json.load(open(mark_path, encoding="utf-8"))
     except (OSError, ValueError):
         _mark = None
+    # Lượt trước của CHÍNH dải này đã tới bước đăng rồi bị giết (dấu `phase=publish`): video có
+    # thể đã lên YouTube mà chưa ghi state. Chạy tiếp = dựng lại + upload lần hai = video trùng
+    # công khai — `truyen_publish.py` không tự kiểm trùng. DỪNG mỗi đêm cho tới khi người xử lý
+    # (review 02/10 vòng 2). Không sweep, không ghi đè dấu: cache + dấu giữ nguyên.
+    if resume_keep(_mark, slug, start, end, voice) and _mark.get("phase") == "publish":
+        log(f"[daily] LỖI: dải {start}-{end} đã tới bước ĐĂNG ở lượt trước rồi bị dừng — có thể đã "
+            f"lên YouTube. KHÔNG chạy lại để tránh đăng trùng.")
+        log(f"[daily] Người xử lý: kênh ĐÃ có tập này ⇒ sửa last_end={end} trong {STATE} rồi xoá "
+            f"{mark_path}; CHƯA có ⇒ xoá khoá \"phase\" trong {mark_path} rồi chạy lại.")
+        print(f"PUBLISH_GUARD=blocked range={start}-{end}", flush=True)
+        sys.exit(1)
     sweep_old(st, log, keep=resume_keep(_mark, slug, start, end, voice))
     os.makedirs(WORK, exist_ok=True)
     try:        # dấu dải đang dở — best-effort: hỏng ghi thì chỉ mất resume, không mất lượt

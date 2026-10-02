@@ -58,6 +58,9 @@ P5-02/10-TOI). Mọi thay đổi chạy giống nhau dưới Task Scheduler lẫ
     hỏng giữa chừng ⇒ tin nói "chưa rõ đã dời bao nhiêu" + đường kê khai; số ngày thùng rác theo cờ;
   - `install_launchd.py --uninstall --all` gỡ cả job chỉ-đích-danh; `-Register` của truyện cảnh
     báo task cũ trỏ cùng chiến dịch.
+  - vòng 2: lượt THEO LỊCH gặp dấu `phase: publish` của chính dải đó thì `daily_truyen.py` DỪNG
+    (`PUBLISH_GUARD=blocked`, mã 1, mỗi đêm cho tới khi người xử lý) — trước đó nó ghi đè dấu rồi
+    upload lần hai; job dọn: cầu dao từ chối ⇒ "KHÔNG dời gì" (không còn "chưa rõ đã dời").
 - Test mới: `test_resume_once.py`, `test_weekly_cleanup.py`, `test_render_preflight.py`; cập nhật
   `test_launchd_templates.py` (9 mẫu, trần truyện, job chỉ-đích-danh), `test_runner_agent_chain.py`.
 - **Còn mở (không làm đợt này):** `truyen_publish.py` chưa tự chống đăng trùng (đợt này chặn ở

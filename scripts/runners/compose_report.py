@@ -183,9 +183,11 @@ def build(title, code, duration, log):
         if "RESUME_ONCE=done code=124" in log:
             warn.append("Lượt chạy tiếp CŨNG quá trần — đã dừng, không lặp. Cache chương còn "
                         "nguyên: lượt theo lịch kế tiếp đọc tiếp đúng dải (hoặc kickstart tay).")
-    if "RESUME_ONCE=skip reason=publish" in log:
-        warn.append("Quá trần lúc ĐANG ĐĂNG — KHÔNG tự chạy tiếp để tránh đăng trùng. Kiểm kênh "
-                    "YouTube: đã có video thì cập nhật state; chưa có thì chạy tay lượt truyện.")
+    if "RESUME_ONCE=skip reason=publish" in log or "PUBLISH_GUARD=blocked" in log:
+        warn.append("Lượt truyện bị dừng lúc ĐANG ĐĂNG — KHÔNG tự chạy lại (kể cả lượt theo lịch "
+                    "đêm sau) để tránh đăng trùng. Kiểm kênh YouTube: ĐÃ có tập ⇒ sửa last_end "
+                    "trong truyen-state.json rồi xoá _resume.json; CHƯA có ⇒ xoá khoá \"phase\" "
+                    "trong _resume.json. Hướng dẫn đầy đủ ở log lượt chạy.")
     elif "RESUME_ONCE=skip reason=no-mark" in log:
         warn.append("Quá trần nhưng không còn dấu dải dở (_resume.json) — không tự chạy tiếp; "
                     "lượt theo lịch kế tiếp chạy lại từ đầu dải.")
@@ -216,6 +218,10 @@ def build(title, code, duration, log):
     if pr_hong:
         warn.append(f"Bước dời media HỎNG (prune_media mã {pr_hong.group(1)}) — chưa rõ đã dời bao "
                     f"nhiêu file. Kê khai để đối chiếu/hoàn tác: {pr_hong.group(2).strip()}")
+    if "CLEANUP_PRUNE_REFUSED" in log:
+        warn.append("prune_media TỪ CHỐI (cầu dao vượt trần hoặc tham số sai) — KHÔNG dời gì. Lượt "
+                    "đầu trên trạm tồn nhiều file hay gặp: chạy -DryRun, dời tay một lần với "
+                    "--max-files theo cỡ thật (docs/RETENTION.md §7).")
     for nhan, bien in re.findall(r"CLEANUP_SKIP label=(\w+) reason=no-station var=(\w+)", log):
         warn.append(f"Bỏ qua trạm {TEN_TRAM.get(nhan, nhan)}: chưa phân giải được ({bien}) — "
                     f"không quét, không xoay log, không đo.")

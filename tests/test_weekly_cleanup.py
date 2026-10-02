@@ -243,3 +243,12 @@ def test_ngoai_le_buoc_1_KHONG_chan_buoc_2_3(may, capsys, monkeypatch):
     assert ma == 1
     assert not may["log_cu"].exists(), "bước 3 vẫn phải chạy"
     assert not (may["mkt"] / "_trash" / "2026-01-01").exists(), "bước 2 vẫn phải chạy"
+
+
+def test_cau_dao_tu_choi_bao_KHONG_doi_gi_khong_doi_ke_khai(may, capsys, monkeypatch):
+    monkeypatch.setattr(WC, "doi_media", lambda *a, **k: (2, {}))
+    _, out = _chay(may, capsys=capsys)
+    assert "files=?" not in out and "CLEANUP_PRUNE_REFUSED" in out
+    import compose_report as CR
+    msg = CR.build("Dọn", 2, "00:00:10", out)
+    assert "KHÔNG dời gì" in msg and "chưa rõ" not in msg

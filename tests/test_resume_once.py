@@ -199,12 +199,12 @@ def test_bi_giet_luc_DANG_DANG_thi_KHONG_chay_tiep(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "RESUME_ONCE=skip reason=publish range=301-310" in out
     import compose_report as CR
-    assert "KHÔNG tự chạy tiếp để tránh đăng trùng" in CR.build("T", 124, "08:30:00", out)
+    assert "KHÔNG tự chạy lại" in CR.build("T", 124, "08:30:00", out)
 
 
 def test_daily_truyen_ghi_pha_publish_TRUOC_khi_dang():
     t = (STORY / "daily_truyen.py").read_text(encoding="utf-8")
-    assert t.index('_m["phase"] = "publish"') < t.index("truyen_publish.py")
+    assert t.index('_m["phase"] = "publish"') < t.index('os.path.join(HERE, "truyen_publish.py")')
 
 
 def test_khong_con_dau_va_chay_tiep_lai_124_deu_co_loi_huong_dan(tmp_path, capsys):
@@ -271,3 +271,16 @@ def test_bo_canh_bi_SIGTERM_thi_giet_nhom_con(tmp_path):
     truoc = nhip.read_text()
     time.sleep(1)
     assert nhip.read_text() == truoc
+
+
+def test_luot_THEO_LICH_gap_dau_publish_cung_dai_thi_DUNG_khong_dang_lai():
+    """Review 02/10 vòng 2: lượt đêm sau chạy lại đúng dải (last_end chưa tăng) — không chặn ở
+    daily_truyen thì nó ghi đè dấu (mất `phase`) rồi upload lần hai."""
+    t = (STORY / "daily_truyen.py").read_text(encoding="utf-8")
+    chan = t.index('_mark.get("phase") == "publish"')
+    assert chan < t.index("sweep_old(st, log, keep=resume_keep(")
+    assert chan < t.index('json.dump({"slug": slug')
+    assert "PUBLISH_GUARD=blocked" in t
+    import compose_report as CR
+    msg = CR.build("T", 1, "00:00:05", "PUBLISH_GUARD=blocked range=301-310\n")
+    assert "kể cả lượt theo lịch" in msg
