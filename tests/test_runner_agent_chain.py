@@ -34,7 +34,7 @@ PS = shutil.which("pwsh") or shutil.which("powershell")
 
 NANG = ("daily-news-a", "daily-news-b", "daily-story", "weekly-news-a", "weekly-news-b",
         "weekly-repo")
-NHE = ("worker", "approve-poller")
+NHE = ("worker", "approve-poller", "weekly-cleanup")
 
 
 def _plist(ten):

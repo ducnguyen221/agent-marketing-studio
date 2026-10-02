@@ -86,7 +86,8 @@ Khối `EnvironmentVariables` của mẫu **không** giống nhau giữa các jo
     tin (daily-news-a/b, weekly-news-a/b, weekly-repo)
         `OMNIVOICE_DTYPE=float32`, KHÔNG khai `HF_DEACTIVATE_ASYNC_LOAD`
     truyện (daily-story)
-        `OMNIVOICE_DTYPE=float16` + `HF_DEACTIVATE_ASYNC_LOAD=1`, trần giờ 30600 s
+        `OMNIVOICE_DTYPE=float16` + `HF_DEACTIVATE_ASYNC_LOAD=1`, trần wrapper 42300 s
+        (runner tự canh 30600 s + chạy tiếp một lần 10800 s — story/resume_once.py)
     worker / approve-poller
         không khai cái nào (không chạy TTS)
 
@@ -101,6 +102,12 @@ chép nguyên khối đó từ mẫu sang plist — muốn đổi thì đổi �
 `worker`, `approve-poller`, `daily-story` **không** nằm trong bộ mặc định. Ba job đó hoặc
 chạy liên tục, hoặc chạy hàng giờ giữa đêm; bật chúng phải là một câu người ta gõ ra, không
 phải hệ quả phụ của việc cài lịch. Muốn bật thì gọi đích danh bằng `--only`, hoặc `--all`.
+
+`weekly-cleanup` (dọn dung lượng tuần) còn chặt hơn: **chỉ** `--only` mới nạp, `--all` cũng bỏ
+qua (`CHI_DICH_DANH`). Job đó dời file theo lịch — một quyết định của chủ máy về chính dữ liệu
+của họ, không được đi kèm một lệnh "bật hết". Mẫu của nó không có chỗ trống kênh/chiến dịch
+nên không cần khai gì trong `launchd.json` (khai `vars: {WEB_REPO_DIR: …}` nếu muốn đối chiếu
+audio đã lên web).
 
 ## Mã thoát
 
@@ -134,6 +141,8 @@ LAUNCH_AGENTS = Path("~/Library/LaunchAgents").expanduser()
 # Ba job phải gõ tên mới bật — xem docstring (F13).
 KHONG_MAC_DINH = ("studio.marketing.worker", "studio.marketing.approve-poller",
                   "studio.marketing.daily-story")
+# Chỉ `--only` mới nạp — `--all` cũng bỏ qua (xem docstring).
+CHI_DICH_DANH = ("studio.marketing.weekly-cleanup",)
 
 _CHO_TRONG = re.compile(r"__[A-Z_]+__")
 
@@ -460,6 +469,13 @@ def render(label: str, bang: dict, bi_mat: dict | None = None,
     return b
 
 
+def can_khai(label: str) -> bool:
+    """Mẫu có chỗ trống kênh/chiến dịch ⇒ phải khai. Job của cả trạm (`weekly-cleanup`) thì không."""
+    f = MAU_DIR / f"{label}.plist"
+    t = f.read_text(encoding="utf-8") if f.is_file() else ""
+    return "__CHANNEL__" in t or "__CAMPAIGN__" in t
+
+
 def runner_thieu(tram: Path, khai: dict) -> list[tuple[str, Path]]:
     """[(label, đường)] — job có `__RUNNER__` trong mẫu mà file nó sẽ gọi
     (`<trạm>/<kênh>/<chiến dịch>/<runner|run.ps1>`, ĐÚNG chuỗi plist ghép) không có.
@@ -511,10 +527,15 @@ def lam(a) -> dict:
     co = nhan()
     if a.list:
         for l in co:
-            SC.log(f"  {l}{'   (phải gọi đích danh)' if l in KHONG_MAC_DINH else ''}")
+            ghi = ("   (CHỈ --only — kể cả --all cũng không nạp)" if l in CHI_DICH_DANH
+                   else "   (phải gọi đích danh)" if l in KHONG_MAC_DINH else "")
+            SC.log(f"  {l}{ghi}")
         return {"labels": co}
 
-    chon = list(a.only) if a.only else [l for l in co if a.all or l not in KHONG_MAC_DINH]
+    # GỠ thì `--all` là gỡ HẾT, kể cả job chỉ-đích-danh: công tắc tắt phải tắt được mọi thứ đã bật.
+    chon = list(a.only) if a.only else [l for l in co
+                                        if (a.uninstall and a.all) or (l not in CHI_DICH_DANH
+                                        and (a.all or l not in KHONG_MAC_DINH))]
     la = [l for l in chon if l not in co]
     if la:
         raise SC.ContractError(f"không có mẫu cho: {la} (xem --list)")
@@ -552,14 +573,14 @@ def lam(a) -> dict:
             ra.append({"label": l, "action": "uninstall"})
         return {"jobs": ra, "out_dir": str(dich_dir)}
 
-    thieu = [l for l in chon if not khai.get(l)]
+    thieu = [l for l in chon if not khai.get(l) and can_khai(l)]
     if thieu:
         raise SC.ContractError(
             "chưa khai kênh/chiến dịch cho: " + ", ".join(thieu)
             + f" — dùng --map <label>=<kênh>/<chiến dịch>, hoặc khai trong "
               f"{tram / KHAI_FILE} (định dạng: docs/launchd.md)")
 
-    thieu_file = runner_thieu(tram, {l: khai[l] for l in chon})
+    thieu_file = runner_thieu(tram, {l: khai[l] for l in chon if khai.get(l)})
     if thieu_file:
         repo = SP.repo_root() or REPO
         raise SC.ContractError(
@@ -572,8 +593,8 @@ def lam(a) -> dict:
             + " — hoặc khai `runner` đúng tên file trong launchd.json.")
 
     for l in chon:
-        k = khai[l]
-        kenh, cd = k["channel"], k["campaign"]
+        k = khai.get(l) or {}
+        kenh, cd = k.get("channel", ""), k.get("campaign", "")
         co_runner = "__RUNNER__" in (MAU_DIR / f"{l}.plist").read_text(encoding="utf-8")
         runner = k.get("runner") or RUNNER_MAC_DINH
         if k.get("runner") and not co_runner:
@@ -618,7 +639,7 @@ def lam(a) -> dict:
             muc["schedule"] = k["schedule"]
         if a.dry_run:
             SC.log(f"[launchd] (xem trước) {l} → {dich} ({len(noi_dung)} B) "
-                   f"· {kenh}/{cd}{'/' + runner if co_runner else ''} "
+                   f"· {(kenh + '/' + cd) if kenh else '(cả trạm)'}{'/' + runner if co_runner else ''} "
                    f"· con trỏ bí mật: {', '.join(sorted(bi_mat)) or '(không)'} "
                    f"· KHÔNG gọi launchctl")
             muc["dry_run"] = True
@@ -635,7 +656,7 @@ def lam(a) -> dict:
             muc["loaded"] = False
         else:
             nap(l, dich)
-            SC.log(f"[launchd] {l}: đã nạp · {kenh}/{cd}")
+            SC.log(f"[launchd] {l}: đã nạp · {(kenh + '/' + cd) if kenh else '(cả trạm)'}")
             muc["loaded"] = True
         ra.append(muc)
 
@@ -653,7 +674,8 @@ def _parser() -> argparse.ArgumentParser:
                     help="chỉ job này (lặp được); gọi đích danh thì job ngoài bộ mặc "
                          "định cũng được bật")
     ap.add_argument("--all", action="store_true",
-                    help="cả worker, poller và lượt truyện (mặc định: KHÔNG)")
+                    help="cả worker, poller và lượt truyện (mặc định: KHÔNG); job dọn "
+                         "tuần vẫn KHÔNG — chỉ --only")
     ap.add_argument("--map", action="append", default=[], metavar="LABEL=KÊNH/CHIẾN-DỊCH",
                     help="khai kênh/chiến dịch cho một job (lặp được)")
     ap.add_argument("--out-dir", help="thư mục ghi plist (mặc định ~/Library/LaunchAgents)")

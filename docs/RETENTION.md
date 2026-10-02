@@ -113,3 +113,17 @@ kế hoạch xoá.
 3. Chốt `--audio-policy` / `--video-policy` cho **từng trạm**, và khai `--evidence` cho
    trạm truyện. Đó là quyết định của chủ máy, không phải mặc định của script.
 4. Đặt cầu dao theo cỡ thật của trạm đó, rồi mới đổi `--move-to` thành `--delete`.
+
+**Đã gắn lịch từ 1.1.8 — ở chế độ DỜI, không xoá.** Job `studio.marketing.weekly-cleanup`
+(launchd, CN 04:00; Windows: `run-weekly-cleanup.ps1 -Register`) chạy `weekly_cleanup.py`:
+`--video-policy published --audio-policy web-first --days 14 --move-to <trạm>/_trash/<ngày>`
+trên các thư mục của trạm marketing + trạm giọng + trạm video, tự nhặt `truyen-state.json` /
+`playlist-youtube.json` làm `--evidence`. Thùng rác đổ sau 30 ngày tính từ NGÀY DỜI — đó là cửa
+sổ hoàn tác. Job chỉ nạp khi gọi đích danh; chạy `-DryRun` đọc báo cáo trước khi bật (bước 1
+ở trên). Cầu dao giữ mặc định (200 file / 50 GB): vượt trần ⇒ job ❌ mã 2, không dời gì — trạm
+tồn nhiều file thì lượt ĐẦU dễ vượt: chạy `-DryRun`, rồi dời tay một lần bằng `prune_media.py
+--max-files <cỡ thật>` trước khi bật lịch, nếu không tuần nào cũng ❌.
+
+Hai điều nữa: mỗi lượt ghi kê khai riêng `manifest-prune-media-<giờ>.json` trong `_trash/<ngày>`
+(hai lượt cùng ngày không ghi đè nhau); trạm giọng/video nằm KHÁC ổ với trạm marketing thì "dời"
+thành chép-rồi-xoá — chậm, và chiếm chỗ trên ổ của trạm marketing cho tới khi thùng rác được đổ.

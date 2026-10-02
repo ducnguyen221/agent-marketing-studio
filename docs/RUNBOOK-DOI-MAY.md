@@ -234,7 +234,7 @@ chỗ dễ sai nhất khi dựng trạm trên Mac, và sai thì cả hai bên v�
 |---|---|---|
 | `OMNIVOICE_DTYPE` | **`float32`** | **`float16`** |
 | `HF_DEACTIVATE_ASYNC_LOAD` | **không khai** | **`1`, bắt buộc** |
-| Trần giờ của wrapper | 2 h (ngày) · 3 h (tuần) | **30600 s = 8 h 30** |
+| Trần giờ | wrapper: 2 h (ngày) · 3 h (tuần) | runner: **30600 s = 8 h 30** + chạy tiếp 1 lần 10800 s · wrapper (lưới an toàn): 42300 s |
 | Mỗi lượt | 4–12 phút · bản tuần ~41 phút | TTS 5 h 47 · cả lượt ≈ 6 h 05 |
 
 - **Vì sao tin dùng fp32:** lượt tin nằm gọn trong cửa sổ 18:00–21:00 và thừa thời gian,
@@ -247,6 +247,23 @@ chỗ dễ sai nhất khi dựng trạm trên Mac, và sai thì cả hai bên v�
 - **Trần giờ truyện không được hạ sát 6 h:** 6 h 05 là số đo trên máy **rảnh**; lượt hằng
   đêm còn crawl và dựng video chen vào. Trần cũ 21600 s (6 h) giết lượt đúng lúc nó vừa
   đọc xong mà chưa kịp dựng video — mất trọn 6 tiếng đã chạy.
+- **Quá trần thì runner tự chạy tiếp MỘT lần (P1-23):** `run-daily-truyen.ps1` chạy
+  `daily_truyen.py` qua `story/resume_once.py`. Mã 124 mà `_resume.json` còn dải dở ⇒ tin ⏳
+  "quá trần — đang chạy tiếp từ chương X" ⇒ chạy lại dùng cache chương (trần 3 h) ⇒ ✅/❌ như
+  thường. Lượt chạy tiếp lại 124 ⇒ dừng, không lặp. Không còn ai phải `launchctl kickstart`
+  tay. Trần của wrapper (plist 42300 s; Windows `ExecutionTimeLimit` do `-Register` tính) phải
+  ≥ tổng hai trần, nếu không nó giết luôn lượt chạy tiếp. **Windows đã có task truyện cũ**
+  (tạo tay, trần 6 h): `run-daily-truyen.ps1 -Register -Campaign <thư mục> -TaskName '<tên task
+  cũ>'` để GHI ĐÈ đúng task đó; `-Register` in WARN nếu thấy task khác trỏ cùng chiến dịch — hai
+  task cùng giờ chạy song song cùng dải và xoá `_work` của nhau.
+- **Không tự chạy tiếp khi bị giết lúc ĐANG ĐĂNG:** `daily_truyen.py` ghi `phase: publish` vào
+  `_resume.json` ngay trước khi upload; quá trần từ đó trở đi thì bộ canh KHÔNG chạy tiếp (video
+  có thể đã lên mà chưa ghi state — chạy tiếp là đăng trùng). Lượt theo lịch đêm sau cũng DỪNG
+  (`PUBLISH_GUARD=blocked`) cho tới khi người gỡ — log in sẵn lệnh: kênh ĐÃ có tập ⇒
+  `<python giọng> scripts/runners/story/daily_truyen.py --state <truyen-state.json>
+  --confirm-published` (ghi đúng `last_end`/`next_url`); CHƯA có ⇒ `--clear-publish-guard`.
+  Đừng sửa `truyen-state.json` tay: `last_end` đúng là chương THẬT cuối (manifest), và nguồn
+  pntt2 cần cả `next_url`.
 - `worker` và `approve-poller` **không khai** cả hai biến: chúng không chạy TTS.
 
 Cấu hình này nằm trong `templates/launchd/*.plist`; `tests/test_launchd_templates.py`
@@ -276,6 +293,9 @@ python scripts/runners/install_launchd.py --only studio.marketing.daily-news-a
 - `worker`, `approve-poller`, `daily-story` **không** nằm trong bộ mặc định: phải gọi đích
   danh bằng `--only`, hoặc `--all`. Ba job đó hoặc chạy liên tục, hoặc chạy hàng giờ giữa
   đêm — bật chúng phải là một câu bạn gõ ra.
+- `weekly-cleanup` (dọn dung lượng tuần) **chỉ** `--only` — `--all` cũng bỏ qua. Trước khi bật:
+  `pwsh scripts/runners/run-weekly-cleanup.ps1 -DryRun` và đọc báo cáo (sẽ dời gì, giữ gì vì
+  thiếu bằng chứng). Windows: `run-weekly-cleanup.ps1 -Register` (cần `NOTIFY_RUN`).
 - Kiểm một job: `launchctl print gui/$UID/<label>`; log ở `<trạm>/logs/launchd/<label>.*.log`.
 
 **Windows**
@@ -312,7 +332,8 @@ mà báo. Sáng hôm sau bạn chỉ thấy: hôm qua không có bài.
 **Cách canh, theo thứ tự nên dùng:**
 
 1. **`notify_run.py --timeout <giây>`** — cách chính, và là thứ các plist mẫu đã bật sẵn
-   (2 h cho lượt ngày, 3 h cho lượt tuần, **8 h 30 cho lượt truyện**). Quá giờ thì wrapper giết
+   (2 h cho lượt ngày, 3 h cho lượt tuần, 1 h cho dọn tuần; lượt truyện 42300 s là **lưới an
+   toàn** — runner truyện tự canh 8 h 30 rồi tự chạy tiếp một lần 3 h, xem mục hai pipeline). Quá giờ thì wrapper giết
    **cả nhóm tiến trình con** (không chỉ cái vỏ — `run.ps1` đẻ ra ffmpeg, node, python),
    gửi tin ❌ ghi rõ "QUÁ GIỜ", và thoát mã 1. Đây là **ngoại lệ duy nhất** của luật "mã
    thoát = mã của lệnh con": khi bị giết thì không có mã con nào để trả.
@@ -322,6 +343,38 @@ mà báo. Sáng hôm sau bạn chỉ thấy: hôm qua không có bài.
    Telegram mỗi lượt là hàng nghìn tin một ngày.
 3. **Nhìn được từ ngoài:** `launchctl print gui/$UID/<label>` in `state = running` kèm PID.
    Một job theo lịch mà còn `running` sau giờ cao nhất của nó là dấu hiệu treo.
+
+## Khởi động lại định kỳ máy chạy lịch — Đức quyết, CHƯA bật
+
+**Vì sao nghĩ tới (P1-24, Mac mini 02/10/2026):** Hot AI 18:00 hỏng sau 42 phút vì môi trường
+render của macOS kẹt (`Navigation timeout` ở frame 0 với mọi project; `WindowServer` 21 % và
+`coreaudiod` 14 % CPU lúc máy rảnh). Khởi động lại máy là hết. Từ 1.1.8 runner tin **phát hiện
+sớm** (`video-studio probe` trước nghiên cứu/TTS, mã 5, tin ❌ "khởi động lại máy rồi chạy lại")
+— nhưng phát hiện vẫn mất một lượt. Khởi động lại định kỳ là cách **phòng**.
+
+Repo **không** tự làm việc này: macOS cần quyền admin, và khởi động lại một máy là quyết định của
+chủ máy. Nếu bật, làm tay một lần:
+
+```sh
+sudo pmset repeat restart U 05:00:00      # Chủ nhật 05:00 (U = Sunday trong pmset)
+pmset -g sched                            # kiểm lịch đã đặt
+sudo pmset repeat cancel                  # bỏ (xoá MỌI lịch repeat của pmset)
+```
+
+Ba điều phải kiểm TRƯỚC khi bật:
+
+1. **Job lịch là LaunchAgent của người dùng** — sau khởi động lại chúng chỉ chạy khi người dùng
+   đã đăng nhập. Máy phải bật tự đăng nhập (FileVault bật thì không tự đăng nhập được). Dấu hiệu
+   đạt: sau lần mất điện 01/10 cả 6 plist tự nạp lại. Kiểm lại sau lần khởi động lại đầu tiên:
+   `launchctl print gui/$UID/studio.marketing.daily-news-a`.
+2. **Không cắt ngang lượt đang chạy.** Truyện bắt đầu 00:00 và có thể kéo tới ~11:30 nếu quá
+   trần rồi chạy tiếp (8 h 30 + 3 h). Khởi động lại 05:00 CN sẽ giết lượt đó: hoặc chọn giờ khác,
+   hoặc chấp nhận mất lượt truyện Chủ nhật (cache chương + `_resume.json` vẫn còn, lượt thứ Hai
+   đọc tiếp đúng dải đó). Dọn tuần CN 04:00 xong trong vài phút — nằm trước 05:00.
+3. **Windows** (nếu máy lịch là Windows): một task Task Scheduler `shutdown /r /t 60` với cùng
+   lưu ý — task chạy "chỉ khi người dùng đăng nhập" sẽ không chạy cho tới khi có người đăng nhập.
+
+Ghi quyết định (bật/không, giờ nào) vào `<trạm>/MAY-DANG-CHAY.md`.
 
 ### Và launchd cũng không dịch được "cách ngày"
 

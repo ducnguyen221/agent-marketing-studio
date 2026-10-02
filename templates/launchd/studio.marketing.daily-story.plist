@@ -3,11 +3,13 @@
 <!-- studio.marketing.daily-story
      Lượt truyện hằng ngày. GIỜ ĐÃ DỜI: bản Windows chạy 03:00, trên Mac là 00:00 (Hour 0) — lượt dài ~5 h nên phải bắt đầu đầu ngày để xong trước giờ làm việc.
 
-     Trần giờ (cờ `timeout` của wrapper) = 30600 s (8 h 30). Số đo: TTS 5 h 47 + dựng
-     video 15,5 phút + upload 30 phút ≈ 6 h 05 — nhưng đó là trên máy RẢNH. Lượt thật
-     còn crawl và dựng video chen vào, nên trần KHÔNG được hạ sát 6 h: trần cũ 21600
-     (6 h) giết lượt đúng lúc nó vừa đọc xong và chưa kịp dựng video, tức mất trọn 6
-     tiếng đã chạy.
+     Trần giờ: HAI tầng (P1-23). Runner tự canh lượt đầu 30600 s (8 h 30) — số đo: TTS 5 h 47
+     + dựng video 15,5 phút + upload 30 phút ≈ 6 h 05 trên máy RẢNH, lượt thật còn crawl và
+     dựng chen vào; trần cũ 21600 (6 h) giết lượt đúng lúc vừa đọc xong. Quá trần mà dải còn
+     dở thì runner tự chạy tiếp MỘT lần (trần 10800 s, dùng cache chương) — xem
+     scripts/runners/story/resume_once.py. Cờ `timeout` của wrapper ở đây (42300 s = 30600
+     + 10800 + 900 biên) chỉ còn là LƯỚI AN TOÀN: nó phải lớn hơn tổng hai trần của runner,
+     nếu không nó giết luôn lượt chạy tiếp (cổng: tests/test_resume_once.py).
 
      MẪU — mọi `__TÊN__` là chỗ trống. Đừng sửa tay bản trong `~/Library/LaunchAgents`:
      sửa ở đây rồi chạy lại `scripts/runners/install_launchd.py`.
@@ -29,7 +31,7 @@
     <string>--composer-dir</string>
     <string>__REPO__/scripts/runners</string>
     <string>--timeout</string>
-    <string>30600</string>
+    <string>42300</string>
     <string>--</string>
     <string>pwsh</string>
     <string>-NoProfile</string>

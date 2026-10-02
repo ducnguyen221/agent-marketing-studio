@@ -57,6 +57,8 @@ LICH = {
     "studio.marketing.weekly-news-b": {"Weekday": 6, "Hour": 21, "Minute": 0},
     "studio.marketing.weekly-repo": {"Weekday": 0, "Hour": 20, "Minute": 0},
     "studio.marketing.daily-story": {"Hour": 0, "Minute": 0},
+    # Dọn tuần: CN 04:00 — sau khi truyện 00:00 thường đã xong phần nặng, trước mọi job ngày.
+    "studio.marketing.weekly-cleanup": {"Weekday": 0, "Hour": 4, "Minute": 0},
 }
 
 # ══ HAI PIPELINE, HAI CẤU HÌNH — bảng quyết định, không phải hệ quả của code ══
@@ -80,7 +82,8 @@ TIN = ["studio.marketing.daily-news-a", "studio.marketing.daily-news-b",
        "studio.marketing.weekly-news-a", "studio.marketing.weekly-news-b",
        "studio.marketing.weekly-repo"]
 TRUYEN = ["studio.marketing.daily-story"]
-KHONG_TTS = ["studio.marketing.worker", "studio.marketing.approve-poller"]
+KHONG_TTS = ["studio.marketing.worker", "studio.marketing.approve-poller",
+             "studio.marketing.weekly-cleanup"]
 
 # label -> (giá trị OMNIVOICE_DTYPE hoặc None nếu KHÔNG được khai, có HF_DEACTIVATE_ASYNC_LOAD?)
 GIONG = {**{l: ("float32", False) for l in TIN},
@@ -88,20 +91,22 @@ GIONG = {**{l: ("float32", False) for l in TIN},
          **{l: (None, False) for l in KHONG_TTS}}
 
 # Trần giờ của wrapper. launchd không có `ExecutionTimeLimit`, nên con số này LÀ cái trần.
-# Truyện 30600 s (8 h 30): lượt đo ~6 h 05 trên máy RẢNH, lượt thật còn crawl + dựng video
-# chen vào. Trần cũ 21600 (6 h) giết lượt đúng lúc đọc xong mà chưa kịp dựng video.
+# Truyện: runner tự canh lượt đầu 30600 s (8 h 30) + chạy tiếp một lần 10800 s (P1-23,
+# story/resume_once.py); trần wrapper 42300 s là lưới an toàn ≥ tổng hai trần + 900 s biên.
+# Trần lượt đầu không được hạ sát 6 h: lượt đo ~6 h 05 trên máy RẢNH (tests/test_resume_once.py).
 TRAN_GIO = {
     "studio.marketing.daily-news-a": 7200,
     "studio.marketing.daily-news-b": 7200,
     "studio.marketing.weekly-news-a": 10800,
     "studio.marketing.weekly-news-b": 10800,
     "studio.marketing.weekly-repo": 10800,
-    "studio.marketing.daily-story": 30600,
+    "studio.marketing.daily-story": 42300,
+    "studio.marketing.weekly-cleanup": 3600,
 }
 
 
-def test_co_du_8_mau():
-    assert len(LABELS) == 8, f"đếm được {len(LABELS)} mẫu: {LABELS}"
+def test_co_du_9_mau():
+    assert len(LABELS) == 9, f"đếm được {len(LABELS)} mẫu: {LABELS}"
 
 
 @pytest.mark.parametrize("label", LABELS)
@@ -165,7 +170,7 @@ def test_truyen_KHONG_duoc_ha_tran_gio_sat_luot_that():
     xuống sát 6 h là giết lượt đúng lúc nó vừa đọc xong và chưa kịp dựng video: mất
     trọn 6 tiếng đã chạy, mà wrapper vẫn chỉ báo "quá giờ".
     """
-    assert _tran_gio("studio.marketing.daily-story") >= 30600
+    assert _tran_gio("studio.marketing.daily-story") >= 30600 + 10800
 
 
 @pytest.mark.parametrize("label", ["studio.marketing.worker",
@@ -269,7 +274,7 @@ def _chay(*doi, cwd=None):
                           errors="replace", cwd=cwd or str(ROOT))
 
 
-def test_list_in_du_8_label():
+def test_list_in_du_9_label():
     r = _chay("--list")
     assert r.returncode == 0, r.stderr
     for l in LABELS:
@@ -385,13 +390,46 @@ def test_mac_dinh_KHONG_nap_ba_job_chay_lien_tuc(tmp_path):
     """Assert trên hằng số `KHONG_MAC_DINH` không chứng minh `lam()` có dùng nó. Cổng này
     chạy `lam()` thật và đếm job nó chọn."""
     chon = _chon(tmp_path)
-    assert set(chon) == set(LABELS) - set(IL.KHONG_MAC_DINH)
+    assert set(chon) == set(LABELS) - set(IL.KHONG_MAC_DINH) - set(IL.CHI_DICH_DANH)
     for l in IL.KHONG_MAC_DINH:
         assert l not in chon, f"{l} không được nạp khi không ai gõ tên nó ra"
 
 
-def test_all_thi_nap_du(tmp_path):
-    assert set(_chon(tmp_path, all=True)) == set(LABELS)
+def test_all_thi_nap_du_TRU_job_chi_dich_danh(tmp_path):
+    assert set(_chon(tmp_path, all=True)) == set(LABELS) - set(IL.CHI_DICH_DANH)
+
+
+def test_don_tuan_KHONG_nap_ca_khi_all_chi_only(tmp_path):
+    """SUBTASK-WIN-RUNTIME-2 §2: `install_launchd.py --all` mặc định KHÔNG nạp job dọn — dời
+    file theo lịch là quyết định của chủ máy, phải gõ đích danh."""
+    l = "studio.marketing.weekly-cleanup"
+    assert IL.CHI_DICH_DANH == (l,)
+    for x in "abc":
+        (tmp_path / x).mkdir()
+    assert l not in _chon(tmp_path / "a", all=True)
+    assert l not in _chon(tmp_path / "b")
+    assert _chon(tmp_path / "c", only=[l]) == [l]
+
+
+def test_don_tuan_KHONG_can_khai_kenh_chien_dich(tmp_path):
+    """Job của cả trạm: mẫu không có chỗ trống kênh/chiến dịch ⇒ launchd.json trống vẫn cài được."""
+    tram = tmp_path / "tram"
+    tram.mkdir()
+    a = IL._parser().parse_args([])
+    a.station, a.dry_run, a.out_dir = str(tram), True, str(tmp_path / "ra")
+    a.only = ["studio.marketing.weekly-cleanup"]
+    assert [m["label"] for m in IL.lam(a)["jobs"]] == a.only
+    assert not IL.can_khai("studio.marketing.weekly-cleanup")
+    assert IL.can_khai("studio.marketing.daily-story")
+
+
+def test_don_tuan_la_job_NHE_chay_Background_qua_wrapper():
+    d = plistlib.loads(IL.render("studio.marketing.weekly-cleanup", GIA))
+    assert d["ProcessType"] == "Background"
+    a = d["ProgramArguments"]
+    assert a[1].endswith("notify_run.py") and "--composer-dir" in a, (
+        "tin Telegram (dung lượng, số file đã dời) do compose_report soạn")
+    assert a[-1].endswith("scripts/runners/run-weekly-cleanup.ps1")
 
 
 def test_only_goi_dich_danh_thi_van_nap_duoc_job_bi_loai(tmp_path):
@@ -412,7 +450,9 @@ CON_TRO_DAY_DU = ["TG_CONFIG", "TG_CHAT", "YT_CLIENT_SECRET", "YT_TOKEN_PATH", "
                   "EMAIL_CONFIG", "CODEX_BRIDGE"]
 # Quyền tối thiểu: job nào khai con trỏ nào là QUYẾT ĐỊNH. Poller chỉ nói chuyện Telegram.
 BI_MAT = {**{l: CON_TRO_DAY_DU for l in TIN + TRUYEN + ["studio.marketing.worker"]},
-          "studio.marketing.approve-poller": ["TG_CONFIG", "TG_CHAT"]}
+          "studio.marketing.approve-poller": ["TG_CONFIG", "TG_CHAT"],
+          # Dọn tuần không đăng gì: chỉ con trỏ Telegram (báo dung lượng).
+          "studio.marketing.weekly-cleanup": ["TG_CONFIG", "TG_CHAT"]}
 
 
 @pytest.fixture
@@ -536,7 +576,8 @@ def test_log_va_JSON_chi_mang_TEN_bien_khong_mang_gia_tri(tmp_path):
 
 # ── runner theo job ──────────────────────────────────────────────────────────
 
-CO_RUNNER = [l for l in LABELS if l in LICH]
+# Job theo lịch gọi runner của CHIẾN DỊCH. Dọn tuần là job của cả trạm (gọi runner của repo).
+CO_RUNNER = [l for l in LABELS if l in LICH and IL.can_khai(l)]
 
 
 @pytest.mark.parametrize("label", CO_RUNNER)
@@ -674,3 +715,9 @@ def test_tai_lieu_dinh_dang_launchd_json_co_vi_du_HOP_LE():
         for label, v in json.loads(k).items():
             assert label in LABELS, label
             IL.muc_khai(label, v)
+
+
+def test_uninstall_all_GO_CA_job_chi_dich_danh(tmp_path):
+    """Review 02/10 NS3: công tắc tắt phải tắt được mọi thứ đã bật."""
+    (tmp_path / "x").mkdir()
+    assert "studio.marketing.weekly-cleanup" in _chon(tmp_path / "x", all=True, uninstall=True)

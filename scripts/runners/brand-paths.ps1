@@ -796,6 +796,66 @@ function Invoke-TopstoryRender {
   return [pscustomobject]@{ code = $r.code; result = $r.result; spec = $spec }
 }
 
+function Invoke-RenderPreflight {
+  <#
+    Rào render (P1-24): `video-studio probe` — render THẬT một trang 320x180 dài 0,5 s, không tài
+    nguyên ngoài (vài giây trên máy khoẻ) — đặt TRƯỚC bước nghiên cứu (agent) và TTS.
+
+    Mac mini 02/10/2026: Hot AI 18:00 hỏng sau 42 phút ở `page.goto … Navigation timeout` frame 0
+    — môi trường macOS kẹt, mọi project đều hỏng, khởi động lại máy là hết. Không có rào này thì
+    lượt chạy đốt agent + TTS + 40 phút rồi mới biết.
+
+    Trần phần RENDER của phép thử: 30 s; đặt `RENDER_PROBE_TIMEOUT` (giây) để đổi — đặt 1 là cách
+    GIẢ LẬP máy kẹt khi nghiệm thu (đúng nhánh kẹt, đúng tin ❌). Trước đó probe LÀM ẤM npx +
+    Chromium ngoài trần đó (thường vài giây; lần đầu sau nâng bản ghim có thể vài phút, mỗi bước
+    trần 600 s ⇒ mã 3) — runner không đặt trần ngoài cho preflight, wrapper của job là trần cuối.
+    -> mã thoát cho runner (DỪNG khi khác 0, không thử lại):
+       0 đi tiếp · 5 môi trường render KẸT (`RENDER_STUCK`) — khởi động lại máy ·
+       1 phép thử hỏng kiểu khác (đuôi log nói vì sao) · 2 cấu hình sai (probe trả JSON lỗi, vd
+       `HYPERFRAMES_VERSION=latest`) · 3 thiếu công cụ (npx/Node, Chromium, gói `video_studio`).
+       Chỉ `RENDER_STUCK` mới là mã 5 — mã 5 nghĩa là "khởi động lại máy", nói câu đó cho một
+       lỗi cấu hình là chỉ sai hướng (review 02/10).
+       video-studio cũ (< 0.2.5): mã 2 mà KHÔNG có dòng JSON (lệnh lạ) ⇒ nhắc rồi đi tiếp.
+  #>
+  param([Parameter(Mandatory)][string]$Python, [scriptblock]$OnLine)
+  $cb = $OnLine
+  $ghi = { param($l) if ($cb) { & $cb $l } }.GetNewClosure()
+  $t = 30
+  $bien = Get-EnvVar 'RENDER_PROBE_TIMEOUT'
+  if ($bien -match '^\d+$' -and [int]$bien -ge 1) { $t = [int]$bien }
+  & $ghi ('Render preflight: video-studio probe (tran ' + $t + 's) ...')
+  # Gom dòng ra rồi mới ghi: video-studio cũ in nguyên bảng trợ giúp (~18 dòng) khi gặp lệnh lạ —
+  # mã 2 chỉ cần một dòng nhắc, không cần dồn bảng đó vào log và đuôi tin Telegram.
+  $dong = New-Object System.Collections.Generic.List[string]
+  $r = Invoke-VideoStudio -Python $Python -OnLine { param($l) $dong.Add([string]$l) }.GetNewClosure() `
+         -Arguments @('probe', '--timeout', [string]$t, '--json')
+  $cu = ($r.code -eq 2 -and -not $r.result)          # lệnh lạ của video-studio cũ: không JSON
+  if (-not $cu) { foreach ($l in $dong) { & $ghi ('probe: ' + $l) } }
+  $err = ''
+  if ($r.result -and $r.result.error) { $err = [string]$r.result.error }
+  $khongModule = (-not $r.result) -and (($dong -join "`n") -match 'No module named')
+  if ($r.code -eq 0) { & $ghi 'RENDER_PREFLIGHT=ok'; return 0 }
+  if ($r.code -eq 1 -and $err -like 'RENDER_STUCK*') {
+    & $ghi 'ERROR: moi truong render ket (HyperFrames khong mo duoc trang) - khoi dong lai may roi chay lai.'
+    & $ghi 'RENDER_PREFLIGHT=stuck'
+    return 5
+  }
+  if ($r.code -eq 3 -or $khongModule) {
+    & $ghi ('ERROR: thieu cong cu render (npx/Node, Chromium hoac goi video_studio trong venv tram giong): ' + $err + ' - chay video-studio doctor.')
+    & $ghi 'RENDER_PREFLIGHT=missing'
+    return 3
+  }
+  if ($cu) { & $ghi 'WARN: video-studio chua co lenh probe (can >= 0.2.5) - bo qua phep thu render.'; & $ghi 'RENDER_PREFLIGHT=skipped'; return 0 }
+  if ($r.code -eq 2) {
+    & $ghi ('ERROR: cau hinh render sai (video-studio probe ma 2): ' + $err + ' - sua cau hinh, chay lai vo ich.')
+    & $ghi 'RENDER_PREFLIGHT=config'
+    return 2
+  }
+  & $ghi ('ERROR: phep thu render hong truoc buoc ton kem (ma ' + $r.code + '): ' + $err + ' - chay video-studio doctor --hf.')
+  & $ghi 'RENDER_PREFLIGHT=failed'
+  return 1
+}
+
 function Get-VideoStudioCodeText {
   param([int]$Code)
   switch ($Code) {

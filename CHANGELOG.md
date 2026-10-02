@@ -3,6 +3,81 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.8 — 2026-10-03
+
+Ba việc Mac mini giao ngày 02/10 (SUBTASK-WIN-RUNTIME-2; P4-RUNS: P5-1.1.7, P5-VIEC-CHO-WINDOWS,
+P5-02/10-TOI). Mọi thay đổi chạy giống nhau dưới Task Scheduler lẫn launchd.
+
+- **P1-23 — truyện tự chạy tiếp khi quá trần.** `run-daily-truyen.ps1` chạy `daily_truyen.py` qua
+  `story/resume_once.py`: lượt đầu trần `-Budget` 30600 s; mã 124 (quá trần — bộ canh giết cả
+  cây tiến trình, hoặc lệnh con tự trả 124) mà `<trạm giọng>/omnivoice/truyen-out/_resume.json`
+  còn dải dở ⇒ tin ⏳ "quá trần — đang chạy tiếp từ chương X" ⇒ chạy lại ĐÚNG MỘT LẦN với trần
+  `-ResumeBudget` 10800 s, dùng cache chương (không đọc lại chương nào). Không còn `_resume.json`
+  ⇒ không chạy tiếp; lượt chạy tiếp lại 124 ⇒ dừng, không lặp. Tin ✅/❌ của lượt chạy tiếp do
+  wrapper gửi như thường, kèm dòng "đã tự chạy tiếp từ chương X" (`compose_report.py` đọc
+  `RESUME_ONCE=…`). Đặt ở runner, không ở wrapper, để wrapper Task Scheduler ngoài repo cũng có.
+  Mẫu `daily-story`: `--timeout` 30600 → **42300** (lưới an toàn ≥ tổng hai trần). Windows:
+  `run-daily-truyen.ps1 -Register` (qua `NOTIFY_RUN`, `ExecutionTimeLimit` = hai trần + 1800 s).
+  Lượt 301–310 (02/10) bị giết 08:30 sau 9/10 chương, người phải `launchctl kickstart` tay.
+- **Job dọn dung lượng hằng tuần** `studio.marketing.weekly-cleanup` (CN 04:00, `Background`,
+  trần 1 h): `run-weekly-cleanup.ps1` → `weekly_cleanup.py`. (1) `prune_media.py
+  --video-policy published --audio-policy web-first --days 14 --move-to <trạm>/_trash/<ngày>`
+  trên thư mục của trạm marketing + giọng + video (DỜI, có kê khai; tự nhặt `truyen-state.json`/
+  `playlist-youtube.json` làm bằng chứng); (2) đổ `_trash/<ngày>` dời quá 30 ngày (theo ngày dời,
+  không theo mtime); (3) xoay vòng log `logs/launchd/` + `daily-logs/` của trạm giọng: xoá quá 60
+  ngày, cắt file trên 5 MB giữ 1 MB cuối tại chỗ; (4) báo dung lượng từng trạm — tin Telegram do
+  `compose_report.py` soạn từ dòng `CLEANUP_*`, nên hai wrapper (launchd/Task Scheduler) cùng nội
+  dung. `-DryRun` không chạm một byte. **`install_launchd.py --all` KHÔNG nạp job này** (mới:
+  `CHI_DICH_DANH`, chỉ `--only`); mẫu không có chỗ trống kênh/chiến dịch nên không cần khai.
+  Windows: `run-weekly-cleanup.ps1 -Register`.
+- **P1-24 — rào render trước các bước tốn kém.** `Invoke-RenderPreflight` (`brand-paths.ps1`) gọi
+  `video-studio probe` (agent-video-studio 0.2.5 — render thật một trang 320×180 dài 0,5 s, vài
+  giây) trong `run-toptoday-hot.ps1`, `run-weekly-news.ps1`, `run-weekly-repo.ps1`: SAU kiểm nhịp
+  + nhạc nền, TRƯỚC nghiên cứu (agent) và TTS. Kẹt (`RENDER_STUCK`) hoặc hỏng ⇒ dừng **mã 5**,
+  tin ❌ "MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — khởi động lại máy rồi chạy
+  lại" (`compose_report.py` + định dạng dự phòng của `notify_run.py`); thiếu npx ⇒ mã 3;
+  video-studio cũ chưa có `probe` ⇒ nhắc rồi đi tiếp. `RENDER_PROBE_TIMEOUT` (giây, mặc định 30)
+  đổi trần — đặt 1 để giả lập máy kẹt khi nghiệm thu. Render hỏng vì `Navigation timeout` cũng
+  được `compose_report` gắn gợi ý khởi động lại. Hot AI 02/10 18:00 hỏng sau 42 phút vì môi trường
+  macOS kẹt; khởi động lại máy là hết.
+- **Khởi động lại định kỳ**: chỉ ghi thành bước tài liệu cho Đức quyết (`docs/RUNBOOK-DOI-MAY.md`
+  mục "Khởi động lại định kỳ máy chạy lịch") — `pmset repeat restart` cần admin, kèm ba điều phải
+  kiểm (tự đăng nhập, không cắt ngang lượt truyện, Windows).
+- **Sau review độc lập (02/10)** — 4 Phải sửa + các Nên sửa:
+  - rào render: chỉ `RENDER_STUCK` mới là mã 5; `probe` mã 2 KÈM JSON = cấu hình sai ⇒ dừng mã 2
+    (trước đó bị coi là "video-studio cũ" và cho qua); thiếu gói `video_studio` ⇒ 3; hỏng khác ⇒ 1;
+    runner kiểm `$ovpy` (thiếu ⇒ 3) và ép `$pf` là số — `exit $null` từng ra mã 0 (✅ giả);
+  - truyện: `daily_truyen.py` ghi `phase: publish` vào `_resume.json` TRƯỚC khi upload ⇒ bộ canh
+    KHÔNG chạy tiếp lượt bị giết lúc đang đăng (chống video trùng công khai); `read_story.py` ghi
+    `Chuong_<n>.wav` nguyên tử (tên tạm + `os.replace`) — file cụt không còn bị dùng lại như chương
+    xong; bộ canh bắt SIGTERM/SIGHUP để giết nhóm con (macOS: session riêng, wrapper không với tới);
+    tin báo lượt chạy tiếp lại quá trần / quá trần không còn dấu / quá trần lúc đăng;
+  - job dọn: không cắt log vừa ghi trong 1 h (lượt truyện có thể đang chạy lúc CN 04:00); kê khai
+    mang giờ (hai lượt cùng ngày không ghi đè); mỗi bước bọc riêng; `prune_media` có trần 2400 s;
+    trạm giọng/video chưa phân giải ⇒ `CLEANUP_SKIP` + cảnh báo thay vì ✅ im lặng; `prune_media`
+    hỏng giữa chừng ⇒ tin nói "chưa rõ đã dời bao nhiêu" + đường kê khai; số ngày thùng rác theo cờ;
+  - `install_launchd.py --uninstall --all` gỡ cả job chỉ-đích-danh; `-Register` của truyện cảnh
+    báo task cũ trỏ cùng chiến dịch.
+  - vòng 2: lượt THEO LỊCH gặp dấu `phase: publish` của chính dải đó thì `daily_truyen.py` DỪNG
+    (`PUBLISH_GUARD=blocked`, mã 1, mỗi đêm cho tới khi người xử lý) — trước đó nó ghi đè dấu rồi
+    upload lần hai; job dọn: cầu dao từ chối ⇒ "KHÔNG dời gì" (không còn "chưa rõ đã dời").
+  - vòng 3: gỡ chặn bằng LỆNH, không sửa JSON tay — `daily_truyen.py --state … --confirm-published`
+    (kênh ĐÃ có tập: ghi `last_end` = act_end THẬT + `next_url` mới, lấy từ dấu ghi lúc vào pha
+    publish — sửa tay `last_end=end` từng làm pntt2 crawl lại đúng dải vừa đăng) hoặc
+    `--clear-publish-guard` (CHƯA có: lượt sau dựng + đăng lại); chặn so theo slug + dải (không
+    theo giọng); dấu publish của chiến dịch KHÁC trên cùng trạm cũng chặn (`_resume.json` dùng chung
+    cả trạm); ghi pha publish hỏng ⇒ KHÔNG đăng; job dọn nhận "từ chối" theo việc chưa có kê khai
+    kế hoạch; probe giết cây con cả khi bị Ctrl-C.
+- Test mới: `test_resume_once.py`, `test_weekly_cleanup.py`, `test_render_preflight.py`; cập nhật
+  `test_launchd_templates.py` (9 mẫu, trần truyện, job chỉ-đích-danh), `test_runner_agent_chain.py`.
+- **Còn mở (không làm đợt này):** `truyen_publish.py` chưa tự chống đăng trùng (đợt này chặn ở
+  tầng resume); `RENDER_PROBE_TIMEOUT` chỉ giả lập nhánh quá giờ của phép thử.
+
+**Mac cần làm:** checkout `v1.1.8` (+ video `v0.2.5`); cài lại plist `daily-story`
+(`install_launchd.py --only studio.marketing.daily-story`); chạy `run-weekly-cleanup.ps1 -DryRun`,
+đọc báo cáo, rồi `--only studio.marketing.weekly-cleanup`; giả lập preflight hỏng bằng
+`RENDER_PROBE_TIMEOUT=1` để thấy tin ❌ đúng.
+
 ## 1.1.7 — 2026-10-01
 
 Ba lỗi Mac mini báo tối 01/10 (P4-RUNS: P5-01/10-TOI, P5-AGENT-CHAIN).

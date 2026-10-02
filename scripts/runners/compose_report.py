@@ -62,6 +62,16 @@ def _khi(iso):
     return f"{khi} lúc {hh:02d}:{mi:02d}"
 
 
+def _co(b):
+    """Byte -> '3,00 GB' / '7,0 MB' (dấu phẩy thập phân, như người Việt đọc)."""
+    b = int(b)
+    s = f"{b / 1024 ** 3:.2f} GB" if b >= 1024 ** 3 else f"{b / 1024 ** 2:.1f} MB"
+    return s.replace(".", ",")
+
+
+TEN_TRAM = {"marketing": "marketing", "giong": "giọng", "video": "video", "trash": "thùng rác"}
+
+
 def find(rx, text, group=1, default=""):
     m = re.search(rx, text)
     return m.group(group) if m else default
@@ -163,6 +173,79 @@ def build(title, code, duration, log):
     elif rs == "error":
         warn.append("Không kiểm được độ phủ của bài trước.")
 
+    # ── Truyện: quá trần rồi tự chạy tiếp (story/resume_once.py, P1-23) ─────────
+    rs_tu = find(r"RESUME_ONCE=start from=(\S+)", log)
+    if rs_tu:
+        dai = find(r"RESUME_ONCE=start from=\S+ range=(\S+)", log)
+        tu = "dựng video (đã đọc đủ chương)" if rs_tu == "build" else f"chương {rs_tu}"
+        warn.append(f"Lượt đầu quá trần — đã tự chạy tiếp MỘT lần từ {tu}"
+                    + (f" (dải {dai})" if dai else "") + ", dùng cache chương đã đọc.")
+        if "RESUME_ONCE=done code=124" in log:
+            warn.append("Lượt chạy tiếp CŨNG quá trần — đã dừng, không lặp. Cache chương còn "
+                        "nguyên: lượt theo lịch kế tiếp đọc tiếp đúng dải (hoặc kickstart tay).")
+    if "RESUME_ONCE=skip reason=publish" in log or "PUBLISH_GUARD=blocked" in log:
+        warn.append("Lượt truyện bị dừng lúc ĐANG ĐĂNG — KHÔNG tự chạy lại (kể cả lượt theo lịch "
+                    "đêm sau) để tránh đăng trùng. Kiểm kênh YouTube rồi chạy lệnh in trong log: "
+                    "ĐÃ có tập ⇒ daily_truyen.py --confirm-published (tự ghi last_end/next_url); "
+                    "CHƯA có ⇒ --clear-publish-guard.")
+    elif "RESUME_ONCE=skip reason=no-mark" in log:
+        warn.append("Quá trần nhưng không còn dấu dải dở (_resume.json) — không tự chạy tiếp; "
+                    "lượt theo lịch kế tiếp chạy lại từ đầu dải.")
+
+    # ── Render kẹt (video-studio `RENDER_STUCK:` · preflight mã 5 · Navigation timeout) ──
+    # `Navigation timeout` chỉ tính khi lượt HỎNG: render_project in stderr của mọi lần thử
+    # hỏng, kể cả khi lần sau qua — lượt ✅ không được mang cảnh báo kẹt.
+    ket = ("RENDER_STUCK" in log or "RENDER_PREFLIGHT=stuck" in log
+           or (not ok and "Navigation timeout" in log))
+    if ket:
+        warn.append("MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — khởi động lại "
+                    "máy rồi chạy lại (kiểm nhanh: video-studio probe).")
+    elif "RENDER_PREFLIGHT=failed" in log:
+        warn.append("Phép thử render hỏng TRƯỚC các bước tốn kém (chưa tốn agent/TTS) — chạy "
+                    "video-studio doctor --hf; không rõ nguyên nhân thì khởi động lại máy.")
+    elif "RENDER_PREFLIGHT=config" in log:
+        warn.append("Cấu hình render sai (video-studio probe mã 2) — sửa cấu hình; chạy lại vô ích.")
+    elif "RENDER_PREFLIGHT=missing" in log:
+        warn.append("Thiếu công cụ render (npx/Node, Chromium, hoặc gói video_studio trong venv "
+                    "trạm giọng) — chạy video-studio doctor.")
+    elif "RENDER_PREFLIGHT=skipped" in log:
+        warn.append("Chưa có phép thử render (video-studio < 0.2.5) — nâng video-studio.")
+
+    # ── Dọn dung lượng tuần (weekly_cleanup.py) ──────────────────────────────
+    sizes = re.findall(r"CLEANUP_SIZE label=(\w+) bytes=(\d+)", log)
+    pr = re.search(r"CLEANUP_PRUNE mode=(\S+) files=(\d+) bytes=(\d+) kept=(\d+)", log)
+    pr_hong = re.search(r"CLEANUP_PRUNE mode=move files=\? .*code=(\d+) manifest=(.+)$", log, re.M)
+    if pr_hong:
+        warn.append(f"Bước dời media HỎNG (prune_media mã {pr_hong.group(1)}) — chưa rõ đã dời bao "
+                    f"nhiêu file. Kê khai để đối chiếu/hoàn tác: {pr_hong.group(2).strip()}")
+    if "CLEANUP_PRUNE_REFUSED" in log:
+        warn.append("prune_media TỪ CHỐI (cầu dao vượt trần hoặc tham số sai) — KHÔNG dời gì. Lượt "
+                    "đầu trên trạm tồn nhiều file hay gặp: chạy -DryRun, dời tay một lần với "
+                    "--max-files theo cỡ thật (docs/RETENTION.md §7).")
+    for nhan, bien in re.findall(r"CLEANUP_SKIP label=(\w+) reason=no-station var=(\w+)", log):
+        warn.append(f"Bỏ qua trạm {TEN_TRAM.get(nhan, nhan)}: chưa phân giải được ({bien}) — "
+                    f"không quét, không xoay log, không đo.")
+    xem = bool(pr and pr.group(1) == "dry-run")
+    if pr:
+        if xem:
+            L.append(f"XEM TRƯỚC (dry-run), chưa chạm gì: sẽ dời {pr.group(2)} file "
+                     f"({_co(pr.group(3))}) đã đăng quá hạn sang _trash; giữ {pr.group(4)} file.")
+        else:
+            L.append(f"Đã dời {pr.group(2)} file ({_co(pr.group(3))}) đã đăng quá hạn sang "
+                     f"_trash; giữ {pr.group(4)} file chưa đủ bằng chứng hoặc còn hạn.")
+    tr = re.search(r"CLEANUP_TRASH mode=\S+ dirs=(\d+) bytes=(\d+)(?: days=(\d+))?", log)
+    if tr and tr.group(1) != "0":
+        L.append(f"{'Sẽ đổ' if xem else 'Đổ'} {tr.group(1)} thư mục thùng rác dời quá "
+                 f"{tr.group(3) or 30} ngày ({_co(tr.group(2))}).")
+    lg = re.search(r"CLEANUP_LOGS mode=\S+ deleted=(\d+) truncated=(\d+)", log)
+    if lg and (lg.group(1) != "0" or lg.group(2) != "0"):
+        L.append(f"Log: {'sẽ ' if xem else ''}xoá {lg.group(1)} log cũ, cắt {lg.group(2)} log "
+                 f"quá cỡ.")
+    if "CLEANUP_DONE ok=0" in log:
+        do_ = [re.sub(r"^\s*ĐỎ\s+", "", d) for d in log.splitlines() if re.match(r"^\s*ĐỎ\s", d)]
+        warn.append("Job dọn có bước hỏng" + (": " + "; ".join(do_[:3])[:300] if do_ else
+                                               " — đọc các dòng ĐỎ trong log."))
+
     # ── Ráp tin ──────────────────────────────────────────────────────────────
     icon = "✅" if ok else "❌"
     out = [f"{icon} <b>{esc(title)}</b>"]
@@ -195,6 +278,11 @@ def build(title, code, duration, log):
     if reach:
         out.append("")
         out.append(reach)
+
+    if sizes:
+        out.append("")
+        out.append("<b>Dung lượng:</b> " + " · ".join(
+            f"{esc(TEN_TRAM.get(n, n))} {_co(b)}" for n, b in sizes))
 
     links = [l for l in dict.fromkeys(links) if l]
     if links:

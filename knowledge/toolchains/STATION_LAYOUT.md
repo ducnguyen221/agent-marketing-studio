@@ -152,7 +152,7 @@ CPU — chậm gấp nhiều lần, hoặc nổ lúc nạp trọng số.
 |---|---|---|
 | `OMNIVOICE_DTYPE` | `float32` | `float16` |
 | `HF_DEACTIVATE_ASYNC_LOAD` | **không khai** | `1` |
-| Trần giờ wrapper | 2 h (ngày) · 3 h (tuần) | 30600 s (8 h 30) |
+| Trần giờ wrapper | 2 h (ngày) · 3 h (tuần) | 42300 s (lưới an toàn; runner tự canh 30600 s + chạy tiếp 1 lần 10800 s) |
 
 Lượt tin 4–12 phút trong cửa sổ 18:00–21:00 ⇒ thừa thời gian, đổi tốc độ lấy độ chính
 xác; nó không đi nhánh fp16 nên vụ nổ mà `HF_DEACTIVATE_ASYNC_LOAD` vá không tồn tại ở
@@ -186,7 +186,7 @@ chính nó. `scripts/runners/install_launchd.py` điền khối đó từ `studi
 | | Windows | macOS |
 |---|---|---|
 | Bộ lập lịch | Task Scheduler | launchd |
-| Mẫu | — | `templates/launchd/*.plist` (8 job) |
+| Mẫu | — | `templates/launchd/*.plist` (9 job) |
 | Cài | `Register-ScheduledTask` | `scripts/runners/install_launchd.py` |
 | Một bản chạy tại một lúc | `MultipleInstances = IgnoreNew` | launchd bảo đảm sẵn theo `Label` |
 | Trần thời gian một lượt | `ExecutionTimeLimit` | **không có** ⇒ `notify_run.py --timeout` |
@@ -194,6 +194,8 @@ chính nó. `scripts/runners/install_launchd.py` điền khối đó từ `studi
 
 Ba job **không** nạp mặc định (`worker`, `approve-poller`, `daily-story`): chúng hoặc chạy
 liên tục, hoặc chạy hàng giờ giữa đêm. Bật chúng phải là một câu người ta gõ ra.
+`weekly-cleanup` (dọn dung lượng tuần, CN 04:00) chặt hơn nữa: chỉ `--only` mới nạp, `--all`
+cũng bỏ qua — Windows tương đương: `run-weekly-cleanup.ps1 -Register`.
 
 `worker` và `approve-poller` **không** bọc `notify_run`: chúng chạy mỗi phút, báo Telegram
 mỗi lượt là hàng nghìn tin một ngày. Chúng tự báo khi có chuyện.

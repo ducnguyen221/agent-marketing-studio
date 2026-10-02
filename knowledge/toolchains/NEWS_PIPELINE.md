@@ -101,7 +101,7 @@ python3 <repo>/scripts/runners/notify_run.py --title "<tên task>" \
     -- pwsh -NoProfile -File <chiến-dịch>/run.ps1
 ```
 
-Đừng gõ tay dòng đó vào plist: `templates/launchd/` có sẵn 8 mẫu trung tính, và
+Đừng gõ tay dòng đó vào plist: `templates/launchd/` có sẵn 9 mẫu trung tính, và
 `scripts/runners/install_launchd.py` điền chỗ trống từ `studio_paths` rồi nạp bằng
 `launchctl`. Chép tay là cách sinh ra ba plist khác nhau trên ba máy.
 
