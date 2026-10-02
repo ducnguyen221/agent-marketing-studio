@@ -58,7 +58,26 @@ Lỗi hình dạng nào cũng là **mã 2** kèm tên label và khoá sai: khoá
 `env` có tên không phải con trỏ bí mật, `vars` có tên ngoài danh sách trắng hoặc giá trị không
 phải đường dẫn (khoá này không phải cửa để đẩy `PYTHONPATH`/`DYLD_*` vào job), giờ ngoài khoảng, `schedule` cho job không chạy theo
 lịch (`worker`, `approve-poller` chạy liên tục). Thiếu khai cho một label được chọn cũng là
-mã 2 — bộ cài không đoán job nào thuộc chiến dịch nào.
+mã 2 — bộ cài không đoán job nào thuộc chiến dịch nào. Ngoại lệ: `weekly-cleanup` là job của
+**cả trạm** (mẫu không có chỗ trống kênh/chiến dịch) nên không cần khai; khai
+`{"vars": {"WEB_REPO_DIR": "…"}}` cho nó nếu muốn đối chiếu audio đã lên web.
+
+### Job dọn dung lượng tuần (từ 1.1.8)
+
+`studio.marketing.weekly-cleanup` — Chủ nhật 04:00, `ProcessType=Background`, trần 1 h. Chạy
+`scripts/runners/run-weekly-cleanup.ps1` → `weekly_cleanup.py`: dời media **đã đăng** và quá 14
+ngày sang `<trạm>/_trash/<ngày>` (`prune_media.py`, có kê khai), đổ thư mục `_trash` dời quá 30
+ngày, xoay vòng log (`logs/launchd/` + `daily-logs/` của trạm giọng: xoá quá 60 ngày, cắt file
+trên 5 MB giữ 1 MB cuối), báo dung lượng từng trạm qua Telegram. **Chỉ `--only` mới nạp** — kể
+cả `--all` cũng bỏ qua: dời file theo lịch là quyết định của chủ máy. Xem trước, không chạm gì:
+`pwsh scripts/runners/run-weekly-cleanup.ps1 -DryRun`. Windows: `-Register`.
+
+### Lượt truyện: trần hai tầng (từ 1.1.8)
+
+Runner truyện tự canh lượt đầu 30600 s; quá trần mà `_resume.json` còn dải dở thì tự chạy tiếp
+**một lần** (trần 10800 s, dùng cache chương), tin ⏳ báo "đang chạy tiếp từ chương X"
+(`scripts/runners/story/resume_once.py`). `--timeout` của mẫu `daily-story` (42300 s) chỉ còn là
+lưới an toàn và phải ≥ tổng hai trần.
 
 `--map <label>=<kênh>/<chiến dịch>` đổi kênh/chiến dịch cho một lần chạy; `runner`, `env`,
 `vars`, `schedule` đã khai trong file vẫn giữ.
@@ -93,8 +112,8 @@ launchd **không** đọc `~/.zshrc` và **không** đọc `<repo>/.env`. Job ch
 | `EMAIL_CONFIG` | 5 job tin, lượt truyện, worker | `send_newsletter.py` của kênh |
 | `CODEX_BRIDGE` | 5 job tin, lượt truyện, worker | `make_fb_image.py make` |
 
-`approve-poller` chỉ khai hai biến Telegram: nó không đăng gì, nên không nhận đường tới token
-đăng bài (quyền tối thiểu).
+`approve-poller` và `weekly-cleanup` chỉ khai hai biến Telegram: chúng không đăng gì, nên không
+nhận đường tới token đăng bài (quyền tối thiểu).
 
 Giá trị lấy theo thứ tự của `studio_paths.secret_env`: **biến môi trường → `<repo>/.env`**
 (chỉ ở chế độ embedded). Ba luật:
@@ -114,7 +133,8 @@ Giá trị lấy theo thứ tự của `studio_paths.secret_env`: **biến môi 
 |---|---|---|
 | mã của lệnh con | 0 ok · 1 lỗi engine · 2 cấu hình sai · 3 thiếu trạm | ✅ / ❌ |
 | 4 | hết hạn mức — mọi engine trong `order` hết lượt; **không phải hỏng**, không gọi triage | 🟡 HẾT HẠN MỨC |
-| 124 | wrapper giết cả cây tiến trình vì quá `--timeout` (launchd không có `ExecutionTimeLimit`) | ⏳ QUÁ TRẦN |
+| 5 | runner tin: **môi trường render kẹt** — `video-studio probe` hỏng TRƯỚC nghiên cứu/TTS (P1-24); khởi động lại máy rồi chạy lại. Giả lập khi nghiệm thu: `RENDER_PROBE_TIMEOUT=1` | ❌ MÔI TRƯỜNG RENDER KẸT |
+| 124 | wrapper giết cả cây tiến trình vì quá `--timeout` (launchd không có `ExecutionTimeLimit`) — hoặc lượt truyện quá trần cả sau lượt chạy tiếp | ⏳ QUÁ TRẦN |
 
 Wrapper của Task Scheduler trên Windows trả đúng các mã này — sổ Excel, `compose_report.py` và
 `triage.py` phân loại theo mã, nên hai máy phải nói cùng một thứ tiếng.

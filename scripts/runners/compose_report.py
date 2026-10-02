@@ -62,6 +62,16 @@ def _khi(iso):
     return f"{khi} lúc {hh:02d}:{mi:02d}"
 
 
+def _co(b):
+    """Byte -> '3,00 GB' / '7,0 MB' (dấu phẩy thập phân, như người Việt đọc)."""
+    b = int(b)
+    s = f"{b / 1024 ** 3:.2f} GB" if b >= 1024 ** 3 else f"{b / 1024 ** 2:.1f} MB"
+    return s.replace(".", ",")
+
+
+TEN_TRAM = {"marketing": "marketing", "giong": "giọng", "video": "video", "trash": "thùng rác"}
+
+
 def find(rx, text, group=1, default=""):
     m = re.search(rx, text)
     return m.group(group) if m else default
@@ -163,6 +173,48 @@ def build(title, code, duration, log):
     elif rs == "error":
         warn.append("Không kiểm được độ phủ của bài trước.")
 
+    # ── Truyện: quá trần rồi tự chạy tiếp (story/resume_once.py, P1-23) ─────────
+    rs_tu = find(r"RESUME_ONCE=start from=(\S+)", log)
+    if rs_tu:
+        dai = find(r"RESUME_ONCE=start from=\S+ range=(\S+)", log)
+        tu = "dựng video (đã đọc đủ chương)" if rs_tu == "build" else f"chương {rs_tu}"
+        warn.append(f"Lượt đầu quá trần — đã tự chạy tiếp MỘT lần từ {tu}"
+                    + (f" (dải {dai})" if dai else "") + ", dùng cache chương đã đọc.")
+
+    # ── Render kẹt (video-studio `RENDER_STUCK:` · preflight mã 5 · Navigation timeout) ──
+    # `Navigation timeout` chỉ tính khi lượt HỎNG: render_project in stderr của mọi lần thử
+    # hỏng, kể cả khi lần sau qua — lượt ✅ không được mang cảnh báo kẹt.
+    ket = ("RENDER_STUCK" in log or "RENDER_PREFLIGHT=stuck" in log
+           or (not ok and "Navigation timeout" in log))
+    if ket:
+        warn.append("MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — khởi động lại "
+                    "máy rồi chạy lại (kiểm nhanh: video-studio probe).")
+    elif code == 5 or "RENDER_PREFLIGHT=failed" in log:
+        warn.append("Phép thử render hỏng TRƯỚC các bước tốn kém (chưa tốn agent/TTS) — chạy "
+                    "video-studio doctor --hf; không rõ nguyên nhân thì khởi động lại máy.")
+
+    # ── Dọn dung lượng tuần (weekly_cleanup.py) ──────────────────────────────
+    sizes = re.findall(r"CLEANUP_SIZE label=(\w+) bytes=(\d+)", log)
+    pr = re.search(r"CLEANUP_PRUNE mode=(\S+) files=(\d+) bytes=(\d+) kept=(\d+)", log)
+    xem = bool(pr and pr.group(1) == "dry-run")
+    if pr:
+        if xem:
+            L.append(f"XEM TRƯỚC (dry-run), chưa chạm gì: sẽ dời {pr.group(2)} file "
+                     f"({_co(pr.group(3))}) đã đăng quá hạn sang _trash; giữ {pr.group(4)} file.")
+        else:
+            L.append(f"Đã dời {pr.group(2)} file ({_co(pr.group(3))}) đã đăng quá hạn sang "
+                     f"_trash; giữ {pr.group(4)} file chưa đủ bằng chứng hoặc còn hạn.")
+    tr = re.search(r"CLEANUP_TRASH mode=\S+ dirs=(\d+) bytes=(\d+)", log)
+    if tr and tr.group(1) != "0":
+        L.append(f"{'Sẽ đổ' if xem else 'Đổ'} {tr.group(1)} thư mục thùng rác cũ hơn 30 ngày "
+                 f"({_co(tr.group(2))}).")
+    lg = re.search(r"CLEANUP_LOGS mode=\S+ deleted=(\d+) truncated=(\d+)", log)
+    if lg and (lg.group(1) != "0" or lg.group(2) != "0"):
+        L.append(f"Log: {'sẽ ' if xem else ''}xoá {lg.group(1)} log cũ, cắt {lg.group(2)} log "
+                 f"quá cỡ.")
+    if "CLEANUP_DONE ok=0" in log:
+        warn.append("Job dọn có bước hỏng — đọc các dòng ĐỎ trong log.")
+
     # ── Ráp tin ──────────────────────────────────────────────────────────────
     icon = "✅" if ok else "❌"
     out = [f"{icon} <b>{esc(title)}</b>"]
@@ -195,6 +247,11 @@ def build(title, code, duration, log):
     if reach:
         out.append("")
         out.append(reach)
+
+    if sizes:
+        out.append("")
+        out.append("<b>Dung lượng:</b> " + " · ".join(
+            f"{esc(TEN_TRAM.get(n, n))} {_co(b)}" for n, b in sizes))
 
     links = [l for l in dict.fromkeys(links) if l]
     if links:

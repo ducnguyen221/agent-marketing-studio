@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- studio.marketing.weekly-cleanup
+     Dọn dung lượng hằng tuần, Chủ nhật 04:00 — ngoài giờ mọi job khác (tin 18:00–21:00, repo
+     tuần CN 20:00, truyện từ 00:00). Dời media ĐÃ ĐĂNG và quá 14 ngày sang `<trạm>/_trash/<ngày>`
+     (prune_media, theo bằng chứng đã đăng), đổ `_trash` cũ hơn 30 ngày, xoay vòng log (60 ngày,
+     cắt file trên 5 MB), báo dung lượng qua Telegram. Xem `scripts/runners/weekly_cleanup.py`.
+
+     KHÔNG nằm trong bộ mặc định, KỂ CẢ cờ all của bộ cài lịch: dời file theo lịch là quyết
+     định của chủ máy, phải gọi đích danh (cờ only). Chạy tay bản xem trước trước khi bật:
+     `pwsh scripts/runners/run-weekly-cleanup.ps1 -DryRun`.
+
+     Không có kênh/chiến dịch: job này của cả trạm, nên mẫu không có chỗ trống kênh/chiến dịch
+     và launchd.json không cần khai gì cho nó. `WEB_REPO_DIR` (đối chiếu audio đã lên web —
+     thiếu thì mọi audio bị GIỮ, không lỗi) khai ở khoá vars của launchd.json nếu muốn.
+
+     MẪU — mọi `__TÊN__` là chỗ trống. Đừng sửa tay bản trong `~/Library/LaunchAgents`:
+     sửa ở đây rồi chạy lại `scripts/runners/install_launchd.py`. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>studio.marketing.weekly-cleanup</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>__PY__</string>
+    <string>__REPO__/scripts/runners/notify_run.py</string>
+    <string>--title</string>
+    <string>Dọn dung lượng tuần</string>
+    <string>--composer-dir</string>
+    <string>__REPO__/scripts/runners</string>
+    <string>--timeout</string>
+    <string>3600</string>
+    <string>--</string>
+    <string>pwsh</string>
+    <string>-NoProfile</string>
+    <string>-File</string>
+    <string>__REPO__/scripts/runners/run-weekly-cleanup.ps1</string>
+  </array>
+
+    <!-- PATH: launchd KHÔNG đọc ~/.zshrc (xem các mẫu khác). Job này không chạy TTS, nên
+         không khai OMNIVOICE_DTYPE / HF_DEACTIVATE_ASYNC_LOAD; OMNIVOICE_DEVICE giữ như mọi
+         mẫu (cổng chung của tests/test_launchd_templates.py). VOICE_STATION / VIDEO_STATION:
+         job quét và đo cả trạm giọng lẫn trạm video. -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>__HOME__/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key><string>__HOME__</string>
+    <key>PYTHONUTF8</key><string>1</string>
+    <key>MARKETING_STUDIO_DATA</key><string>__STATION__</string>
+    <key>MARKETING_STUDIO_HOME</key><string>__REPO__</string>
+    <key>MARKETING_STUDIO_PY</key><string>__PY__</string>
+    <key>VOICE_STATION</key><string>__VOICE_STATION__</string>
+    <key>VIDEO_STATION</key><string>__VIDEO_STATION__</string>
+    <key>OMNIVOICE_DEVICE</key><string>mps</string>
+    <!-- CON TRỎ bí mật: TÊN ở đây, GIÁ TRỊ bộ cài lịch điền (đường dẫn, không phải bí mật).
+         Chỉ Telegram: job này không đăng gì. -->
+    <key>TG_CONFIG</key><string>__ENV_TG_CONFIG__</string>
+    <key>TG_CHAT</key><string>__ENV_TG_CHAT__</string>
+    <!-- __ENV_EXTRA__ -->
+  </dict>
+
+  <key>WorkingDirectory</key><string>__STATION__</string>
+  <key>StandardOutPath</key><string>__STATION__/logs/launchd/studio.marketing.weekly-cleanup.out.log</string>
+  <key>StandardErrorPath</key><string>__STATION__/logs/launchd/studio.marketing.weekly-cleanup.err.log</string>
+  <!-- ProcessType=Background: job NHẸ (đi cây thư mục, dời file, cắt log) chạy lúc 04:00 khi
+       máy rảnh — để macOS xếp nó sau mọi việc khác là đúng ý. Job nặng (TTS + dựng) mới cần
+       Interactive (P0-10). -->
+  <key>ProcessType</key><string>Background</string>
+  <key>RunAtLoad</key><false/>
+  <key>StartCalendarInterval</key>
+  <dict>
+      <key>Weekday</key><integer>0</integer>
+      <key>Hour</key><integer>4</integer>
+      <key>Minute</key><integer>0</integer>
+  </dict>
+</dict>
+</plist>

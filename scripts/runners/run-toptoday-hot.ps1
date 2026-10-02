@@ -13,7 +13,8 @@
 # thoát 0 với dòng "skip parity" (launchd trên macOS gọi mỗi ngày).
 # Dựng video: `video-studio render --project topstory` (repo agent-video-studio, cài trong venv
 # giọng) với spec do `topstory_spec.py` ghép từ -top.json + bản chụp cấu hình.
-# Exit: 0 ok / 1 fail.
+# Exit: 0 ok / 1 fail / 3 thiếu công cụ render / 4 hết hạn mức / 5 môi trường render kẹt
+#       (Invoke-RenderPreflight, P1-24 — DỪNG trước nghiên cứu/TTS, khởi động lại máy rồi chạy lại).
 param(
   [string]$Brand = 'ai',
   [string]$Date  = (Get-Date -Format 'yyyy-MM-dd'),
@@ -109,6 +110,10 @@ Log "=== Daily HOT $Label (TOP-1 deep-dive) start ==="
 $bgmEp = Resolve-ForcedBgm -Cfg $cfg -Dir $bgmDir -BrandDir $brandDir
 if (-not $bgmEp.ok) { Log ("ERROR: bgm = '" + $cfg.bgm + "' khong co file mp3 (thu vien: " + $bgmDir + "). Sua campaign.md hoac chep mp3 vao thu vien."); Log '=== failed ==='; exit 1 }
 if (@($bgmCat.missing).Count -gt 0) { Log ('WARN: thu vien nhac nen thieu mp3 cho: ' + (@($bgmCat.missing) -join ', ') + ' (' + $bgmDir + ')') }
+# Rào render (P1-24): phép thử HyperFrames rẻ TRƯỚC nghiên cứu/TTS — kẹt thì dừng ngay (mã 5),
+# không đốt agent + TTS + 40 phút. Xem Invoke-RenderPreflight trong brand-paths.ps1.
+$pf = Invoke-RenderPreflight -Python $ovpy -OnLine { param($l) Log $l }
+if ($pf -ne 0) { Log '=== failed ==='; exit $pf }
 $dispDate = ([datetime]$Date).ToString('dd/MM/yyyy')
 $outDir   = Join-Path $outRoot $Date
 New-Item -ItemType Directory -Force -Path (Join-Path $outDir 'clips') | Out-Null

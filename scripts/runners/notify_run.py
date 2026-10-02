@@ -12,7 +12,8 @@ của một cái máy). Trên macOS/launchd không có Windows PowerShell 5.1, v
 tự đủ — nên đây là bản Python, cùng hợp đồng:
 
 · **Mã thoát = mã của lệnh con, nguyên vẹn** (0 ok · 1 lỗi engine · 2 hợp đồng sai · 3 trạm
-  thiếu · 4 hết hạn mức). Bộ lập lịch chỉ nhìn mã thoát; đổi nó là nói dối về lượt chạy.
+  thiếu · 4 hết hạn mức · 5 môi trường render kẹt — rào render của runner tin dừng TRƯỚC
+  agent/TTS, P1-24). Bộ lập lịch chỉ nhìn mã thoát; đổi nó là nói dối về lượt chạy.
   **Mã 4 = hết hạn mức** (mọi engine trong `order` hết lượt): KHÔNG phải pipeline hỏng — tin
   🟡 "HẾT HẠN MỨC" đặt lên đầu, không gọi triage (không có sự cố nào để phân loại).
 · **✅** tiêu đề + MỌI link sản phẩm trích từ log (YouTube, Facebook, và các miền khai qua
@@ -76,6 +77,7 @@ import telegram_io as tg  # noqa: E402
 CONG_CU = ("pwsh", "node", "ffprobe", "python3", "npx")
 MA_HET_HAN_MUC = 4      # agent_call: mọi engine trong `order` hết lượt — KHÔNG phải hỏng
 MA_QUA_GIO = 124        # quy ước `timeout(1)`; wrapper Windows trả cùng mã
+MA_RENDER_KET = 5       # rào render (Invoke-RenderPreflight, P1-24): dừng TRƯỚC agent/TTS
 TRAN_TIN = 3900
 TRAN_COMPOSE = 120      # giây
 TRAN_TRIAGE = 180       # giây — notify không được phép treo bộ lập lịch
@@ -322,6 +324,10 @@ def soan_tin(title: str, ma: int, dur: str, dong: list[str], mien: list[str],
     elif qua_gio:
         msg = ("⏳ <b>QUÁ TRẦN — wrapper đã giết cả cây tiến trình</b> (exit 124). Xem các bước "
                "bên dưới để biết nó đứng ở đâu.\n\n" + msg)
+    elif ma == MA_RENDER_KET and not composed:
+        # Có composer thì compose_report đã nói câu này (cùng chữ) — đừng nói hai lần.
+        msg = ("❌ <b>MÔI TRƯỜNG RENDER KẸT</b> (HyperFrames không mở được trang) — khởi động lại "
+               "máy rồi chạy lại (exit 5; rào render dừng TRƯỚC agent/TTS).\n\n" + msg)
 
     if ma != 0 and not het_han_muc:
         if not composed:

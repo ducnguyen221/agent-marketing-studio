@@ -3,6 +3,54 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.8 — 2026-10-03
+
+Ba việc Mac mini giao ngày 02/10 (SUBTASK-WIN-RUNTIME-2; P4-RUNS: P5-1.1.7, P5-VIEC-CHO-WINDOWS,
+P5-02/10-TOI). Mọi thay đổi chạy giống nhau dưới Task Scheduler lẫn launchd.
+
+- **P1-23 — truyện tự chạy tiếp khi quá trần.** `run-daily-truyen.ps1` chạy `daily_truyen.py` qua
+  `story/resume_once.py`: lượt đầu trần `-Budget` 30600 s; mã 124 (quá trần — bộ canh giết cả
+  cây tiến trình, hoặc lệnh con tự trả 124) mà `<trạm giọng>/omnivoice/truyen-out/_resume.json`
+  còn dải dở ⇒ tin ⏳ "quá trần — đang chạy tiếp từ chương X" ⇒ chạy lại ĐÚNG MỘT LẦN với trần
+  `-ResumeBudget` 10800 s, dùng cache chương (không đọc lại chương nào). Không còn `_resume.json`
+  ⇒ không chạy tiếp; lượt chạy tiếp lại 124 ⇒ dừng, không lặp. Tin ✅/❌ của lượt chạy tiếp do
+  wrapper gửi như thường, kèm dòng "đã tự chạy tiếp từ chương X" (`compose_report.py` đọc
+  `RESUME_ONCE=…`). Đặt ở runner, không ở wrapper, để wrapper Task Scheduler ngoài repo cũng có.
+  Mẫu `daily-story`: `--timeout` 30600 → **42300** (lưới an toàn ≥ tổng hai trần). Windows:
+  `run-daily-truyen.ps1 -Register` (qua `NOTIFY_RUN`, `ExecutionTimeLimit` = hai trần + 1800 s).
+  Lượt 301–310 (02/10) bị giết 08:30 sau 9/10 chương, người phải `launchctl kickstart` tay.
+- **Job dọn dung lượng hằng tuần** `studio.marketing.weekly-cleanup` (CN 04:00, `Background`,
+  trần 1 h): `run-weekly-cleanup.ps1` → `weekly_cleanup.py`. (1) `prune_media.py
+  --video-policy published --audio-policy web-first --days 14 --move-to <trạm>/_trash/<ngày>`
+  trên thư mục của trạm marketing + giọng + video (DỜI, có kê khai; tự nhặt `truyen-state.json`/
+  `playlist-youtube.json` làm bằng chứng); (2) đổ `_trash/<ngày>` dời quá 30 ngày (theo ngày dời,
+  không theo mtime); (3) xoay vòng log `logs/launchd/` + `daily-logs/` của trạm giọng: xoá quá 60
+  ngày, cắt file trên 5 MB giữ 1 MB cuối tại chỗ; (4) báo dung lượng từng trạm — tin Telegram do
+  `compose_report.py` soạn từ dòng `CLEANUP_*`, nên hai wrapper (launchd/Task Scheduler) cùng nội
+  dung. `-DryRun` không chạm một byte. **`install_launchd.py --all` KHÔNG nạp job này** (mới:
+  `CHI_DICH_DANH`, chỉ `--only`); mẫu không có chỗ trống kênh/chiến dịch nên không cần khai.
+  Windows: `run-weekly-cleanup.ps1 -Register`.
+- **P1-24 — rào render trước các bước tốn kém.** `Invoke-RenderPreflight` (`brand-paths.ps1`) gọi
+  `video-studio probe` (agent-video-studio 0.2.5 — render thật một trang 320×180 dài 0,5 s, vài
+  giây) trong `run-toptoday-hot.ps1`, `run-weekly-news.ps1`, `run-weekly-repo.ps1`: SAU kiểm nhịp
+  + nhạc nền, TRƯỚC nghiên cứu (agent) và TTS. Kẹt (`RENDER_STUCK`) hoặc hỏng ⇒ dừng **mã 5**,
+  tin ❌ "MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — khởi động lại máy rồi chạy
+  lại" (`compose_report.py` + định dạng dự phòng của `notify_run.py`); thiếu npx ⇒ mã 3;
+  video-studio cũ chưa có `probe` ⇒ nhắc rồi đi tiếp. `RENDER_PROBE_TIMEOUT` (giây, mặc định 30)
+  đổi trần — đặt 1 để giả lập máy kẹt khi nghiệm thu. Render hỏng vì `Navigation timeout` cũng
+  được `compose_report` gắn gợi ý khởi động lại. Hot AI 02/10 18:00 hỏng sau 42 phút vì môi trường
+  macOS kẹt; khởi động lại máy là hết.
+- **Khởi động lại định kỳ**: chỉ ghi thành bước tài liệu cho Đức quyết (`docs/RUNBOOK-DOI-MAY.md`
+  mục "Khởi động lại định kỳ máy chạy lịch") — `pmset repeat restart` cần admin, kèm ba điều phải
+  kiểm (tự đăng nhập, không cắt ngang lượt truyện, Windows).
+- Test mới: `test_resume_once.py`, `test_weekly_cleanup.py`, `test_render_preflight.py`; cập nhật
+  `test_launchd_templates.py` (9 mẫu, trần truyện, job chỉ-đích-danh), `test_runner_agent_chain.py`.
+
+**Mac cần làm:** checkout `v1.1.8` (+ video `v0.2.5`); cài lại plist `daily-story`
+(`install_launchd.py --only studio.marketing.daily-story`); chạy `run-weekly-cleanup.ps1 -DryRun`,
+đọc báo cáo, rồi `--only studio.marketing.weekly-cleanup`; giả lập preflight hỏng bằng
+`RENDER_PROBE_TIMEOUT=1` để thấy tin ❌ đúng.
+
 ## 1.1.7 — 2026-10-01
 
 Ba lỗi Mac mini báo tối 01/10 (P4-RUNS: P5-01/10-TOI, P5-AGENT-CHAIN).

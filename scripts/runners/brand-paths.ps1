@@ -796,6 +796,53 @@ function Invoke-TopstoryRender {
   return [pscustomobject]@{ code = $r.code; result = $r.result; spec = $spec }
 }
 
+function Invoke-RenderPreflight {
+  <#
+    Rào render (P1-24): `video-studio probe` — render THẬT một trang 320x180 dài 0,5 s, không tài
+    nguyên ngoài (vài giây trên máy khoẻ) — đặt TRƯỚC bước nghiên cứu (agent) và TTS.
+
+    Mac mini 02/10/2026: Hot AI 18:00 hỏng sau 42 phút ở `page.goto … Navigation timeout` frame 0
+    — môi trường macOS kẹt, mọi project đều hỏng, khởi động lại máy là hết. Không có rào này thì
+    lượt chạy đốt agent + TTS + 40 phút rồi mới biết.
+
+    Trần phép thử: 30 s; đặt `RENDER_PROBE_TIMEOUT` (giây) để đổi — đặt 1 là cách GIẢ LẬP máy kẹt
+    khi nghiệm thu (phép thử quá giờ ⇒ đúng nhánh kẹt, đúng tin ❌).
+    -> mã thoát cho runner: 0 đi tiếp · 5 môi trường render kẹt/hỏng (DỪNG, không thử lại) ·
+       3 thiếu công cụ render. video-studio cũ (< 0.2.5, chưa có `probe`) ⇒ nhắc rồi đi tiếp.
+  #>
+  param([Parameter(Mandatory)][string]$Python, [scriptblock]$OnLine)
+  $cb = $OnLine
+  $ghi = { param($l) if ($cb) { & $cb $l } }.GetNewClosure()
+  $t = 30
+  $bien = Get-EnvVar 'RENDER_PROBE_TIMEOUT'
+  if ($bien -match '^\d+$' -and [int]$bien -ge 1) { $t = [int]$bien }
+  & $ghi ('Render preflight: video-studio probe (tran ' + $t + 's) ...')
+  # Gom dòng ra rồi mới ghi: video-studio cũ in nguyên bảng trợ giúp (~18 dòng) khi gặp lệnh lạ —
+  # mã 2 chỉ cần một dòng nhắc, không cần dồn bảng đó vào log và đuôi tin Telegram.
+  $dong = New-Object System.Collections.Generic.List[string]
+  $r = Invoke-VideoStudio -Python $Python -OnLine { param($l) $dong.Add([string]$l) }.GetNewClosure() `
+         -Arguments @('probe', '--timeout', [string]$t, '--json')
+  if ($r.code -ne 2) { foreach ($l in $dong) { & $ghi ('probe: ' + $l) } }
+  $err = ''
+  if ($r.result -and $r.result.error) { $err = [string]$r.result.error }
+  switch ($r.code) {
+    0 { & $ghi 'RENDER_PREFLIGHT=ok'; return 0 }
+    1 {
+      if ($err -like 'RENDER_STUCK*') {
+        & $ghi 'ERROR: moi truong render ket (HyperFrames khong mo duoc trang) - khoi dong lai may roi chay lai.'
+        & $ghi 'RENDER_PREFLIGHT=stuck'
+      } else {
+        & $ghi ('ERROR: phep thu render hong truoc buoc ton kem: ' + $err + ' - chay video-studio doctor --hf; khong ro nguyen nhan thi khoi dong lai may.')
+        & $ghi 'RENDER_PREFLIGHT=failed'
+      }
+      return 5
+    }
+    3 { & $ghi ('ERROR: thieu cong cu render (npx/Node): ' + $err + ' - chay video-studio doctor.'); & $ghi 'RENDER_PREFLIGHT=missing'; return 3 }
+    2 { & $ghi 'WARN: video-studio chua co lenh probe (can >= 0.2.5) - bo qua phep thu render.'; return 0 }
+    default { & $ghi ('WARN: phep thu render tra ma la ' + $r.code + ' - bo qua.'); return 0 }
+  }
+}
+
 function Get-VideoStudioCodeText {
   param([int]$Code)
   switch ($Code) {
