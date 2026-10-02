@@ -61,6 +61,13 @@ P5-02/10-TOI). Mọi thay đổi chạy giống nhau dưới Task Scheduler lẫ
   - vòng 2: lượt THEO LỊCH gặp dấu `phase: publish` của chính dải đó thì `daily_truyen.py` DỪNG
     (`PUBLISH_GUARD=blocked`, mã 1, mỗi đêm cho tới khi người xử lý) — trước đó nó ghi đè dấu rồi
     upload lần hai; job dọn: cầu dao từ chối ⇒ "KHÔNG dời gì" (không còn "chưa rõ đã dời").
+  - vòng 3: gỡ chặn bằng LỆNH, không sửa JSON tay — `daily_truyen.py --state … --confirm-published`
+    (kênh ĐÃ có tập: ghi `last_end` = act_end THẬT + `next_url` mới, lấy từ dấu ghi lúc vào pha
+    publish — sửa tay `last_end=end` từng làm pntt2 crawl lại đúng dải vừa đăng) hoặc
+    `--clear-publish-guard` (CHƯA có: lượt sau dựng + đăng lại); chặn so theo slug + dải (không
+    theo giọng); dấu publish của chiến dịch KHÁC trên cùng trạm cũng chặn (`_resume.json` dùng chung
+    cả trạm); ghi pha publish hỏng ⇒ KHÔNG đăng; job dọn nhận "từ chối" theo việc chưa có kê khai
+    kế hoạch; probe giết cây con cả khi bị Ctrl-C.
 - Test mới: `test_resume_once.py`, `test_weekly_cleanup.py`, `test_render_preflight.py`; cập nhật
   `test_launchd_templates.py` (9 mẫu, trần truyện, job chỉ-đích-danh), `test_runner_agent_chain.py`.
 - **Còn mở (không làm đợt này):** `truyen_publish.py` chưa tự chống đăng trùng (đợt này chặn ở

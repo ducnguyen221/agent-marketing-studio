@@ -204,7 +204,7 @@ def test_bi_giet_luc_DANG_DANG_thi_KHONG_chay_tiep(tmp_path, capsys):
 
 def test_daily_truyen_ghi_pha_publish_TRUOC_khi_dang():
     t = (STORY / "daily_truyen.py").read_text(encoding="utf-8")
-    assert t.index('_m["phase"] = "publish"') < t.index('os.path.join(HERE, "truyen_publish.py")')
+    assert t.index('_m.update({"phase": "publish"') < t.index('os.path.join(HERE, "truyen_publish.py")')
 
 
 def test_khong_con_dau_va_chay_tiep_lai_124_deu_co_loi_huong_dan(tmp_path, capsys):
@@ -277,10 +277,86 @@ def test_luot_THEO_LICH_gap_dau_publish_cung_dai_thi_DUNG_khong_dang_lai():
     """Review 02/10 vòng 2: lượt đêm sau chạy lại đúng dải (last_end chưa tăng) — không chặn ở
     daily_truyen thì nó ghi đè dấu (mất `phase`) rồi upload lần hai."""
     t = (STORY / "daily_truyen.py").read_text(encoding="utf-8")
-    chan = t.index('_mark.get("phase") == "publish"')
+    chan = t.index("chan = chan_dang_trung(_mark, slug, start, end)")
     assert chan < t.index("sweep_old(st, log, keep=resume_keep(")
     assert chan < t.index('json.dump({"slug": slug')
     assert "PUBLISH_GUARD=blocked" in t
     import compose_report as CR
     msg = CR.build("T", 1, "00:00:05", "PUBLISH_GUARD=blocked range=301-310\n")
     assert "kể cả lượt theo lịch" in msg
+
+
+# ── chặn đăng trùng: chạy THẬT daily_truyen.main() trong sandbox (review vòng 3) ──
+
+def _daily(tmp_path, monkeypatch):
+    import importlib
+    eng = tmp_path / "omnivoice"
+    (eng / "truyen-out").mkdir(parents=True)
+    monkeypatch.setenv("OMNIVOICE_DIR", str(eng))
+    sys.path.insert(0, str(STORY))
+    import daily_truyen
+    dt = importlib.reload(daily_truyen)
+    st = tmp_path / "truyen-state.json"
+    st.write_text(json.dumps({"slug": "pntt-p2", "site": "pntt2", "batch": 10, "last_end": 300,
+                              "next_url": "https://x/chuong-301", "last_publish_ok": True}),
+                  encoding="utf-8")
+    return dt, eng, st
+
+
+def _dau_publish(eng, slug="pntt-p2", start=301, end=310, voice="a-tun-v1"):
+    m = eng / "truyen-out" / RO.RESUME_MARK
+    m.write_text(json.dumps({"slug": slug, "start": start, "end": end, "voice": voice,
+                             "cache_dir": "pntt-p2__atunv1", "phase": "publish", "act_start": 301,
+                             "act_end": 312, "next_url": "https://x/chuong-313"}), encoding="utf-8")
+    return m
+
+
+def _main(dt, monkeypatch, *argv):
+    monkeypatch.setattr(sys, "argv", ["daily_truyen.py", *argv])
+    with pytest.raises(SystemExit) as e:
+        dt.main()
+    return e.value.code
+
+
+def test_luot_dem_sau_cung_dai_DUNG_khong_sweep_khong_ghi_de_dau(tmp_path, monkeypatch, capsys):
+    dt, eng, st = _daily(tmp_path, monkeypatch)
+    m = _dau_publish(eng, voice="giong-khac")          # khớp theo slug + dải, KHÔNG theo giọng
+    cu = m.read_text(encoding="utf-8")
+    rac = eng / "truyen-out" / "pntt-p2__atun"          # thứ sweep_old sẽ xoá nếu chạy
+    rac.mkdir()
+    assert _main(dt, monkeypatch, "--state", str(st)) == 1
+    assert m.read_text(encoding="utf-8") == cu and rac.is_dir()
+    out = capsys.readouterr().out
+    assert "PUBLISH_GUARD=blocked kind=same range=301-310" in out
+    assert "--confirm-published" in out and "--clear-publish-guard" in out
+
+
+def test_dau_publish_cua_chien_dich_KHAC_cung_chan(tmp_path, monkeypatch, capsys):
+    dt, eng, st = _daily(tmp_path, monkeypatch)
+    m = _dau_publish(eng, slug="pntt-p1", start=91, end=100)
+    assert _main(dt, monkeypatch, "--state", str(st)) == 1
+    assert "kind=other" in capsys.readouterr().out and m.is_file()
+
+
+def test_confirm_published_ghi_act_end_va_next_url_TU_DAU(tmp_path, monkeypatch):
+    """Không phải `end` yêu cầu (310) mà act_end THẬT (312); pntt2 cần next_url mới."""
+    dt, eng, st = _daily(tmp_path, monkeypatch)
+    m = _dau_publish(eng)
+    assert _main(dt, monkeypatch, "--state", str(st), "--confirm-published") == 0
+    s = json.loads(st.read_text(encoding="utf-8"))
+    assert s["last_end"] == 312 and s["next_url"] == "https://x/chuong-313"
+    assert s["last_publish_ok"] is True and not m.exists()
+
+
+def test_clear_publish_guard_bo_pha_giu_cache(tmp_path, monkeypatch):
+    dt, eng, st = _daily(tmp_path, monkeypatch)
+    m = _dau_publish(eng)
+    assert _main(dt, monkeypatch, "--state", str(st), "--clear-publish-guard") == 0
+    d = json.loads(m.read_text(encoding="utf-8"))
+    assert "phase" not in d and d["start"] == 301
+    assert json.loads(st.read_text(encoding="utf-8"))["last_end"] == 300
+
+
+def test_go_chan_khi_KHONG_co_dau_la_ma_2(tmp_path, monkeypatch):
+    dt, _eng, st = _daily(tmp_path, monkeypatch)
+    assert _main(dt, monkeypatch, "--state", str(st), "--confirm-published") == 2

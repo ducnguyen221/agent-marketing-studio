@@ -258,7 +258,12 @@ chỗ dễ sai nhất khi dựng trạm trên Mac, và sai thì cả hai bên v�
   task cùng giờ chạy song song cùng dải và xoá `_work` của nhau.
 - **Không tự chạy tiếp khi bị giết lúc ĐANG ĐĂNG:** `daily_truyen.py` ghi `phase: publish` vào
   `_resume.json` ngay trước khi upload; quá trần từ đó trở đi thì bộ canh KHÔNG chạy tiếp (video
-  có thể đã lên mà chưa ghi state — chạy tiếp là đăng trùng). Tin báo bảo kiểm kênh rồi chạy tay.
+  có thể đã lên mà chưa ghi state — chạy tiếp là đăng trùng). Lượt theo lịch đêm sau cũng DỪNG
+  (`PUBLISH_GUARD=blocked`) cho tới khi người gỡ — log in sẵn lệnh: kênh ĐÃ có tập ⇒
+  `<python giọng> scripts/runners/story/daily_truyen.py --state <truyen-state.json>
+  --confirm-published` (ghi đúng `last_end`/`next_url`); CHƯA có ⇒ `--clear-publish-guard`.
+  Đừng sửa `truyen-state.json` tay: `last_end` đúng là chương THẬT cuối (manifest), và nguồn
+  pntt2 cần cả `next_url`.
 - `worker` và `approve-poller` **không khai** cả hai biến: chúng không chạy TTS.
 
 Cấu hình này nằm trong `templates/launchd/*.plist`; `tests/test_launchd_templates.py`

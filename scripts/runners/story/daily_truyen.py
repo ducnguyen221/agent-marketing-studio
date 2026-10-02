@@ -96,6 +96,46 @@ def cache_dir_name(slug, vtag):
     return slug + vtag.replace("_", "__")
 
 
+def chan_dang_trung(mark, slug, start, end):
+    """Dấu `phase=publish` còn đó ⇒ một lượt đã tới bước ĐĂNG rồi bị dừng. -> None | "same" | "other".
+
+    "same": chính dải này (lượt đêm sau chạy lại đúng dải vì `last_end` chưa tăng).
+    "other": dải/chiến dịch KHÁC trên cùng trạm — `_resume.json` là MỘT file cho cả trạm, chạy
+    tiếp sẽ sweep/ghi đè mất dấu đó và đêm sau chiến dịch kia upload trùng. Cả hai đều DỪNG.
+    So theo slug + dải, KHÔNG theo giọng: mất một profile giữa hai đêm làm `pick_voice` đổi giọng,
+    so cả giọng thì chặn trượt đúng lúc cần chặn (review 02/10 vòng 3).
+    """
+    if not isinstance(mark, dict) or mark.get("phase") != "publish":
+        return None
+    try:
+        cung = (mark.get("slug") == slug and int(mark.get("start")) == int(start)
+                and int(mark.get("end")) == int(end))
+    except (TypeError, ValueError):
+        cung = False
+    return "same" if cung else "other"
+
+
+def xac_nhan_da_dang(st, mark, stamp):
+    """Kênh ĐÃ có tập ⇒ ghi tiến độ ĐÚNG như lượt đăng thành công đã ghi. -> st mới.
+
+    Giá trị lấy từ dấu (`act_start`/`act_end`/`next_url` ghi lúc vào pha publish, từ manifest) —
+    KHÔNG từ dải yêu cầu: nguồn gộp/nhảy chương thì `act_end` khác `end`, và nguồn lật-theo-nút
+    (pntt2) cần `next_url` mới, thiếu nó lượt sau crawl lại đúng dải vừa đăng (review vòng 3).
+    """
+    if "act_end" not in mark:
+        raise ValueError("dấu không mang act_end (lượt ghi dấu cũ hơn 1.1.8) — sửa state tay theo "
+                         "manifest trong truyen-out/_work")
+    st = dict(st)
+    st["last_end"] = int(mark["act_end"])
+    st["last_run"] = stamp
+    st["last_publish_ok"] = True
+    st["history"] = (st.get("history", []) + [f"{mark.get('act_start')}-{mark['act_end']}@{stamp}"
+                                              f" (xác nhận tay)"])[-50:]
+    if mark.get("next_url"):
+        st["next_url"] = mark["next_url"]
+    return st
+
+
 def resume_keep(mark, slug, start, end, voice):
     """-> tập tên trong truyen-out được chừa khi sweep (rỗng nếu dấu không khớp lượt này)."""
     want = {"slug": slug, "start": int(start), "end": int(end), "voice": voice}
@@ -233,6 +273,13 @@ def main():
     ap = argparse.ArgumentParser(description="Chạy 1 lượt đọc+dựng+đăng cho MỘT phần truyện.")
     ap.add_argument("--state", default=DEFAULT_STATE, required=DEFAULT_STATE is None,
                     help="File state của phần truyện (<chiến dịch>/truyen-state.json).")
+    g = ap.add_mutually_exclusive_group()
+    g.add_argument("--confirm-published", action="store_true",
+                   help="gỡ chặn đăng trùng khi kênh ĐÃ có tập: ghi last_end/next_url từ dấu rồi "
+                        "xoá dấu (không đọc, không dựng, không đăng)")
+    g.add_argument("--clear-publish-guard", action="store_true",
+                   help="gỡ chặn khi kênh CHƯA có tập: bỏ pha publish khỏi dấu, lượt sau dựng + "
+                        "đăng lại dải đó")
     args = ap.parse_args()
     STATE = args.state
 
@@ -288,12 +335,42 @@ def main():
     # thể đã lên YouTube mà chưa ghi state. Chạy tiếp = dựng lại + upload lần hai = video trùng
     # công khai — `truyen_publish.py` không tự kiểm trùng. DỪNG mỗi đêm cho tới khi người xử lý
     # (review 02/10 vòng 2). Không sweep, không ghi đè dấu: cache + dấu giữ nguyên.
-    if resume_keep(_mark, slug, start, end, voice) and _mark.get("phase") == "publish":
-        log(f"[daily] LỖI: dải {start}-{end} đã tới bước ĐĂNG ở lượt trước rồi bị dừng — có thể đã "
-            f"lên YouTube. KHÔNG chạy lại để tránh đăng trùng.")
-        log(f"[daily] Người xử lý: kênh ĐÃ có tập này ⇒ sửa last_end={end} trong {STATE} rồi xoá "
-            f"{mark_path}; CHƯA có ⇒ xoá khoá \"phase\" trong {mark_path} rồi chạy lại.")
-        print(f"PUBLISH_GUARD=blocked range={start}-{end}", flush=True)
+    chan = chan_dang_trung(_mark, slug, start, end)
+    lenh = f'"{sys.executable}" "{os.path.abspath(__file__)}" --state "{STATE}"'
+    if args.clear_publish_guard or args.confirm_published:
+        if chan != "same":
+            log(f"[daily] không có dấu pha publish cho dải {start}-{end} của {slug} — không có gì để gỡ.")
+            sys.exit(2)
+        if args.confirm_published:
+            try:
+                st2 = xac_nhan_da_dang(st, _mark, stamp)
+            except ValueError as e:
+                log(f"[daily] LỖI: {e}")
+                sys.exit(2)
+            json.dump(st2, open(STATE, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=2)
+            os.remove(mark_path)
+            log(f"[daily] ĐÃ XÁC NHẬN: last_end -> {st2['last_end']}"
+                + (f", next_url -> {st2['next_url']}" if _mark.get("next_url") else "")
+                + " · dấu đã xoá. Lượt sau sang dải mới.")
+        else:
+            _mark.pop("phase", None)
+            with open(mark_path, "w", encoding="utf-8", newline="\n") as _f:
+                json.dump(_mark, _f, ensure_ascii=False)
+            log(f"[daily] ĐÃ GỠ CHẶN: lượt sau dựng + đăng lại dải {start}-{end} (dùng cache chương).")
+        sys.exit(0)
+    if chan:
+        ai = (f"dải {start}-{end}" if chan == "same" else
+              f"chiến dịch/dải KHÁC ({_mark.get('slug')} {_mark.get('start')}-{_mark.get('end')}) trên "
+              f"cùng trạm giọng")
+        log(f"[daily] LỖI: {ai} đã tới bước ĐĂNG ở một lượt trước rồi bị dừng — có thể đã lên "
+            f"YouTube. KHÔNG chạy (tránh đăng trùng, và không ghi đè dấu đó).")
+        if chan == "same":
+            log(f"[daily] Kiểm kênh YouTube. ĐÃ có tập ⇒ {lenh} --confirm-published")
+            log(f"[daily]                 CHƯA có tập ⇒ {lenh} --clear-publish-guard")
+        else:
+            log(f"[daily] Chạy hai lệnh gỡ trên với --state của CHIẾN DỊCH {_mark.get('slug')}.")
+        print(f"PUBLISH_GUARD=blocked kind={chan} range={_mark.get('start')}-{_mark.get('end')}",
+              flush=True)
         sys.exit(1)
     sweep_old(st, log, keep=resume_keep(_mark, slug, start, end, voice))
     os.makedirs(WORK, exist_ok=True)
@@ -388,14 +465,21 @@ def main():
     # Dấu pha "publish" vào _resume.json TRƯỚC khi upload: lượt bị giết từ đây trở đi có thể đã
     # lên YouTube mà chưa kịp ghi state — `resume_once.py` thấy pha này thì KHÔNG tự chạy tiếp
     # (chạy tiếp = dựng lại + upload lần hai = video trùng công khai). Người kiểm kênh rồi chạy tay.
+    # Dấu mang luôn giá trị tiến độ THẬT (từ manifest) để `--confirm-published` ghi đúng.
+    # Ghi dấu hỏng ⇒ DỪNG trước khi upload (chặn kiểu fail-closed): không có dấu thì một lần bị giết
+    # lúc đang đăng là đăng trùng đêm sau. Video đã dựng nằm ở OUT_DIR, đăng tay được.
     try:
         with open(mark_path, encoding="utf-8") as _f:
             _m = json.load(_f)
-        _m["phase"] = "publish"
+        _m.update({"phase": "publish", "act_start": act_start, "act_end": act_end,
+                   "next_url": man_next_url, "video": final_mp4})
         with open(mark_path, "w", encoding="utf-8", newline="\n") as _f:
             json.dump(_m, _f, ensure_ascii=False)
     except (OSError, ValueError) as e:
-        log(f"[daily] WARN: không ghi được pha publish vào dấu resume ({e}).")
+        log(f"[daily] LỖI: không ghi được pha publish vào dấu resume ({e}) — KHÔNG đăng (bị dừng "
+            f"lúc đăng mà không có dấu là đăng trùng). Video ở {final_mp4}; đăng tay bằng "
+            f"truyen_publish.py.")
+        sys.exit(1)
     pub_ok = False
     if os.path.isfile(TOKEN_TRUYEN) and os.path.isfile(manifest):
         cache_dir = os.path.join(ENGINE, "truyen-out", slug + vtag.replace("_", "__"), "cache")

@@ -185,9 +185,9 @@ def build(title, code, duration, log):
                         "nguyên: lượt theo lịch kế tiếp đọc tiếp đúng dải (hoặc kickstart tay).")
     if "RESUME_ONCE=skip reason=publish" in log or "PUBLISH_GUARD=blocked" in log:
         warn.append("Lượt truyện bị dừng lúc ĐANG ĐĂNG — KHÔNG tự chạy lại (kể cả lượt theo lịch "
-                    "đêm sau) để tránh đăng trùng. Kiểm kênh YouTube: ĐÃ có tập ⇒ sửa last_end "
-                    "trong truyen-state.json rồi xoá _resume.json; CHƯA có ⇒ xoá khoá \"phase\" "
-                    "trong _resume.json. Hướng dẫn đầy đủ ở log lượt chạy.")
+                    "đêm sau) để tránh đăng trùng. Kiểm kênh YouTube rồi chạy lệnh in trong log: "
+                    "ĐÃ có tập ⇒ daily_truyen.py --confirm-published (tự ghi last_end/next_url); "
+                    "CHƯA có ⇒ --clear-publish-guard.")
     elif "RESUME_ONCE=skip reason=no-mark" in log:
         warn.append("Quá trần nhưng không còn dấu dải dở (_resume.json) — không tự chạy tiếp; "
                     "lượt theo lịch kế tiếp chạy lại từ đầu dải.")

@@ -154,6 +154,9 @@ def doi_media(tram: Path, goc: list[str], dich: Path, days: int, dry: bool,
     for d in (r.stderr or "").splitlines():
         SC.log("    " + d)
     kq = {}
+    # Đã chạm đĩa hay chưa: prune_media ghi kê khai "planned" TRƯỚC byte đầu tiên. Mã 2 không chắc
+    # là "từ chối trước khi chạm" (ghi kê khai "done" hỏng SAU khi dời cũng là mã 2).
+    cham = "kê khai (kế hoạch)" in (r.stderr or "")
     for d in reversed((r.stdout or "").splitlines()):
         d = d.strip()
         if d.startswith("{") and d.endswith("}"):
@@ -162,6 +165,7 @@ def doi_media(tram: Path, goc: list[str], dich: Path, days: int, dry: bool,
             except ValueError:
                 pass
             break
+    kq["_cham"] = cham
     return r.returncode, kq
 
 
@@ -283,7 +287,8 @@ def lam(a) -> dict:
     giu_f = (t.get("keep") or {}).get("files", 0)
     if ma_prune:
         do.append(f"prune_media mã {ma_prune} (xem log phía trên)")
-    if ma_prune == SC.CONTRACT_ERROR:
+    refused = ma_prune == SC.CONTRACT_ERROR and not kq.get("_cham")
+    if refused:
         # Cầu dao / tham số: prune_media từ chối TRƯỚC byte đầu tiên — không dời gì.
         _in(f"CLEANUP_PRUNE mode={'dry-run' if dry else 'move'} files=0 bytes=0 kept={giu_f} "
             f"code={ma_prune}")
@@ -293,7 +298,7 @@ def lam(a) -> dict:
     else:
         _in(f"CLEANUP_PRUNE mode={'dry-run' if dry else 'move'} files={doi_f} bytes={doi_b} "
             f"kept={giu_f} code={ma_prune}")
-    if ma_prune == SC.CONTRACT_ERROR:
+    if refused:
         _in("CLEANUP_PRUNE_REFUSED")
 
     # 2
@@ -340,7 +345,8 @@ def lam(a) -> dict:
           "trash_purged": len(xoa_rac), "logs_deleted": len(xoa_log),
           "logs_truncated": len(cat_log), "sizes": co,
           "manifest": kq.get("manifest") or (None if dry or not ma_prune else str(ke_khai))}
-    if ma_prune == SC.CONTRACT_ERROR:
+    ra.pop("_cham", None)
+    if refused:
         raise SC.ContractError("prune_media từ chối (cầu dao hoặc tham số) — KHÔNG dời gì; "
                                "đọc log phía trên rồi xem tay")
     if do:
