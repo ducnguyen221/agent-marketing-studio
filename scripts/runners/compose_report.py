@@ -79,6 +79,15 @@ def find(rx, text, group=1, default=""):
 
 def build(title, code, duration, log):
     ok = code == 0
+    # Lượt CỐ Ý không làm gì (runner tin cách ngày, ngày lệch nhịp — `RUN_SKIPPED=cadence`): một
+    # dòng ⏭, không ✅. Tin "✅ chạy xong sau 0 giây" mỗi ngày làm người đọc tưởng đã có bài
+    # (Đức hỏi 03/10). Wrapper launchd (`notify_run.py`) còn không gửi lượt này; wrapper Task
+    # Scheduler ngoài repo gửi đúng dòng này. Mã khác 0 thì dấu đó không được che lỗi.
+    bo_qua = find(r"\bRUN_SKIPPED=(\w+)", log)
+    if ok and bo_qua:
+        ly_do = "hôm nay không phải ngày chạy (lịch cách ngày)" if bo_qua == "cadence" else bo_qua
+        return (f"⏭ <b>{esc(title)}</b> — bỏ qua theo nhịp: {esc(ly_do)}. "
+                "Không làm gì, không phải lỗi.")
     L = []                                   # các câu kể
     warn = []                                # bất thường -> đẩy lên đầu
     links = []
@@ -195,11 +204,23 @@ def build(title, code, duration, log):
     # ── Render kẹt (video-studio `RENDER_STUCK:` · preflight mã 5 · Navigation timeout) ──
     # `Navigation timeout` chỉ tính khi lượt HỎNG: render_project in stderr của mọi lần thử
     # hỏng, kể cả khi lần sau qua — lượt ✅ không được mang cảnh báo kẹt.
-    ket = ("RENDER_STUCK" in log or "RENDER_PREFLIGHT=stuck" in log
-           or (not ok and "Navigation timeout" in log))
-    if ket:
-        warn.append("MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — khởi động lại "
-                    "máy rồi chạy lại (kiểm nhanh: video-studio probe).")
+    # P1-25 (`probe --heal`, video-studio ≥ 0.2.7): kẹt lúc đầu rồi tự chữa được thì log vẫn có dòng
+    # `RENDER_STUCK` của lần probe đầu — lượt đó KHÔNG được mang câu "khởi động lại máy".
+    goi_cd = find(r"RENDER_DIAG=(.+)", log).strip()
+    tu_chua = ("RENDER_HEAL=recovered" in log and "RENDER_PREFLIGHT=stuck" not in log)
+    ket = not tu_chua and ("RENDER_STUCK" in log or "RENDER_PREFLIGHT=stuck" in log
+                           or (not ok and "Navigation timeout" in log))
+    if tu_chua:
+        warn.append(f"Môi trường render KẸT lúc đầu nhưng đã tự chữa (lần "
+                    f"{find(r'RENDER_HEAL=recovered step=(\d+)', log) or '?'}) — lượt chạy tiếp "
+                    f"bình thường." + (f" Gói chẩn đoán: {goi_cd}" if goi_cd else ""))
+    elif ket:
+        da_chua = "RENDER_HEAL=failed" in log
+        warn.append("MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — "
+                    + ("đã tự chữa (giết Chrome mồ côi, xoá profile tạm, thử lại) vẫn kẹt — "
+                       if da_chua else "")
+                    + "khởi động lại máy rồi chạy lại (kiểm nhanh: video-studio probe)."
+                    + (f" Gói chẩn đoán: {goi_cd}" if goi_cd else ""))
     elif "RENDER_PREFLIGHT=failed" in log:
         warn.append("Phép thử render hỏng TRƯỚC các bước tốn kém (chưa tốn agent/TTS) — chạy "
                     "video-studio doctor --hf; không rõ nguyên nhân thì khởi động lại máy.")

@@ -105,6 +105,9 @@ else {
   if ($cli -and -not $env:YT_CLIENT_SECRET -and (Test-IsPathValue $cli)) { $env:YT_CLIENT_SECRET = (Resolve-Home $cli) }
 }
 
+# Xoay vòng log launchd của trạm trong lượt (job dọn tuần đã gỡ trên Mac); `daily-logs/` do
+# daily_truyen.py tự xoay cạnh sweep_old — nó biết đúng đường của trạm giọng.
+Invoke-LogRotate -Python $py -OnLine { param($l) Write-Output $l }
 $daily = Join-Path (Join-Path $engine 'story') 'daily_truyen.py'
 $guard = Join-Path (Join-Path $engine 'story') 'resume_once.py'
 Write-Output ('[truyen] chien dich ' + $Campaign + ' · state ' + (Split-Path $State -Leaf) + ' · python ' + $py +

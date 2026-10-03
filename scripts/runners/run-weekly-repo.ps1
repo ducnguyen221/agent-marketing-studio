@@ -97,7 +97,9 @@ if (@($bgmCat.missing).Count -gt 0) { Log ('WARN: thu vien nhac nen thieu mp3 ch
 # Rào render (P1-24): phép thử HyperFrames rẻ TRƯỚC nghiên cứu/TTS — kẹt thì dừng ngay (mã 5),
 # không đốt agent + TTS + 40 phút. Xem Invoke-RenderPreflight trong brand-paths.ps1.
 if (-not $ovpy) { Log 'ERROR: khong thay python cua tram giong (OMNIVOICE_PY / VOICE_STATION).'; Log '=== failed ==='; exit 3 }
-$pf = Invoke-RenderPreflight -Python $ovpy -OnLine { param($l) Log $l }
+# Xoay vòng log trong lượt (job dọn tuần đã gỡ trên Mac): *.log > 60 ngày, > 5 MB, gói chẩn đoán cũ.
+if ($syspy) { Invoke-LogRotate -Python $syspy -Dirs @($logdir) -OldDirs @(Join-Path $logdir 'render-stuck') -OnLine { param($l) Log $l } }
+$pf = Invoke-RenderPreflight -Python $ovpy -DiagDir (Join-Path $logdir 'render-stuck') -OnLine { param($l) Log $l }
 # Bất cứ thứ gì không phải số nguyên (hàm hỏng giữa chừng dưới EAP Continue) là HỎNG: `exit $null`
 # ra mã 0, tức tin ✅ cho một lượt đã dừng (review 02/10).
 if ($pf -isnot [int]) { $pf = 1 }

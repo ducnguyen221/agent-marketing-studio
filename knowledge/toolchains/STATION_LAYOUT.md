@@ -194,7 +194,7 @@ chính nó. `scripts/runners/install_launchd.py` điền khối đó từ `studi
 
 Ba job **không** nạp mặc định (`worker`, `approve-poller`, `daily-story`): chúng hoặc chạy
 liên tục, hoặc chạy hàng giờ giữa đêm. Bật chúng phải là một câu người ta gõ ra.
-`weekly-cleanup` (dọn dung lượng tuần, CN 04:00) chặt hơn nữa: chỉ `--only` mới nạp, `--all`
+`weekly-cleanup` (dọn dung lượng tuần, CN 04:00 — tuỳ chọn từ 1.1.9, log đã xoay trong lượt chạy) chặt hơn nữa: chỉ `--only` mới nạp, `--all`
 cũng bỏ qua — Windows tương đương: `run-weekly-cleanup.ps1 -Register`.
 
 `worker` và `approve-poller` **không** bọc `notify_run`: chúng chạy mỗi phút, báo Telegram

@@ -41,6 +41,14 @@ Windows trả) và nói rõ lý do trong cả log lẫn tin báo (⏳). Hai máy
 `compose_report.py`, sổ Excel và `triage.py` phân loại theo mã — lệch mã là lệch báo cáo.
 Không đặt `--timeout` thì hành vi y như trước: chờ đến khi nào xong.
 
+## Lượt "bỏ qua theo nhịp" — không gửi tin
+
+Runner tin hằng ngày chạy cách ngày (Hot AI ngày chẵn, Hot Data ngày lẻ) nhưng launchd gọi MỖI
+ngày: ngày lệch nhịp nó thoát 0 sau 0 giây với dòng `RUN_SKIPPED=<lý do>`. Trước 1.1.9 lượt đó
+vẫn ra tin "✅ … chạy 00:00:00" — mỗi ngày một tin trông như đã đăng bài mà không có gì
+(Đức hỏi 03/10). Mã 0 + dấu đó ⇒ **không gửi**, chỉ in một dòng vào log của job. Mã khác 0 thì
+dấu đó không được nuốt tin lỗi: vẫn báo như thường.
+
 ## Ba tầng soạn tin (giống wrapper Windows)
 
 1. `--composer-dir/compose_report.py` → văn người đọc (nếu có).
@@ -84,6 +92,8 @@ TRAN_TRIAGE = 180       # giây — notify không được phép treo bộ lập
 
 LINK_GOC = (r"youtube\.com/(?:watch\?v=|shorts/)[\w-]+|youtu\.be/[\w-]+"
             r"|facebook\.com/\S+|fb\.watch/\S+")
+# Dấu "lượt này cố ý không làm gì" do runner in (vd `RUN_SKIPPED=cadence`).
+BO_QUA_RE = re.compile(r"\bRUN_SKIPPED=(\w+)")
 BUOC_RE = re.compile(r"^(===|---|\[|Step |Launching|Rendering|Publishing|Uploading|Crawling"
                      r"|DONE|OK |Registered|publish: (OK|DONE|YouTube|Facebook|Excel|web))")
 TOKEN_RE = re.compile(r"\d{5,}:[A-Za-z0-9_-]{20,}")
@@ -163,6 +173,17 @@ def trich_do_phu(dong: list[str]) -> tuple[list[str], str]:
 
 
 # ── Chạy ─────────────────────────────────────────────────────────────────────
+
+def ly_do_bo_qua(ma: int, dong: list[str]) -> str:
+    """-> lý do (vd "cadence") nếu lượt THÀNH CÔNG này cố ý bỏ qua; "" nếu không."""
+    if ma != 0:
+        return ""
+    for d in dong:
+        m = BO_QUA_RE.search(d)
+        if m:
+            return m.group(1)
+    return ""
+
 
 def in_which() -> None:
     for t in CONG_CU:
@@ -334,8 +355,11 @@ def soan_tin(title: str, ma: int, dur: str, dong: list[str], mien: list[str],
                "bên dưới để biết nó đứng ở đâu.\n\n" + msg)
     elif ma == MA_RENDER_KET and not composed:
         # Có composer thì compose_report đã nói câu này (cùng chữ) — đừng nói hai lần.
+        goi = next((m.group(1).strip() for d in dong
+                    for m in [re.search(r"RENDER_DIAG=(.+)", d)] if m), "")
         msg = ("❌ <b>MÔI TRƯỜNG RENDER KẸT</b> (HyperFrames không mở được trang) — khởi động lại "
-               "máy rồi chạy lại (exit 5; rào render dừng TRƯỚC agent/TTS).\n\n" + msg)
+               "máy rồi chạy lại (exit 5; rào render dừng TRƯỚC agent/TTS)."
+               + (f"\nGói chẩn đoán: <code>{_esc(goi)}</code>" if goi else "") + "\n\n" + msg)
 
     if ma != 0 and not het_han_muc:
         if not composed:
@@ -431,6 +455,10 @@ def main(argv: list[str] | None = None) -> int:
     dur = f"{giay // 3600:02d}:{giay % 3600 // 60:02d}:{giay % 60:02d}"
     print(f"notify_run: lệnh con thoát mã {ma} sau {dur}", flush=True)
 
+    bo_qua = ly_do_bo_qua(ma, dong)
+    if bo_qua:
+        print(f"notify: lượt bỏ qua theo nhịp ({bo_qua}) — không gửi Telegram.", flush=True)
+        return ma
     tieu_de = f"{a.title} — QUÁ GIỜ {a.timeout}s" if qua_gio else a.title
     try:
         tin = soan_tin(tieu_de, ma, dur, dong, _mien(a.link_domains), composer, qua_gio)

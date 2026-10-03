@@ -193,3 +193,50 @@ def test_doctor_so_profile_NFD_voi_khai_NFC_KHONG_do_gia(tmp_path, monkeypatch):
     so = DR.So()
     DR._kham_profile(so, tmp_path, [("kenh", {"voice_profile": "khong-co"})])
     assert so.fail, "profile thật sự thiếu vẫn phải ĐỎ"
+
+
+# ── `gh` cho nhánh dự phòng của bản tin tuần (SUBTASK-WIN-RUNTIME-3 §5) ────────────────
+
+def _tram_tuan(tmp_path, gh_repo="owner/news"):
+    t = _tram(tmp_path, "run-weekly-news.ps1")
+    (t / "kenh" / "channel.yml").write_text(
+        "id: kenh\nbrand:\n  gh_repo: " + gh_repo + "\n", encoding="utf-8")
+    return t
+
+
+def _kham_gh(tmp_path, monkeypatch, tram, co_gh):
+    monkeypatch.setattr(DR.SP, "voice_station", lambda *a, **k: None)
+    monkeypatch.setattr(DR.RD, "tim_last30days", lambda *a, **k: tmp_path / "l30.py")
+    monkeypatch.setattr(DR.RD, "thu_muc_nhac_nen", lambda: None)
+    monkeypatch.setattr(DR.shutil, "which",
+                        lambda ten: ("/opt/homebrew/bin/gh" if co_gh else None) if ten == "gh" else "/x/" + ten)
+    so = DR.So()
+    DR.kham_runner(so, tram)
+    return so
+
+
+def test_kenh_can_gh_chi_khi_co_ban_tin_tuan_VA_khai_gh_repo(tmp_path):
+    assert RD.kenh_can_gh(_tram_tuan(tmp_path)) == ["kenh"]
+    assert RD.kenh_can_gh(_tram_tuan(tmp_path / "b", gh_repo='""')) == []
+    assert RD.kenh_can_gh(_tram(tmp_path / "c", "run-toptoday-hot.ps1")) == []
+
+
+def test_doctor_THIEU_gh_thi_NHAC_kem_lenh_cai_ca_hai_he(tmp_path, monkeypatch):
+    so = _kham_gh(tmp_path, monkeypatch, _tram_tuan(tmp_path), co_gh=False)
+    chu = "\n".join(so.warn)
+    assert "gh_repo" in chu and "brew install gh" in chu and "gh auth login" in chu
+    assert "winget install --id GitHub.cli" in chu and "KHÔNG có video" in chu
+    assert so.fail == [], "thiếu gh chỉ NHẮC — nhánh đó là dự phòng"
+
+
+def test_doctor_CO_gh_thi_dang_nhap_la_NOT_CHECKED(tmp_path, monkeypatch):
+    so = _kham_gh(tmp_path, monkeypatch, _tram_tuan(tmp_path), co_gh=True)
+    assert not any("gh_repo" in w for w in so.warn)
+    assert any("gh auth status" in x for x in so.not_checked)
+
+
+def test_runner_tuan_thieu_gh_BO_nhanh_Release_truoc_khi_goi_gh():
+    t = (ROOT / "scripts" / "runners" / "run-weekly-news.ps1").read_text(encoding="utf-8-sig")
+    rao = t.index("-not (Get-Command gh -ErrorAction SilentlyContinue)")
+    assert rao < t.index("& gh release view"), "phải rẽ nhánh TRƯỚC lệnh gh đầu tiên"
+    assert "KHONG co lenh gh" in t

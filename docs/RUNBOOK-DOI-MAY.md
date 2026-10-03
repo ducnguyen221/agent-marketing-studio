@@ -293,9 +293,16 @@ python scripts/runners/install_launchd.py --only studio.marketing.daily-news-a
 - `worker`, `approve-poller`, `daily-story` **không** nằm trong bộ mặc định: phải gọi đích
   danh bằng `--only`, hoặc `--all`. Ba job đó hoặc chạy liên tục, hoặc chạy hàng giờ giữa
   đêm — bật chúng phải là một câu bạn gõ ra.
-- `weekly-cleanup` (dọn dung lượng tuần) **chỉ** `--only` — `--all` cũng bỏ qua. Trước khi bật:
+- `weekly-cleanup` (dọn dung lượng tuần) là **tuỳ chọn, không nạp mặc định** — **chỉ** `--only`,
+  `--all` cũng bỏ qua. Không cần nó để giữ dung lượng có trần: mỗi quy trình tự dọn media của nó,
+  và từ 1.1.9 log xoay vòng ngay trong các lượt tin/truyện. Nếu vẫn muốn bật: trước đó
   `pwsh scripts/runners/run-weekly-cleanup.ps1 -DryRun` và đọc báo cáo (sẽ dời gì, giữ gì vì
   thiếu bằng chứng). Windows: `run-weekly-cleanup.ps1 -Register` (cần `NOTIFY_RUN`).
+- **Giờ chạy là cấu hình THEO MÁY, không phải mặc định cứng trong mẫu** — Mac: khoá `schedule` trong
+  `<trạm>/launchd.json`; Windows: `-Time` khi `-Register`. Lịch đang dùng (từ 04/10/2026, Mac):
+  Hot AI · Hot Data **17:00** (cách ngày, xen kẽ — mỗi ngày đúng một lượt Hot), Weekly AI (T6) ·
+  Weekly Data (T7) · Weekly Repo (CN) **19:00** (= 17:00 + trần 2 h của lượt Hot), truyện **00:00**.
+  Chuyển lịch về Windows thì đăng ký Task Scheduler đúng các giờ này.
 - Kiểm một job: `launchctl print gui/$UID/<label>`; log ở `<trạm>/logs/launchd/<label>.*.log`.
 
 **Windows**
@@ -349,11 +356,17 @@ mà báo. Sáng hôm sau bạn chỉ thấy: hôm qua không có bài.
 **Vì sao nghĩ tới (P1-24, Mac mini 02/10/2026):** Hot AI 18:00 hỏng sau 42 phút vì môi trường
 render của macOS kẹt (`Navigation timeout` ở frame 0 với mọi project; `WindowServer` 21 % và
 `coreaudiod` 14 % CPU lúc máy rảnh). Khởi động lại máy là hết. Từ 1.1.8 runner tin **phát hiện
-sớm** (`video-studio probe` trước nghiên cứu/TTS, mã 5, tin ❌ "khởi động lại máy rồi chạy lại")
-— nhưng phát hiện vẫn mất một lượt. Khởi động lại định kỳ là cách **phòng**.
+sớm** (`video-studio probe` trước nghiên cứu/TTS, mã 5, tin ❌ "khởi động lại máy rồi chạy lại").
+Từ 1.1.9 (video-studio ≥ 0.2.7) runner **tự chữa trước** (P1-25): kẹt thì chụp gói chẩn đoán vào
+`<log của chiến dịch>/render-stuck/<giờ>/`, giết Chrome/HyperFrames mồ côi, xoá profile tạm cũ,
+chờ 60 s rồi 600 s, thử lại — hết thang mới ❌ "khởi động lại máy" (kèm đường gói). Gói đó là thứ
+mang đi tìm nguyên nhân gốc (vẫn chưa rõ). Giả lập trên máy nghiệm thu:
+`RENDER_PROBE_TIMEOUT=1 RENDER_HEAL_WAITS=1,1`. Phát hiện + tự chữa vẫn có thể mất một lượt nếu
+máy kẹt thật — khởi động lại định kỳ là cách **phòng**.
 
 Repo **không** tự làm việc này: macOS cần quyền admin, và khởi động lại một máy là quyết định của
-chủ máy. Nếu bật, làm tay một lần:
+chủ máy. Giờ nên chọn: **sau mọi job đêm, trước job đầu tiên trong ngày** (lịch hiện tại: truyện
+00:00 → ~07:00, tin 17:00). Nếu bật, làm tay một lần:
 
 ```sh
 sudo pmset repeat restart U 05:00:00      # Chủ nhật 05:00 (U = Sunday trong pmset)
@@ -370,7 +383,8 @@ Ba điều phải kiểm TRƯỚC khi bật:
 2. **Không cắt ngang lượt đang chạy.** Truyện bắt đầu 00:00 và có thể kéo tới ~11:30 nếu quá
    trần rồi chạy tiếp (8 h 30 + 3 h). Khởi động lại 05:00 CN sẽ giết lượt đó: hoặc chọn giờ khác,
    hoặc chấp nhận mất lượt truyện Chủ nhật (cache chương + `_resume.json` vẫn còn, lượt thứ Hai
-   đọc tiếp đúng dải đó). Dọn tuần CN 04:00 xong trong vài phút — nằm trước 05:00.
+   đọc tiếp đúng dải đó). Lượt truyện thường xong ~07:00 — giờ an toàn hơn là sau mốc đó và
+   trước 17:00 (vd `U 09:00:00`).
 3. **Windows** (nếu máy lịch là Windows): một task Task Scheduler `shutdown /r /t 60` với cùng
    lưu ý — task chạy "chỉ khi người dùng đăng nhập" sẽ không chạy cho tới khi có người đăng nhập.
 
