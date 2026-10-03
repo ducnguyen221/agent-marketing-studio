@@ -315,3 +315,14 @@ def test_notify_run_du_phong_ma_5_kem_goi_chan_doan():
     msg = NR.soan_tin("Daily Hot AI", 5, "00:12:00",
                       ["probe: RENDER_DIAG=/t/render-stuck/c", "RENDER_PREFLIGHT=stuck"], [], None)
     assert "MÔI TRƯỜNG RENDER KẸT" in msg and "/t/render-stuck/c" in msg
+
+
+def test_compose_report_tu_chua_roi_KET_LAI_khi_dung_that_van_bao_khoi_dong_lai():
+    """Review 04/10: tự chữa ở preflight không được che lần kẹt thật về sau."""
+    import compose_report as CR
+    log = ("probe: RENDER_DIAG=/t/render-stuck/d\nprobe: RENDER_HEAL=recovered step=2\n"
+           "RENDER_PREFLIGHT=ok\n=== render ===\n"
+           "ERROR: RENDER_STUCK: page.goto: Navigation timeout of 60000 ms exceeded\n=== failed ===")
+    msg = CR.build("Daily Hot AI", 1, "00:40:00", log)
+    assert msg.startswith("❌") and "KẸT LẠI" in msg and "khởi động lại máy rồi chạy lại" in msg
+    assert "lượt chạy tiếp bình thường" not in msg and "/t/render-stuck/d" in msg

@@ -46,6 +46,12 @@ Scheduler lẫn launchd. Lịch chạy KHÔNG đổi trong repo (Mac tự chỉn
   lệnh `gh` đầu tiên. `doctor`: kênh có bản tin tuần + khai `brand.gh_repo` mà thiếu `gh` ⇒ cảnh
   báo kèm lệnh cài (`brew install gh` + người dùng tự `gh auth login`; Windows `winget`); có `gh`
   ⇒ đăng nhập là NOT_CHECKED. INSTALL thêm dòng `gh`.
+- **Sau review độc lập (04/10)** — 1 Chặn + 1 Phải sửa ở repo này: `compose_report.py` có biểu
+  thức f-string chứa gạch ngược (chỉ hợp lệ từ Python 3.12 — 3.10/3.11 mất cả tầng soạn tin, CI
+  ma trận 3.10 đỏ) ⇒ tách ra biến; lượt tự chữa ở preflight rồi KẸT LẠI khi dựng thật từng ra tin
+  "đã tự chữa — chạy tiếp bình thường" ⇒ nay chỉ xét phần log SAU `RENDER_PREFLIGHT=ok`, kẹt lại
+  thì báo "KẸT LẠI khi dựng thật — khởi động lại máy". Phía video-studio 0.2.7 sửa cách nhận/giết
+  tiến trình mồ côi (xem CHANGELOG của repo đó).
 - **Lịch**: RUNBOOK-DOI-MAY ghi giờ chạy là cấu hình theo máy (Mac: `launchd.json` khoá `schedule`)
   và lịch đang dùng (Hot 17:00, tuần 19:00, truyện 00:00) — Windows không sửa mẫu lịch.
 

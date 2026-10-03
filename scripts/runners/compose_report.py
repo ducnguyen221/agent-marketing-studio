@@ -206,14 +206,22 @@ def build(title, code, duration, log):
     # hỏng, kể cả khi lần sau qua — lượt ✅ không được mang cảnh báo kẹt.
     # P1-25 (`probe --heal`, video-studio ≥ 0.2.7): kẹt lúc đầu rồi tự chữa được thì log vẫn có dòng
     # `RENDER_STUCK` của lần probe đầu — lượt đó KHÔNG được mang câu "khởi động lại máy".
+    # Nhưng kẹt LẠI sau đó (bước dựng thật, sau `RENDER_PREFLIGHT=ok`) thì vẫn là kẹt (review 04/10).
     goi_cd = find(r"RENDER_DIAG=(.+)", log).strip()
     tu_chua = ("RENDER_HEAL=recovered" in log and "RENDER_PREFLIGHT=stuck" not in log)
+    sau_pf = log.rsplit("RENDER_PREFLIGHT=ok", 1)[-1] if "RENDER_PREFLIGHT=ok" in log else log
+    ket_lai = tu_chua and ("RENDER_STUCK" in sau_pf or (not ok and "Navigation timeout" in sau_pf))
     ket = not tu_chua and ("RENDER_STUCK" in log or "RENDER_PREFLIGHT=stuck" in log
                            or (not ok and "Navigation timeout" in log))
-    if tu_chua:
-        warn.append(f"Môi trường render KẸT lúc đầu nhưng đã tự chữa (lần "
-                    f"{find(r'RENDER_HEAL=recovered step=(\d+)', log) or '?'}) — lượt chạy tiếp "
-                    f"bình thường." + (f" Gói chẩn đoán: {goi_cd}" if goi_cd else ""))
+    buoc_chua = find(r"RENDER_HEAL=recovered step=(\d+)", log) or "?"
+    them_goi = f" Gói chẩn đoán: {goi_cd}" if goi_cd else ""
+    if ket_lai:
+        warn.append(f"MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — lúc kiểm trước đã tự "
+                    f"chữa (lần {buoc_chua}) nhưng KẸT LẠI khi dựng thật — khởi động lại máy rồi "
+                    f"chạy lại.{them_goi}")
+    elif tu_chua:
+        warn.append(f"Môi trường render KẸT lúc đầu nhưng đã tự chữa (lần {buoc_chua}) — lượt chạy "
+                    f"tiếp bình thường.{them_goi}")
     elif ket:
         da_chua = "RENDER_HEAL=failed" in log
         warn.append("MÔI TRƯỜNG RENDER KẸT (HyperFrames không mở được trang) — "
