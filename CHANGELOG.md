@@ -51,7 +51,11 @@ Scheduler lẫn launchd. Lịch chạy KHÔNG đổi trong repo (Mac tự chỉn
   ma trận 3.10 đỏ) ⇒ tách ra biến; lượt tự chữa ở preflight rồi KẸT LẠI khi dựng thật từng ra tin
   "đã tự chữa — chạy tiếp bình thường" ⇒ nay chỉ xét phần log SAU `RENDER_PREFLIGHT=ok`, kẹt lại
   thì báo "KẸT LẠI khi dựng thật — khởi động lại máy". Phía video-studio 0.2.7 sửa cách nhận/giết
-  tiến trình mồ côi (xem CHANGELOG của repo đó).
+  tiến trình mồ côi, đối chiếu SID chủ trên Windows và che secret ba lớp (xem CHANGELOG của repo đó).
+- **Wrapper Task Scheduler giữ nguyên (Đức chọn 04/10):** `~/.opcos/bootstrap/notify-run.ps1` nằm
+  ngoài repo; lượt bỏ qua theo nhịp trên Windows vẫn ra MỘT dòng "⏭ … bỏ qua theo nhịp … không phải
+  lỗi" (văn do `compose_report.py` soạn), không còn ✅. launchd thì không gửi gì. Các task tin trên
+  Windows hiện đều Disabled (lịch đã chuyển sang Mac).
 - **Lịch**: RUNBOOK-DOI-MAY ghi giờ chạy là cấu hình theo máy (Mac: `launchd.json` khoá `schedule`)
   và lịch đang dùng (Hot 17:00, tuần 19:00, truyện 00:00) — Windows không sửa mẫu lịch.
 
