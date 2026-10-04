@@ -780,8 +780,13 @@ def kham_agy_model(so: So, tram: Path, models=None):
                     f"trên PATH — chuỗi sẽ lùi sang engine kế ở mọi lượt.")
             return
         models = AC.agy_models(cfg, timeout=30, cache=False)
+    if models is None:
+        so.chua_kiem(f"agy: không chạy được `agy models` — chưa kiểm tên model ({', '.join(muc)}).")
+        return
     if not models:
-        so.chua_kiem(f"agy: không hỏi được `agy models` — chưa kiểm tên model ({', '.join(muc)}).")
+        so.nhac("agy: `agy models` chạy được nhưng KHÔNG đọc ra model nào — agy đổi định dạng in? Mọi "
+                f"mẫu ({', '.join(m for m in muc if AC.la_mau_model(m)) or 'không có'}) sẽ không phân "
+                "giải được và chuỗi lùi sang engine kế ở mọi lượt. Sửa `parse_agy_models`.")
         return
     import difflib
     for m in muc:

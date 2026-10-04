@@ -294,3 +294,10 @@ def test_doctor_khong_dung_agy_thi_im(tmp_path, khong_bien):
     so = DR.So()
     DR.kham_agy_model(so, _tram_engines(tmp_path, ["claude:best", "codex:best"], best=""), models=MODELS)
     assert so.warn == so.info == so.not_checked == so.fail == []
+
+
+
+def test_doctor_agy_models_doc_RONG_thi_NHAC(tmp_path, khong_bien):
+    so = DR.So()
+    DR.kham_agy_model(so, _tram_engines(tmp_path, ["agy:claude-opus-*-high"]), models=[])
+    assert any("đổi định dạng" in w for w in so.warn) and so.not_checked == []

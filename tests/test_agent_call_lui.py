@@ -338,3 +338,56 @@ def test_agy_models_dem_theo_tien_trinh():
         assert len(goi) == 1 and goi[0][-1] == "models"
     finally:
         AC._AGY_MODELS.clear()
+
+
+
+# ── P1-27 sau review (05/10) ────────────────────────────────────────────────────────
+
+def test_sao_chi_khop_SO_PHIEN_BAN_khong_khop_bien_the():
+    ds = ["claude-opus-5-5-high", "claude-opus-5-5-1m-high", "claude-opus-5-5-thinking-high",
+          "gemini-3.8-flash-high", "gemini-3.10-flash-high", "gemini-3.8-flash-high-thinking"]
+    assert AC.chon_model_agy("claude-opus-*-high", ds) == "claude-opus-5-5-high"
+    assert AC.chon_model_agy("gemini-*-flash-high", ds) == "gemini-3.10-flash-high"
+
+
+def test_agy_models_KHONG_dem_khi_hong_tam():
+    lan = []
+
+    def hong_roi_on(argv, stdin, **kw):
+        lan.append(1)
+        if len(lan) == 1:
+            return {"rc": 1, "stdout": "", "stderr": "network"}
+        return {"rc": 0, "stdout": "gemini-3.8-flash-high\tG\n"}
+    AC._AGY_MODELS.clear()
+    try:
+        assert AC.agy_models(runner=hong_roi_on) is None
+        assert AC.agy_models(runner=hong_roi_on) == ["gemini-3.8-flash-high"], "lần sau phải hỏi lại"
+    finally:
+        AC._AGY_MODELS.clear()
+
+
+def test_agy_models_doi_dinh_dang_la_danh_sach_RONG_khong_phai_None():
+    AC._AGY_MODELS.clear()
+    try:
+        assert AC.agy_models(runner=lambda a, s, **k: {"rc": 0, "stdout": '{"models": []}'}) == []
+    finally:
+        AC._AGY_MODELS.clear()
+
+
+def test_luot_mau_bi_bo_qua_VAN_vao_so_va_noi_dung_ly_do(lam, tmp_path, monkeypatch):
+    cfg = lam(["agy:claude-opus-*-high", "claude:best"], agy=[OK], claude=[OK])
+    monkeypatch.setattr(AC, "agy_models", lambda *a, **k: [])
+    ra, _ = _goi(cfg, tmp_path)
+    assert ra["engine"] == "claude" and "đổi định dạng" in ra["tried"][0]["error"]
+    so = [json.loads(l) for l in (tmp_path / "so.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert so[0]["kind"] == "model_access" and so[0]["model_pattern"] == "claude-opus-*-high"
+    assert so[-1]["engine"] == "claude"
+
+
+def test_mau_va_ten_cung_cung_mot_model_KHONG_goi_hai_lan(lam, tmp_path, monkeypatch):
+    cfg = lam(["agy:claude-opus-5-5-high", "agy:claude-opus-*-high", "claude:best"],
+              agy=[{"rc": 1, "stderr": ["invalid model selection"]}], claude=[OK])
+    monkeypatch.setattr(AC, "agy_models", lambda *a, **k: ["claude-opus-5-5-high"])
+    ra, _ = _goi(cfg, tmp_path)
+    assert [t["model"] for t in ra["tried"]].count("claude-opus-5-5-high") == 1
+    assert ra["engine"] == "claude"

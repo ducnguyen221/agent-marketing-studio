@@ -26,6 +26,12 @@ Hot AI 17:00 và hook truyện chạy bằng Gemini thay vì Opus mà không ai 
   trạm có `engines.json` hoặc chiến dịch chạy runner. Đo trên Windows: trạm cũ ghi
   `claude-opus-4-6-thinking` ⇒ nhắc, gợi ý `claude-opus-5-5-high`.
 - RUNBOOK-DOI-MAY (mục *Thứ tự engine*) và `docs/runners.md` ghi cách viết mẫu.
+- **Sau review độc lập (05/10):** `*` chỉ khớp SỐ PHIÊN BẢN (`5-5`, `3.8`, `6`) — không khớp biến
+  thể `claude-opus-5-5-1m-high` / `…-thinking-high`; so phiên bản theo phần `*` bắt được. Lượt mẫu bị
+  bỏ qua VẪN vào sổ (`model_pattern`). `agy models` hỏng tạm không bị đệm (hook truyện hỏi lại ở lần
+  gọi sau). Phân biệt "không chạy được `agy models`" (doctor: NOT_CHECKED) với "chạy được nhưng
+  không đọc ra model nào — agy đổi định dạng in?" (doctor: NHẮC). Mẫu và tên cứng cùng ra một model
+  thì không gọi hai lần.
 - **Việc của mỗi máy:** `engines.json` của trạm là cấu hình theo máy — đổi `agy:<tên cứng>` sang mẫu
   (Mac đã vá tay `order[0] = agy:claude-opus-5-5-high`; nên đổi tiếp sang `agy:claude-opus-*-high`).
 

@@ -691,9 +691,12 @@ def parse_agy_models(text: str) -> list[str]:
 
 
 def agy_models(cfg=None, *, timeout=60, env=None, runner=None, cache=True) -> list[str] | None:
-    """Danh sách model agy cho phép lúc này — `agy models` (0 token, ~3 s). Hỏng ⇒ None.
+    """Danh sách model agy cho phép lúc này — `agy models` (0 token, ~3 s).
 
-    Đệm theo tiến trình: một lượt runner gọi nhiều bước agent nhưng danh mục không đổi giữa chừng.
+    -> [id…] · `[]` = lệnh chạy được (mã 0) nhưng KHÔNG đọc ra id nào (agy đổi định dạng in?) ·
+    `None` = không chạy được (mã ≠ 0, quá giờ, không có lệnh). Hai ca hỏng khác nhau vì cách
+    sửa khác nhau. Chỉ ĐỆM khi có danh sách: một lần mạng chập không được bỏ agy cả lượt truyện
+    (hook gọi `call()` nhiều lần trong cùng tiến trình).
     """
     cfg = cfg or CAU_HINH_MAC_DINH
     spec = (cfg.get("engines") or {}).get("agy") or {}
@@ -706,36 +709,51 @@ def agy_models(cfg=None, *, timeout=60, env=None, runner=None, cache=True) -> li
     chay = runner or run_process
     try:
         r = chay([*cmd, "models"], None, timeout=timeout, stall=timeout, env=env)
-        ds = parse_agy_models(r.get("stdout") or "") if r.get("rc") == 0 else []
     except Exception:  # noqa: BLE001 — không hỏi được danh mục = không phân giải được mẫu
-        ds = []
-    kq = ds or None
-    if cache:
-        _AGY_MODELS[khoa] = kq
-    return kq
+        return None
+    if r.get("rc") != 0 or r.get("timed_out"):
+        return None
+    ds = parse_agy_models(r.get("stdout") or "")
+    if cache and ds:
+        _AGY_MODELS[khoa] = ds
+    return ds
 
 
 def la_mau_model(model: str) -> bool:
     return "*" in (model or "") or "?" in (model or "")
 
 
-def _khoa_phien_ban(ten: str) -> tuple:
-    return tuple(int(x) for x in re.findall(r"\d+", ten))
+def _mau_regex(mau: str):
+    """`*` = MỘT số phiên bản (`5-5`, `3.8`, `6`) — không phải "bất cứ gì": `claude-opus-*-high`
+    không được khớp biến thể `claude-opus-5-5-1m-high` hay `…-thinking-high`. `?` = một ký tự."""
+    phan = []
+    for c in mau:
+        if c == "*":
+            phan.append(r"(\d+(?:[.-]\d+)*)")
+        elif c == "?":
+            phan.append(".")
+        else:
+            phan.append(re.escape(c))
+    return re.compile("".join(phan))
 
 
 def chon_model_agy(mau: str, models) -> str | None:
     """Mẫu `claude-opus-*-high` -> model khớp có số phiên bản CAO NHẤT (`claude-opus-5-5-high`).
 
-    So theo bộ số trong tên (`(5, 5)` > `(4, 6)`; `(6,)` > `(5, 5)`), hoà thì theo chữ. Tên
-    không có `*`/`?` thì trả nguyên — kể cả khi không có trong danh sách (để agy tự báo lỗi).
+    So theo bộ số MÀ `*` BẮT ĐƯỢC (`(5, 5)` > `(4, 6)`; `(6,)` > `(5, 5)`; `(3, 10)` > `(3, 8)`),
+    hoà thì theo chữ. Tên không có `*`/`?` thì trả nguyên — kể cả khi không có trong danh sách
+    (để agy tự báo lỗi, chuỗi lùi như cũ).
     """
-    import fnmatch
     if not la_mau_model(mau):
         return mau
-    khop = [m for m in (models or []) if fnmatch.fnmatchcase(m, mau)]
-    if not khop:
-        return None
-    return max(khop, key=lambda m: (_khoa_phien_ban(m), m))
+    rx = _mau_regex(mau)
+    khop = []
+    for m in models or []:
+        k = rx.fullmatch(m)
+        if k:
+            so = tuple(int(x) for g in k.groups() for x in re.findall(r"\d+", g or ""))
+            khop.append((so, m))
+    return max(khop)[1] if khop else None
 
 
 def agy_resets_at(usage_rows) -> str | None:
@@ -1288,17 +1306,34 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
             if ds_skill and skills_mode == "native":
                 SC.log(f"[agent-call] {eng} không có đường skill native — nhúng vào prompt")
             p_eng = prompt_inline
+        mau_model = None
         if eng == "agy" and la_mau_model(mdl):
+            mau_model = mdl
             ds_model = agy_models(cfg, env=env)
             that = chon_model_agy(mdl, ds_model)
             if not that:
-                ly_do = ("không hỏi được `agy models`" if ds_model is None
-                         else f"không model nào khớp (có: {', '.join(ds_model[:8])}…)")
+                if ds_model is None:
+                    ly_do = "không chạy được `agy models`"
+                elif not ds_model:
+                    ly_do = ("`agy models` chạy được nhưng không đọc ra model nào — agy đổi định "
+                             "dạng in? (cần sửa parse_agy_models)")
+                else:
+                    ly_do = (f"không model nào khớp (có: {', '.join(ds_model[:8])}"
+                             f"{'…' if len(ds_model) > 8 else ''})")
                 luot = {"engine": eng, "model": mdl, "ms": 0, "rc": None, "kind": "model_access",
                         "resets_at": None, "usage": None,
                         "error": f"mẫu model {mdl!r}: {ly_do}"}
                 tried.append(luot)
+                # Vào SỔ như mọi lượt `model_access`: P1-27 là chuyện "lùi mà không ai thấy".
+                append_ledger(so, {"ts": datetime.now(timezone.utc).isoformat(), **luot,
+                                   "model_pattern": mdl, "cwd": str(cwd),
+                                   "chain_pos": i, "chain_len": len(chuoi)})
                 SC.log(f"[agent-call] bỏ qua {eng}:{mdl} — {luot['error']}")
+                i += 1
+                continue
+            if i not in da_thu_lai and any(t["engine"] == eng and t["model"] == that for t in tried):
+                # `order` có cả mẫu lẫn tên cứng cùng ra một model — đừng gọi nó hai lần.
+                SC.log(f"[agent-call] bỏ qua {eng}:{mdl} -> {that} — đã thử model này trong chuỗi")
                 i += 1
                 continue
             SC.log(f"[agent-call] {eng}:{mdl} -> {that} (theo `agy models`)")
@@ -1390,7 +1425,8 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
                            "tools": _tools_list(tools),
                            "expect": ktra, "noi_bo": ro, "stall": stall_luot,
                            "chain_pos": i, "chain_len": len(chuoi),
-                           "prompt_via": ("file" if tep_agy else "argv" if eng == "agy" else "stdin")})
+                           "prompt_via": ("file" if tep_agy else "argv" if eng == "agy" else "stdin"),
+                           "model_pattern": mau_model})
 
         if loai["kind"] is None:
             return {"ok": True, "code": OK, "engine": eng, "model": mdl, "ms": r["ms"],
