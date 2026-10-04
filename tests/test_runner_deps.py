@@ -240,3 +240,64 @@ def test_runner_tuan_thieu_gh_BO_nhanh_Release_truoc_khi_goi_gh():
     rao = t.index("-not (Get-Command gh -ErrorAction SilentlyContinue)")
     assert rao < t.index("& gh release view"), "phải rẽ nhánh TRƯỚC lệnh gh đầu tiên"
     assert "KHONG co lenh gh" in t
+
+
+
+# ── P1-27: doctor đối chiếu tên model agy với `agy models` ─────────────────────────────
+
+MODELS = ["gemini-3.8-flash-high", "claude-opus-5-5-high", "claude-opus-5-5-medium"]
+
+
+@pytest.fixture
+def khong_bien(monkeypatch):
+    for k in ("TRUYEN_HOOK_ENGINE", "AGENT_CALL_ENGINES"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setattr(DR.SP, "secret_env", lambda ten, *a, **k: None)
+
+
+def _tram_engines(tmp_path, order, best="gemini-*-flash-high"):
+    import json as _j
+    t = tmp_path / "tram"
+    (t / "_agent-call").mkdir(parents=True)
+    (t / "CHANNELS.md").write_text("---\nchannels: []\n---\n", encoding="utf-8")
+    (t / "_agent-call" / "engines.json").write_text(
+        _j.dumps({"order": order, "engines": {"agy": {"best": best}}}), encoding="utf-8")
+    return t
+
+
+def test_doctor_model_agy_CU_thi_NHAC_kem_goi_y(tmp_path, khong_bien):
+    so = DR.So()
+    DR.kham_agy_model(so, _tram_engines(tmp_path, ["agy:claude-opus-4-6-thinking", "claude:best"]),
+                      models=MODELS)
+    chu = "\n".join(so.warn)
+    assert "claude-opus-4-6-thinking" in chu and "claude-opus-5-5-high" in chu
+    assert "claude-opus-*-high" in chu and so.fail == []
+
+
+def test_doctor_mau_khop_thi_ghi_ban_phan_giai(tmp_path, khong_bien):
+    so = DR.So()
+    DR.kham_agy_model(so, _tram_engines(tmp_path, ["agy:claude-opus-*-high", "agy:best"]), models=MODELS)
+    assert so.warn == []
+    assert any("claude-opus-5-5-high" in x for x in so.info)
+    assert any("gemini-3.8-flash-high" in x for x in so.info), "`agy:best` phải được đổi ra tên best"
+
+
+def test_doctor_khong_hoi_duoc_agy_models_la_NOT_CHECKED(tmp_path, khong_bien, monkeypatch):
+    monkeypatch.setattr(DR.shutil, "which", lambda ten: "/x/" + ten)
+    monkeypatch.setattr(DR.AC, "agy_models", lambda *a, **k: None)
+    so = DR.So()
+    DR.kham_agy_model(so, _tram_engines(tmp_path, ["agy:claude-opus-*-high"]))
+    assert so.not_checked and so.warn == [] and so.fail == []
+
+
+def test_doctor_khong_dung_agy_thi_im(tmp_path, khong_bien):
+    so = DR.So()
+    DR.kham_agy_model(so, _tram_engines(tmp_path, ["claude:best", "codex:best"], best=""), models=MODELS)
+    assert so.warn == so.info == so.not_checked == so.fail == []
+
+
+
+def test_doctor_agy_models_doc_RONG_thi_NHAC(tmp_path, khong_bien):
+    so = DR.So()
+    DR.kham_agy_model(so, _tram_engines(tmp_path, ["agy:claude-opus-*-high"]), models=[])
+    assert any("đổi định dạng" in w for w in so.warn) and so.not_checked == []

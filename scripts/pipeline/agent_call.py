@@ -78,7 +78,7 @@ def _parser():
                          "sạch ⇒ mã 0, có chữ cấm ⇒ mã 1")
     ap.add_argument("--on-quota", default="fallback", choices=("fallback", "wait", "fail"),
                     help="hết hạn mức thì: đổi engine (mặc định) | chờ tới giờ mở lại | trả mã 4")
-    ap.add_argument("--fallback", help="đè chuỗi engine, vd `agy:claude-opus-4-6-thinking,codex:best`")
+    ap.add_argument("--fallback", help="đè chuỗi engine, vd `agy:claude-opus-*-high,codex:best` (mẫu `*` của agy phân giải theo `agy models`)")
     ap.add_argument("--engines-config", help="đè đường dẫn engines.json")
     ap.add_argument("--ledger", help="đè đường dẫn sổ JSONL")
     ap.add_argument("--print-text", action="store_true",

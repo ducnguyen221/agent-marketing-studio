@@ -225,6 +225,13 @@ print(AC.build_chain('claude','best',cfg))"
 Còn phải kiểm riêng trên máy mới: `engines.<tên>.cmd` — đường cài `claude`/`codex`/`agy`
 trên macOS khác Windows, và một `cmd` sai chỉ lộ ra ở lượt lịch đầu tiên.
 
+**Tên model của agy viết bằng MẪU, không viết cứng** (từ 1.1.10): `agy:claude-opus-*-high`,
+`agy:gemini-*-flash-high`. Lúc chạy `agent_call` hỏi `agy models` (0 token, ~3 s) và chọn model
+khớp có số phiên bản cao nhất. agy tự cập nhật và đổi tên model (03/10/2026: `claude-opus-4-6-
+thinking` biến mất, mẫu đầu `order` trả `model_access` hai ngày liền mà chuỗi lùi che đi). `doctor`
+đối chiếu mọi model agy trong `order`, `engines.agy.best` và `TRUYEN_HOOK_ENGINE` với `agy models`
+— tên cứng đã biến mất thì nhắc kèm tên gần nhất.
+
 ### Hai pipeline, hai cấu hình — đừng gộp
 
 Tin và truyện chạy **cùng một engine giọng** nhưng **không** dùng chung cấu hình. Đây là

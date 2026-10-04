@@ -3,6 +3,38 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.10 — 2026-10-05
+
+P1-27 (Mac mini 04/10, P4-RUNS mục P5-HOT-AI-17H): agy tự cập nhật lên 1.2.16 lúc 03/10 19:00 và đổi
+hẳn danh mục model — `claude-opus-4-6-thinking` biến mất, chỉ còn `claude-opus-5-5-{low,medium,high}`,
+`claude-sonnet-5-5-*`, `gemini-3.8/3.7/3.6-flash-*`, `gemini-3.1-pro-*`, `gpt-oss-120b-medium`. Mẫu
+đầu `order` trả `model_access` ở mọi lượt; chuỗi lùi cứu (sang Gemini) nên không lượt nào hỏng, nhưng
+Hot AI 17:00 và hook truyện chạy bằng Gemini thay vì Opus mà không ai thấy.
+
+- **Mẫu tên model agy, phân giải lúc chạy.** `agent_call` nhận `agy:<mẫu có * hoặc ?>`: hỏi `agy
+  models` (0 token, ~3 s, đệm theo tiến trình), chọn model khớp có SỐ PHIÊN BẢN cao nhất (so bộ số
+  trong tên: `claude-opus-6-high` > `claude-opus-5-5-high`), log `agy:claude-opus-*-high ->
+  claude-opus-5-5-high`. Không khớp / không hỏi được `agy models` ⇒ `model_access`, lùi sang engine kế.
+  Tên cứng vẫn chạy như cũ. Sổ ghi tên đã phân giải.
+- **Mặc định không còn tên cứng:** `order` mặc định `claude:best · agy:claude-opus-*-high ·
+  agy:gemini-*-flash-high`, `engines.agy.best = gemini-*-flash-high`; `TRUYEN_HOOK_ENGINE` mặc định
+  `agy:claude-opus-*-high` (`truyen_publish.py`); SECRETS.md, `--fallback` help sửa theo. Có cổng test
+  chặn mặc định khoá cứng tên model agy.
+- **`doctor` kiểm tên model agy** (`kham_agy_model`): mọi model agy trong `order`, `engines.agy.best`,
+  `TRUYEN_HOOK_ENGINE` đối chiếu `agy models`; tên cứng không còn ⇒ NHẮC kèm tên gần nhất và gợi ý
+  mẫu bền; mẫu ⇒ ghi bản phân giải; mẫu không khớp ⇒ NHẮC; không hỏi được ⇒ NOT_CHECKED. Chỉ kiểm khi
+  trạm có `engines.json` hoặc chiến dịch chạy runner. Đo trên Windows: trạm cũ ghi
+  `claude-opus-4-6-thinking` ⇒ nhắc, gợi ý `claude-opus-5-5-high`.
+- RUNBOOK-DOI-MAY (mục *Thứ tự engine*) và `docs/runners.md` ghi cách viết mẫu.
+- **Sau review độc lập (05/10):** `*` chỉ khớp SỐ PHIÊN BẢN (`5-5`, `3.8`, `6`) — không khớp biến
+  thể `claude-opus-5-5-1m-high` / `…-thinking-high`; so phiên bản theo phần `*` bắt được. Lượt mẫu bị
+  bỏ qua VẪN vào sổ (`model_pattern`). `agy models` hỏng tạm không bị đệm (hook truyện hỏi lại ở lần
+  gọi sau). Phân biệt "không chạy được `agy models`" (doctor: NOT_CHECKED) với "chạy được nhưng
+  không đọc ra model nào — agy đổi định dạng in?" (doctor: NHẮC). Mẫu và tên cứng cùng ra một model
+  thì không gọi hai lần.
+- **Việc của mỗi máy:** `engines.json` của trạm là cấu hình theo máy — đổi `agy:<tên cứng>` sang mẫu
+  (Mac đã vá tay `order[0] = agy:claude-opus-5-5-high`; nên đổi tiếp sang `agy:claude-opus-*-high`).
+
 ## 1.1.9 — 2026-10-04
 
 Năm việc Mac mini giao ngày 04/10 (SUBTASK-WIN-RUNTIME-3; P4-RUNS: P5-02/10-TOI, P5-03/10-TOI,

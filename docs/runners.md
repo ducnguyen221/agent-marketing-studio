@@ -22,7 +22,9 @@ của kênh, state truyện.
 Bước nghiên cứu của ba runner tin đi qua `Invoke-AgentCall` (`brand-paths.ps1`) →
 `scripts/pipeline/agent_call.py --engine order`: engine chạy theo `order` trong
 `<trạm>/_agent-call/engines.json`, lỗi tạm được thử lại rồi lùi sang engine kế, hết hạn mức ở
-MỌI engine thì runner thoát **mã 4** (🟡, không phải hỏng). Không runner tin nào gọi `claude -p`
+MỌI engine thì runner thoát **mã 4** (🟡, không phải hỏng). Model của agy trong `order` nên viết
+bằng mẫu (`agy:claude-opus-*-high`) — `agent_call` phân giải theo `agy models` lúc chạy, chọn bản có
+số phiên bản cao nhất; không khớp gì thì coi như `model_access` và lùi sang engine kế. Không runner tin nào gọi `claude -p`
 thô nữa (P1-21: Hot Data 01/10 chết vì hạn mức `claude` dùng chung với phiên tương tác, trong khi
 agy đứng đầu `order` chạy được).
 
