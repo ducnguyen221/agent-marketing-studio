@@ -730,6 +730,82 @@ def kham_runner(so: So, tram: Path):
 KHAM_THEM.append(kham_runner)
 
 
+# ── Tên model agy trong `engines.json` còn nằm trong `agy models` không (P1-27) ──────────────
+#
+# Mac mini 03/10/2026: agy tự cập nhật (1.2.16) và bỏ `claude-opus-4-6-thinking` khỏi danh mục;
+# mẫu đầu `order` trả `model_access` mọi lượt suốt hai ngày, chuỗi lùi lặng lẽ chạy bằng Gemini.
+# `agy models` là 0 token (~3 s) nên doctor hỏi được. Lệch chỉ NHẮC: chuỗi lùi vẫn cứu lượt chạy,
+# nhưng nó chạy bằng engine khác cái Đức chọn — đó là thứ phải thấy được.
+
+def _muc_agy(cfg: dict) -> list[str]:
+    """Mọi model agy mà trạm sẽ dùng: `order`, `engines.agy.best`, `TRUYEN_HOOK_ENGINE`."""
+    ra = []
+    tho = cfg.get("order") or []
+    if isinstance(tho, str):
+        tho = [x for x in tho.split(",") if x.strip()]
+    for muc in tho:
+        eng, _, mdl = str(muc).partition(":")
+        if eng.strip() == "agy":
+            ra.append(mdl.strip() or "best")
+    hook = (SP.secret_env("TRUYEN_HOOK_ENGINE") or "").strip()
+    if hook.startswith("agy:"):
+        ra.append(hook.partition(":")[2].strip() or "best")
+    best = str(((cfg.get("engines") or {}).get("agy") or {}).get("best") or "")
+    ra = [best if m == "best" else m for m in ra]
+    return [m for i, m in enumerate(ra) if m and m not in ra[:i]]
+
+
+def kham_agy_model(so: So, tram: Path, models=None):
+    # Trạm chưa khai `engines.json` và không chiến dịch nào chạy runner tin/truyện thì không ai gọi
+    # agent — kiểm agy ở đó là dòng nhắc thường trực cho người chỉ viết blog.
+    try:
+        co_cau_hinh = AC.config_path(tram).is_file()
+    except (OSError, SC.StudioError):
+        co_cau_hinh = False
+    if not co_cau_hinh and not RD.runner_dang_dung(tram):
+        return
+    try:
+        cfg = AC.load_config(station=tram)
+    except SC.StudioError as e:
+        so.hong(f"agent-call: {e}")
+        return
+    muc = _muc_agy(cfg)
+    if not muc:
+        return
+    if models is None:
+        tho = ((cfg.get("engines") or {}).get("agy") or {}).get("cmd") or "agy"
+        lenh = tho[0] if isinstance(tho, (list, tuple)) and tho else tho
+        if not shutil.which(str(lenh)):
+            so.nhac(f"agy: `engines.json` dùng agy ({', '.join(muc)}) nhưng không thấy lệnh `{lenh}` "
+                    f"trên PATH — chuỗi sẽ lùi sang engine kế ở mọi lượt.")
+            return
+        models = AC.agy_models(cfg, timeout=30, cache=False)
+    if not models:
+        so.chua_kiem(f"agy: không hỏi được `agy models` — chưa kiểm tên model ({', '.join(muc)}).")
+        return
+    import difflib
+    for m in muc:
+        that = AC.chon_model_agy(m, models)
+        if AC.la_mau_model(m):
+            if that:
+                so.ghi(f"agy: `{m}` → {that} (theo `agy models`)")
+            else:
+                so.nhac(f"agy: mẫu `{m}` không khớp model nào trong `agy models` — chuỗi lùi sang "
+                        f"engine kế ở mọi lượt. Có: {', '.join(models)}.")
+        elif m not in models:
+            gan = difflib.get_close_matches(m, models, n=2, cutoff=0.4)
+            goi_y = (f" Gần nhất: {', '.join(gan)}." if gan else "")
+            so.nhac(f"agy: model `{m}` KHÔNG còn trong `agy models` (agy tự cập nhật đổi tên model) — "
+                    f"mọi lượt dùng nó sẽ `model_access` rồi lùi sang engine kế.{goi_y} Sửa "
+                    f"`_agent-call/engines.json`, nên dùng mẫu bền như `claude-opus-*-high` / "
+                    f"`gemini-*-flash-high` (phân giải theo `agy models` lúc chạy).")
+        else:
+            so.ghi(f"agy: model `{m}` có trong `agy models`")
+
+
+KHAM_THEM.append(kham_agy_model)
+
+
 # ══ Skill cho các ứng dụng AI (host) ═══════════════════════════════════════════════════
 #
 # Đo được từ đây: skill gốc có mặt, adapter của Claude khớp skill gốc. KHÔNG đo được từ

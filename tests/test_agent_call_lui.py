@@ -260,3 +260,81 @@ def test_tep_prompt_bi_xoa_ca_khi_agy_loi(lam, tmp_path, monkeypatch):
     assert ra["ok"] and ra["engine"] == "claude"
     assert _chuoi(ra) == [("agy", "quota"), ("claude", None)]
     assert tao and not any(t.parent.exists() for t in tao)
+
+
+
+# ── P1-27: mẫu tên model agy phân giải theo `agy models` lúc chạy ─────────────────────
+
+DANH_MUC = ["gemini-3.8-flash-high", "gemini-3.7-flash-high", "claude-opus-5-5-low",
+            "claude-opus-5-5-high", "claude-sonnet-5-5-high", "gpt-oss-120b-medium"]
+
+
+def test_parse_agy_models_bo_dong_fetching():
+    out = "Fetching available models...\ngemini-3.8-flash-high\tGemini 3.8 Flash (High)\n" \
+          "claude-opus-5-5-high\tClaude Opus 5.5 (High)\n\n"
+    assert AC.parse_agy_models(out) == ["gemini-3.8-flash-high", "claude-opus-5-5-high"]
+
+
+@pytest.mark.parametrize("mau,mong", [
+    ("claude-opus-*-high", "claude-opus-5-5-high"),
+    ("gemini-*-flash-high", "gemini-3.8-flash-high"),
+    ("claude-opus-*-medium", None),
+    ("gemini-3.7-flash-high", "gemini-3.7-flash-high"),        # tên cứng: trả nguyên
+    ("claude-opus-4-6-thinking", "claude-opus-4-6-thinking"),  # agy tự báo lỗi, chuỗi lùi
+])
+def test_chon_model_agy(mau, mong):
+    assert AC.chon_model_agy(mau, DANH_MUC) == mong
+
+
+def test_chon_model_agy_lay_PHIEN_BAN_cao_nhat():
+    ds = ["claude-opus-4-6-high", "claude-opus-5-5-high", "claude-opus-6-high", "claude-opus-5-10-high"]
+    assert AC.chon_model_agy("claude-opus-*-high", ds) == "claude-opus-6-high"
+    assert AC.chon_model_agy("claude-opus-5-*-high", ds) == "claude-opus-5-10-high"
+
+
+def test_mau_model_chay_bang_ban_moi_nhat(lam, tmp_path, monkeypatch):
+    """Mac 03/10: tên cứng `claude-opus-4-6-thinking` biến mất sau khi agy tự cập nhật."""
+    cfg = lam(["agy:claude-opus-*-high", "claude:best"], agy=[OK], claude=[OK])
+    monkeypatch.setattr(AC, "agy_models", lambda *a, **k: list(DANH_MUC))
+    ra, _ = _goi(cfg, tmp_path)
+    assert ra["ok"] and ra["engine"] == "agy" and ra["model"] == "claude-opus-5-5-high"
+
+
+def test_mau_khong_khop_thi_model_access_va_lui(lam, tmp_path, monkeypatch):
+    cfg = lam(["agy:claude-opus-*-xhigh", "claude:best"], agy=[OK], claude=[OK])
+    monkeypatch.setattr(AC, "agy_models", lambda *a, **k: list(DANH_MUC))
+    ra, _ = _goi(cfg, tmp_path)
+    assert ra["ok"] and ra["engine"] == "claude"
+    assert _chuoi(ra) == [("agy", "model_access"), ("claude", None)]
+
+
+def test_khong_hoi_duoc_agy_models_thi_lui(lam, tmp_path, monkeypatch):
+    cfg = lam(["agy:gemini-*-flash-high", "claude:best"], agy=[OK], claude=[OK])
+    monkeypatch.setattr(AC, "agy_models", lambda *a, **k: None)
+    ra, _ = _goi(cfg, tmp_path)
+    assert ra["engine"] == "claude" and "agy models" in ra["tried"][0]["error"]
+
+
+def test_mac_dinh_KHONG_khoa_cung_ten_model_agy():
+    """Repo không được cứng tên model agy — agy tự cập nhật và đổi tên (P1-27)."""
+    cfg = AC.CAU_HINH_MAC_DINH
+    agy = [m.partition(":")[2] for m in cfg["order"] if m.startswith("agy:")]
+    agy.append(cfg["engines"]["agy"]["best"])
+    assert agy and all(AC.la_mau_model(m) for m in agy), agy
+    truyen = (ROOT / "scripts" / "runners" / "story" / "truyen_publish.py").read_text(encoding="utf-8")
+    assert 'TRUYEN_HOOK_ENGINE", "agy:claude-opus-*-high"' in truyen
+
+
+def test_agy_models_dem_theo_tien_trinh():
+    goi = []
+
+    def chay(argv, stdin, **kw):
+        goi.append(argv)
+        return {"rc": 0, "stdout": "gemini-3.8-flash-high\tG\n"}
+    AC._AGY_MODELS.clear()
+    try:
+        assert AC.agy_models(runner=chay) == ["gemini-3.8-flash-high"]
+        assert AC.agy_models(runner=chay) == ["gemini-3.8-flash-high"]
+        assert len(goi) == 1 and goi[0][-1] == "models"
+    finally:
+        AC._AGY_MODELS.clear()

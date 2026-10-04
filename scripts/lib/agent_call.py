@@ -159,11 +159,13 @@ class QuotaExhausted(SC.StudioError):
 CAU_HINH_MAC_DINH = {
     "version": 1,
     # Thứ tự ưu tiên. Sửa MỘT mảng này là đổi được engine chính của cả bốn đường ống.
-    "order": ["claude:best", "agy:claude-opus-4-6-thinking", "agy:gemini-3.8-flash-high"],
+    # Model của agy viết bằng MẪU (`*`) — phân giải theo `agy models` lúc chạy (P1-27, xem
+    # `chon_model_agy`): agy tự cập nhật và đổi tên model, tên cứng thì trôi.
+    "order": ["claude:best", "agy:claude-opus-*-high", "agy:gemini-*-flash-high"],
     "engines": {
         "claude": {"cmd": "claude", "best": "opus", "extra_args": []},
         "codex": {"cmd": "codex", "best": "gpt-5.6-sol", "extra_args": []},
-        "agy": {"cmd": "agy", "best": "gemini-3.8-flash-high", "extra_args": []},
+        "agy": {"cmd": "agy", "best": "gemini-*-flash-high", "extra_args": []},
     },
     "skill_roots": [],
     "ledger": "",
@@ -609,7 +611,7 @@ def parse_agy_usage(response: str) -> list[dict]:
     """Bóc bảng `/usage` của agy -> [{pool, label, remaining_pct, resets_at}, …].
 
     Mỗi dòng là TSV: `<hồ>\\t<nhãn>\\t<còn %>\\t<ISO mở lại>`. Hai hồ TÁCH BIỆT (Gemini ·
-    Claude+GPT) là lý do `agy:claude-opus-4-6-thinking` chạy được khi tài khoản Claude đã
+    Claude+GPT) là lý do `agy:claude-opus-*-high` chạy được khi tài khoản Claude đã
     hết hạn mức — nên phải đọc theo hồ, không gộp thành một con số.
     """
     ra = []
@@ -663,6 +665,77 @@ def agy_usage(cfg=None, *, timeout=120, env=None, runner=None) -> list[dict]:
     if not isinstance(data, dict):
         return []
     return parse_agy_usage(data.get("response") or "")
+
+
+# ── Tên model của agy: mẫu bền, phân giải theo `agy models` lúc chạy (P1-27) ─────────────
+#
+# Mac mini 03/10/2026 19:00: agy tự cập nhật lên 1.2.16, danh mục model đổi hẳn (`claude-opus-4-6-
+# thinking` biến mất, thay bằng `claude-opus-5-5-{low,medium,high}`). Mẫu đầu `order` trả
+# `model_access` ở MỌI lượt — chuỗi lùi vẫn cứu (sang Gemini) nên không lượt nào hỏng, nhưng hai
+# ngày chạy bằng engine khác mà không ai hay. Tên cứng là thứ sẽ trôi lần nữa; nên `engines.json`
+# được viết MẪU: `agy:claude-opus-*-high` = bản `claude-opus-…-high` có SỐ PHIÊN BẢN CAO NHẤT trong
+# `agy models` ở thời điểm chạy. Không khớp gì ⇒ `model_access`, chuỗi lùi như mọi lỗi model.
+
+_AGY_MODELS: dict = {}            # bộ đệm theo tiến trình: lệnh `agy` -> danh sách (hoặc None)
+_TEN_MODEL = re.compile(r"[a-z0-9][a-z0-9._-]*")
+
+
+def parse_agy_models(text: str) -> list[str]:
+    """`agy models` in `<id>\t<nhãn>` mỗi dòng (kèm dòng "Fetching…") -> [id…] theo thứ tự in."""
+    ra = []
+    for dong in (text or "").splitlines():
+        id_ = dong.split("\t", 1)[0].strip()
+        if "\t" in dong and _TEN_MODEL.fullmatch(id_) and id_ not in ra:
+            ra.append(id_)
+    return ra
+
+
+def agy_models(cfg=None, *, timeout=60, env=None, runner=None, cache=True) -> list[str] | None:
+    """Danh sách model agy cho phép lúc này — `agy models` (0 token, ~3 s). Hỏng ⇒ None.
+
+    Đệm theo tiến trình: một lượt runner gọi nhiều bước agent nhưng danh mục không đổi giữa chừng.
+    """
+    cfg = cfg or CAU_HINH_MAC_DINH
+    spec = (cfg.get("engines") or {}).get("agy") or {}
+    tho = spec.get("cmd") or "agy"
+    cmd = [str(x) for x in tho] if isinstance(tho, (list, tuple)) else [str(tho)]
+    cmd[0] = _tim_lenh(cmd[0])
+    khoa = "\0".join(cmd)
+    if cache and khoa in _AGY_MODELS:
+        return _AGY_MODELS[khoa]
+    chay = runner or run_process
+    try:
+        r = chay([*cmd, "models"], None, timeout=timeout, stall=timeout, env=env)
+        ds = parse_agy_models(r.get("stdout") or "") if r.get("rc") == 0 else []
+    except Exception:  # noqa: BLE001 — không hỏi được danh mục = không phân giải được mẫu
+        ds = []
+    kq = ds or None
+    if cache:
+        _AGY_MODELS[khoa] = kq
+    return kq
+
+
+def la_mau_model(model: str) -> bool:
+    return "*" in (model or "") or "?" in (model or "")
+
+
+def _khoa_phien_ban(ten: str) -> tuple:
+    return tuple(int(x) for x in re.findall(r"\d+", ten))
+
+
+def chon_model_agy(mau: str, models) -> str | None:
+    """Mẫu `claude-opus-*-high` -> model khớp có số phiên bản CAO NHẤT (`claude-opus-5-5-high`).
+
+    So theo bộ số trong tên (`(5, 5)` > `(4, 6)`; `(6,)` > `(5, 5)`), hoà thì theo chữ. Tên
+    không có `*`/`?` thì trả nguyên — kể cả khi không có trong danh sách (để agy tự báo lỗi).
+    """
+    import fnmatch
+    if not la_mau_model(mau):
+        return mau
+    khop = [m for m in (models or []) if fnmatch.fnmatchcase(m, mau)]
+    if not khop:
+        return None
+    return max(khop, key=lambda m: (_khoa_phien_ban(m), m))
 
 
 def agy_resets_at(usage_rows) -> str | None:
@@ -1215,6 +1288,21 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
             if ds_skill and skills_mode == "native":
                 SC.log(f"[agent-call] {eng} không có đường skill native — nhúng vào prompt")
             p_eng = prompt_inline
+        if eng == "agy" and la_mau_model(mdl):
+            ds_model = agy_models(cfg, env=env)
+            that = chon_model_agy(mdl, ds_model)
+            if not that:
+                ly_do = ("không hỏi được `agy models`" if ds_model is None
+                         else f"không model nào khớp (có: {', '.join(ds_model[:8])}…)")
+                luot = {"engine": eng, "model": mdl, "ms": 0, "rc": None, "kind": "model_access",
+                        "resets_at": None, "usage": None,
+                        "error": f"mẫu model {mdl!r}: {ly_do}"}
+                tried.append(luot)
+                SC.log(f"[agent-call] bỏ qua {eng}:{mdl} — {luot['error']}")
+                i += 1
+                continue
+            SC.log(f"[agent-call] {eng}:{mdl} -> {that} (theo `agy models`)")
+            mdl = that
         tep_agy = None
         if eng == "agy" and len(p_eng) > AGY_ARGV_LIMIT and _tools_list(tools):
             # P1-26: lượt có tool ⇒ agy đọc được tệp ⇒ prompt dài đi qua TỆP, agy giữ chỗ đứng

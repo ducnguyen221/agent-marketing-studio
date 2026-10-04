@@ -186,7 +186,7 @@ khoá `env`/`vars` của `launchd.json` (`docs/launchd.md`).
 | `YT_CLIENT_SECRET__NGHE_TIEN_TRUYEN` | `run-daily-truyen.ps1` — thay `YT_CLIENT_SECRET` cho riêng lượt truyện | dùng `YT_CLIENT_SECRET` |
 | `TRUYEN_PUBLISH_PY` | `story/truyen_paths.py` — python cho bước đăng truyện | `python`/`python3`/`py -3` import được `googleapiclient` → python đang chạy |
 | `TRUYEN_FONT` | `story/truyen_paths.py` — font tiêu đề (cần dấu tiếng Việt) | `<engine giọng>/assets/fonts/title.ttf` → Arial Bold hệ thống |
-| `TRUYEN_HOOK_ENGINE` | `story/truyen_publish.py` — engine viết mô tả tập (`engine:model`, `claude-cli` = đường cũ) | `agy:claude-opus-4-6-thinking` rồi lùi theo `order` của `engines.json` |
+| `TRUYEN_HOOK_ENGINE` | `story/truyen_publish.py` — engine viết mô tả tập (`engine:model`, `claude-cli` = đường cũ) | `agy:claude-opus-*-high` (mẫu, phân giải theo `agy models`) rồi lùi theo `order` của `engines.json` |
 | `TRUYEN_HEAL` | `story/heal_agent.py` — `=1` mới cho agent tự sửa mã truyện khi mã nằm trong bản clone git | TẮT trong repo (sửa mã dưới chân máy lịch làm bẩn cây git, không qua review) |
 | `OMNIVOICE_SEED` | `story/read_story.py` — seed TTS cố định | ngẫu nhiên |
 | `NOTIFY_RUN` | `run-weekly-repo.ps1 -Register` (chỉ Windows) — wrapper báo cáo của Task Scheduler | `-Register` dừng mã 2 |

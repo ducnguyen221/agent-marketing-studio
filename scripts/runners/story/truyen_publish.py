@@ -79,7 +79,8 @@ def fmt_ts(sec):
 # chung agent_call của agent-marketing-studio (chuỗi lùi theo `order` trong
 # <trạm>/_agent-call/engines.json khi agy hết hạn mức). Đặt TRUYEN_HOOK_ENGINE=claude-cli để
 # quay về đường cũ. Mọi lỗi ở đây -> rơi xuống `claude -p` như trước, rồi mô tả tĩnh.
-HOOK_ENGINE = os.environ.get("TRUYEN_HOOK_ENGINE", "agy:claude-opus-4-6-thinking")
+# Mẫu `*` phân giải theo `agy models` lúc chạy (P1-27: agy tự cập nhật đổi tên model).
+HOOK_ENGINE = os.environ.get("TRUYEN_HOOK_ENGINE", "agy:claude-opus-*-high")
 
 
 def _agent_call_json(prompt, timeout=300):
