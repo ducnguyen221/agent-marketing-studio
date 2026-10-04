@@ -52,7 +52,7 @@ Scheduler lẫn launchd. Lịch chạy KHÔNG đổi trong repo (Mac tự chỉn
   "đã tự chữa — chạy tiếp bình thường" ⇒ nay chỉ xét phần log SAU `RENDER_PREFLIGHT=ok`, kẹt lại
   thì báo "KẸT LẠI khi dựng thật — khởi động lại máy". Phía video-studio 0.2.7 sửa cách nhận/giết
   tiến trình mồ côi, đối chiếu SID chủ trên Windows và che secret ba lớp (xem CHANGELOG của repo đó).
-- **Wrapper Task Scheduler giữ nguyên (Đức chọn 04/10):** `~/.opcos/bootstrap/notify-run.ps1` nằm
+- **Wrapper Task Scheduler giữ nguyên (Đức chọn 04/10):** wrapper báo Telegram của Task Scheduler (hạ tầng máy, `notify-run.ps1`) nằm
   ngoài repo; lượt bỏ qua theo nhịp trên Windows vẫn ra MỘT dòng "⏭ … bỏ qua theo nhịp … không phải
   lỗi" (văn do `compose_report.py` soạn), không còn ✅. launchd thì không gửi gì. Các task tin trên
   Windows hiện đều Disabled (lịch đã chuyển sang Mac).
