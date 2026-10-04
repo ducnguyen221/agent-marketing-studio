@@ -112,6 +112,33 @@ KIND_ORDER = ("auth", "network", "quota", "model_access", "engine")
 # bằng mã 2 ("sửa cấu hình"), chứ không để nó thành một mã 1 khó hiểu.
 AGY_ARGV_LIMIT = 30_000
 
+# P1-26 (Mac mini 03/10/2026): prompt nghiên cứu của bản tin tuần dài 45 402 ký tự ⇒ cả hai mẫu agy
+# bị bỏ qua, bản tin tuần KHÔNG BAO GIỜ chạy bằng agy dù `order` xếp nó đứng đầu. Nên prompt quá
+# trần đi qua TỆP: ghi vào thư mục tạm riêng, `--add-dir` thư mục đó, và `--print=` chỉ còn một câu
+# ngắn bảo agy đọc hết tệp rồi làm theo. Agy headless tự TỪ CHỐI `read_file` khi không bật
+# `--dangerously-skip-permissions` (đo 26/09) — nên đường tệp chỉ mở khi lượt gọi ĐÃ xin tool
+# (cửa đó đã mở sẵn), không tự nới quyền cho một lượt chỉ-trả-lời.
+AGY_PROMPT_HET = "=== HẾT TỆP NHIỆM VỤ ==="
+
+
+def agy_loi_dan_tep(tep, so_ky_tu: int) -> str:
+    """Câu `--print=` ngắn thay cho prompt dài: đọc HẾT tệp rồi làm đúng theo nó."""
+    return (f"Nhiệm vụ của bạn nằm TRỌN trong tệp `{tep}` (UTF-8, {so_ky_tu} ký tự) — quá dài để "
+            f"truyền qua dòng lệnh. Việc ĐẦU TIÊN: đọc HẾT tệp đó bằng công cụ đọc tệp (đọc nhiều "
+            f"lượt nếu công cụ cắt bớt) cho tới dòng cuối `{AGY_PROMPT_HET}` — chưa thấy dòng đó là "
+            f"chưa đọc hết. Sau đó làm đúng và đủ theo chỉ dẫn trong tệp, như thể nội dung tệp là "
+            f"chính tin nhắn này. Ngoài tệp đó không có chỉ dẫn nào khác.")
+
+
+def ghi_tep_prompt_agy(prompt: str) -> Path:
+    """Ghi prompt vào một thư mục tạm RIÊNG (không vào cwd — cwd có thể là repo web sẽ commit)."""
+    import tempfile
+    d = Path(tempfile.mkdtemp(prefix="agent-call-agy-"))
+    tep = d / "nhiem-vu.md"
+    with open(tep, "w", encoding="utf-8", newline="\n") as f:
+        f.write(prompt.rstrip("\n") + "\n\n" + AGY_PROMPT_HET + "\n")
+    return tep
+
 # Engine nào THẬT SỰ phát tiến độ ra stdout ở định dạng lớp này chọn cho nó (xem docstring,
 # mục "Đồng hồ im lặng"). Đây là một SỰ THẬT ĐO ĐƯỢC về từng CLI, không phải một tuỳ chọn:
 # đổi dòng nào ở đây thì phải đổi `build_command` của engine đó trước.
@@ -386,13 +413,21 @@ def _tim_lenh(ten: str) -> str:
     return shutil.which(ten) or ten
 
 
+def _xoa_tep_agy(tep) -> None:
+    if tep is not None:
+        import shutil
+        shutil.rmtree(Path(tep).parent, ignore_errors=True)
+
+
 def build_command(engine: str, model: str, prompt: str, *, tools=(), cwd=None, cfg=None,
-                  native_skill=False) -> tuple[list[str], str | None]:
+                  native_skill=False, prompt_file=None) -> tuple[list[str], str | None]:
     """-> (argv, văn bản đẩy vào stdin hoặc None).
 
     Prompt đi đường nào là thuộc tính của TỪNG CLI, không phải lựa chọn: `claude` và
     `codex` đọc stdin; `agy` từ chối cả ba đường stdin (bridge đã đo) và chỉ nhận qua
     `--print=`. Đó là lý do hàm này trả về cả argv lẫn stdin thay vì chỉ argv.
+    `prompt_file` (chỉ agy): prompt đã ghi sẵn ra tệp đó (`ghi_tep_prompt_agy`) — `--print=` chỉ
+    còn câu dẫn ngắn, thư mục của tệp được `--add-dir`. Cần tool (xem `AGY_PROMPT_HET`).
     """
     cfg = cfg or CAU_HINH_MAC_DINH
     spec = (cfg.get("engines") or {}).get(engine) or {}
@@ -418,7 +453,11 @@ def build_command(engine: str, model: str, prompt: str, *, tools=(), cwd=None, c
         return argv + them, prompt
 
     if engine == "agy":
-        if len(prompt) > AGY_ARGV_LIMIT:
+        if prompt_file is not None and not _tools_list(tools):
+            raise SC.ContractError(
+                "agy chỉ đọc được tệp prompt khi lượt gọi có tool (headless tự từ chối read_file) "
+                "— rút gọn prompt dưới trần argv hoặc chọn engine khác.")
+        if prompt_file is None and len(prompt) > AGY_ARGV_LIMIT:
             raise SC.ContractError(
                 f"prompt {len(prompt)} ký tự vượt trần argv của agy ({AGY_ARGV_LIMIT}) — "
                 f"agy không nhận prompt qua stdin. Rút gọn prompt hoặc chọn engine khác.")
@@ -429,7 +468,11 @@ def build_command(engine: str, model: str, prompt: str, *, tools=(), cwd=None, c
             argv.append("--dangerously-skip-permissions")
         if cwd:
             argv += ["--add-dir", str(cwd)]
-        argv.append(f"--print={prompt}")
+        if prompt_file is not None:
+            argv += ["--add-dir", str(Path(prompt_file).parent)]
+            argv.append(f"--print={agy_loi_dan_tep(prompt_file, len(prompt))}")
+        else:
+            argv.append(f"--print={prompt}")
         return argv + them, None
 
     raise SC.ContractError(f"engine lạ: {engine!r} (chỉ có {', '.join(ENGINES)})")
@@ -1172,10 +1215,18 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
             if ds_skill and skills_mode == "native":
                 SC.log(f"[agent-call] {eng} không có đường skill native — nhúng vào prompt")
             p_eng = prompt_inline
-        if eng == "agy" and len(p_eng) > AGY_ARGV_LIMIT and i + 1 < len(chuoi):
+        tep_agy = None
+        if eng == "agy" and len(p_eng) > AGY_ARGV_LIMIT and _tools_list(tools):
+            # P1-26: lượt có tool ⇒ agy đọc được tệp ⇒ prompt dài đi qua TỆP, agy giữ chỗ đứng
+            # đầu chuỗi. Tệp nằm thư mục tạm riêng, xoá ngay sau lượt gọi (finally bên dưới).
+            tep_agy = ghi_tep_prompt_agy(p_eng)
+            SC.log(f"[agent-call] {eng}:{mdl} — prompt {len(p_eng)} ký tự > trần argv "
+                   f"{AGY_ARGV_LIMIT} — gửi qua tệp {tep_agy}")
+        elif eng == "agy" and len(p_eng) > AGY_ARGV_LIMIT and i + 1 < len(chuoi):
             # agy chỉ nhận prompt qua argv. Prompt dài (runner tin: khuôn + hồ sơ tác giả +
             # danh sách đã đăng) không phải lỗi cấu hình khi chuỗi còn engine đọc stdin — bỏ
             # qua agy, đừng dừng cả chuỗi bằng mã 2. Engine CUỐI thì để `build_command` nổ.
+            # (Lượt CÓ tool thì đi đường tệp ở trên — chỉ lượt không tool mới tới đây.)
             luot = {"engine": eng, "model": mdl, "ms": 0, "rc": None, "kind": "too_long",
                     "resets_at": None, "usage": None,
                     "error": f"prompt {len(p_eng)} ký tự vượt trần argv của agy ({AGY_ARGV_LIMIT})"}
@@ -1184,8 +1235,12 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
                    f"{chuoi[i + 1][0]}:{chuoi[i + 1][1]}")
             i += 1
             continue
-        argv, stdin_text = build_command(eng, mdl, p_eng, tools=tools, cwd=cwd, cfg=cfg,
-                                         native_skill=native)
+        try:
+            argv, stdin_text = build_command(eng, mdl, p_eng, tools=tools, cwd=cwd, cfg=cfg,
+                                             native_skill=native, prompt_file=tep_agy)
+        except BaseException:
+            _xoa_tep_agy(tep_agy)
+            raise
         # Đồng hồ im lặng CHỈ vũ trang cho engine thật sự phát sóng tiến độ (docstring đầu
         # file). Với engine im tới câu cuối, "im lặng" không phải bằng chứng treo — và một
         # đồng hồ đo cái nó không quan sát được thì chỉ giết nhầm, không cứu được gì.
@@ -1209,6 +1264,8 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
             else:
                 loai = classify(eng, r["rc"], r["stdout"], r["stderr"],
                                 produced=_da_sinh(eng, r["stdout"]))
+        finally:
+            _xoa_tep_agy(tep_agy)
 
         if loai["kind"] == "quota" and not loai["resets_at"] and eng == "agy":
             # `/usage` là 0 token; hỏi nó rẻ hơn nhiều so với trả về một mã 4 không kèm
@@ -1244,7 +1301,8 @@ def call(prompt: str, *, engine: str, model="best", tools=(), skills=(), skills_
                            "skills": ds_skill, "skills_mode": skills_mode,
                            "tools": _tools_list(tools),
                            "expect": ktra, "noi_bo": ro, "stall": stall_luot,
-                           "chain_pos": i, "chain_len": len(chuoi)})
+                           "chain_pos": i, "chain_len": len(chuoi),
+                           "prompt_via": ("file" if tep_agy else "argv" if eng == "agy" else "stdin")})
 
         if loai["kind"] is None:
             return {"ok": True, "code": OK, "engine": eng, "model": mdl, "ms": r["ms"],

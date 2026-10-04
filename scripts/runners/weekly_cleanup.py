@@ -53,14 +53,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
 import studio_contract as SC  # noqa: E402
 import studio_paths as SP  # noqa: E402
+from log_rotate import DANG_GHI_GIAY, GIU_DUOI, cat_duoi, xoay_log  # noqa: E402,F401
 
 PROG = "weekly_cleanup.py"
 REPO = Path(__file__).resolve().parents[2]
 PRUNE = REPO / "scripts" / "pipeline" / "prune_media.py"
 TRASH = "_trash"
 NGAY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-GIU_DUOI = 1024 * 1024            # cắt log lớn: giữ ngần này byte cuối
-DANG_GHI_GIAY = 3600              # log sửa trong ngần này giây = có thể đang được ghi ⇒ không cắt
 TRAN_PRUNE = 2400                 # giây cho prune_media (wrapper ngoài: 1 h cho cả job)
 # Thư mục cấp một của trạm marketing KHÔNG quét media: thùng rác của chính job này, log, sổ
 # kê khai của prune_media, và mọi thứ bắt đầu bằng `_`/`.` (state nội bộ: `_agent-call`…).
@@ -198,50 +197,8 @@ def do_rac(rac: Path, tran_ngay: int, hom_nay: _dt.date, dry: bool) -> tuple[lis
 
 # ── 3. xoay vòng log ───────────────────────────────────────────────────────────
 
-def cat_duoi(p: Path, giu: int = GIU_DUOI) -> None:
-    """Giữ `giu` byte cuối (bắt đầu từ đầu một dòng), cắt tại chỗ — không xoá, không đổi inode."""
-    with open(p, "r+b") as f:
-        f.seek(0, os.SEEK_END)
-        n = f.tell()
-        if n <= giu:
-            return
-        f.seek(n - giu)
-        duoi = f.read()
-        nl = duoi.find(b"\n")
-        if 0 <= nl < len(duoi) - 1:
-            duoi = duoi[nl + 1:]
-        f.seek(0)
-        f.write(b"[weekly_cleanup: da cat phan dau cua log]\n" + duoi)
-        f.truncate()
-
-
-def xoay_log(thu_muc: list[Path], tran_ngay: int, tran_mb: float, bay_gio: float,
-             dry: bool) -> tuple[list, list, list]:
-    """-> ([đã xoá], [đã cắt], [lỗi]). Chỉ file trực tiếp trong mỗi thư mục, không đệ quy."""
-    xoa, cat, loi = [], [], []
-    tran_b = int(tran_mb * 1024 * 1024)
-    for d in thu_muc:
-        if not d.is_dir():
-            continue
-        for f in sorted(d.iterdir()):
-            if not f.is_file() or f.is_symlink():
-                continue
-            try:
-                st = f.stat()
-                if bay_gio - st.st_mtime > tran_ngay * 86400:
-                    if not dry:
-                        f.unlink()
-                    xoa.append(f)
-                elif st.st_size > tran_b and bay_gio - st.st_mtime < DANG_GHI_GIAY:
-                    SC.log(f"[dọn] 3. bỏ qua cắt {f} — vừa ghi trong {DANG_GHI_GIAY // 60} phút, "
-                           f"có thể đang được ghi; tuần sau cắt")
-                elif st.st_size > tran_b:
-                    if not dry:
-                        cat_duoi(f)
-                    cat.append(f)
-            except OSError as e:
-                loi.append(f"{f}: {e}")
-    return xoa, cat, loi
+# `cat_duoi` / `xoay_log` sống ở `scripts/lib/log_rotate.py` (1.1.9): các runner tin + truyện
+# xoay log ngay trong lượt chạy bằng cùng mã đó — job này (tuỳ chọn) chỉ gọi lại.
 
 
 def thu_muc_log(tram: Path, giong: Path | None) -> list[Path]:

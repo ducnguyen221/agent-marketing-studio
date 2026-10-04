@@ -95,6 +95,42 @@ def runner_dang_dung(station) -> set[str]:
     return ra
 
 
+RUNNER_TUAN = "run-weekly-news.ps1"
+
+
+def kenh_can_gh(station) -> list[str]:
+    """Kênh có chiến dịch chạy `run-weekly-news.ps1` VÀ khai `brand.gh_repo` trong `channel.yml`.
+
+    Bản tin tuần có nhánh dự phòng "YouTube không dùng được ⇒ đăng video lên GitHub Release" — nhánh
+    đó gọi lệnh `gh`. Mac mini chưa cài `gh` (P4-RUNS P5-KIEM-TRA-LICH 03/10/2026): nhánh chưa từng
+    chạy thật, nhưng chạy là hỏng. -> [id kênh]. Đọc hỏng gì thì bỏ qua kênh đó (check_tree báo).
+    """
+    try:
+        import yaml
+    except ImportError:
+        return []
+    tuan = {Path(c["dir"]).resolve() for c in chien_dich_co_runner(station) if c["runner"] == RUNNER_TUAN}
+    if not tuan:
+        return []
+    ra = []
+    try:
+        kenh = SP.channels(station)
+    except Exception:  # noqa: BLE001
+        return []
+    for c in kenh:
+        d = Path(c.get("dir") or "")
+        try:
+            if not any(d.resolve() in cd.parents for cd in tuan):
+                continue
+            data = yaml.safe_load((d / SP.MOC_KENH).read_text(encoding="utf-8")) or {}
+        except Exception:  # noqa: BLE001
+            continue
+        brand = data.get("brand") if isinstance(data, dict) else None
+        if isinstance(brand, dict) and str(brand.get("gh_repo") or "").strip():
+            ra.append(str(c.get("id") or d.name))
+    return ra
+
+
 def lenh_scaffold_run_ps1(repo, dich: Path) -> str:
     """Lệnh chép `run.ps1` mẫu vào thư mục chiến dịch — theo shell của máy đang chạy."""
     mau = (Path(repo) / MAU_RUN_PS1) if repo else MAU_RUN_PS1

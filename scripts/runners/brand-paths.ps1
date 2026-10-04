@@ -816,27 +816,70 @@ function Invoke-RenderPreflight {
        Chỉ `RENDER_STUCK` mới là mã 5 — mã 5 nghĩa là "khởi động lại máy", nói câu đó cho một
        lỗi cấu hình là chỉ sai hướng (review 02/10).
        video-studio cũ (< 0.2.5): mã 2 mà KHÔNG có dòng JSON (lệnh lạ) ⇒ nhắc rồi đi tiếp.
+
+    THANG TỰ CHỮA (P1-25, video-studio ≥ 0.2.7 `probe --heal`): lần đầu kẹt thì video-studio chụp
+    gói chẩn đoán vào -DiagDir (`<log>/render-stuck/<giờ>/`), giết Chrome/HyperFrames mồ côi, xoá
+    profile tạm cũ > 1 h, chờ 60 s → probe lại, chờ 600 s → probe cuối; qua ⇒ 0 (dòng
+    `RENDER_HEAL=recovered`), hết thang mới 5. Nhịp chờ: `RENDER_HEAL_WAITS` (vd `1,1` khi giả lập
+    trên máy nghiệm thu); `RENDER_HEAL=0` tắt thang. video-studio 0.2.5/0.2.6 không biết `--heal`
+    ⇒ nhắc một dòng rồi probe như cũ (không thang).
   #>
-  param([Parameter(Mandatory)][string]$Python, [scriptblock]$OnLine)
+  param([Parameter(Mandatory)][string]$Python, [scriptblock]$OnLine, [string]$DiagDir = '')
   $cb = $OnLine
   $ghi = { param($l) if ($cb) { & $cb $l } }.GetNewClosure()
   $t = 30
   $bien = Get-EnvVar 'RENDER_PROBE_TIMEOUT'
   if ($bien -match '^\d+$' -and [int]$bien -ge 1) { $t = [int]$bien }
-  & $ghi ('Render preflight: video-studio probe (tran ' + $t + 's) ...')
+  $thang = ((Get-EnvVar 'RENDER_HEAL') -ne '0')
+  $cho = '60,600'
+  $bienCho = Get-EnvVar 'RENDER_HEAL_WAITS'
+  if ($bienCho -match '^\d+(,\d+)*$') { $cho = $bienCho }
+  $goc = @('probe', '--timeout', [string]$t, '--json')
+  $doi = $goc
+  if ($thang) {
+    $doi = $goc + @('--heal', '--heal-waits', $cho)
+    if ($DiagDir) { $doi += @('--diag-dir', $DiagDir) }
+    & $ghi ('Render preflight: video-studio probe (tran ' + $t + 's, ket thi tu chua: cho ' + $cho + 's) ...')
+  } else {
+    & $ghi ('Render preflight: video-studio probe (tran ' + $t + 's, RENDER_HEAL=0 - khong tu chua) ...')
+  }
   # Gom dòng ra rồi mới ghi: video-studio cũ in nguyên bảng trợ giúp (~18 dòng) khi gặp lệnh lạ —
   # mã 2 chỉ cần một dòng nhắc, không cần dồn bảng đó vào log và đuôi tin Telegram.
   $dong = New-Object System.Collections.Generic.List[string]
   $r = Invoke-VideoStudio -Python $Python -OnLine { param($l) $dong.Add([string]$l) }.GetNewClosure() `
-         -Arguments @('probe', '--timeout', [string]$t, '--json')
+         -Arguments $doi
+  if ($thang -and $r.code -eq 2 -and (($dong -join "`n") -match 'unrecognized arguments: --heal')) {
+    # video-studio 0.2.5/0.2.6: argparse từ chối `--heal` (mã 2 KÈM JSON "tham số không hợp lệ") —
+    # không phải cấu hình sai. Probe lại đúng như bản cũ, không có thang.
+    & $ghi 'WARN: video-studio < 0.2.7 chua co probe --heal (thang tu chua render ket) - probe nhu cu. Nang video-studio.'
+    $dong.Clear()
+    $r = Invoke-VideoStudio -Python $Python -OnLine { param($l) $dong.Add([string]$l) }.GetNewClosure() `
+           -Arguments $goc
+  }
   $cu = ($r.code -eq 2 -and -not $r.result)          # lệnh lạ của video-studio cũ: không JSON
   if (-not $cu) { foreach ($l in $dong) { & $ghi ('probe: ' + $l) } }
   $err = ''
   if ($r.result -and $r.result.error) { $err = [string]$r.result.error }
+  $diag = ''
+  if ($r.result -and $r.result.diag) { $diag = [string]$r.result.diag }
+  if ($r.result -and $r.result.heal -and $r.result.heal.diag) { $diag = [string]$r.result.heal.diag }
   $khongModule = (-not $r.result) -and (($dong -join "`n") -match 'No module named')
-  if ($r.code -eq 0) { & $ghi 'RENDER_PREFLIGHT=ok'; return 0 }
+  if ($r.code -eq 0) {
+    if ($r.result -and $r.result.heal) {
+      & $ghi ('WARN: moi truong render KET luc dau, DA TU CHUA (lan ' + $r.result.heal.step + ') - chay tiep. Goi chan doan: ' + $diag)
+    }
+    & $ghi 'RENDER_PREFLIGHT=ok'; return 0
+  }
   if ($r.code -eq 1 -and $err -like 'RENDER_STUCK*') {
-    & $ghi 'ERROR: moi truong render ket (HyperFrames khong mo duoc trang) - khoi dong lai may roi chay lai.'
+    $them = ''
+    if ($diag) { $them = ' Goi chan doan: ' + $diag }
+    # Dấu ASCII, không so chữ tiếng Việt trong `$err`: dòng ra của lệnh native đi qua bảng mã
+    # console — PS 5.1 chưa đặt UTF-8 thì chữ có dấu đã vỡ trước khi tới đây.
+    if (($dong -join "`n") -match 'RENDER_HEAL=failed') {
+      & $ghi ('ERROR: moi truong render ket - da tu chua (giet Chrome mo coi, xoa profile tam, thu lai) van ket - khoi dong lai may roi chay lai.' + $them)
+    } else {
+      & $ghi ('ERROR: moi truong render ket (HyperFrames khong mo duoc trang) - khoi dong lai may roi chay lai.' + $them)
+    }
     & $ghi 'RENDER_PREFLIGHT=stuck'
     return 5
   }
@@ -854,6 +897,34 @@ function Invoke-RenderPreflight {
   & $ghi ('ERROR: phep thu render hong truoc buoc ton kem (ma ' + $r.code + '): ' + $err + ' - chay video-studio doctor --hf.')
   & $ghi 'RENDER_PREFLIGHT=failed'
   return 1
+}
+
+function Invoke-LogRotate {
+  <#
+    Xoay vòng log NGAY TRONG lượt chạy (SUBTASK-WIN-RUNTIME-3 §4): Đức gỡ job dọn tuần trên Mac, nên
+    đầu mỗi lượt tin/truyện gọi `scripts/lib/log_rotate.py` — xoá `*.log` quá 60 ngày, cắt file trên
+    5 MB (giữ 1 MB cuối, không đụng file vừa ghi trong 1 h), xoá thư mục con quá hạn của -OldDirs
+    (gói chẩn đoán `render-stuck/<giờ>/`). Luôn kèm `<trạm>/logs/launchd` (log stdout/stderr của
+    launchd — chỉ có trên Mac; thư mục không có thì bỏ qua).
+    KHÔNG BAO GIỜ làm hỏng lượt chạy: lỗi gì cũng chỉ thành một dòng WARN. -> không trả gì.
+  #>
+  param([Parameter(Mandatory)][string]$Python, [string[]]$Dirs = @(), [string[]]$OldDirs = @(),
+        [scriptblock]$OnLine)
+  $ErrorActionPreference = 'Continue'
+  $lr = Join-Path (Join-Path (Join-Path $script:RepoRoot 'scripts') 'lib') 'log_rotate.py'
+  $tat = @($Dirs | Where-Object { $_ })
+  if ($script:Station) { $tat += (Join-Path (Join-Path $script:Station 'logs') 'launchd') }
+  $doi = @($lr)
+  foreach ($d in $tat) { $doi += @('--dir', $d) }
+  foreach ($d in @($OldDirs | Where-Object { $_ })) { $doi += @('--old-dirs', $d) }
+  try {
+    & $Python @doi 2>&1 | ForEach-Object {
+      $l = Format-NativeLine $_
+      if ($null -ne $l -and $OnLine) { & $OnLine $l }
+    }
+  } catch {
+    if ($OnLine) { & $OnLine ('WARN: xoay vong log loi - ' + $_.Exception.Message) }
+  }
 }
 
 function Get-VideoStudioCodeText {

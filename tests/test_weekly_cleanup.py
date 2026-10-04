@@ -118,7 +118,7 @@ def test_xoay_vong_log_xoa_cu_cat_to_giu_duoi(may, capsys):
     assert not may["log_cu"].exists()
     to = may["log_to"].read_bytes()
     assert len(to) <= WC.GIU_DUOI + 100 and to.endswith(b"dong cuoi\n")
-    assert to.startswith(b"[weekly_cleanup:"), "cắt phải để lại dấu cho người đọc log"
+    assert to.startswith(b"[log_rotate:"), "cắt phải để lại dấu cho người đọc log (mã chung, 1.1.9)"
     assert (may["mkt"] / "logs" / "launchd" / "studio.marketing.worker.out.log").read_bytes() == b"nho\n"
     assert (may["giong"] / "omnivoice" / "truyen-out" / "daily-logs" /
             "pntt_301-310_20261002.log").is_file()

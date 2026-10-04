@@ -475,3 +475,41 @@ def test_token_trong_log_con_KHONG_lot_vao_tin(cau_hinh, mang):
     assert NR.main(["--title", "T", *_py(f"import sys; print('loi: {gia}'); sys.exit(1)")]) == 1
     assert gia not in mang.tin, "token trong log con đi thẳng vào tin Telegram"
     assert "token-da-che" in mang.tin
+
+
+# ── lượt bỏ qua theo nhịp (SUBTASK-WIN-RUNTIME-3 §1) ─────────────────────────
+
+def test_bo_qua_theo_nhip_KHONG_gui_tin_nhung_van_ghi_log(cau_hinh, mang, capsys):
+    """Hot AI/Hot Data cách ngày, launchd gọi mỗi ngày: ngày lệch nhịp từng ra "✅ chạy 0 giây"."""
+    code = ("print('skip parity: 2026-10-03 khong phai ngay chay');"
+            "print('RUN_SKIPPED=cadence'); print('=== skipped (cadence) ===')")
+    assert NR.main(["--title", "Daily Hot AI", *_py(code)]) == 0
+    assert mang.lan == [], "lượt bỏ qua theo nhịp không được gửi Telegram"
+    ra = capsys.readouterr().out
+    assert "skip parity" in ra and "không gửi Telegram" in ra, "vẫn phải để lại dấu trong log"
+
+
+def test_bo_qua_ma_KHAC_0_van_bao_loi(cau_hinh, mang):
+    """Dấu bỏ qua không được nuốt tin lỗi."""
+    code = "import sys; print('RUN_SKIPPED=cadence'); sys.exit(1)"
+    assert NR.main(["--title", "T", *_py(code)]) == 1
+    assert mang.tin.startswith("❌")
+
+
+def test_compose_report_bo_qua_mot_dong_khong_dau_tick():
+    """Wrapper Task Scheduler (ngoài repo) gửi đúng văn này: một dòng ⏭, không ✅."""
+    sys.path.insert(0, str(Path(NR.__file__).parent))
+    import compose_report as CR
+    msg = CR.build("Daily Hot Data", 0, "00:00:00",
+                   "skip parity: x\nRUN_SKIPPED=cadence\n=== skipped (cadence) ===\n")
+    assert msg.startswith("⏭") and "✅" not in msg and "bỏ qua theo nhịp" in msg
+    assert "\n" not in msg and len(msg) >= 20, "compose_report trả < 20 ký tự là bị bỏ"
+    assert CR.build("T", 1, "00:00:01", "RUN_SKIPPED=cadence\nERROR: x").startswith("❌")
+
+
+def test_runner_tin_ngay_lech_nhip_in_dau_bo_qua_truoc_exit_0():
+    ROOT = Path(__file__).resolve().parents[1]
+    t = (ROOT / "scripts" / "runners" / "run-toptoday-hot.ps1").read_text(encoding="utf-8-sig")
+    khoi = t[t.index("Log (\"skip parity"):]
+    khoi = khoi[:khoi.index("exit 0")]
+    assert "Log 'RUN_SKIPPED=cadence'" in khoi

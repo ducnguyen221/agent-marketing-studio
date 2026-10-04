@@ -3,6 +3,62 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.9 — 2026-10-04
+
+Năm việc Mac mini giao ngày 04/10 (SUBTASK-WIN-RUNTIME-3; P4-RUNS: P5-02/10-TOI, P5-03/10-TOI,
+P5-KIEM-TRA-LICH, P5-WEEKLY-DATA-LUOT-1, P5-DOI-GIO-2). Mọi thay đổi chạy giống nhau dưới Task
+Scheduler lẫn launchd. Lịch chạy KHÔNG đổi trong repo (Mac tự chỉnh bằng `launchd.json`).
+
+- **Lượt "bỏ qua theo nhịp" không còn tin ✅ gây nhầm.** Hot AI/Hot Data cách ngày nhưng lịch gọi
+  mỗi ngày: ngày lệch nhịp runner thoát 0 sau 0 s, trước đây vẫn ra "✅ … chạy 0 giây". Runner in
+  thêm `RUN_SKIPPED=cadence`; `notify_run.py` (launchd) thấy mã 0 + dấu đó ⇒ **không gửi**, chỉ
+  ghi một dòng log; `compose_report.py` soạn một dòng "⏭ … bỏ qua theo nhịp … không phải lỗi" —
+  đó là thứ wrapper Task Scheduler (ngoài repo) gửi. Mã khác 0 thì dấu đó không che tin lỗi.
+- **P1-26 — bản tin tuần chạy được bằng agy.** Prompt tuần 45 402 ký tự > trần argv 30 000 của agy
+  ⇒ trước đây cả hai mẫu agy bị bỏ, rơi xuống codex. Nay `agent_call` ghi prompt quá trần vào một
+  thư mục tạm riêng (không vào cwd), `--add-dir` thư mục đó, và `--print=` chỉ còn câu dẫn "đọc HẾT
+  tệp … tới dòng `=== HẾT TỆP NHIỆM VỤ ===` rồi làm theo"; xoá tệp ngay sau lượt gọi (cả khi lỗi).
+  Chỉ khi lượt gọi có tool (agy headless tự từ chối `read_file` nếu không tự duyệt tool — không tự
+  nới quyền cho lượt chỉ-trả-lời); không tool thì giữ hành vi cũ (bỏ qua agy). Sổ ghi
+  `prompt_via: file|argv|stdin`. Đo thật trên Windows (agy 1.2.15): prompt 40 577 ký tự qua tệp,
+  agy đọc hết và làm đúng chỉ dẫn ở dòng cuối, 16 s.
+- **P1-25 — render kẹt: tự chữa + chụp chứng cứ trước khi bắt khởi động lại.** `Invoke-RenderPreflight`
+  gọi `video-studio probe --heal --heal-waits 60,600 --diag-dir <log chiến dịch>/render-stuck`
+  (agent-video-studio **0.2.7**): kẹt ⇒ gói chẩn đoán `render-stuck/<giờ>/` (top CPU, tiến trình
+  Chrome/HyperFrames + mồ côi, profile tạm, lỗi probe; macOS thêm `pmset -g assertions/therm`, 10′
+  `log show` WindowServer/coreaudiod; không env, không dòng lệnh tiến trình, che token) ⇒ giết
+  Chrome/HyperFrames mồ côi ⇒ xoá profile tạm > 1 h ⇒ chờ 60 s probe lại ⇒ chờ 600 s probe cuối ⇒
+  hết thang mới mã 5 "khởi động lại máy" kèm đường gói. Tự chữa được ⇒ đi tiếp, tin ✅ kèm dòng "đã
+  tự chữa (lần N) — gói chẩn đoán: …" và KHÔNG nói "khởi động lại máy". `RENDER_HEAL_WAITS` đổi nhịp
+  chờ (giả lập: `RENDER_PROBE_TIMEOUT=1 RENDER_HEAL_WAITS=1,1`), `RENDER_HEAL=0` tắt thang;
+  video-studio 0.2.5/0.2.6 (chưa biết `--heal`) ⇒ nhắc một dòng rồi probe như cũ, không đọc nhầm
+  thành "cấu hình sai". RUNBOOK: giờ khởi động lại định kỳ nên sau truyện (~07:00), trước 17:00.
+- **Log xoay vòng trong lượt chạy** (Đức đã gỡ `weekly-cleanup` trên Mac). `scripts/lib/log_rotate.py`
+  (mã chung, job dọn tuần cũng dùng): `*.log` sửa quá 60 ngày ⇒ xoá, trên 5 MB ⇒ cắt giữ 1 MB cuối
+  tại chỗ, file vừa ghi trong 1 h không cắt, tên bắt đầu `_` (state/sổ của heal_agent) và file
+  không phải log không đụng, thư mục con `render-stuck/<giờ>` quá 60 ngày ⇒ xoá; không bao giờ làm
+  hỏng lượt. Gắn ở: ba runner tin (sau kiểm nhịp, trước rào render — log chiến dịch +
+  `<trạm>/logs/launchd`), runner truyện (`<trạm>/logs/launchd`) và `daily_truyen.py` (`daily-logs/`,
+  ngay trước `sweep_old`). `weekly-cleanup` + `prune_media.py` giữ trong repo như **tuỳ chọn có tài
+  liệu, không nạp mặc định** (RETENTION, launchd.md, RUNBOOK nói rõ).
+- **`gh` không có trên Mac.** `run-weekly-news.ps1`: YouTube không dùng được mà thiếu lệnh `gh` ⇒
+  bỏ nhánh dự phòng GitHub Release (trang tuần lên không có video, log WARN nói rõ) thay vì hỏng ở
+  lệnh `gh` đầu tiên. `doctor`: kênh có bản tin tuần + khai `brand.gh_repo` mà thiếu `gh` ⇒ cảnh
+  báo kèm lệnh cài (`brew install gh` + người dùng tự `gh auth login`; Windows `winget`); có `gh`
+  ⇒ đăng nhập là NOT_CHECKED. INSTALL thêm dòng `gh`.
+- **Sau review độc lập (04/10)** — 1 Chặn + 1 Phải sửa ở repo này: `compose_report.py` có biểu
+  thức f-string chứa gạch ngược (chỉ hợp lệ từ Python 3.12 — 3.10/3.11 mất cả tầng soạn tin, CI
+  ma trận 3.10 đỏ) ⇒ tách ra biến; lượt tự chữa ở preflight rồi KẸT LẠI khi dựng thật từng ra tin
+  "đã tự chữa — chạy tiếp bình thường" ⇒ nay chỉ xét phần log SAU `RENDER_PREFLIGHT=ok`, kẹt lại
+  thì báo "KẸT LẠI khi dựng thật — khởi động lại máy". Phía video-studio 0.2.7 sửa cách nhận/giết
+  tiến trình mồ côi, đối chiếu SID chủ trên Windows và che secret ba lớp (xem CHANGELOG của repo đó).
+- **Wrapper Task Scheduler giữ nguyên (Đức chọn 04/10):** wrapper báo Telegram của Task Scheduler (hạ tầng máy, `notify-run.ps1`) nằm
+  ngoài repo; lượt bỏ qua theo nhịp trên Windows vẫn ra MỘT dòng "⏭ … bỏ qua theo nhịp … không phải
+  lỗi" (văn do `compose_report.py` soạn), không còn ✅. launchd thì không gửi gì. Các task tin trên
+  Windows hiện đều Disabled (lịch đã chuyển sang Mac).
+- **Lịch**: RUNBOOK-DOI-MAY ghi giờ chạy là cấu hình theo máy (Mac: `launchd.json` khoá `schedule`)
+  và lịch đang dùng (Hot 17:00, tuần 19:00, truyện 00:00) — Windows không sửa mẫu lịch.
+
 ## 1.1.8 — 2026-10-03
 
 Ba việc Mac mini giao ngày 02/10 (SUBTASK-WIN-RUNTIME-2; P4-RUNS: P5-1.1.7, P5-VIEC-CHO-WINDOWS,

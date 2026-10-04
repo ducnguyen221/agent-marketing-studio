@@ -183,6 +183,32 @@ def rm_path(p):
         _drop_readonly(os.remove, p)
 
 
+def xoay_log_truyen(log):
+    """Xoay vòng `daily-logs/` NGAY TRONG lượt (SUBTASK-WIN-RUNTIME-3 §4 — job dọn tuần đã gỡ).
+
+    `*.log` quá 60 ngày ⇒ xoá; > 5 MB ⇒ cắt giữ 1 MB cuối; file vừa ghi trong 1 h (log của CHÍNH
+    lượt này) không đụng; `_heal_state.json` / `_heal_audit.log` (tên bắt đầu `_`) không đụng.
+    Mã ở `scripts/lib/log_rotate.py` (dùng chung với runner tin). Hỏng gì cũng chỉ ghi log.
+    """
+    try:
+        lib = os.path.join(os.path.dirname(os.path.dirname(HERE)), "lib")
+        if lib not in sys.path:
+            sys.path.insert(0, lib)
+        import time
+        import log_rotate
+        xoa, cat, loi = log_rotate.xoay_log([LOGDIR], log_rotate.NGAY, log_rotate.TRAN_MB,
+                                            time.time(), False, mau="*.log", log=log)
+        for f in xoa:
+            log(f"[log] xoá {f} (> {log_rotate.NGAY} ngày)")
+        for f in cat:
+            log(f"[log] cắt {f} (> {log_rotate.TRAN_MB:g} MB, giữ 1 MB cuối)")
+        for e in loi:
+            log(f"[log] WARN: {e}")
+        log(f"LOG_ROTATE mode=rotate deleted={len(xoa)} truncated={len(cat)} dirs=0 errors={len(loi)}")
+    except Exception as e:  # noqa: BLE001 — xoay log hỏng không được làm hỏng lượt truyện
+        log(f"[log] WARN: xoay vòng log lỗi — {e}")
+
+
 def sweep_old(st, log, keep=()):
     """Dọn sản phẩm của lần chạy TRƯỚC. Chạy ở ĐẦU run này, KHÔNG phải cuối run trước.
 
@@ -372,6 +398,7 @@ def main():
         print(f"PUBLISH_GUARD=blocked kind={chan} range={_mark.get('start')}-{_mark.get('end')}",
               flush=True)
         sys.exit(1)
+    xoay_log_truyen(log)
     sweep_old(st, log, keep=resume_keep(_mark, slug, start, end, voice))
     os.makedirs(WORK, exist_ok=True)
     try:        # dấu dải đang dở — best-effort: hỏng ghi thì chỉ mất resume, không mất lượt

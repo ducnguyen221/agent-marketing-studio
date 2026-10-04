@@ -192,3 +192,71 @@ def test_CLI_engine_order_chay_dung_thu_tu_engines_json(lam, tmp_path):
     assert rc == 0
     so = [json.loads(d) for d in (tmp_path / "so.jsonl").read_text(encoding="utf-8").splitlines()]
     assert so[0]["engine"] == "codex", "engine đầu phải là mục đầu của `order`"
+
+
+# ── P1-26: prompt quá trần argv đi qua TỆP khi lượt gọi có tool ─────────────────────
+
+SHIM_TEP = textwrap.dedent('''
+    import json, os, re, sys
+    bao = sys.argv[1]
+    p = [a for a in sys.argv if a.startswith("--print=")][0][len("--print="):]
+    m = re.search(r"`([^`]+nhiem-vu[.]md)`", p)
+    them = [sys.argv[i + 1] for i, a in enumerate(sys.argv) if a == "--add-dir"]
+    nd = open(m.group(1), encoding="utf-8").read() if m else ""
+    json.dump({"print_len": len(p), "tep": m.group(1) if m else None, "noi_dung": nd,
+               "add_dir": them, "skip_perm": "--dangerously-skip-permissions" in sys.argv},
+              open(bao, "w", encoding="utf-8"), ensure_ascii=False)
+    print(json.dumps({"result": "OK"}))
+''')
+
+
+@pytest.fixture
+def agy_tep(tmp_path):
+    shim = tmp_path / "shim_tep.py"
+    shim.write_text(SHIM_TEP, encoding="utf-8")
+    bao = tmp_path / "bao.json"
+    cfg = {"version": 1, "order": ["agy:best", "codex:best"], "skill_roots": [],
+           "engines": {"agy": {"cmd": [sys.executable, str(shim), str(bao)], "best": "agy-best"},
+                       "codex": {"cmd": ["khong-co-lenh-nay"], "best": "codex-best"}}}
+    return cfg, bao
+
+
+def test_prompt_45k_CO_tool_thi_agy_VAN_dung_dau_qua_tep(agy_tep, tmp_path):
+    """Weekly Data 03/10: 45 402 ký tự ⇒ agy bị bỏ, rơi xuống codex. Nay agy chạy, đọc qua tệp."""
+    cfg, bao = agy_tep
+    prompt = ("Nghiên cứu tin tuần. " * 2200)[:45_402]
+    ra, _ = _goi(cfg, tmp_path, prompt=prompt, tools="web,read,write")
+    assert ra["ok"] and ra["engine"] == "agy", ra
+    assert _chuoi(ra) == [("agy", None)]
+    b = json.loads(bao.read_text(encoding="utf-8"))
+    assert b["print_len"] < 2000, "argv chỉ còn câu dẫn ngắn"
+    assert b["noi_dung"].startswith(prompt) and b["noi_dung"].rstrip().endswith(AC.AGY_PROMPT_HET)
+    assert str(Path(b["tep"]).parent) in b["add_dir"], "thư mục tệp phải được --add-dir"
+    assert b["skip_perm"], "headless tự từ chối read_file nếu không tự duyệt tool"
+    assert not Path(b["tep"]).exists(), "tệp prompt phải bị xoá ngay sau lượt gọi"
+    assert not str(b["tep"]).startswith(str(tmp_path)), "tệp không được nằm trong cwd (repo web)"
+    so = [json.loads(l) for l in (tmp_path / "so.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert so[-1]["prompt_via"] == "file"
+
+
+def test_prompt_ngan_van_qua_argv(agy_tep, tmp_path):
+    cfg, bao = agy_tep
+    ra, _ = _goi(cfg, tmp_path, prompt="ngắn thôi", tools="web,read")
+    assert ra["ok"] and json.loads(bao.read_text(encoding="utf-8"))["tep"] is None
+
+
+def test_build_command_tep_ma_KHONG_tool_la_ma_2(tmp_path):
+    """Không tool ⇒ không có cửa đọc tệp ⇒ không tự nới quyền chỉ để đọc prompt."""
+    with pytest.raises(SC.ContractError):
+        AC.build_command("agy", "m", "x" * 40_000, prompt_file=tmp_path / "nhiem-vu.md")
+
+
+def test_tep_prompt_bi_xoa_ca_khi_agy_loi(lam, tmp_path, monkeypatch):
+    cfg = lam(["agy:best", "claude:best"], agy=[QUOTA], claude=[OK])
+    tao = []
+    goc = AC.ghi_tep_prompt_agy
+    monkeypatch.setattr(AC, "ghi_tep_prompt_agy", lambda p: tao.append(goc(p)) or tao[-1])
+    ra, _ = _goi(cfg, tmp_path, prompt="x" * (AC.AGY_ARGV_LIMIT + 1), tools="read")
+    assert ra["ok"] and ra["engine"] == "claude"
+    assert _chuoi(ra) == [("agy", "quota"), ("claude", None)]
+    assert tao and not any(t.parent.exists() for t in tao)

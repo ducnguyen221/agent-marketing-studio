@@ -62,7 +62,11 @@ mã 2 — bộ cài không đoán job nào thuộc chiến dịch nào. Ngoại 
 **cả trạm** (mẫu không có chỗ trống kênh/chiến dịch) nên không cần khai; khai
 `{"vars": {"WEB_REPO_DIR": "…"}}` cho nó nếu muốn đối chiếu audio đã lên web.
 
-### Job dọn dung lượng tuần (từ 1.1.8)
+### Job dọn dung lượng tuần (từ 1.1.8) — tuỳ chọn, không nạp mặc định
+
+Từ 1.1.9 **không cần** job này để giữ dung lượng có trần: log xoay vòng ngay trong lượt tin/truyện
+(`scripts/lib/log_rotate.py`), media do từng quy trình tự dọn. Mac mini đã gỡ nó (03/10/2026). Giữ
+lại như tuỳ chọn có tài liệu:
 
 `studio.marketing.weekly-cleanup` — Chủ nhật 04:00, `ProcessType=Background`, trần 1 h. Chạy
 `scripts/runners/run-weekly-cleanup.ps1` → `weekly_cleanup.py`: dời media **đã đăng** và quá 14

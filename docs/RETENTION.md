@@ -114,7 +114,14 @@ kế hoạch xoá.
    trạm truyện. Đó là quyết định của chủ máy, không phải mặc định của script.
 4. Đặt cầu dao theo cỡ thật của trạm đó, rồi mới đổi `--move-to` thành `--delete`.
 
-**Đã gắn lịch từ 1.1.8 — ở chế độ DỜI, không xoá.** Job `studio.marketing.weekly-cleanup`
+**Tuỳ chọn, KHÔNG nạp mặc định (1.1.9).** Mac mini đã gỡ job này (03/10/2026): mỗi quy trình tự
+dọn media của nó (truyện quét lượt trước, tin xoá mp4 sau khi lên YouTube, tuần giữ 14 thư mục video
++ 54 bản audio), và log nay **xoay vòng ngay trong lượt chạy** (`scripts/lib/log_rotate.py`, đầu mỗi
+lượt tin + truyện: `*.log` quá 60 ngày xoá, trên 5 MB cắt giữ 1 MB cuối, gói chẩn đoán
+`render-stuck/` quá 60 ngày xoá). Job dưới đây giữ trong repo như **lưới an toàn có tài liệu**, bật
+khi chủ máy muốn thêm tầng dời-theo-bằng-chứng.
+
+**Có từ 1.1.8 — ở chế độ DỜI, không xoá.** Job `studio.marketing.weekly-cleanup`
 (launchd, CN 04:00; Windows: `run-weekly-cleanup.ps1 -Register`) chạy `weekly_cleanup.py`:
 `--video-policy published --audio-policy web-first --days 14 --move-to <trạm>/_trash/<ngày>`
 trên các thư mục của trạm marketing + trạm giọng + trạm video, tự nhặt `truyen-state.json` /

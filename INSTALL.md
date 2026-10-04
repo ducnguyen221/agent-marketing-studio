@@ -68,6 +68,7 @@ zsh -lic 'echo $PATH'
 | Git | **Bắt buộc** | `Git.Git` (cài `--scope user`, không cần admin) | có sẵn qua Xcode CLT, hoặc `git` |
 | Python 3.10+ (khuyến nghị 3.12) | **Bắt buộc** | `Python.Python.3.12` (không cần admin) | `python@3.12` |
 | PowerShell | Chạy runner `.ps1` (lịch, chiến dịch) | Windows PowerShell 5.1 có sẵn | `pwsh`: `brew install --cask powershell` |
+| GitHub CLI (`gh`) | Chỉ nhánh dự phòng của bản tin tuần (kênh khai `brand.gh_repo`: YouTube không dùng được ⇒ video lên GitHub Release). Thiếu thì trang tuần lên không có video; `doctor` cảnh báo | `GitHub.cli` | `brew install gh`, rồi **người dùng tự** `gh auth login` |
 
 `python --version` mở Microsoft Store dù `py -0p` trống nghĩa là máy chỉ có "Python giả" của Store —
 coi như chưa có Python. **Không cần** trạm giọng (`agent-voice-studio`) hay trạm video

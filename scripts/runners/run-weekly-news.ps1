@@ -97,7 +97,9 @@ if (@($bgmCat.missing).Count -gt 0) { Log ('WARN: thu vien nhac nen thieu mp3 ch
 # Rào render (P1-24): phép thử HyperFrames rẻ TRƯỚC nghiên cứu/TTS — kẹt thì dừng ngay (mã 5),
 # không đốt agent + TTS + 40 phút. Xem Invoke-RenderPreflight trong brand-paths.ps1.
 if (-not $ovpy) { Log 'ERROR: khong thay python cua tram giong (OMNIVOICE_PY / VOICE_STATION).'; Log '=== run failed ==='; exit 3 }
-$pf = Invoke-RenderPreflight -Python $ovpy -OnLine { param($l) Log $l }
+# Xoay vòng log trong lượt (job dọn tuần đã gỡ trên Mac): *.log > 60 ngày, > 5 MB, gói chẩn đoán cũ.
+if ($syspy) { Invoke-LogRotate -Python $syspy -Dirs @($logdir) -OldDirs @(Join-Path $logdir 'render-stuck') -OnLine { param($l) Log $l } }
+$pf = Invoke-RenderPreflight -Python $ovpy -DiagDir (Join-Path $logdir 'render-stuck') -OnLine { param($l) Log $l }
 # Bất cứ thứ gì không phải số nguyên (hàm hỏng giữa chừng dưới EAP Continue) là HỎNG: `exit $null`
 # ra mã 0, tức tin ✅ cho một lượt đã dừng (review 02/10).
 if ($pf -isnot [int]) { $pf = 1 }
@@ -241,6 +243,12 @@ if ($Uat) {
 if ($ytRecap) {
   $ma = @($media + @('--html', $target, '--repo', $repo, '--date', $today, '--inject-only', '--yt-recap', $ytRecap, '--brand-config', $brandCfg))
   if ($ytShort) { $ma += @('--yt-short', $ytShort) }
+  & $ovpy @ma 2>&1 | ForEach-Object { $l = Format-NativeLine $_; if ($null -ne $l) { Log ('media: ' + $l) } }
+} elseif ((-not $Uat) -and (Test-Path $recapFile) -and -not (Get-Command gh -ErrorAction SilentlyContinue)) {
+  # Mac mini chưa cài `gh` (03/10/2026): nhánh Release bên dưới sẽ hỏng ở lệnh đầu tiên. Bỏ nhánh,
+  # nói rõ, trang tuần vẫn lên (audio + nội dung) chỉ thiếu video. `doctor` cảnh báo trước điều này.
+  Log 'WARN: YouTube unavailable va KHONG co lenh gh - bo nhanh du phong GitHub Release; trang tuan len KHONG co video. Cai: brew install gh + gh auth login (macOS) / winget install GitHub.cli (Windows).'
+  $ma = @($media + @('--html', $target, '--repo', $repo, '--date', $today, '--inject-only', '--brand-config', $brandCfg))
   & $ovpy @ma 2>&1 | ForEach-Object { $l = Format-NativeLine $_; if ($null -ne $l) { Log ('media: ' + $l) } }
 } elseif ((-not $Uat) -and (Test-Path $recapFile)) {
   Log 'WARN: YouTube unavailable - fallback Release.'

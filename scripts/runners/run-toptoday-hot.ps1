@@ -100,6 +100,10 @@ if ($cad -and -not $cad.run) {
     Log ("cadence: $Date lech nhip (" + $cad.days + ' ngay/lan tu ' + $cad.anchor + ') - IgnoreCadence -> van chay')
   } else {
     Log ("skip parity: $Date khong phai ngay chay (" + $cad.days + ' ngay/lan tu ' + $cad.anchor + ', lech ' + $cad.offset + ')')
+    # Dấu máy đọc: wrapper launchd (`notify_run.py`) KHÔNG gửi Telegram cho lượt này; wrapper
+    # Task Scheduler gửi một dòng "⏭ bỏ qua theo nhịp" do `compose_report.py` soạn — không còn tin
+    # "✅ thành công 0 giây" mỗi ngày làm người đọc tưởng đã đăng bài (SUBTASK-WIN-RUNTIME-3 §1).
+    Log 'RUN_SKIPPED=cadence'
     Log '=== skipped (cadence) ==='
     exit 0
   }
@@ -114,7 +118,9 @@ if (@($bgmCat.missing).Count -gt 0) { Log ('WARN: thu vien nhac nen thieu mp3 ch
 # Rào render (P1-24): phép thử HyperFrames rẻ TRƯỚC nghiên cứu/TTS — kẹt thì dừng ngay (mã 5),
 # không đốt agent + TTS + 40 phút. Xem Invoke-RenderPreflight trong brand-paths.ps1.
 if (-not $ovpy) { Log 'ERROR: khong thay python cua tram giong (OMNIVOICE_PY / VOICE_STATION).'; Log '=== failed ==='; exit 3 }
-$pf = Invoke-RenderPreflight -Python $ovpy -OnLine { param($l) Log $l }
+# Xoay vòng log trong lượt (job dọn tuần đã gỡ trên Mac): *.log > 60 ngày, > 5 MB, gói chẩn đoán cũ.
+if ($syspy) { Invoke-LogRotate -Python $syspy -Dirs @($logdir) -OldDirs @(Join-Path $logdir 'render-stuck') -OnLine { param($l) Log $l } }
+$pf = Invoke-RenderPreflight -Python $ovpy -DiagDir (Join-Path $logdir 'render-stuck') -OnLine { param($l) Log $l }
 # Bất cứ thứ gì không phải số nguyên (hàm hỏng giữa chừng dưới EAP Continue) là HỎNG: `exit $null`
 # ra mã 0, tức tin ✅ cho một lượt đã dừng (review 02/10).
 if ($pf -isnot [int]) { $pf = 1 }

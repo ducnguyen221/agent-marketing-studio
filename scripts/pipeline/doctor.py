@@ -697,6 +697,22 @@ def kham_runner(so: So, tram: Path):
     if truyen:
         _kham_truyen(so, py if (py and RD.thieu_module(py, ("faster_whisper",)) == []) else None)
 
+    # `gh` — nhánh dự phòng của bản tin tuần (YouTube không dùng được ⇒ GitHub Release). Mac mini
+    # 03/10/2026 không có `gh`: nhánh chưa từng chạy, nhưng chạy là hỏng. Runner nay tự BỎ nhánh đó
+    # khi thiếu lệnh (trang tuần không có video) — doctor nói trước để người cài cho đủ.
+    can_gh = RD.kenh_can_gh(tram) if RD.RUNNER_TUAN in tin else []
+    if can_gh:
+        gh = shutil.which("gh")
+        if not gh:
+            so.nhac(f"gh: kênh {', '.join(can_gh)} khai `brand.gh_repo` — bản tin tuần dùng lệnh `gh` "
+                    "ở nhánh dự phòng (YouTube không dùng được ⇒ đăng video lên GitHub Release), máy "
+                    "này KHÔNG có. Thiếu thì runner bỏ nhánh đó: trang tuần lên KHÔNG có video. Cài: "
+                    "macOS `brew install gh` rồi người dùng tự `gh auth login`; Windows "
+                    "`winget install --id GitHub.cli -e`. Job launchd chỉ thấy PATH trong plist "
+                    "(có /opt/homebrew/bin).")
+        else:
+            so.chua_kiem(f"gh: đăng nhập chưa kiểm (doctor không gọi mạng) — tự chạy: gh auth status  [{gh}]")
+
     # P0-4 — nhạc nền: style khai mà thiếu mp3. Chỉ NHẮC, không có lệnh sinh nhạc.
     if tin:
         nn = RD.kiem_nhac_nen(RD.thu_muc_nhac_nen())
