@@ -24,7 +24,7 @@
 |---|---|---|
 | **Thêm kênh mạng xã hội mới** | `knowledge/toolchains/PLATFORM_SETUP.md` | `knowledge/toolchains/SECRETS.md` (nối token) · `knowledge/data_model/DATA_MODEL.md` (enum `channels`) |
 | **Nối token/mật khẩu cho kênh mới** | `knowledge/toolchains/SECRETS.md` | mục lục bí mật của trạm (`~/.secret/README.md`) |
-| **Thêm giọng văn thương hiệu mới** | `output_styles/README.md` | `output_styles/compa-class-blog.md` (file mẫu) |
+| **Thêm giọng văn thương hiệu mới** | `output_styles/README.md` | `output_styles/WEBSITE_BLOG_GUIDELINE.md` (file mẫu) |
 | **Sửa đổi trường dữ liệu** | `knowledge/data_model/DATA_MODEL.md` | `templates/station/_channel/_campaign/campaign.md` · `scripts/pipeline/export_excel.py` (bộ cột bản xuất) |
 | **Dựng trạm nội dung mới** | `docs/ONBOARDING.md` (mười bước, có cách kiểm từng bước) | `install.ps1` / `install.sh` · `docs/WORKSPACE.md` · `examples/README.md` (trạm mẫu đã điền) |
 | **Dẫn NGƯỜI KHÁC dựng trạm** (agent làm hướng dẫn viên) | `.agents/prompts/onboard-station.md` | `docs/ONBOARDING.md` |
@@ -80,7 +80,7 @@
 | **Kiểm định dạng bài Facebook** (bold, link, hashtag) | `scripts/pipeline/fb_format.py --check` |
 | **Chấm một bài bằng 24 cổng đếm được** | `scripts/pipeline/blog_gates.py <thư mục bài>` |
 | **Số đo thật của bài đã đăng, để đặt ngưỡng** | `fixtures/baseline/blog_baseline.md` |
-| **Dựng ảnh infographic tóm tắt cả bài** (prompt mẫu + cổng kiểm chính tả) | `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` |
+| **Dựng ảnh infographic tóm tắt cả bài** (prompt mẫu + cổng kiểm chính tả) | `templates/IMAGE_GUIDELINES.md` |
 | Nguồn chưng cất của kho tri thức (ghi công) | `knowledge/README.md` |
 
 **Luật chống ảo giác:** thư mục chỉ có `README`/`.gitkeep` = kho rỗng — không suy nội dung từ tên thư mục.

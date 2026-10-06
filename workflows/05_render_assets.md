@@ -12,7 +12,7 @@
 ## 1. Trình Tự Thực Thi
 
 1. **Kiểm tra Cờ Dựng:** Đối chiếu cờ `audio`, `video`, `short` trong frontmatter `research.md` của bài. Nếu là `no` → bỏ qua không dựng.
-2. **Tạo Hình Ảnh & Thumbnail:** Tạo thumbnail theo đúng tỷ lệ kích thước kênh (16:9 cho YouTube, 1:1 hoặc 4:5 cho Facebook).
+2. **Tạo Hình Ảnh & Thumbnail:** Tạo thumbnail theo đúng tỷ lệ kích thước kênh (16:9 cho YouTube, 16:9 Cover Page và Infographic cho Facebook/Blog theo [`templates/IMAGE_GUIDELINES.md`](../templates/IMAGE_GUIDELINES.md)). Quy tắc điều phối model: Gemini (`agy`) ưu tiên số 1 để lên ý tưởng và prompt; fallback Codex (`codex`) khi hết quota.
 3. **Lồng Tiếng & Dựng Video:** Áp dụng toolchain theo tài liệu [`../knowledge/toolchains/ASSET_TOOLCHAIN.md`](../knowledge/toolchains/ASSET_TOOLCHAIN.md).
 4. **Ảnh đính kèm bài Facebook — sinh rồi NGƯỜI soát chữ:**
    ```

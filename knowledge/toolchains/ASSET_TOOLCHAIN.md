@@ -136,12 +136,12 @@ Nguồn nội dung: khối `## post:carousel` / `## post:infographic` trong `con
 | | Dựng bằng | Khổ | Dùng ở đâu |
 |---|---|---|---|
 | **`thumbnail.png`** — ảnh bìa | `gen_infographic.py` (HTML + Chrome, chữ luôn đúng dấu) | 1280×720 | cover card trên atlas · hình thu nhỏ YouTube |
-| **`infographic.png`** — ảnh tóm tắt | model sinh ảnh qua cầu Codex, theo `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` | 1920×1080 | **ảnh đăng Facebook** · đặt **ở đầu bài blog** |
+| **`infographic.png`** — ảnh tóm tắt | model sinh ảnh (Gemini số 1 -> Codex fallback), theo `templates/IMAGE_GUIDELINES.md` | 1920×1080 | **ảnh đăng Facebook** · đặt **ở đầu bài blog** |
 
 Ảnh tóm tắt là bản rút gọn của cả bài trong một hình — người lướt qua phải nắm được ý
 chính trong 5 giây mà không cần bấm gì. Nó thay cho ảnh Facebook kiểu cũ (một nền + ba dòng
-chữ). **Một ảnh, hai chỗ dùng.** Cách viết prompt, ngữ pháp bố cục 5 vùng và cổng kiểm
-chính tả nằm ở `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` — đọc file đó trước khi dựng.
+chữ). **Một ảnh, hai chỗ dùng.** Cách viết prompt, các archetype bố cục và cổng kiểm
+chính tả nằm ở `templates/IMAGE_GUIDELINES.md` — đọc file đó trước khi dựng.
 
 Trên atlas, ảnh tóm tắt đặt tên `<slug>-1.jpg`, **không** đặt `<slug>.jpg`.
 

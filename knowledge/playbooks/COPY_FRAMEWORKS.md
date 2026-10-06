@@ -50,7 +50,7 @@ Chọn 1 khung theo loại nội dung, đừng trộn nửa vời.
 | **PPPP** | Problem → Promise → Proof → Proposal | proposal, pitch |
 | **StoryBrand** | Nhân vật (khách) gặp vấn đề → gặp người dẫn đường (bạn) → có kế hoạch → hành động → tránh thất bại | thương hiệu cá nhân, video |
 
-**Lăng kính 3 lớp** (bắt buộc với bài chuyên sâu — giữ từ `output_styles/compa-class-blog.md`):
+**Lăng kính 3 lớp** (bắt buộc với bài chuyên sâu — giữ từ `output_styles/WEBSITE_BLOG_GUIDELINE.md`):
 kỹ thuật (nó chạy thế nào) → business (đổi được gì về tiền/thời gian) → con người (ai chịu đổi cách làm).
 
 ---
@@ -101,6 +101,6 @@ Sinh THEO ma trận (10 hook cho 10 ô khác nhau) tốt hơn 30 cách nói lạ
 ---
 
 ## Liên kết
-- Giọng viết: `output_styles/compa-class-blog.md` (blog) · `tobi-post.md` (Facebook).
+- Giọng viết: `output_styles/WEBSITE_BLOG_GUIDELINE.md` (blog) · `tobi-post.md` (Facebook).
 - Format theo kênh: `output_styles/multichannel-style.md`.
 - Tâm lý học phía sau: `knowledge/psychology/MARKETING_PSYCHOLOGY.md`.

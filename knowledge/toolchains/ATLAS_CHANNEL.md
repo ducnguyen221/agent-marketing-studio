@@ -120,7 +120,7 @@ trạng thái khó dọn nhất.
 | **B3** Tách kênh | ③ | ⚙️ | `gen_article.py` tách **theo neo** | `atlas/blog.md` · `facebook/post.txt` · `facebook/comment.txt` · `facebook/infographic.prompt.txt` · `youtube/description.txt` | mỗi file tồn tại và **>0 byte** |
 | **B4** Tự kiểm | ④ | ⚙️+🤖 | `blog_gates.py` + `fb_format.py --check` + `QA_ASSET.md` | `gates.json` | 24 cổng; đỏ-chặn → `quality_check=failed` |
 | 🔒 **Cổng 2** | | 👤 | `Post.review_status=approved` | | **agent không tự đặt** |
-| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh Facebook**: `make_fb_image.py make` gửi `facebook/infographic.prompt.txt` cho Codex qua cầu A2A, rồi **người soát chữ** và ghi `make_fb_image.py verify` (`templates/INFOGRAPHIC_PROMPT_TEMPLATE.md`) | `youtube/thumbnail.png` · `atlas/audio.mp3` · `youtube/video.mp4` · `facebook/infographic.png` + `.prompt.txt` + `.meta.json` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
+| **B5** Dựng tiếng & hình | ⑤ | ⚙️ | cover `gen_infographic.py` · `podcast.txt` → `make_podcast.py` **[venv OmniVoice]** · `scenes.json` → `make_podcast_video.py` · **ảnh Facebook**: `make_fb_image.py make` gửi `facebook/infographic.prompt.txt` cho model qua cầu A2A, rồi **người soát chữ** và ghi `make_fb_image.py verify` (`templates/IMAGE_GUIDELINES.md`) | `youtube/thumbnail.png` · `atlas/audio.mp3` · `youtube/video.mp4` · `facebook/infographic.png` + `.prompt.txt` + `.meta.json` | cover 1280×720 · 8 scene · \|video−audio\| ≤1s · podcast 750–1000 từ |
 | **B6** Dựng trang | ⑤ | ⚙️ | `build_blog_html.py` | `atlas/atlas.html` | **≥6 thẻ `og:`** |
 | **B7** Đăng YouTube | ⑥ | ⚙️ | upload + `publishAt` = ô `{publish_at}` của `release` (ngày cột `schedule`, giờ `runtime.publish_time`) | `youtube_url` | GET 200 |
 | **B8** Đăng web | ⑥ | ⚙️ | chép 3 file vào `atlas/content/<cat>/` (trang **nhúng video B7**) → `generate-manifest.js` → `git add` **đích danh từng path** → push | `blog_url` | **GET `blog_url` = 200 TRƯỚC khi ghi sổ** |
@@ -143,7 +143,7 @@ URL vào sổ phải là URL đã mở được, không phải URL đã tính ra
 | | Trước | Nay | Vì |
 |---|---|---|---|
 | 1 | Link atlas + video **trong thân post** | **Trong comment đầu**, thân post 0 URL | Chốt 04/09 |
-| 2 | Ảnh kèm post = cover 16:9 dùng lại | **`facebook/infographic.png` — ảnh tóm tắt cả bài, cũng đặt ở đầu trang blog** | `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` |
+| 2 | Ảnh kèm post = cover 16:9 dùng lại | **`facebook/infographic.png` — ảnh tóm tắt cả bài, cũng đặt ở đầu trang blog** | `templates/IMAGE_GUIDELINES.md` |
 | 3 | `atlas.html` không có `og:` | **≥6 thẻ** | Link ở comment thì preview là gần như tất cả |
 | 4 | Nguồn ngoài 0–5, không đo | **3–7, có cổng chặn** | 2/3 bài cũ có 0 nguồn |
 | 5 | Chính kiến rỗng, im lặng | **fail-closed** | Cả 3 bài cũ viết với chính kiến rỗng |

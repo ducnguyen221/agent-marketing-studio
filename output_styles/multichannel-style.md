@@ -5,7 +5,7 @@
 > kênh — KHÔNG copy y nguyên. Mỗi kênh có giới hạn độ dài, định dạng, hành vi reach khác nhau.
 >
 > Giọng văn KHÔNG nằm ở đây — file này chỉ lo FORMAT. Giọng:
-> - Blog: `compa-class-blog.md`
+> - Blog website: `WEBSITE_BLOG_GUIDELINE.md`
 > - Facebook (post dài + caption reel): `tobi-post.md`
 > - YouTube / X: dùng giọng "mình/Đức" như FB, rút gọn.
 

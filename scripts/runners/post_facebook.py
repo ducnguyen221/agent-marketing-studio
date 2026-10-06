@@ -255,6 +255,54 @@ def post_link(c, message, link, when):
     return r.json().get("id", "")
 
 
+def _handle_group_error(r, group_id):
+    """Bắt và diễn giải mã lỗi chi tiết khi Page đăng bài vào Group."""
+    try:
+        err = r.json().get("error", {})
+        code = err.get("code")
+        subcode = err.get("error_subcode")
+        msg = err.get("message", r.text[:200])
+    except Exception:
+        code, subcode, msg = None, None, r.text[:200]
+
+    huong_dan = []
+    if code in (200, 190):
+        huong_dan.append(f"Page chưa tham gia Group ({group_id}) hoặc chưa được cấp quyền đăng bài.")
+        huong_dan.append("Vào Cài đặt nhóm trên Facebook -> Thêm Page vào nhóm hoặc mời Page làm Quản trị viên/Thành viên.")
+    elif code == 10:
+        huong_dan.append(f"App chưa được thêm vào Group ({group_id}).")
+        huong_dan.append("Vào Cài đặt nhóm -> Ứng dụng (Apps) -> Thêm App liên kết với Page.")
+    else:
+        huong_dan.append(f"Lỗi Graph API ({code}/{subcode}): {msg}")
+
+    raise RuntimeError("Đăng bài vào Group thất bại: " + " | ".join(huong_dan))
+
+
+def post_to_group(c, group_id, message, link=None):
+    """Đăng bài (chữ hoặc link) lên Facebook GROUP dưới tư cách PAGE bằng page_token."""
+    body = {"message": message, "access_token": c["page_token"]}
+    if link:
+        body["link"] = link
+    r = requests.post(f"{GRAPH}/{group_id}/feed", data=body, timeout=60)
+    if not r.ok:
+        _handle_group_error(r, group_id)
+    r.raise_for_status()
+    return r.json().get("id", "")
+
+
+def post_group_photo(c, group_id, image_path, caption=""):
+    """Đăng ẢNH lên Facebook GROUP dưới tư cách PAGE bằng page_token."""
+    data = {"message": caption or "", "access_token": c["page_token"]}
+    with open(image_path, "rb") as f:
+        r = requests.post(f"{GRAPH}/{group_id}/photos", data=data,
+                          files={"source": f}, timeout=180)
+    if not r.ok:
+        _handle_group_error(r, group_id)
+    r.raise_for_status()
+    j = r.json()
+    return j.get("id", ""), j.get("post_id", "") or j.get("id", "")
+
+
 def post_video(c, video_path, description, when, title=""):
     """Upload VIDEO DÀI trực tiếp lên Page (native), resumable theo chunk.
 
@@ -507,6 +555,9 @@ def main():
     ap.add_argument("--app-id", default="")
     ap.add_argument("--app-secret", default="")
     ap.add_argument("--page-id", default="")
+    ap.add_argument("--group-id", default="", help="ID của Facebook Group để đăng bài dưới tư cách Page")
+    ap.add_argument("--share-to-group", default="", help="ID của Facebook Group để chia sẻ bài viết từ Page vào Group (Cách 1)")
+    ap.add_argument("--image", default="", help="đường dẫn file ảnh (PNG/JPG) để đăng bài kèm ảnh lên Page hoặc Group")
     args = ap.parse_args()
 
     if args.exchange:
@@ -570,6 +621,12 @@ def main():
 
     if args.dry_run:
         print("=== DRY-RUN ===")
+        if args.group_id:
+            print(f"đích đăng  : Facebook GROUP ({args.group_id}) dưới tư cách PAGE")
+            print(f"ảnh đính kèm: {args.image or '(không có)'}")
+            print(f"card link  : {args.link or '(không có)'}")
+            print(f"--- message bài GROUP ({len(message)} ký tự) ---\n{message}")
+            return 0
         print(f"bài dài hẹn: {when_iso} (unix={when})")
         print(f"Reel hẹn   : {reel_when_iso} (lệch {args.reel_offset_min} phút)")
         che_do = ("v3 — REEL LÀ BÀI CHÍNH, không link" if args.reel_main
@@ -583,6 +640,8 @@ def main():
         print(f"reel: {args.reel} (desc {len(reel_desc)} ký tự)")
         print(f"--- message bài dài ({len(message)} ký tự) ---\n{message}")
         print(f"--- caption REEL ({len(reel_desc)} ký tự) ---\n{reel_desc}")
+        if args.share_to_group:
+            print(f"share_to_group: {args.share_to_group}")
         # Comment cũng ra công khai -> phải xem trước được, đừng để nó là thứ duy nhất
         # chỉ thấy sau khi đã đăng.
         cmt_preview = _read(args.comment_file)
@@ -595,7 +654,24 @@ def main():
 
     c = _cfg(args)
     post_id, reel_id, cover_ok, errs = "-", "-", None, []
-    if args.no_text_post:
+    if args.group_id:
+        # ── ĐĂNG VÀO FACEBOOK GROUP DƯỚI TƯ CÁCH PAGE ─────────────────────────
+        if when:
+            errs.append("group:Hẹn giờ đăng không được hỗ trợ qua Facebook Group API")
+        if args.reel:
+            errs.append("group:Đăng Reel không được hỗ trợ cho Facebook Group qua script này")
+        if not errs:
+            try:
+                if args.image:
+                    if not os.path.isfile(args.image):
+                        raise FileNotFoundError(f"File ảnh không tồn tại: {args.image}")
+                    photo_id, pid = post_group_photo(c, args.group_id, args.image, message)
+                    post_id = pid or photo_id or "-"
+                else:
+                    post_id = post_to_group(c, args.group_id, message, args.link) or "-"
+            except Exception as e:
+                errs.append(f"group:{_err(e)}")
+    elif args.no_text_post:
         # v3 ĐÚNG NGHĨA (05/09/2026): Reel là object DUY NHẤT.
         #
         # Từ 18/08 ba runner và chiến lược Facebook v2 đã tuyên bố "bài text riêng đã
@@ -624,7 +700,7 @@ def main():
             post_id = post_link(c, message, args.link, when) or "-"
         except Exception as e:
             errs.append(f"feed:{_err(e)}")
-    if args.reel and os.path.isfile(args.reel):
+    if not args.group_id and args.reel and os.path.isfile(args.reel):
         try:
             reel_id, cover_ok = post_reel(c, args.reel, reel_desc, reel_when,
                                           args.reel_cover_at, args.reel_cover)
@@ -633,13 +709,14 @@ def main():
             errs.append(f"reel:{_err(e)}")
     status = (f"scheduled@{when_iso}" if when else "published") if not errs else ("error:" + " | ".join(errs))
     cover_str = {True: "ok", False: "failed"}.get(cover_ok, "-")
-    # ── Comment mang LINK, đăng ngay dưới Reel ────────────────────────────────
-    # Vì sao link nằm ở comment chứ không trong bài: chính Meta khuyến nghị vậy (gợi ý
-    # hiện trong Professional Dashboard) — caption có link bị dìm nặng, comment thì KHÔNG
-    # bị tính. Chỉ chạy khi bài đã PUBLISH THẬT (when=None): bài hẹn giờ chưa tồn tại
-    # nên không thể comment.
+    # ── Comment mang LINK, đăng ngay dưới Reel (hoặc bài Group) ───────────────
     cmt_id, cmt_txt = "-", _read(args.comment_file)
-    if cmt_txt and reel_id not in ("", "-"):
+    if cmt_txt and args.group_id and post_id not in ("", "-"):
+        try:
+            cmt_id = post_comment(c, post_id, cmt_txt) or "-"
+        except Exception as e:
+            errs.append(f"comment:{_err(e)}")
+    elif cmt_txt and reel_id not in ("", "-"):
         if when:
             errs.append("comment:bo qua (bai dang hen gio, chua ton tai de comment)")
         else:
@@ -653,10 +730,22 @@ def main():
                     else:
                         time.sleep(20)
 
-    mode = ("reel-main" if args.reel_main
-            else ("native-video" if (args.video and os.path.isfile(args.video)) else "text-link"))
-    print(f"FB_POST_ID={post_id} FB_REEL_ID={reel_id} FB_REEL_COVER={cover_str} "
+    mode = ("group-photo" if (args.group_id and args.image)
+            else ("group-post" if args.group_id
+                  else ("reel-main" if args.reel_main
+                        else ("native-video" if (args.video and os.path.isfile(args.video)) else "text-link"))))
+    target = f"group:{args.group_id}" if args.group_id else f"page:{c.get('page_id')}"
+    print(f"FB_POST_ID={post_id} FB_TARGET={target} FB_REEL_ID={reel_id} FB_REEL_COVER={cover_str} "
           f"FB_REEL_AT={reel_when_iso} FB_MODE={mode} FB_COMMENT_ID={cmt_id} STATUS={status}")
+    if args.share_to_group and post_id not in ("", "-") and not args.group_id:
+        page_post_url = f"https://www.facebook.com/{post_id}"
+        web_share_url = f"https://www.facebook.com/sharer/sharer.php?u={page_post_url}"
+        try:
+            share_id = post_to_group(c, args.share_to_group, message="", link=page_post_url)
+            print(f"FB_GROUP_SHARE_ID={share_id}")
+        except Exception as e:
+            print(f"FB_GROUP_SHARE=manual_share_needed REASON={_err(e)}")
+            print(f"FB_GROUP_SHARE_URL={web_share_url}")
     return 0  # best-effort
 
 

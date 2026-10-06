@@ -182,7 +182,7 @@ content_name: "Tên làm việc của content"
 
 > Prompt tạo ẢNH đính kèm bài Facebook, gửi NGUYÊN VĂN cho model sinh ảnh. Tách ra
 > `facebook/infographic.prompt.txt` ở bước B3; cổng G24 đo nó ngay ở bước viết.
-> Khung và luật đầy đủ: `templates/INFOGRAPHIC_PROMPT_TEMPLATE.md` mục 1–3. Bốn điều máy
+> Khung và luật đầy đủ: `templates/IMAGE_GUIDELINES.md`. Bốn điều máy
 > hoặc người sẽ kiểm:
 > - **Viết sẵn TỪNG chuỗi chữ sẽ nằm trên ảnh**, đúng chính tả, đúng dấu. Model không được
 >   tự nghĩ chữ — nó sẽ nghĩ, và nghĩ sai dấu.
@@ -196,7 +196,7 @@ QUAN TRỌNG NHẤT — CHỮ TIẾNG VIỆT PHẢI ĐÚNG DẤU TUYỆT ĐỐI.
 dưới đây, không diễn đạt lại, không bỏ dấu, không thêm chữ nào ngoài danh sách.
 Nếu không vẽ nổi một chuỗi cho đúng dấu thì thà để trống chỗ đó còn hơn vẽ sai.
 
-PHONG CÁCH: {{phong cách + bảng màu, theo mục 2 của INFOGRAPHIC_PROMPT_TEMPLATE}}
+PHONG CÁCH: {{phong cách + bảng màu, theo IMAGE_GUIDELINES.md}}
 
 【VÙNG 1 — ĐẦU TRANG】
 Tiêu đề: {{≤55 ký tự}}

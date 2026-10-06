@@ -77,5 +77,5 @@ Cổng `tests/test_no_identity_leak.py::test_TEMPLATE_khong_mang_nhan_dien_that`
 
 ## Bốn khuôn còn lại ở gốc
 
-`CAMPAIGN_TEMPLATE.xlsx` · `EMAIL_NEWSLETTER_TEMPLATE.md` · `INFOGRAPHIC_PROMPT_TEMPLATE.md` ·
+`CAMPAIGN_TEMPLATE.xlsx` · `EMAIL_NEWSLETTER_TEMPLATE.md` · `IMAGE_GUIDELINES.md` ·
 `RECYCLING_PLAN_TEMPLATE.md` — chúng không thuộc cây trạm, là biểu mẫu dùng riêng từng lúc.

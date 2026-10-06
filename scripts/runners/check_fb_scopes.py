@@ -81,19 +81,83 @@ def check(tool):
     return ok
 
 
+def check_group(tool, group_id):
+    """Kiểm tra quyền của Page token trên Group cụ thể qua Graph API, không lộ secret."""
+    p = tool if tool.lower().endswith(".json") else os.path.join(tool, "facebook_config.json")
+    print(f"\n=== Kiểm tra quyền trên Group ({group_id}) ===")
+    if not os.path.isfile(p):
+        print("  ⚠️ KHÔNG CÓ FILE CONFIG")
+        return False
+    try:
+        with open(p, encoding="utf-8-sig") as f:
+            c = json.load(f)
+        tok = c["page_token"]
+        pid = c.get("page_id", "")
+    except Exception as e:
+        print(f"  ⚠️ đọc config lỗi: {type(e).__name__}")
+        return False
+
+    try:
+        r = requests.get(f"{GRAPH}/{group_id}",
+                         params={"fields": "id,name,privacy,administrator",
+                                 "access_token": tok}, timeout=30)
+    except Exception as e:
+        print(f"  ⚠️ gọi Graph API lỗi: {type(e).__name__}")
+        return False
+
+    if r.ok:
+        d = r.json()
+        print(f"  Tên Group  : {d.get('name')!r} (ID: {d.get('id')})")
+        print(f"  Quyền riêng tư: {d.get('privacy', 'N/A')}")
+        print(f"  Admin/Mod  : {'Có' if d.get('administrator') else 'Thành viên / Được cấp quyền'}")
+        print(f"  Page Token : {c.get('page_name')} ({pid})")
+        print("  ✅ ĐỦ QUYỀN TRUY CẬP VÀ ĐĂNG BÀI VÀO GROUP DƯỚI TƯ CÁCH PAGE.")
+        return True
+
+    try:
+        err_data = r.json().get("error", {})
+    except Exception:
+        err_data = {}
+    code = err_data.get("code")
+    subcode = err_data.get("error_subcode")
+    msg = err_data.get("message", r.text[:200])
+
+    print(f"  ❌ KHÔNG THỂ TRUY CẬP GROUP ({group_id}): HTTP {r.status_code}")
+    print(f"  Mã lỗi FB  : {code} (subcode: {subcode})")
+    print(f"  Thông báo  : {msg}")
+    print("  👉 Hướng dẫn xử lý:")
+    if code == 190:
+        print("     1. Token của Page đã hết hạn hoặc không hợp lệ. Cần tạo lại Page Access Token.")
+    elif code == 200:
+        print("     1. Đảm bảo Page của bạn đã THAM GIA vào Group với tư cách Page.")
+        print("     2. Trong cài đặt Group, kiểm tra xem Page có được cấp quyền đăng bài không.")
+        print("     3. Lưu ý Meta Graph API v19+: Page nên là Quản trị viên (Admin) của Group để đăng trực tiếp.")
+    elif code == 10:
+        print("     1. App chưa được thêm vào Group hoặc bị giới hạn quyền truy cập.")
+    else:
+        print("     1. Kiểm tra lại ID Group có chính xác không.")
+        print("     2. Kiểm tra token có quyền `pages_manage_posts` và Page là thành viên Group.")
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tool", default="", help="file config hoặc thư mục chứa facebook_config.json (bỏ trống = biến FB_CONFIG)")
+    ap.add_argument("--group-id", default="", help="ID của Facebook Group cần kiểm tra quyền đăng")
     args = ap.parse_args()
     tools = [args.tool] if args.tool else DEFAULT_TOOLS
     if not tools:
         ap.error("chưa có cấu hình: truyền --tool hoặc đặt FB_CONFIG")
     results = [check(t) for t in tools]
+    group_ok = True
+    if args.group_id:
+        group_results = [check_group(t, args.group_id) for t in tools]
+        group_ok = all(group_results)
     print()
-    if all(results):
-        print("✅ ĐỦ QUYỀN — comment link sẽ chạy được ở lần đăng tới.")
+    if all(results) and group_ok:
+        print("✅ TẤT CẢ QUYỀN ĐẠT — sẵn sàng đăng bài.")
         return 0
-    print("❌ CÒN THIẾU QUYỀN — xem dấu ❌ ở trên. Làm lại bước cấp quyền trong knowledge/toolchains/PLATFORM_SETUP.md")
+    print("❌ CÒN THIẾU QUYỀN — xem chi tiết lỗi ở trên.")
     return 1
 
 

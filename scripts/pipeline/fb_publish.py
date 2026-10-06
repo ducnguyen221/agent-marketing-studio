@@ -59,30 +59,63 @@ TRANG_THAI = "fb-state.json"
 
 
 def dang_anh(cfg: dict, message: str, image_path: str,
-             publish_ts: int | None = None) -> tuple[str, str]:
+             publish_ts: int | None = None,
+             group_id: str | None = None) -> tuple[str, str]:
     """Đăng ảnh kèm caption. Trả về (photo_id, post_id). `post_id` rỗng nếu Graph không trả.
 
-    Dùng /{page_id}/photos chứ không phải /feed: /feed chỉ nhận link hoặc chữ, muốn ảnh
-    hiện to trên feed thì phải đi đường photos. Nó trả về CẢ photo_id lẫn post_id —
-    comment phải gắn vào **post_id**, gắn vào photo_id thì comment nằm ở chỗ khác.
-
-    `publish_ts` có giá trị = HẸN GIỜ: ảnh lên ở trạng thái chưa phát và Facebook tự phát
-    đúng mốc. Bài hẹn chưa tồn tại trên feed nên chưa gắn comment được — đó là việc của
-    `attach_pending` sau giờ phát.
+    Dùng /{target_id}/photos (target_id là group_id hoặc page_id). Nó trả về CẢ photo_id
+    lẫn post_id — comment phải gắn vào **post_id**, gắn vào photo_id thì comment nằm ở chỗ khác.
     """
     data = {"message": message, "access_token": cfg["page_token"]}
-    if publish_ts:
+    target_id = group_id or cfg["page_id"]
+    if publish_ts and not group_id:
         data["published"] = "false"
         data["scheduled_publish_time"] = str(publish_ts)
     else:
         data["published"] = "true"
     with open(image_path, "rb") as f:
-        r = requests.post(f"{GRAPH}/{cfg['page_id']}/photos",
+        r = requests.post(f"{GRAPH}/{target_id}/photos",
                           data=data, files={"source": f}, timeout=180)
     if not r.ok:
-        raise SystemExit(f"Đăng ảnh thất bại: {r.status_code} {str(r.json())[:400]}")
+        try:
+            err = r.json().get("error", {})
+            msg = err.get("message", r.text[:300])
+        except Exception:
+            msg = r.text[:300]
+        raise SystemExit(f"Đăng ảnh thất bại lên {target_id}: {r.status_code} {msg}")
     j = r.json()
     return j.get("id", ""), j.get("post_id", "")
+
+
+def chia_se_vao_group(cfg: dict, group_id: str, permalink: str) -> dict:
+    """Chia sẻ link bài viết từ Page vào Group (Cách 1).
+    Gọi /{group_id}/feed với link={permalink}.
+    Nếu Meta chặn do Groups API deprecation, ghi nhận trạng thái và sinh Web Share URL.
+    """
+    web_share_url = f"https://www.facebook.com/sharer/sharer.php?u={permalink}"
+    try:
+        r = requests.post(f"{GRAPH}/{group_id}/feed",
+                          data={"link": permalink, "access_token": cfg["page_token"]},
+                          timeout=60)
+        if r.ok:
+            share_id = r.json().get("id", "")
+            print(f"  FB_GROUP_SHARE_ID={share_id}")
+            return {"status": "shared", "group_id": group_id, "share_id": share_id}
+        try:
+            err = r.json().get("error", {})
+        except Exception:
+            err = {}
+        code = err.get("code")
+        print(f"  [share group] Graph API từ chối ({code}): Meta đã hạn chế Groups API bên thứ ba.")
+        print(f"  [share group] Link bài viết: {permalink}")
+        print(f"  [share group] Web Share URL: {web_share_url}")
+        return {"status": "manual_share_needed", "group_id": group_id,
+                "reason": err.get("message", r.text[:200]),
+                "share_url": web_share_url}
+    except Exception as e:
+        print(f"  [share group] Lỗi kết nối: {e}")
+        return {"status": "error", "group_id": group_id, "reason": str(e),
+                "share_url": web_share_url}
 
 
 def da_len_song(cfg: dict, post_id: str) -> tuple[bool, str]:
@@ -290,6 +323,10 @@ def main(argv=None) -> int:
                     help="trạm chứa CHANNELS.md (mặc định: như studio_paths)")
     ap.add_argument("--publish-at", default="",
                     help="mốc hẹn, unix giây. Rỗng hoặc sát hơn 11 phút = đăng ngay")
+    ap.add_argument("--group-id", default="",
+                    help="Facebook Group ID để đăng dưới tư cách Page")
+    ap.add_argument("--share-to-group", default="",
+                    help="Facebook Group ID để tự động chia sẻ link bài viết của Page vào Group sau khi đăng (Cách 1)")
     ap.add_argument("--fill", action="append", default=[], metavar="KHOA=GIA_TRI",
                     help="thay {{KHOA}} trong thân bài và comment; giá trị rỗng = bỏ dòng đó")
     ap.add_argument("--attach-pending", metavar="THU_MUC",
@@ -331,6 +368,9 @@ def main(argv=None) -> int:
             raise SystemExit(f"--publish-at {a.publish_at!r} không phải unix giây")
         hen = ts if ts > time.time() + SAN_HEN_GIO else None
 
+    if a.group_id and hen:
+        raise SystemExit("Facebook Group không hỗ trợ đăng hẹn giờ qua Graph API. Bỏ --publish-at để đăng ngay.")
+
     # --- cổng TRƯỚC khi gọi Graph -------------------------------------------------
     trong_than = _URL.findall(msg)
     if trong_than:
@@ -353,6 +393,8 @@ def main(argv=None) -> int:
         import make_fb_image as MFI
         ok_anh, why_anh = MFI.trang_thai_soat(Path(a.image))
         print(f"  soát chữ : {'OK' if ok_anh else 'CHƯA'} — {why_anh}")
+        if a.share_to_group:
+            print(f"  [dry-run] tự động chia sẻ link bài viết của Page vào Group: {a.share_to_group}")
         print("  [dry-run] cổng nội dung đã qua, KHÔNG gọi Graph. Đăng thật còn kiểm Cổng 2, "
               "mức tự trị và soát chữ.")
         return 0
@@ -361,7 +403,8 @@ def main(argv=None) -> int:
     # Đặt TRƯỚC hai cổng người: bước này không gọi Graph, chỉ in lại link. Nếu để sau, một
     # kênh vừa bị hạ mức tự trị sẽ làm lượt chạy lại báo hỏng cho một bài ĐANG nằm trên
     # Facebook, và đường ống sẽ không bao giờ ghi nhận nó.
-    state_file = Path(a.comment_file).resolve().parent / TRANG_THAI
+    ten_trang_thai = f"fb-group-{a.group_id}-state.json" if a.group_id else TRANG_THAI
+    state_file = Path(a.comment_file).resolve().parent / ten_trang_thai
     if state_file.is_file():
         d = json.loads(state_file.read_text(encoding="utf-8"))
         print(f"  đã có    : {state_file} — KHÔNG đăng lại")
@@ -421,7 +464,10 @@ def main(argv=None) -> int:
         return 4
     print(f"  soát chữ : {why_anh}")
 
-    photo_id, post_id = dang_anh(cfg, msg, a.image, hen)
+    if a.group_id:
+        photo_id, post_id = dang_anh(cfg, msg, a.image, hen, group_id=a.group_id)
+    else:
+        photo_id, post_id = dang_anh(cfg, msg, a.image, hen)
     if not post_id:
         if hen:
             # Không có post_id thì pha hai không biết gắn comment vào đâu. Ảnh đã hẹn trên
@@ -432,10 +478,13 @@ def main(argv=None) -> int:
         post_id = photo_id
     print(f"  FB_PHOTO_ID={photo_id}")
     print(f"  FB_POST_ID={post_id}")
+    if a.group_id:
+        print(f"  FB_GROUP_ID={a.group_id}")
 
     # Ghi trạng thái NGAY sau khi Facebook nhận bài, TRƯỚC comment. Comment mà hỏng thì
     # lượt chạy lại vẫn thấy file này và không đăng trùng; pha hai gắn comment sau.
     d = {"post_id": post_id, "photo_id": photo_id, "scheduled": bool(hen),
+         "group_id": a.group_id or "", "target": "group" if a.group_id else "page",
          "publish_ts": hen or int(time.time()),
          "publish_at": time.strftime("%Y-%m-%dT%H:%M:%S%z",
                                      time.localtime(hen or time.time())),
@@ -448,10 +497,14 @@ def main(argv=None) -> int:
         # Comment NGAY. Càng để lâu càng nhiều người thấy bài chưa có đường về.
         time.sleep(2)
         d["comment_id"] = dang_comment(cfg, post_id, cmt)
-        d["permalink"] = f"https://www.facebook.com/{post_id}"
+        d["permalink"] = (f"https://www.facebook.com/groups/{a.group_id}/posts/{post_id}"
+                          if a.group_id else f"https://www.facebook.com/{post_id}")
         _ghi_json(state_file, d)
         print(f"  FB_COMMENT_ID={d['comment_id']}")
         print(f"  FB_PERMALINK={d['permalink']}")
+        if a.share_to_group and not a.group_id:
+            d["share_to_group"] = chia_se_vao_group(cfg, a.share_to_group, d["permalink"])
+            _ghi_json(state_file, d)
     print(_dong_ket_qua(d))
     return 0
 
