@@ -164,6 +164,25 @@ Nền tảng không trả chỉ số nào → **để trống**, không điền 
 
 ---
 
+## Hai chế độ vận hành Pipeline
+
+Tùy theo tình huống và tiến độ chiến dịch, người vận hành và agent có thể chọn một trong hai chế độ:
+
+| Đặc tính | ① Auto Pipeline for 1 Post (Chạy theo bài) | ② Auto Pipeline by Calendar (Chạy theo lịch) |
+|---|---|---|
+| **Bản chất** | Chạy ad-hoc, tập trung cho 1 bài cụ thể | Chạy định kỳ/bám sát timeline `schedule` của `campaign.md` |
+| **Khi nào chọn** | Bài tin nóng, bài cần đẩy gấp, hoặc đang test dò lỗi từng bước quy trình | Khi đã lên khung chiến dịch hoặc batch bài hàng tuần/tháng |
+| **Đầu vào tối thiểu**| Mã bài (`cid`) + brief | `campaign.md` đầy đủ thông tin chiến dịch + bảng Content có `schedule` |
+| **Cơ chế 2 Pha** | Không có (chạy thẳng từ bước hiện tại) | **Pha 1**: Đối soát dở dang (gắn comment, share Group bài hẹn giờ đã lên)<br>**Pha 2**: Quét bài hôm nay + bù trễ an toàn (≤ 3 ngày) |
+| **Xử lý trễ hạn** | Không áp dụng | Quá hạn ≤ 3 ngày: cho phép đăng bù; Quá hạn > 7 ngày: **chặn tự động** |
+| **Lệnh thực thi** | `python scripts/pipeline/run_pipeline.py <cam> run --post <cid>` | `python scripts/pipeline/calendar_pipeline.py <cam>`<br>hoặc `python scripts/pipeline/run_pipeline.py <cam> calendar` |
+
+### Phân nhánh Hybrid trong Pipeline by Calendar:
+- **Nhánh đã có bài (Batch Production - duyệt trước)**: Bài đã qua Cổng 2 (`register_publish approve`), khi đến ngày hẹn `schedule` pipeline sẽ tự động xuất bản ngay ra Web, Fanpage và chia sẻ vào Group kèm teaser caption mà không xin lại lệnh duyệt.
+- **Nhánh mới có ý tưởng (Just-in-Time)**: Nếu đến lịch mà bài mới ở Cổng 1, pipeline sẽ tự động kích hoạt chuỗi dựng bài (`create-post` → `write` → `check-gates`). Nếu kênh ở mức `autonomy: suggest`, pipeline dừng đúng tại Cổng 2, ghi nhận `waiting_approval`, in file cần xem và **thoát sạch sẽ, không treo tiến trình**.
+
+---
+
 ## Vòng lặp chuẩn mỗi lượt
 
 ```

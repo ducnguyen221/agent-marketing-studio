@@ -47,13 +47,14 @@ LAYOUT = {
     "fb_prompt":  "facebook/infographic.prompt.txt",  # B3 tách từ ### image_prompt
     "fb_image_meta": "facebook/infographic.meta.json",  # B5 ai sinh, lúc nào, ai đã soát chữ
     "fb_reel":    "facebook/reel.txt",         # CHỈ khi bài có short.mp4
+    "fb_group_share": "facebook/group_share.txt",  # B3 teaser caption khi share vào Group
 }
 
 # Thư mục con phải tạo khi dựng bài mới.
 CHANNEL_DIR = ("youtube", "atlas", "facebook")
 
 # File bản công khai — thứ thật sự đến tay người đọc (cổng lộ lọt quét đúng nhóm này).
-FILE_CONG_KHAI = ("blog", "fb_post", "fb_comment", "yt_desc", "fb_reel", "atlas_html")
+FILE_CONG_KHAI = ("blog", "fb_post", "fb_comment", "yt_desc", "fb_reel", "fb_group_share", "atlas_html")
 
 
 def p(thu_muc_bai, khoa: str) -> Path:

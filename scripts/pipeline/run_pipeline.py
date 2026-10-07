@@ -342,6 +342,15 @@ def main(argv=None) -> int:
     pc.add_argument("--dry-run", action="store_true")
     pc.add_argument("--json", action="store_true")
 
+    pcal = sub.add_parser("calendar", help="vận hành tự động theo lịch chiến dịch (2 pha)")
+    pcal.add_argument("--date", default="", help="ngày thực thi YYYY-MM-DD (mặc định: hôm nay)")
+    pcal.add_argument("--lookback", type=int, default=3, help="số ngày cho phép đăng bù (mặc định 3)")
+    pcal.add_argument("--max-posts", type=int, default=3, help="số bài tối đa xuất bản mỗi lượt (mặc định 3)")
+    pcal.add_argument("--share-to-group", default="", help="Facebook Group ID để chia sẻ bài viết kèm teaser")
+    pcal.add_argument("--station", default=None, help="trạm chứa CHANNELS.md")
+    pcal.add_argument("--dry-run", action="store_true")
+    pcal.add_argument("--json", action="store_true")
+
     a = ap.parse_args(argv)
     campaign = Path(a.campaign)
     if not (campaign / "campaign.md").is_file():
@@ -354,6 +363,28 @@ def main(argv=None) -> int:
         if not a.json:
             _print_overview(t)
         return 0
+
+    if a.cmd == "calendar":
+        import calendar_pipeline as CP
+        try:
+            t_date = a.date.strip() if a.date else None
+            res = CP.run_calendar_pipeline(
+                campaign,
+                target_date=t_date,
+                lookback_days=a.lookback,
+                max_posts_per_run=a.max_posts,
+                share_to_group=a.share_to_group,
+                station=a.station,
+                dry_run=a.dry_run,
+            )
+            if a.json:
+                print(json.dumps(res, ensure_ascii=False, indent=2))
+            else:
+                print(CP.format_report(res))
+            return 0
+        except Exception as e:
+            loi(f"calendar error: {e}")
+            return 1
 
     try:
         result = run(campaign, mode=a.mode,

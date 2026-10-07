@@ -37,6 +37,7 @@ _SECTION_RE = re.compile(
 # Nhãn (fallback khi heading không đánh số): map keyword -> khóa kênh.
 # Thứ tự ưu tiên check: cụ thể trước (youtube/desc) rồi chung.
 _LABEL_PATTERNS = [
+    ("fb_group_share", re.compile(r"group.*share|share.*group", re.I)),
     ("youtube_desc", re.compile(r"youtube", re.I)),
     ("fb_desc",      re.compile(r"\bfb\b.*\b(desc|caption|mô\s*tả)\b|facebook.*\b(desc|caption|mô\s*tả)\b", re.I)),
     ("fb_post",      re.compile(r"\bfb\b.*post|facebook.*post|\bpost\b.*facebook|bài.*facebook", re.I)),
@@ -56,6 +57,7 @@ _ANCHOR_TO_KEY = {
     "facebook_post": "fb_post",
     "youtube_desc": "youtube_desc", "youtube_video": "youtube_desc",
     "reel": "fb_desc", "fb_desc": "fb_desc", "fb_caption": "fb_desc",
+    "group_share": "fb_group_share", "fb_group_share": "fb_group_share", "share_group": "fb_group_share",
 }
 # Comment đầu tiên của bài Facebook — nơi DUY NHẤT được chứa link (luật 04/09/2026).
 # Nằm lồng bên trong khối facebook_post nên phải bắt riêng, nếu không nó bị nuốt vào
@@ -83,6 +85,7 @@ _OUT_FILES = {
     "fb_comment": PP.LAYOUT["fb_comment"],
     "fb_image_prompt": PP.LAYOUT["fb_prompt"],
     "youtube_desc": PP.LAYOUT["yt_desc"],
+    "fb_group_share": PP.LAYOUT.get("fb_group_share", "facebook/group_share.txt"),
 }
 # reel CHỈ sinh khi bài có short.mp4 — bài thường không dùng tới, sinh ra là rác và còn
 # chứa link blog (trái luật "thân bài Facebook 0 URL").
@@ -211,6 +214,14 @@ def write_outputs(parts, out_dir, with_reel=False):
         # vào comment Facebook nguyên văn ba dấu gạch.
         text = re.sub(r"(?:\n\s*(?:-{3,}|\*{3,}|_{3,})\s*)+$", "", text).strip()
         if not text or not text.strip():
+            # Chỉ dọn dẹp riêng file fb_group_share nếu section đó bị gỡ
+            if key == "fb_group_share":
+                old_p = os.path.join(out_dir, fname)
+                if os.path.isfile(old_p):
+                    try:
+                        os.remove(old_p)
+                    except OSError:
+                        pass
             continue
         path = os.path.join(out_dir, fname)
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -244,7 +255,8 @@ def main(argv=None):
             "(hoặc heading đánh số '## 3) Blog' theo kiểu cũ).")
     written = write_outputs(parts, args.out_dir, args.with_reel)
 
-    missing = [k for k in _OUT_FILES if k not in written]   # reel không tính là thiếu
+    # fb_group_share là tuỳ chọn (sinh khi có neo ## post:group_share), không tính là thiếu
+    missing = [k for k in _OUT_FILES if k not in written and k != "fb_group_share"]
     print(json.dumps({"out_dir": os.path.abspath(args.out_dir),
                       "written": written,
                       "missing_sections": missing,

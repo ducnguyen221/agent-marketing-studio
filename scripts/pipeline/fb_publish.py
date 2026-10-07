@@ -35,6 +35,24 @@ GRAPH = "https://graph.facebook.com/v21.0"
 _URL = re.compile(r"https?://\S+", re.I)
 
 
+def _hook_from_body(message: str) -> str:
+    """Lấy câu đáng chú ý nhất trong thân bài làm hook khi không có teaser riêng."""
+    body = message.split("\n", 1)[1] if "\n" in message else ""
+    cands = []
+    for para in body.split("\n"):
+        s = para.strip()
+        if not s or s.startswith(("#", "▶", "🤖", "📊", "💭")):
+            continue
+        for snt in re.split(r"(?<=[.!?…])\s", s):
+            snt = snt.strip()
+            if 40 <= len(snt) <= 200:
+                cands.append(snt)
+    if not cands:
+        return ""
+    with_num = [s for s in cands if re.search(r"\d", s)]
+    return (with_num or cands)[0]
+
+
 def _doc(p: str) -> str:
     with open(p, encoding="utf-8") as f:
         return f.read()
@@ -87,20 +105,25 @@ def dang_anh(cfg: dict, message: str, image_path: str,
     return j.get("id", ""), j.get("post_id", "")
 
 
-def chia_se_vao_group(cfg: dict, group_id: str, permalink: str) -> dict:
-    """Chia sẻ link bài viết từ Page vào Group (Cách 1).
-    Gọi /{group_id}/feed với link={permalink}.
+def chia_se_vao_group(cfg: dict, group_id: str, permalink: str, share_message: str = "") -> dict:
+    """Chia sẻ link bài viết từ Page vào Group (Cách 1) kèm teaser caption nếu có.
+    Gọi /{group_id}/feed với link={permalink} và message={share_message}.
     Nếu Meta chặn do Groups API deprecation, ghi nhận trạng thái và sinh Web Share URL.
     """
     web_share_url = f"https://www.facebook.com/sharer/sharer.php?u={permalink}"
+    post_data = {"link": permalink, "access_token": cfg["page_token"]}
+    if share_message:
+        post_data["message"] = share_message
     try:
         r = requests.post(f"{GRAPH}/{group_id}/feed",
-                          data={"link": permalink, "access_token": cfg["page_token"]},
+                          data=post_data,
                           timeout=60)
         if r.ok:
             share_id = r.json().get("id", "")
             print(f"  FB_GROUP_SHARE_ID={share_id}")
-            return {"status": "shared", "group_id": group_id, "share_id": share_id}
+            if share_message:
+                print(f"  FB_GROUP_SHARE_CAPTION={share_message}")
+            return {"status": "shared", "group_id": group_id, "share_id": share_id, "share_caption": share_message}
         try:
             err = r.json().get("error", {})
         except Exception:
@@ -109,13 +132,19 @@ def chia_se_vao_group(cfg: dict, group_id: str, permalink: str) -> dict:
         print(f"  [share group] Graph API từ chối ({code}): Meta đã hạn chế Groups API bên thứ ba.")
         print(f"  [share group] Link bài viết: {permalink}")
         print(f"  [share group] Web Share URL: {web_share_url}")
+        if share_message:
+            print(f"  FB_GROUP_SHARE_CAPTION={share_message}")
         return {"status": "manual_share_needed", "group_id": group_id,
                 "reason": err.get("message", r.text[:200]),
-                "share_url": web_share_url}
+                "share_url": web_share_url,
+                "share_caption": share_message}
     except Exception as e:
         print(f"  [share group] Lỗi kết nối: {e}")
+        if share_message:
+            print(f"  FB_GROUP_SHARE_CAPTION={share_message}")
         return {"status": "error", "group_id": group_id, "reason": str(e),
-                "share_url": web_share_url}
+                "share_url": web_share_url,
+                "share_caption": share_message}
 
 
 def da_len_song(cfg: dict, post_id: str) -> tuple[bool, str]:
@@ -166,25 +195,31 @@ def _dong_ket_qua(d: dict) -> str:
 
 
 def attach_pending(cfg: dict, goc: Path, *, now: float | None = None,
-                   doc_song=None, gui_comment=None) -> list[dict]:
-    """Pha hai của đăng hẹn giờ: gắn comment đầu cho bài đã tới giờ phát mà chưa có comment.
+                   doc_song=None, gui_comment=None, gui_share_group=None) -> list[dict]:
+    """Pha hai của đăng hẹn giờ: gắn comment đầu và kích hoạt group share (nếu có)
+    cho bài đã tới giờ phát mà chưa hoàn tất.
 
-    Chạy lại bao nhiêu lần cũng được. Bài đã có `comment_id` thì bỏ qua, bài chưa tới giờ
-    thì chờ. PHẢI có một lượt chạy theo lịch gọi hàm này: thiếu nó thì bài hẹn lên sóng mà
-    không có đường về blog.
+    Chạy lại bao nhiêu lần cũng được. Bài đã có `comment_id` và group_share hoàn tất thì bỏ qua,
+    bài chưa tới giờ thì chờ. PHẢI có một lượt chạy theo lịch gọi hàm này: thiếu nó thì bài hẹn lên sóng mà
+    không có đường về blog hoặc chưa phân phối vào Group.
 
-    Không kiểm lại Cổng 2 hay mức tự trị: bài đã NẰM TRÊN Facebook. Chặn comment lúc này
-    không rút được bài, chỉ biến nó thành bài mồ côi. Chữ của comment đã chốt từ lúc hẹn và
-    lưu trong file trạng thái, nên sửa `comment.txt` sau khi duyệt cũng không lọt ra ngoài.
+    Không kiểm lại Cổng 2 hay mức tự trị: bài đã NẰM TRÊN Facebook. Chặn comment/share lúc này
+    không rút được bài, chỉ biến nó thành bài mồ côi. Chữ của comment/share đã chốt từ lúc hẹn và
+    lưu trong file trạng thái, nên sửa file sau khi duyệt cũng không lọt ra ngoài.
     """
     now = time.time() if now is None else now
     doc_song = doc_song or (lambda pid: da_len_song(cfg, pid))
     gui_comment = gui_comment or (lambda pid, msg: dang_comment(cfg, pid, msg))
+    gui_share_group = gui_share_group or (lambda gid, link, msg: chia_se_vao_group(cfg, gid, link, msg))
     ra = []
     for f in sorted(Path(goc).rglob(TRANG_THAI)):
         d = json.loads(f.read_text(encoding="utf-8"))
         kq = {"file": str(f), "post_id": d.get("post_id", "")}
-        if d.get("comment_id"):
+        needs_comment = not bool(d.get("comment_id"))
+        share_target = d.get("share_to_group_id") or (d.get("group_share") or {}).get("group_id")
+        needs_share = bool(share_target and (d.get("group_share") or {}).get("status") != "shared")
+
+        if not needs_comment and not needs_share:
             kq["status"] = "done"
         elif now < float(d.get("publish_ts") or 0):
             kq["status"] = "waiting"
@@ -196,10 +231,19 @@ def attach_pending(cfg: dict, goc: Path, *, now: float | None = None,
                     kq["status"] = "overdue" if tre > QUA_HAN else "waiting"
                     kq["reason"] = f"quá giờ hẹn {int(tre // 60)} phút mà Facebook chưa phát"
                 else:
-                    d["comment_id"] = gui_comment(d["post_id"], d["comment"])
                     d["permalink"] = link
                     _ghi_json(f, d)
-                    kq.update(status="attached", comment_id=d["comment_id"], url=link)
+                    if needs_comment and d.get("comment"):
+                        d["comment_id"] = gui_comment(d["post_id"], d["comment"])
+                        _ghi_json(f, d)
+                    if needs_share and share_target:
+                        sh_cap = d.get("share_caption", "")
+                        d["group_share"] = gui_share_group(share_target, link, sh_cap)
+                        d["share_to_group"] = d["group_share"]
+                        _ghi_json(f, d)
+                    kq.update(status="attached", comment_id=d.get("comment_id", ""), url=link)
+                    if d.get("group_share"):
+                        kq["group_share"] = d["group_share"]
             except SystemExit as e:
                 # Một bài hỏng không được giữ chân các bài sau: mỗi giờ trễ là thêm người
                 # đọc thấy bài không có link.
@@ -327,6 +371,8 @@ def main(argv=None) -> int:
                     help="Facebook Group ID để đăng dưới tư cách Page")
     ap.add_argument("--share-to-group", default="",
                     help="Facebook Group ID để tự động chia sẻ link bài viết của Page vào Group sau khi đăng (Cách 1)")
+    ap.add_argument("--share-message-file", help="file nội dung teaser khi chia sẻ bài vào Group")
+    ap.add_argument("--share-caption", default="", help="chuỗi nội dung teaser khi chia sẻ bài vào Group")
     ap.add_argument("--fill", action="append", default=[], metavar="KHOA=GIA_TRI",
                     help="thay {{KHOA}} trong thân bài và comment; giá trị rỗng = bỏ dòng đó")
     ap.add_argument("--attach-pending", metavar="THU_MUC",
@@ -359,6 +405,30 @@ def main(argv=None) -> int:
     cmt, bo_cmt = dien_cho_trong(_doc(a.comment_file), gia_tri)
     for dong in bo_than + bo_cmt:
         print(f"  bỏ dòng  : {dong}  (chỗ trống không có giá trị)")
+
+    share_msg = ""
+    if a.share_message_file and os.path.isfile(a.share_message_file):
+        share_msg = _doc(a.share_message_file).strip()
+    elif a.share_caption:
+        share_msg = a.share_caption.strip()
+    elif a.share_to_group:
+        post_dir = Path(a.post).resolve() if a.post else (Path(a.comment_file).resolve().parent if a.comment_file else None)
+        if post_dir:
+            candidates = [
+                post_dir / "group_share.txt",
+                post_dir / "facebook" / "group_share.txt",
+                post_dir / "fb" / "group_share.txt",
+            ]
+            for cand in candidates:
+                if cand.is_file():
+                    share_msg = cand.read_text(encoding="utf-8").strip()
+                    if share_msg:
+                        print(f"  tự nạp teaser Group: {cand}")
+                        break
+        if not share_msg:
+            hk = _hook_from_body(msg)
+            if hk and hk != msg:
+                share_msg = f"{hk}\n\nXem chi tiết bài viết bên dưới 👇"
 
     hen = None
     if a.publish_at.strip():
@@ -395,6 +465,8 @@ def main(argv=None) -> int:
         print(f"  soát chữ : {'OK' if ok_anh else 'CHƯA'} — {why_anh}")
         if a.share_to_group:
             print(f"  [dry-run] tự động chia sẻ link bài viết của Page vào Group: {a.share_to_group}")
+            if share_msg:
+                print(f"  [dry-run] teaser Group ({len(share_msg)} ký tự):\n{share_msg}")
         print("  [dry-run] cổng nội dung đã qua, KHÔNG gọi Graph. Đăng thật còn kiểm Cổng 2, "
               "mức tự trị và soát chữ.")
         return 0
@@ -407,7 +479,36 @@ def main(argv=None) -> int:
     state_file = Path(a.comment_file).resolve().parent / ten_trang_thai
     if state_file.is_file():
         d = json.loads(state_file.read_text(encoding="utf-8"))
-        print(f"  đã có    : {state_file} — KHÔNG đăng lại")
+        print(f"  đã có    : {state_file} — KHÔNG đăng lại Page")
+        post_id = d.get("post_id")
+        if post_id and not a.group_id:
+            changed = False
+            # Nếu chưa có comment và bài đã lên sóng (hoặc không hẹn giờ)
+            if not d.get("comment_id") and not (d.get("scheduled") and time.time() < float(d.get("publish_ts") or 0)):
+                try:
+                    song, link = da_len_song(cfg, post_id)
+                    if song and cmt:
+                        d["comment_id"] = dang_comment(cfg, post_id, cmt)
+                        d["permalink"] = link
+                        _ghi_json(state_file, d)
+                        print(f"  [bổ sung] FB_COMMENT_ID={d['comment_id']}")
+                except Exception as e:
+                    print(f"  [bổ sung comment lỗi]: {e}")
+
+            # Nếu có share_to_group mà chưa hoàn thành thành công (chỉ chạy khi bài KHÔNG đang hẹn giờ tương lai)
+            is_future_scheduled = bool(d.get("scheduled") and time.time() < float(d.get("publish_ts") or 0))
+            if not is_future_scheduled:
+                target_group = a.share_to_group or d.get("share_to_group_id") or (d.get("group_share") or {}).get("group_id")
+                cur_status = (d.get("group_share") or {}).get("status")
+                if target_group and cur_status != "shared":
+                    p_link = d.get("permalink") or f"https://www.facebook.com/{post_id}"
+                    sh_cap = share_msg or d.get("share_caption") or (d.get("group_share") or {}).get("share_caption", "")
+                    d["share_to_group_id"] = target_group
+                    d["share_caption"] = sh_cap
+                    d["group_share"] = chia_se_vao_group(cfg, target_group, p_link, share_message=sh_cap)
+                    d["share_to_group"] = d["group_share"]
+                    _ghi_json(state_file, d)
+
         if not d.get("comment_id"):
             print("  [chú ý]  bài chưa có comment; --attach-pending sẽ gắn sau giờ phát")
         print(_dong_ket_qua(d))
@@ -488,7 +589,9 @@ def main(argv=None) -> int:
          "publish_ts": hen or int(time.time()),
          "publish_at": time.strftime("%Y-%m-%dT%H:%M:%S%z",
                                      time.localtime(hen or time.time())),
-         "comment": cmt, "comment_id": "", "permalink": ""}
+         "comment": cmt, "comment_id": "", "permalink": "",
+         "share_to_group_id": a.share_to_group or "",
+         "share_caption": share_msg or ""}
     _ghi_json(state_file, d)
 
     if hen:
@@ -503,7 +606,8 @@ def main(argv=None) -> int:
         print(f"  FB_COMMENT_ID={d['comment_id']}")
         print(f"  FB_PERMALINK={d['permalink']}")
         if a.share_to_group and not a.group_id:
-            d["share_to_group"] = chia_se_vao_group(cfg, a.share_to_group, d["permalink"])
+            d["group_share"] = chia_se_vao_group(cfg, a.share_to_group, d["permalink"], share_message=share_msg)
+            d["share_to_group"] = d["group_share"]
             _ghi_json(state_file, d)
     print(_dong_ket_qua(d))
     return 0

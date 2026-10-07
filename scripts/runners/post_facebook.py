@@ -557,6 +557,8 @@ def main():
     ap.add_argument("--page-id", default="")
     ap.add_argument("--group-id", default="", help="ID của Facebook Group để đăng bài dưới tư cách Page")
     ap.add_argument("--share-to-group", default="", help="ID của Facebook Group để chia sẻ bài viết từ Page vào Group (Cách 1)")
+    ap.add_argument("--share-message-file", default="", help="file chứa teaser caption khi chia sẻ bài viết vào Group")
+    ap.add_argument("--share-caption", default="", help="chuỗi teaser caption trực tiếp khi chia sẻ bài viết vào Group")
     ap.add_argument("--image", default="", help="đường dẫn file ảnh (PNG/JPG) để đăng bài kèm ảnh lên Page hoặc Group")
     args = ap.parse_args()
 
@@ -618,6 +620,11 @@ def main():
         reel_desc = compose_reel(raw, vid_url, args.no_link)
 
     reel_when, reel_when_iso = shift_when(when, args.reel_offset_min)
+    share_msg = _read(args.share_message_file) if args.share_message_file else (args.share_caption or "")
+    if not share_msg and args.share_to_group:
+        hk = _hook_from_body(message)
+        if hk and hk != message:
+            share_msg = f"{hk}\n\nXem chi tiết bài viết bên dưới 👇"
 
     if args.dry_run:
         print("=== DRY-RUN ===")
@@ -642,6 +649,8 @@ def main():
         print(f"--- caption REEL ({len(reel_desc)} ký tự) ---\n{reel_desc}")
         if args.share_to_group:
             print(f"share_to_group: {args.share_to_group}")
+            if share_msg:
+                print(f"--- caption SHARE GROUP ({len(share_msg)} ký tự) ---\n{share_msg}")
         # Comment cũng ra công khai -> phải xem trước được, đừng để nó là thứ duy nhất
         # chỉ thấy sau khi đã đăng.
         cmt_preview = _read(args.comment_file)
@@ -741,11 +750,15 @@ def main():
         page_post_url = f"https://www.facebook.com/{post_id}"
         web_share_url = f"https://www.facebook.com/sharer/sharer.php?u={page_post_url}"
         try:
-            share_id = post_to_group(c, args.share_to_group, message="", link=page_post_url)
+            share_id = post_to_group(c, args.share_to_group, message=share_msg, link=page_post_url)
             print(f"FB_GROUP_SHARE_ID={share_id}")
+            if share_msg:
+                print(f"FB_GROUP_SHARE_CAPTION={share_msg}")
         except Exception as e:
             print(f"FB_GROUP_SHARE=manual_share_needed REASON={_err(e)}")
             print(f"FB_GROUP_SHARE_URL={web_share_url}")
+            if share_msg:
+                print(f"FB_GROUP_SHARE_CAPTION={share_msg}")
     return 0  # best-effort
 
 
