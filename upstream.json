@@ -1,5 +1,5 @@
 {
-  "_doc": "Sổ nguồn của phần CHƯNG CẤT từ repo ngoài (xem NOTICE). `files` ghi sha256 của BẢN TRONG REPO NÀY (xuống dòng LF) — commit upstream lúc chưng cất không được ghi lại, nên hash giữ cho mọi lần sửa phải rà lại nguồn và cập nhật sổ trong cùng commit. Cổng: tests/test_upstream_provenance.py.",
+  "_doc": "Sổ nguồn của phần CHƯNG CẤT từ repo ngoài (xem NOTICE). `files` giữ sha256 của bản trong repo này sau chuẩn hóa LF; `file_provenance` chỉ ghi ref, upstream_paths và reviewed_at cho file mới hoặc đã rà lại. File legacy chưa có snapshot giữ nguyên upstream_ref null. Cổng: tests/test_upstream_provenance.py.",
   "sources": {
     "coreyhaines31/marketingskills": {
       "url": "https://github.com/coreyhaines31/marketingskills",
@@ -8,6 +8,7 @@
       "license_checked": "2026-09-29",
       "upstream_ref": null,
       "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "file_provenance": {},
       "files": {
         "knowledge/playbooks/COPY_FRAMEWORKS.md": "6272697999f9030405ccf5fd26510acf135444e2932ad4ea1a5231e9a8040b77",
         "knowledge/playbooks/SEO_PLAYBOOK.md": "06c8c9b892d89c0c5f3df5d8ba501fa779e5a1b655adce26fc576050a2519409",
@@ -23,6 +24,7 @@
       "license_checked": "2026-09-29",
       "upstream_ref": null,
       "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "file_provenance": {},
       "files": {
         ".agents/skills/hook-writer/SKILL.md": "2e94d857c2930f01d8e9ac2e6b3c4501cf1cf22b1dd8c1b2d164dadb4df7b11c",
         ".agents/skills/thread-writer/SKILL.md": "5c2914d5e121560322cb3268b881d86af011ee3ec24bfcef15cce591feb7c52f"
@@ -35,6 +37,7 @@
       "license_checked": "2026-09-29",
       "upstream_ref": null,
       "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "file_provenance": {},
       "files": {
         "knowledge/playbooks/COPY_FRAMEWORKS.md": "6272697999f9030405ccf5fd26510acf135444e2932ad4ea1a5231e9a8040b77"
       }
@@ -46,6 +49,7 @@
       "license_checked": "2026-09-29",
       "upstream_ref": null,
       "upstream_ref_note": "không ghi lại lúc chưng cất",
+      "file_provenance": {},
       "files": {
         "knowledge/playbooks/YOUTUBE_PLAYBOOK.md": "bfcf40613196268c20b015767a4c67ba764324b37100aa8cf050e6a3eb05b0a8"
       }

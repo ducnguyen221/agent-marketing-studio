@@ -1,39 +1,55 @@
 ---
 name: content-production
-description: >
-  Sản xuất nội dung sẵn-đăng theo từng kênh từ một Content ĐÃ DUYỆT và dữ kiện đã kiểm chứng.
-  Dùng khi soạn bài blog, post social, caption, newsletter, landing copy, hoặc tái chế nội
-  dung. Chạy ở khâu ③ produce, sau cổng 1.
+description: Produce ready-to-publish multi-channel assets from an approved campaign item, or polish independent drafts via 7-pass copy editing without bypassing campaign gates.
 ---
 
-# Content Production
+# Sản xuất nội dung & Biên tập (Content Production)
 
-> Chưng cất từ `content-production` (KPIM 30_MARKETING) + `COPY_FRAMEWORKS.md`.
+Sản xuất nội dung đa kênh sẵn-đăng từ brief chiến dịch đã duyệt Gate 1, hoặc biên tập nâng cao bản nháp độc lập qua 7 lượt biên tập.
 
-## Mục đích
-Biến brief đã duyệt + dữ kiện đã xác minh → asset sẵn-đăng đúng format từng kênh.
+## Khi nào dùng
+- Sản xuất bài viết (blog, social, email, newsletter, landing copy) cho chiến dịch đã qua Gate 1.
+- Biên tập, làm sắc nét và gọt giũa bản nháp (loại bỏ sáo rỗng AI, làm rõ luận điểm, kiểm tra claim).
+- Tái chế một nội dung gốc sang nhiều định dạng kênh phát hành khác nhau.
 
-## Quy trình
-1. Đọc frontmatter `campaign.md` + dòng Content (`core_brief`, `audience_profile`, `constraints`,
-   `key_sources`, `creative_direction`), hồ sơ `.md` Mục 4 và Mục 5.
-2. Chọn công thức phù hợp: tiêu đề + khung bài (`COPY_FRAMEWORKS.md`), giọng theo kênh
-   (`output_styles/`). Cùng 1 nội dung gốc → FORMAT LẠI theo từng kênh, không copy y nguyên.
-3. Sản xuất asset đúng định dạng và ngôn ngữ yêu cầu.
-4. **Gắn nhãn `[KIỂM CHỨNG]`** cho mọi số/claim chưa xác minh được — không bịa.
-5. Chạy `checklists/QA_ASSET.md` trước khi đẩy sang người duyệt (đặc biệt: grep tên tool
-   nội bộ = rỗng; đúng giới hạn hashtag theo kênh; không lộ PII).
+## Khi không dùng
+- Chưa có brief hoặc chiến dịch chưa qua Gate 1 (cần hoàn tất ở `campaign-pipeline`).
+- Tư vấn định hướng chiến lược hoặc thay đổi gói dịch vụ/offer (dùng `content-strategy`).
+
+## Hai chế độ hoạt động
+1. **Chế độ `campaign` (Mặc định trong chiến dịch):**
+   - Đòi hỏi: Chiến dịch đã qua Gate 1 (`Content.status = in_production`).
+   - Đầu vào: `campaign.md` (frontmatter + brief), hồ sơ kênh (`brand.md`), research bài viết.
+   - Đầu ra: Ghi file `content.md`, tạo khối `## post:<post_format>`, cập nhật trạng thái `Post.agent_status = completed`, chuẩn bị trình Gate 2.
+2. **Chế độ `standalone-edit` (Biên tập độc lập):**
+   - Đòi hỏi: Bản nháp độc lập không thuộc chiến dịch + mục tiêu biên tập + giọng kênh/nguồn.
+   - Đầu vào: Văn bản nháp, đối tượng độc giả, tài liệu kiểm chứng (nếu có).
+   - Đầu ra: Bản nháp đã chỉnh sửa + ghi chú lý do sửa; KHÔNG tạo thư mục bài, KHÔNG ghi trạng thái.
+   - **Ranh giới cứng:** Nếu bản nháp thuộc về một chiến dịch đang quản lý, bắt buộc phải tuân theo chế độ `campaign` và kiểm tra Gate 1, nghiêm cấm dùng `standalone-edit` để né cổng duyệt.
+
+## Quy trình sản xuất & Biên tập
+1. **Tiếp nhận & Xác định chế độ:** Nhận brief hoặc bản nháp; kiểm tra tính hợp lệ của Gate 1 nếu là campaign.
+2. **Khung bài & Giọng điệu:** Chọn công thức (`COPY_FRAMEWORKS.md`) và giọng theo kênh (`brand.md`, `output_styles/`).
+3. **Áp dụng 7 lượt biên tập (`COPY_EDITING.md`):**
+   - Lượt 1: Cấu trúc & Mạch lập luận (Flow & Structure).
+   - Lượt 2: Độ rõ ràng & Tinh gọn (cắt sáo rỗng AI).
+   - Lượt 3: Giọng tác giả & Phù hợp kênh.
+   - Lượt 4: Bằng chứng & Tính cụ thể (gắn `[KIỂM CHỨNG]` cho số liệu chưa xác minh).
+   - Lượt 5: Lời kêu gọi hành động (CTA) trực diện, duy nhất.
+   - Lượt 6: Trình bày & Quét mắt (tiêu đề phụ, bullet, đoạn ngắn).
+   - Lượt 7: Rà soát an toàn (loại bỏ PII, không lộ tool nội bộ).
+4. **Kiểm tra QA:** Chạy checklist `checklists/QA_ASSET.md` trước khi bàn giao.
 
 ## Đầu ra
-- **Một** file `content.md` trong thư mục bài chứa text của MỌI kênh, tách bằng heading
-  `## post:<post_format>`. Không tách ra nhiều file `.txt`/`.md` theo kênh.
-- **Một dòng Post cho mỗi khối**, với `post_content` = anchor tương ứng (vd `post:facebook_post`;
-  trùng format thì thêm `#2`). `channel` chỉ lấy từ `Campaign.channels`.
-- Danh sách CTA + claim cần nguồn.
-- `Content.status = in_production`, `Post.agent_status = completed`.
+- Với `campaign`: File `content.md` chứa các khối `## post:<format>`, danh sách CTA và claim cần kiểm chứng.
+- Với `standalone-edit`: Bản sửa hoàn chỉnh kèm bảng giải thích thay đổi.
 
-**Bất biến phải giữ:** số khối `## post:` = số dòng Post. Lệch = khối mồ côi hoặc anchor chết.
+## Kiểm tra chất lượng & Ranh giới an toàn
+- Giữ nguyên sự thật và giọng tác giả; không tự ý thay đổi offer, cam kết hoặc chính sách giá.
+- Không bịa đặt chứng chỉ, logo đối tác hoặc lời chứng thực của khách hàng.
+- Số khối `## post:` phải khớp chính xác số dòng Post trong campaign.
 
-## Ranh giới (bắt buộc)
-- KHÔNG bịa kết quả hiệu quả, lời khách hàng, logo, endorsement, điều khoản ưu đãi.
-- Nội dung public phải đúng giọng của kênh: `brand.md` ở gốc kênh + `output_styles/`.
-- Phát hành và phân phối trả phí cần người duyệt — cổng 2 (`Post.review_status = approved`).
+## Tài liệu tham khảo
+- Sổ tay biên tập 7 lượt: `knowledge/playbooks/COPY_EDITING.md`
+- Công thức viết: `knowledge/playbooks/COPY_FRAMEWORKS.md`
+- Checklist QA: `.agents/checklists/QA_ASSET.md`

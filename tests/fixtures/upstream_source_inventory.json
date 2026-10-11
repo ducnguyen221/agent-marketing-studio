@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "coreyhaines31/marketingskills",
+    "url": "https://github.com/coreyhaines31/marketingskills",
+    "commit": "1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff",
+    "reviewed_at": "2026-10-10",
+    "tree_sha": "b764dce2c4444ed7b4b71d6e564ec7da270c829f",
+    "license": {
+      "path": "LICENSE",
+      "blob_sha": "7c48dd638a9ebed49a8ef0c0c4eea90105381cdf",
+      "spdx": "MIT",
+      "copyright": "Copyright (c) 2025 Corey Haines",
+      "sha256": "b70d71e24e40fce5da8f4b6f9cd862096a048e433db7f3c8cac5e348e6d34591"
+    },
+    "files": {
+      "skills/customer-research/SKILL.md": "905e65e67268448d88b3b96cf045c6b3615cdd87c1060e129b148a31aa627669",
+      "skills/product-marketing/SKILL.md": "6dfd6bd485f62448385844cb9eceefcee0977c843d7a1c9e6077590d4e19d1ec",
+      "skills/content-strategy/SKILL.md": "dce9f4027ae129691e92623541a360bee9356137a7eecf68afa95674af118e68",
+      "skills/copy-editing/SKILL.md": "d23184ad62cbe29f64684b934c99d4ae8c7f03dec9c5a5d6bd492d645f5b9719",
+      "skills/copywriting/SKILL.md": "78c0a09b78a41995ba055d6549bbd7db3fe958673d039b9121e7a2e32bb4bb06",
+      "skills/offers/SKILL.md": "f27239be82e5d4ad42daa944fad7d0a640b80ca82697ba7399843437a001e5aa",
+      "skills/lead-magnets/SKILL.md": "190a64c72a9a36fdde3a6b0888798e1bb9dd4e7406b00a6bbf90dba5e64c047b",
+      "skills/emails/SKILL.md": "0d27de40c2eb32eb2425a48805dc1bf0210d64d0ce384cd48860697020f5a573",
+      "skills/cro/SKILL.md": "6e172cc38178c800ff41ceb097f36c6a1db8035fb88a1fee53043f8ec38a6f35",
+      "skills/analytics/SKILL.md": "73405dd294aaedbcd2b3fe00ef44691963fa8d1c6c280a3d46179a33f067f984",
+      "skills/ab-testing/SKILL.md": "bde64a0c54013a9003b9967f5be61758a3302cbcde2145c6a13a6d8a49d9f342",
+      "skills/attribution/SKILL.md": "b0493b97f7a22d6daf7fe47a67e8dc050e5cca98fe952df7dea2bf296853c978"
+    }
+  }
+}

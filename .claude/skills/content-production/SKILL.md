@@ -1,9 +1,6 @@
 ---
 name: content-production
-description: >
-  Sản xuất nội dung sẵn-đăng theo từng kênh từ một Content ĐÃ DUYỆT và dữ kiện đã kiểm chứng.
-  Dùng khi soạn bài blog, post social, caption, newsletter, landing copy, hoặc tái chế nội
-  dung. Chạy ở khâu ③ produce, sau cổng 1.
+description: Produce ready-to-publish multi-channel assets from an approved campaign item, or polish independent drafts via 7-pass copy editing without bypassing campaign gates.
 ---
 
 # content-production — adapter nguồn

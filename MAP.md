@@ -8,13 +8,13 @@
 
 | Khâu / Nhiệm Vụ | Điểm Bắt Đầu | Tài Liệu Cần Đọc Tiếp | Tài Liệu Tuyệt Đối KHÔNG Đọc |
 |---|---|---|---|
-| **① Khởi tạo Chiến dịch (new)** | `workflows/01_new_campaign.md` | • `templates/station/_channel/_campaign/campaign.md`<br>• `knowledge/data_model/DATA_MODEL.md` (Nhóm Strategic Brief) | • `output_styles/*`<br>• `knowledge/playbooks/*`<br>• `knowledge/toolchains/*` |
+| **① Khởi tạo Chiến dịch (new)** | `workflows/01_new_campaign.md` | • `.agents/skills/marketing-routing/SKILL.md` nếu chưa rõ hướng<br>• `.agents/skills/campaign-pipeline/SKILL.md`<br>• `templates/station/_channel/_campaign/campaign.md`<br>• `knowledge/data_model/DATA_MODEL.md` (Strategic Brief) | • `output_styles/*`<br>• Playbook không liên quan tới quyết định hiện tại |
 | **② Lập Kế hoạch Content (plan)** | `workflows/02_plan_content.md` | • `knowledge/playbooks/SEO_PLAYBOOK.md`<br>• `knowledge/playbooks/COPY_FRAMEWORKS.md`<br>• frontmatter `campaign.md` của chiến dịch<br>• `continuity.json` của kênh (tránh trùng đề tài) | • `knowledge/toolchains/*`<br>• `output_styles/*` (chưa cần ở bước ý tưởng) |
 | **③ Viết Bài Đa Kênh (produce)** | `workflows/03_produce_content.md` | **Bắt buộc cả ba:**<br>• `campaign.md` của chiến dịch<br>• `brand.md` ở gốc kênh (fail-closed)<br>• `research.md` của chính bài<br>Rồi: `output_styles/<brand_style>.md` · `.agents/skills/hook-writer/SKILL.md` | • `workflows/06_publish.md`<br>• `knowledge/toolchains/PLATFORM_SETUP.md` |
 | **④ Máy Tự Kiểm Tra (selfqa)** | `workflows/04_self_qa.md` | • `.agents/checklists/QA_ASSET.md`<br>• `output_styles/<brand_style>.md` | • `templates/*`<br>• `knowledge/toolchains/*` |
 | **⑤ Dựng Asset Hình/Tiếng (render)**| `workflows/05_render_assets.md` | • `knowledge/toolchains/ASSET_TOOLCHAIN.md` | • `output_styles/*`<br>• `knowledge/playbooks/*` |
 | **⑥ Đăng Bài & Hẹn Giờ (publish)** | `workflows/06_publish.md` | • `knowledge/toolchains/ATLAS_CHANNEL.md` (trình tự 10 bước một bài blog)<br>• `knowledge/toolchains/PLATFORM_SETUP.md`<br>• Hồ sơ `.md` Mục 5 (Giờ vàng đăng bài) | • `templates/*`<br>• `knowledge/psychology/*` |
-| **⑦ Đo Lường & Báo Cáo (measure)**| `workflows/07_measure.md` | • `knowledge/data_model/DATA_MODEL.md` (Nhóm Measurement)<br>• `campaign.md` Mục 9 (nơi DUY NHẤT giữ lịch sử đo) | • `output_styles/*`<br>• `templates/*` |
+| **⑦ Đo Lường & Báo Cáo (measure)**| `workflows/07_measure.md` | • `.agents/roles/growth-analyst.md`<br>• `knowledge/data_model/DATA_MODEL.md` (Measurement)<br>• `campaign.md` Mục 9 (nơi DUY NHẤT giữ lịch sử đo)<br>• Trước publish: hỏi growth-analyst để tư vấn kế hoạch KPI/tracking | • `output_styles/*`<br>• Template không liên quan tới câu hỏi đo lường |
 
 ---
 
@@ -82,6 +82,26 @@
 | **Số đo thật của bài đã đăng, để đặt ngưỡng** | `fixtures/baseline/blog_baseline.md` |
 | **Dựng ảnh infographic tóm tắt cả bài** (prompt mẫu + cổng kiểm chính tả) | `templates/IMAGE_GUIDELINES.md` |
 | Nguồn chưng cất của kho tri thức (ghi công) | `knowledge/README.md` |
+
+## 4. Bảng chọn skill (sinh từ catalog)
+
+Đọc catalog cho điều kiện mode/đầu vào/đầu ra; dùng router khi chưa rõ năng lực. Gọi thẳng skill phù hợp là fast path.
+
+<!-- SKILL_ROUTING:START -->
+| Skill | Tình huống | Đầu ra | Ranh giới |
+|---|---|---|---|
+| marketing-routing | The right capability is unclear or the request has multiple steps.; A campaign brief needs clarification or its valid next step is unclear. | need_and_scope; missing_information; primary_skill_and_reason; next_step_and_stop_condition | The user directly invoked a suitable skill for a single-skill request.; The request asks to approve a gate, publish, or update actual metrics. |
+| campaign-pipeline | The user wants to prepare or continue a specific campaign.; The current campaign stage or valid next step must be identified. | campaign_status_and_blocker; valid_next_step; prepared_campaign_artifact_or_stage_output | Only customer research or independent draft editing is requested.; Required paths or brief details are missing for campaign creation, or production gates are unmet. |
+| content-production | Content must be produced from campaign items that passed Gate 1.; Channel-specific assets are needed from an established brief, voice, and sources.; An independent draft must be edited, polished, or revised without changing facts or voice. | channel_formatted_content; claims_needing_sources; qa_ready_post_entries; edited_draft_with_change_notes | The campaign has not passed Gate 1 or required campaign, brand, or research inputs are missing.; Strategy consultation, offer changes, or edits that bypass campaign gates are requested. |
+| hook-writer | The current step needs distinct openings grounded in the message and sources. | hook_options_with_distinct_angles | A campaign, content calendar, or complete asset is needed. |
+| thread-writer | The requested output is a thread or multi-part post sequence. | thread_outline; connected_post_draft; CTA | A content calendar, full campaign, or single non-thread post is needed. |
+| customer-research | The user wants to understand buyer needs, objections, or real feedback.; Customer reviews, interview transcripts, or survey responses must be analyzed. | customer_insights_by_segment; voice_of_customer_matrix; research_gaps | The task only needs ad-hoc news research for an individual article.; A complete brief is already available and drafting is requested. |
+| content-strategy | The user asks what to write this month, needs a content calendar, or wants an SEO topic cluster.; Content topics must be scored and prioritized by business impact and audience demand. | prioritized_topics_matrix; topic_cluster_map; distribution_plan | A specific topic is already selected and needs drafting or execution.; The request is to review campaign progression across the 7 stages. |
+| offer-design | Packaging a service, course, software, or consulting offer into a complete offer stack.; Designing bonuses and risk-reversal guarantees for an existing product. | offer_brief; value_stack; risk_reversal_terms | The offer is already finalized and only copy drafting is requested.; The user asks to unilaterally change prices, discounts, or legal terms without approval. |
+| lead-generation | Designing a lead magnet to capture targeted prospect interest.; Drafting opt-in page copy, delivery messaging, or a nurture email sequence. | lead_magnet_plan; optin_copy; nurture_email_sequence | The user requests sending bulk emails, configuring live CRMs, or collecting sensitive PII.; A complete campaign already exists and only asset QA is requested. |
+| conversion-optimization | A landing page or opt-in form receives traffic but exhibits low conversion rates.; Diagnosing friction, visual hierarchy, or missing value propositions on conversion assets. | cro_diagnostic_report; quick_wins_list; test_hypotheses_matrix | The task only requires minor text polishing for a social post or blog article.; The user demands guaranteed conversion percentage increases without testing. |
+| marketing-measurement | Setting up campaign tracking, event taxonomy, UTM conventions, or KPI hierarchies.; Designing controlled A/B test briefs with sample sizes, primary metrics, and guardrails. | tracking_plan; experiment_brief; measurement_snapshot_report | The user assumes automated live analytics sync without manual entry or data verification.; A complete campaign is not yet published and drafting copy is requested. |
+<!-- SKILL_ROUTING:END -->
 
 **Luật chống ảo giác:** thư mục chỉ có `README`/`.gitkeep` = kho rỗng — không suy nội dung từ tên thư mục.
 File không có thông tin thì nói "chưa có", đừng dựng ra.

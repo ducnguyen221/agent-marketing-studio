@@ -19,6 +19,8 @@
 
 ## 1. Trình Tự Thực Thi
 
+Chạy QA cho nội dung campaign sau production. Tư vấn/phân tích độc lập không mở QA gate; nếu draft thuộc campaign, dùng trạng thái và workflow của campaign đó.
+
 1. **Chạy Bộ Checklist QA:**
    - Đối chiếu với bảng kiểm tra [`.agents/checklists/QA_ASSET.md`](../.agents/checklists/QA_ASSET.md).
    - Kiểm tra giọng văn thương hiệu (`output_styles/`).
@@ -37,6 +39,6 @@
 ## 🔒 CỔNG 2: PHÊ DUYỆT XUẤT BẢN (Human Gate 2)
 
 > ⚠️ **Điều kiện tiên quyết để chuyển sang Khâu ⑤ Render và Khâu ⑥ Publish:**
-> - `Post.review_status = approved`
+> - `posts[].review.status = approved`, kèm `approved_by` và câu duyệt nguyên văn
 > 
 > **Agent TUYỆT ĐỐI KHÔNG tự động tick duyệt cổng này.**

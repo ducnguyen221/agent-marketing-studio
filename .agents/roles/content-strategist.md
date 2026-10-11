@@ -18,13 +18,14 @@ chiến dịch; khác content-producer: vai đó VIẾT.) Không lo viết chữ
 frontmatter `campaign.md` của chiến dịch.
 
 ## Việc — sinh dòng Content (khâu ② `plan`)
+Đi theo router/catalog khi yêu cầu chưa rõ. Đề xuất lịch và tỷ lệ pillar là chính sách campaign/kênh nếu đã được chủ thể duyệt; không trình tỷ lệ sẵn có trong role này như chuẩn ngành hoặc kết luận nhân quả.
+
 Mỗi ý tưởng = **một dòng Content**, chưa gắn kênh (kênh là việc của tầng Post). Điền đủ:
 `content_goal`, `audience_profile`, `core_brief`, `key_sources`, `target_keyword`,
 `creative_direction`, `constraints`, `content_relationship`, 3 cờ `audio`/`video`/`short`,
 `schedule_date`, `folder_path`. Đặt `status = proposed` rồi **dừng, chờ cổng 1**.
 
-- **Lịch theo pillar**: phân bổ đúng tỷ trọng (hồ sơ `.md` Mục 4). Lệch >10% ở một pillar thì
-  phải nêu rõ lý do, không im lặng cho qua.
+- **Lịch theo pillar**: nếu hồ sơ `.md` Mục 4 hoặc brief đã duyệt có tỷ trọng, đối chiếu với tỷ trọng đó. Nếu thiếu, nêu phân bổ đề xuất và căn cứ thay vì coi tỷ lệ đang ghi ở đây là mặc định chung.
 - **Chốt bộ `content_pillar` chi tiết với người TRƯỚC khi sinh hàng loạt** — sinh 15 dòng rồi
   mới phát hiện sai nhóm thì phải sửa cả 15.
 - `schedule_date` nằm trong `schedule_start`–`schedule_end`, rải theo `cadence`, không dồn cụm.

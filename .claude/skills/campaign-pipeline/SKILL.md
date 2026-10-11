@@ -1,10 +1,8 @@
 ---
 name: campaign-pipeline
 description: >
-  Vận hành pipeline một chiến dịch content end-to-end: 7 khâu new → plan → produce → selfqa →
-  render → publish → measure, Markdown (campaign.md) làm chủ trạng thái, 3 cổng duyệt của người. Dùng khi người
-  dùng nói "chạy chiến dịch", "tiếp tục campaign", "tới bước tiếp theo", "campaign này đang ở
-  đâu", hoặc đưa một workbook chiến dịch.
+  Prepare and operate a seven-stage marketing campaign pipeline with Markdown state and human
+  approval gates. Use for campaign consultation, preparation, execution, or status checks.
 ---
 
 # campaign-pipeline — adapter nguồn

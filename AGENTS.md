@@ -41,7 +41,7 @@ canonical: true
 
 ## 2. Bản Đồ Ngữ Cảnh & Thứ Tự Đọc (Context Navigation)
 
-> 📍 **Tra cứu nhanh tại [MAP.md](MAP.md) trước khi thực hiện bất kỳ nhiệm vụ nào.** Agent tuyệt đối không đọc toàn bộ kho tri thức một lúc.
+> 📍 **Tra cứu nhanh tại [MAP.md](MAP.md) trước khi thực hiện bất kỳ nhiệm vụ nào.** Khi chưa rõ năng lực phù hợp, dùng `.agents/skills/marketing-routing/SKILL.md`; nếu người dùng gọi rõ skill phù hợp thì đi thẳng theo phần catalog liên quan. Agent tuyệt đối không đọc toàn bộ kho tri thức một lúc.
 
 ### Ba nguồn tài liệu cốt lõi:
 1. [`knowledge/data_model/DATA_MODEL.md`](knowledge/data_model/DATA_MODEL.md) — Định nghĩa chi tiết 75 trường dữ liệu và ràng buộc.
@@ -69,8 +69,12 @@ canonical: true
   (có `--bulk` để tạo cả loạt). Chúng copy từ `templates/` và ghi đúng chỗ.
   **Tuyệt đối không tự dựng thư mục bằng tay.**
 - **`new_post.py` CHẶN** nếu `campaign.md` chưa điền đủ tám trường bắt buộc. Điền xong hãy tạo bài.
-- **Trước khi viết một chữ, agent PHẢI đọc:** `campaign.md` của chiến dịch · `brand.md` của
-  kênh · `research.md` của chính bài đó. Chi tiết ở `knowledge/toolchains/ATLAS_CHANNEL.md`.
+- **Trước khi sản xuất nội dung thuộc campaign, agent PHẢI đọc:** `campaign.md` của chiến dịch ·
+  `brand.md` của kênh · `research.md` của chính bài đó. Chi tiết ở
+  `knowledge/toolchains/ATLAS_CHANNEL.md`. Tư vấn/phân tích hoặc biên tập draft độc lập không tạo
+  campaign/post hay ghi approval state. Draft thuộc campaign luôn theo mode campaign và điều kiện
+  G1; không dùng yêu cầu sửa để né cổng. Chỉ dùng mode đã khai trong catalog, không gọi mode chưa
+  hỗ trợ như thể đã có.
 
 ---
 

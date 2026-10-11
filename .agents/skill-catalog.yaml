@@ -1,0 +1,279 @@
+schema: 1
+skills:
+  - id: marketing-routing
+    path: .agents/skills/marketing-routing/SKILL.md
+    summary: Route by scope, current state, inputs, and desired output.
+    use_when:
+      - The right capability is unclear or the request has multiple steps.
+      - A campaign brief needs clarification or its valid next step is unclear.
+    do_not_use_when:
+      - The user directly invoked a suitable skill for a single-skill request.
+      - The request asks to approve a gate, publish, or update actual metrics.
+    stages: [cross-cutting]
+    modes: [consult, prepare, execute, standalone-edit]
+    requires:
+      consult:
+        read: [user_request, supplied_sources_or_missing_source]
+        write: []
+      prepare:
+        read: [brief, existing_campaign_context_when_provided]
+        write: []
+      execute:
+        read: [current_stage_documents, current_state, applicable_gate]
+        write: []
+      standalone-edit:
+        read: [independent_draft, edit_goal, voice, supplied_sources]
+        write: []
+    outputs: [need_and_scope, missing_information, primary_skill_and_reason, next_step_and_stop_condition]
+    supports: []
+    references: [.agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+  - id: campaign-pipeline
+    path: .agents/skills/campaign-pipeline/SKILL.md
+    summary: Read and continue a campaign through seven stages with Markdown state and human gates.
+    use_when:
+      - The user wants to prepare or continue a specific campaign.
+      - The current campaign stage or valid next step must be identified.
+    do_not_use_when:
+      - Only customer research or independent draft editing is requested.
+      - Required paths or brief details are missing for campaign creation, or production gates are unmet.
+    stages: [new, plan, produce, selfqa, render, publish, measure]
+    modes: [consult, prepare, execute]
+    requires:
+      consult:
+        read: [user_question, supplied_campaign_or_brief, DATA_MODEL.md_when_gate_or_field_is_unclear]
+        write: []
+      prepare:
+        read: [campaign_brief, channel_context, DATA_MODEL.md, new_and_plan_workflows]
+        write: [campaign_artifact_via_existing_script_after_required_inputs]
+      execute:
+        read: [current_campaign_and_post_state, workflow_for_current_stage, applicable_gate]
+        write: [only_current_stage_outputs_and_fields_per_existing_script]
+    outputs: [campaign_status_and_blocker, valid_next_step, prepared_campaign_artifact_or_stage_output]
+    supports: [content-production, hook-writer, thread-writer]
+    references: [knowledge/data_model/DATA_MODEL.md, workflows/00_WORKFLOW_INDEX.md, .agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+  - id: content-production
+    path: .agents/skills/content-production/SKILL.md
+    summary: Produce and QA eligible campaign content in required channel formats, or polish independent drafts via 7-pass copy editing.
+    use_when:
+      - Content must be produced from campaign items that passed Gate 1.
+      - Channel-specific assets are needed from an established brief, voice, and sources.
+      - An independent draft must be edited, polished, or revised without changing facts or voice.
+    do_not_use_when:
+      - The campaign has not passed Gate 1 or required campaign, brand, or research inputs are missing.
+      - Strategy consultation, offer changes, or edits that bypass campaign gates are requested.
+    stages: [produce, standalone]
+    modes: [execute, standalone-edit]
+    requires:
+      execute:
+        read: [approved_campaign_content_with_g1, channel_brand, post_research, COPY_FRAMEWORKS.md]
+        write: [campaign_content_md_and_publish_json_via_existing_process]
+      standalone-edit:
+        read: [independent_draft, edit_goal, channel_voice, supplied_sources, COPY_EDITING.md]
+        write: []
+    outputs: [channel_formatted_content, claims_needing_sources, qa_ready_post_entries, edited_draft_with_change_notes]
+    supports: [hook-writer, thread-writer]
+    references: [knowledge/playbooks/COPY_FRAMEWORKS.md, knowledge/playbooks/COPY_EDITING.md, .agents/checklists/QA_ASSET.md]
+    maturity: candidate
+    evidence: []
+
+  - id: hook-writer
+    path: .agents/skills/hook-writer/SKILL.md
+    summary: Write and compare hooks, headlines, or opening lines for an existing brief.
+    use_when:
+      - The current step needs distinct openings grounded in the message and sources.
+    do_not_use_when:
+      - A campaign, content calendar, or complete asset is needed.
+    stages: [produce, standalone]
+    modes: [execute, standalone-edit]
+    requires:
+      execute:
+        read: [approved_campaign_brief, channel_voice, supplied_sources]
+        write: [hook_options_for_current_content]
+      standalone-edit:
+        read: [independent_draft_or_topic, edit_goal, channel_voice, supplied_sources]
+        write: []
+    outputs: [hook_options_with_distinct_angles]
+    supports: []
+    references: [knowledge/playbooks/COPY_FRAMEWORKS.md]
+    maturity: candidate
+    evidence: []
+
+  - id: thread-writer
+    path: .agents/skills/thread-writer/SKILL.md
+    summary: Plan and write a connected thread around one argument and a clear CTA.
+    use_when:
+      - The requested output is a thread or multi-part post sequence.
+    do_not_use_when:
+      - A content calendar, full campaign, or single non-thread post is needed.
+    stages: [produce, standalone]
+    modes: [execute, standalone-edit]
+    requires:
+      execute:
+        read: [approved_campaign_brief, channel_voice, supplied_sources]
+        write: [thread_draft_for_current_content]
+      standalone-edit:
+        read: [independent_draft_or_topic, edit_goal, channel_voice, supplied_sources]
+        write: []
+    outputs: [thread_outline, connected_post_draft, CTA]
+    supports: []
+    references: [knowledge/playbooks/COPY_FRAMEWORKS.md]
+    maturity: candidate
+    evidence: []
+
+  - id: customer-research
+    path: .agents/skills/customer-research/SKILL.md
+    summary: Analyze customer reviews, transcripts, or survey responses to extract verified pains, desires, objections, and verbatim customer language by segment without inventing personas.
+    use_when:
+      - The user wants to understand buyer needs, objections, or real feedback.
+      - Customer reviews, interview transcripts, or survey responses must be analyzed.
+    do_not_use_when:
+      - The task only needs ad-hoc news research for an individual article.
+      - A complete brief is already available and drafting is requested.
+    stages: [plan, standalone]
+    modes: [consult, prepare]
+    requires:
+      consult:
+        read: [customer_feedback_or_transcript, product_context]
+        write: []
+      prepare:
+        read: [customer_feedback_or_transcript, product_context]
+        write: []
+    outputs: [customer_insights_by_segment, voice_of_customer_matrix, research_gaps]
+    supports: []
+    references: [knowledge/playbooks/CUSTOMER_RESEARCH.md, templates/CUSTOMER_RESEARCH_TEMPLATE.md, .agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+  - id: content-strategy
+    path: .agents/skills/content-strategy/SKILL.md
+    summary: Turn business goals and customer insights into prioritized content topics, pillar-spoke topic clusters, customer journey mapping, and distribution plans without writing full drafts.
+    use_when:
+      - The user asks what to write this month, needs a content calendar, or wants an SEO topic cluster.
+      - Content topics must be scored and prioritized by business impact and audience demand.
+    do_not_use_when:
+      - A specific topic is already selected and needs drafting or execution.
+      - The request is to review campaign progression across the 7 stages.
+    stages: [plan, standalone]
+    modes: [consult, prepare]
+    requires:
+      consult:
+        read: [business_goals, audience_segments, customer_insights_when_available]
+        write: []
+      prepare:
+        read: [business_goals, audience_segments, customer_insights_when_available, templates/CONTENT_PRIORITY_TEMPLATE.md]
+        write: []
+    outputs: [prioritized_topics_matrix, topic_cluster_map, distribution_plan]
+    supports: [customer-research]
+    references: [knowledge/playbooks/CONTENT_STRATEGY.md, templates/CONTENT_PRIORITY_TEMPLATE.md, .agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+  - id: offer-design
+    path: .agents/skills/offer-design/SKILL.md
+    summary: Package services, courses, or solutions into compelling offer stacks with deliverables, bonuses, risk reversal, and scope boundaries without unilaterally setting prices.
+    use_when:
+      - Packaging a service, course, software, or consulting offer into a complete offer stack.
+      - Designing bonuses and risk-reversal guarantees for an existing product.
+    do_not_use_when:
+      - The offer is already finalized and only copy drafting is requested.
+      - The user asks to unilaterally change prices, discounts, or legal terms without approval.
+    stages: [plan, standalone]
+    modes: [consult, prepare]
+    requires:
+      consult:
+        read: [product_context, target_audience, core_deliverables]
+        write: []
+      prepare:
+        read: [product_context, target_audience, core_deliverables, templates/OFFER_BRIEF_TEMPLATE.md]
+        write: []
+    outputs: [offer_brief, value_stack, risk_reversal_terms]
+    supports: [customer-research]
+    references: [knowledge/playbooks/OFFER_DESIGN.md, templates/OFFER_BRIEF_TEMPLATE.md, .agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+  - id: lead-generation
+    path: .agents/skills/lead-generation/SKILL.md
+    summary: Design targeted lead magnets, opt-in page blueprints, delivery flows, and nurture email sequences without sending emails or collecting sensitive personal data.
+    use_when:
+      - Designing a lead magnet to capture targeted prospect interest.
+      - Drafting opt-in page copy, delivery messaging, or a nurture email sequence.
+    do_not_use_when:
+      - The user requests sending bulk emails, configuring live CRMs, or collecting sensitive PII.
+      - A complete campaign already exists and only asset QA is requested.
+    stages: [plan, produce, standalone]
+    modes: [consult, prepare, execute]
+    requires:
+      consult:
+        read: [target_audience, core_problem, core_offer]
+        write: []
+      prepare:
+        read: [target_audience, core_problem, core_offer, templates/LEAD_MAGNET_TEMPLATE.md]
+        write: []
+      execute:
+        read: [lead_magnet_brief, email_sequence_blueprint, channel_voice]
+        write: [lead_magnet_copy_and_nurture_emails]
+    outputs: [lead_magnet_plan, optin_copy, nurture_email_sequence]
+    supports: [offer-design, content-production]
+    references: [knowledge/playbooks/LEAD_GENERATION.md, templates/LEAD_MAGNET_TEMPLATE.md, .agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+  - id: conversion-optimization
+    path: .agents/skills/conversion-optimization/SKILL.md
+    summary: Diagnose landing pages and conversion flows for friction, lack of clarity, or missing proof, and propose evidence-grounded hypotheses without promising unverified lift percentages.
+    use_when:
+      - A landing page or opt-in form receives traffic but exhibits low conversion rates.
+      - Diagnosing friction, visual hierarchy, or missing value propositions on conversion assets.
+    do_not_use_when:
+      - The task only requires minor text polishing for a social post or blog article.
+      - The user demands guaranteed conversion percentage increases without testing.
+    stages: [plan, standalone]
+    modes: [consult, prepare]
+    requires:
+      consult:
+        read: [landing_page_or_form_content, conversion_goal]
+        write: []
+      prepare:
+        read: [landing_page_or_form_content, conversion_goal, CRO_PLAYBOOK.md]
+        write: []
+    outputs: [cro_diagnostic_report, quick_wins_list, test_hypotheses_matrix]
+    supports: []
+    references: [knowledge/playbooks/CRO_PLAYBOOK.md, .agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+  - id: marketing-measurement
+    path: .agents/skills/marketing-measurement/SKILL.md
+    summary: Design tracking plans, UTM conventions, metric hierarchies, and controlled A/B test briefs without claiming unverified analytics connectors or declaring premature winners.
+    use_when:
+      - Setting up campaign tracking, event taxonomy, UTM conventions, or KPI hierarchies.
+      - Designing controlled A/B test briefs with sample sizes, primary metrics, and guardrails.
+    do_not_use_when:
+      - The user assumes automated live analytics sync without manual entry or data verification.
+      - A complete campaign is not yet published and drafting copy is requested.
+    stages: [plan, measure, standalone]
+    modes: [consult, prepare, execute]
+    requires:
+      consult:
+        read: [business_goal, target_urls_or_channels]
+        write: []
+      prepare:
+        read: [business_goal, target_urls_or_channels, templates/TRACKING_PLAN_TEMPLATE.md, templates/EXPERIMENT_BRIEF_TEMPLATE.md]
+        write: []
+      execute:
+        read: [published_posts_actuals, workflows/07_measure.md, target_kpis]
+        write: [measurement_snapshots_appended_to_campaign]
+    outputs: [tracking_plan, experiment_brief, measurement_snapshot_report]
+    supports: []
+    references: [knowledge/playbooks/MEASUREMENT_PLAYBOOK.md, templates/TRACKING_PLAN_TEMPLATE.md, templates/EXPERIMENT_BRIEF_TEMPLATE.md, workflows/07_measure.md, .agents/skills/marketing-routing/references/consultation.md]
+    maturity: candidate
+    evidence: []
+
+pilot_routes: []

@@ -9,7 +9,7 @@
 
 ---
 
-## 0. ĐỌC TRƯỚC KHI VIẾT MỘT CHỮ — bắt buộc
+## 0. ĐỌC TRƯỚC KHI VIẾT NỘI DUNG CAMPAIGN — bắt buộc
 
 | # | Đọc gì | Không đọc thì sao |
 |---|---|---|
@@ -17,7 +17,7 @@
 | 2 | `brand.md` ở gốc kênh — tác giả là ai, giọng gì, chính kiến gì | ra bài trung tính, đúng mà nhạt — lỗi từng chạy suốt ba bài mà không ai thấy |
 | 3 | `research.md` của **chính bài đó** — mục tiêu và nguồn riêng của bài | viết theo trí nhớ; G05 bắt được nhưng đã mất một vòng |
 
-Đọc (2) **fail-closed**: đọc không được thì **DỪNG**, đừng viết tiếp với chính kiến rỗng.
+Đọc (2) **fail-closed**: đọc không được thì **DỪNG**, đừng viết tiếp với chính kiến rỗng. Quy tắc này áp dụng cho sản xuất nội dung thuộc campaign. Tư vấn, phân tích hoặc biên tập draft độc lập không tạo campaign/post hay approval state; chỉ dùng mode đã khai trong catalog. Draft thuộc campaign vẫn cần G1 và không được chuyển sang một mode độc lập để né cổng.
 
 Không cổng máy nào bắt được việc *có đọc hay không* — chỉ bắt được hậu quả. Vì vậy nó là
 kỷ luật, và nó được ghi ở ba chỗ: đây, docstring `new_post.py`, và `ATLAS_CHANNEL.md`.

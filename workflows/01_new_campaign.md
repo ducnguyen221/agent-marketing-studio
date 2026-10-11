@@ -11,6 +11,8 @@
 
 ## 1. Trình Tự Thực Thi
 
+Nếu brief chưa đủ hoặc yêu cầu còn mơ hồ, dùng tư vấn trong `.agents/skills/marketing-routing/SKILL.md` / `campaign-pipeline` để phản chiếu mục tiêu, nguồn lực, người đọc và đầu ra trước. Gom câu hỏi có thể đổi quyết định trong một lượt; thiếu đường dẫn hoặc trường bắt buộc thì chưa gọi script tạo kênh/campaign.
+
 ### Bước 0 — Đã có kênh chưa?
 
 Chiến dịch sống **bên trong một kênh**. Chưa có kênh thì tạo trước:

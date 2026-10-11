@@ -11,6 +11,8 @@
 
 ## 1. Trình Tự Thực Thi
 
+Đọc `.agents/roles/content-strategist.md` và catalog khi cần chọn năng lực. Tỷ lệ pillar/CTA chỉ là ràng buộc nếu campaign hoặc chủ kênh đã xác nhận; nếu chưa có, trình phương án và căn cứ để người quyết, không coi heuristic cũ là chuẩn ngành.
+
 1. **Nghiên cứu từ khóa & Chủ đề:** Tham khảo [`../knowledge/playbooks/SEO_PLAYBOOK.md`](../knowledge/playbooks/SEO_PLAYBOOK.md) và [`../knowledge/playbooks/COPY_FRAMEWORKS.md`](../knowledge/playbooks/COPY_FRAMEWORKS.md).
 2. **Sinh N dòng Content:**
    - Điền nhóm **Strategy:** `content_goal`, `audience_profile`, `core_brief`.
@@ -27,6 +29,6 @@
 
 > ⚠️ **Điều kiện tiên quyết để chuyển sang Khâu ③:**
 > - `Content.status = approved`
-> - `Content.approved_date = YYYY-MM-DD` (có ngày hợp lệ)
+> - `g1 = YYYY-MM-DD` (ngày người duyệt hợp lệ)
 > 
 > **Agent TUYỆT ĐỐI KHÔNG tự động tick duyệt cổng này.**

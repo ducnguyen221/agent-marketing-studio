@@ -1,10 +1,8 @@
 ---
 name: campaign-pipeline
 description: >
-  Vận hành pipeline một chiến dịch content end-to-end: 7 khâu new → plan → produce → selfqa →
-  render → publish → measure, Markdown (campaign.md) làm chủ trạng thái, 3 cổng duyệt của người. Dùng khi người
-  dùng nói "chạy chiến dịch", "tiếp tục campaign", "tới bước tiếp theo", "campaign này đang ở
-  đâu", hoặc đưa một workbook chiến dịch.
+  Prepare and operate a seven-stage marketing campaign pipeline with Markdown state and human
+  approval gates. Use for campaign consultation, preparation, execution, or status checks.
 ---
 
 # Campaign Pipeline — hợp đồng 7 khâu
@@ -23,7 +21,17 @@ description: >
 - **Ghi tới đâu xác nhận tới đó.** Ghi xong đọc lại. Cuối lượt báo đã đổi gì ở sheet nào.
 - **Giá trị lạ → báo người**, không im lặng bỏ qua dòng.
 
-## Luôn bắt đầu bằng hiện trạng
+## Modes
+
+| Mode | Đọc/làm | Ghi |
+|---|---|---|
+| `consult` | Phản chiếu mục tiêu, người đọc, phạm vi, nguồn và dữ kiện còn thiếu; tư vấn bước hợp lệ. Dùng source được giao dù nguồn đối chiếu khác chưa có; nói rõ giới hạn. | Trả trong chat hoặc file được giao; không tạo trạm/campaign/post, không ghi trạng thái hay approval. Không bắt buộc có station hoặc chạy `check_tree.py`. |
+| `prepare` | Hỏi gộp phần thiếu có thể đổi quyết định; đề xuất campaign và kiểm đường dẫn/đầu vào. | Chỉ tạo artifact qua script hiện có khi đủ brief, đường dẫn và phạm vi. Không produce trước G1. |
+| `execute` | Bắt đầu bằng hiện trạng của campaign và khâu đang được giao. | Chỉ ghi output/field của khâu hiện tại qua quy trình/script hiện có khi đủ điều kiện và cổng. |
+
+Trao đổi tư vấn không tự cấp G1/G2/G3. Sau khi người dùng đã chốt thông tin, dùng lại câu trả lời, không hỏi lại để xin quyền cho bước đã được giao. Nếu người dùng gọi thẳng skill này, không bắt buộc nạp lại router.
+
+## Hiện trạng khi execute
 
 Chạy `check_tree.py --station <trạm>` rồi đếm bảng Content theo `status` và `posts[]` theo
 `post_status`, rồi báo: đang tắc ở đâu, NGƯỜI cần đặt ô nào thành gì. Rồi mới hỏi người muốn chạy khâu nào (trừ khi họ đã nói rõ).
@@ -53,7 +61,7 @@ bài: Strategy / Knowledge / SEO / Creativity / Governance.
 `schedule_date` nằm trong khoảng campaign, rải theo `cadence`.
 **Ra:** `status = proposed` → **dừng, chờ cổng 1**.
 
-### 🔒 Cổng 1 — người duyệt Content
+### 🔒 Cổng 1 — người duyệt Content (`status = approved` và ngày `g1`)
 
 ### ③ `produce` — viết nội dung + sinh Post
 **Vào:** Content `approved`.
@@ -71,7 +79,7 @@ Facebook không markdown literal.
 **Nghi ngờ → để `failed` và ghi lý do, đừng tự xác nhận `passed`.**
 
 ### 🔒 Cổng 2 — người duyệt Post
-`changes_requested` → đọc `review.feedback`, sửa, chạy lại ④. Không có trạng thái trung gian
+`changes_requested` → đọc `posts[].review.feedback`, sửa, chạy lại ④. Không có trạng thái trung gian
 nào để đặt — `post_status` chỉ nhận `not_created` · `approved` · `published`.
 Không xoá feedback cũ.
 
@@ -82,7 +90,7 @@ HyperFrames render, OmniVoice lồng tiếng. Cờ `no` thì không dựng. Shor
 **Ra:** file trong `folder_path`, `post_status = approved`.
 
 ### ⑥ `publish`
-**Vào:** `review_status = approved` **và** `quality_check = passed`.
+**Vào:** `posts[].review.status = approved` **và** `quality_check = passed`.
 **Ra:** `publish_status`, `publish_link`, `post_status = published`; `Content.status = published`
 + `published_date`. Thiếu token → **dừng**, báo setup. Mặc định dry-run.
 
