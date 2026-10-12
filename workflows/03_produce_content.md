@@ -30,7 +30,12 @@ kỷ luật, và nó được ghi ở ba chỗ: đây, docstring `new_post.py`, 
 2. **Soạn BRIEF rồi từng khối kênh:**
    - Viết mục **BRIEF** trước — mọi khối `post:` bên dưới phải bám nó.
    - Mỗi kênh một khối `## post:<post_format>` (`blog_article`, `youtube_desc`,
-     `facebook_post`…). Neo phải **đúng chính tả, viết thường, không thêm chữ**.
+     `facebook_post`, `carousel_slides`, `reels_script`, `pinned_comment`…). Neo phải **đúng chính tả, viết thường, không thêm chữ**.
+   - Tham khảo các cẩm nang chuyển thể đa kênh chuyên sâu:
+     * Chuỗi chuyển thể 1-thành-5 & chống AI slop: [`../knowledge/playbooks/MULTICHANNEL_PUBLISHING.md`](../knowledge/playbooks/MULTICHANNEL_PUBLISHING.md)
+     * Kịch bản Video ngắn 3 cột cho OmniVoice/HyperFrames: [`../knowledge/playbooks/SHORT_FORM_VIDEO_PLAYBOOK.md`](../knowledge/playbooks/SHORT_FORM_VIDEO_PLAYBOOK.md)
+     * Kịch bản Slide Carousel & Prompt Whiteboard Infographic: [`../knowledge/playbooks/CAROUSEL_INFOGRAPHIC_PLAYBOOK.md`](../knowledge/playbooks/CAROUSEL_INFOGRAPHIC_PLAYBOOK.md)
+     * Bình luận ghim phễu chuyển đổi: [`../knowledge/playbooks/PINNED_COMMENT_PLAYBOOK.md`](../knowledge/playbooks/PINNED_COMMENT_PLAYBOOK.md)
    - Chỉ tạo khối cho kênh có trong `channels` của `campaign.md`. Kênh không đăng thì
      **xoá khối**, đừng để rỗng.
    - Cùng một brief phải **FORMAT LẠI** theo từng kênh, không copy y nguyên.

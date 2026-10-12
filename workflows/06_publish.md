@@ -57,7 +57,7 @@ không chứa link, nên người đọc không có đường nào đi tiếp.
 
    ⚠️ **Facebook bắt buộc có `--comment-id`.** Permalink Facebook trả HTTP 200 cả khi đó là
    trang đăng nhập, nên kiểm bằng HTTP ở đây là vô nghĩa — cái kiểm được là có `platform_id`
-   và có comment. Không có comment = bài mồ côi.
+   và có comment. Không có comment = bài mồ côi (xem chiến lược và 4 phong cách bình luận ghim tại [`../knowledge/playbooks/PINNED_COMMENT_PLAYBOOK.md`](../knowledge/playbooks/PINNED_COMMENT_PLAYBOOK.md)).
 
 5. **Quy trình Đăng Page & Share bài vào Group kèm Teaser Caption (Chuẩn vận hành):**
    - Khi chiến dịch phân phối nội dung đa kênh (vừa kéo tương tác cho Fanpage, vừa lan tỏa vào Group cộng đồng):

@@ -13,7 +13,7 @@
 
 Đọc `.agents/roles/content-strategist.md` và catalog khi cần chọn năng lực. Tỷ lệ pillar/CTA chỉ là ràng buộc nếu campaign hoặc chủ kênh đã xác nhận; nếu chưa có, trình phương án và căn cứ để người quyết, không coi heuristic cũ là chuẩn ngành.
 
-1. **Nghiên cứu từ khóa & Chủ đề:** Tham khảo [`../knowledge/playbooks/SEO_PLAYBOOK.md`](../knowledge/playbooks/SEO_PLAYBOOK.md) và [`../knowledge/playbooks/COPY_FRAMEWORKS.md`](../knowledge/playbooks/COPY_FRAMEWORKS.md).
+1. **Nghiên cứu từ khóa & Chủ đề:** Tham khảo [`../knowledge/playbooks/SEO_PLAYBOOK.md`](../knowledge/playbooks/SEO_PLAYBOOK.md), [`../knowledge/playbooks/COPY_FRAMEWORKS.md`](../knowledge/playbooks/COPY_FRAMEWORKS.md) và [`../knowledge/playbooks/CONTENT_MATRIX_PLAYBOOK.md`](../knowledge/playbooks/CONTENT_MATRIX_PLAYBOOK.md) (Ma trận Justin Welsh: 8 định dạng × Content Pillars để sinh ý tưởng đa góc nhìn).
 2. **Sinh N dòng Content:**
    - Điền nhóm **Strategy:** `content_goal`, `audience_profile`, `core_brief`.
    - Điền nhóm **Knowledge:** `key_sources`, `proof_points`.

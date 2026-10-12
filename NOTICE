@@ -35,6 +35,11 @@ Tham khảo thiết kế, không chép văn bản:
   đo của chính repo này. GitHub báo giấy phép của repo đó là "Other" — chưa kiểm chi tiết; không
   câu chữ hay mã nào của OpenClaw được chép vào đây.
 
+- charlie947/social-media-skills (https://github.com/charlie947/social-media-skills)
+  MIT — tham khảo kiến trúc thiết kế và phương pháp luận cho ma trận nội dung 8 định dạng,
+  kịch bản video ngắn 4 pha, slide carousel đa trang, bình luận ghim chuyển đổi và mobile-first formatting;
+  viết mới hoàn toàn bằng tiếng Việt cho mô hình đa kênh OpcOS, không chép mã hay văn bản.
+
 Giấy phép MIT của các nguồn trên (cùng một văn bản, khác dòng Copyright):
 
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software
