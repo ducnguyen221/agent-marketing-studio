@@ -54,6 +54,7 @@ def test_ten_plugin_trung_ten_repo():
     ten = {_json(".claude-plugin/plugin.json")["name"], _json(".codex-plugin/plugin.json")["name"],
            *(p["name"] for p in _json(".claude-plugin/marketplace.json")["plugins"])}
     assert ten == {"agent-marketing-team"}, ten
+    assert _json(".claude-plugin/marketplace.json")["name"] == "agent-marketing-team"
 
 
 def test_manifest_tro_dung_thu_muc_skill_that():

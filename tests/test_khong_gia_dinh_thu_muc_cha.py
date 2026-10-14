@@ -60,8 +60,10 @@ def test_quet_duoc_file():
 
 
 def test_mau_cam_bat_dung_cac_kieu_da_gap():
-    for mau in ("~/Code/agent-marketing-team", "$HOME/Code/news",
+    cu = "agent-marketing-" + "studio"        # tên cũ, ghép chuỗi để git grep không thêm dòng
+    for mau in ("~/Code/agent-marketing-team", f"~/Code/{cu}", "$HOME/Code/news",
                 "Join-Path $HOME (Join-Path 'Code' 'agent-marketing-team')",
+                f"Join-Path $HOME (Join-Path 'Code' '{cu}')",
                 'Path.home() / "Code"', r"D:\du-an\Code\agent-voice-studio"):
         assert CAM.search(mau), mau
     for sach in ("<thư mục cha chứa các repo>/agent-voice-studio", "`Code`, `Repo`",

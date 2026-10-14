@@ -389,9 +389,10 @@ def test_tram_ngoai_repo_khong_khai_bien_thi_DUNG_khong_doan_thu_muc_nha(tmp_pat
     """Không đi lên được tới repo, không biến ⇒ exit 2 nêu `MARKETING_STUDIO_HOME`. Mồi nhử:
     một repo ĐẦY ĐỦ ở `<nhà giả>/Code/agent-marketing-team` — đường lùi cũ — KHÔNG được dùng."""
     campaign = _tram(tmp_path, "-Brand ai")
-    moi = _nha(tmp_path) / "Code" / "agent-marketing-team" / "scripts" / "pipeline"
-    moi.mkdir(parents=True)
-    shutil.copyfile(GOC / "scripts" / "pipeline" / "campaign_cfg.py", moi / "campaign_cfg.py")
+    for ten in ("agent-marketing-team", "agent-marketing-" + "studio"):   # tên mới + tên cũ
+        moi = _nha(tmp_path) / "Code" / ten / "scripts" / "pipeline"
+        moi.mkdir(parents=True)
+        shutil.copyfile(GOC / "scripts" / "pipeline" / "campaign_cfg.py", moi / "campaign_cfg.py")
     r = _chay_khong_HOME_repo(campaign)
     assert r.returncode == 2, r.stdout + r.stderr
     assert "MARKETING_STUDIO_HOME" in r.stdout, r.stdout

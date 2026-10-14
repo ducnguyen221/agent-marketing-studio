@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="marketing-agent">
-  <title>marketing-agent</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Agent Marketing Team">
+  <title>Agent Marketing Team</title>
   <defs>
     <radialGradient id="glow" cx="82%" cy="0%" r="70%">
       <stop offset="0%" stop-color="#2f6df6" stop-opacity=".28"/>
@@ -27,7 +27,7 @@
   </g>
 
   <g font-family="Be Vietnam Pro, Segoe UI, Roboto, Noto Sans, sans-serif">
-    <text x="96" y="330" fill="#e9ebef" font-size="88" font-weight="800" letter-spacing="-2">marketing-agent</text>
+    <text x="96" y="330" fill="#e9ebef" font-size="88" font-weight="800" letter-spacing="-2">agent-marketing-team</text>
     <text x="96" y="398" fill="#a4abb6" font-size="34" font-weight="500">Chiến dịch marketing chạy end-to-end bằng AI — người vẫn cầm cương.</text>
     <text x="96" y="452" fill="#727984" font-size="27" font-weight="500">Brief → lịch nội dung → AI viết nháp → bạn duyệt → đăng → đo.</text>
   </g>
