@@ -74,7 +74,7 @@ def sample_campaign(tmp_path):
     (p01_dir / "content.md").write_text("# P01\n\n## post:facebook\nBài P01\n\n## post:group_share\nTeaser P01\n", encoding="utf-8")
     (p01_dir / "gates.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")
     (p01_dir / "publish.json").write_text(json.dumps({
-        "posts": [{"post_id": "p01_fb", "channel": "facebook", "review": {"status": "approved", "approved_by": "Tobi"}}]
+        "posts": [{"post_id": "p01_fb", "channel": "facebook", "review": {"status": "approved", "approved_by": "reviewer"}}]
     }), encoding="utf-8")
 
     # Dựng folder bài P02
@@ -83,7 +83,7 @@ def sample_campaign(tmp_path):
     (p02_dir / "content.md").write_text("# P02\n\n## post:facebook\nBài P02\n", encoding="utf-8")
     (p02_dir / "gates.json").write_text(json.dumps({"verdict": "pass"}), encoding="utf-8")
     (p02_dir / "publish.json").write_text(json.dumps({
-        "posts": [{"post_id": "p02_fb", "channel": "facebook", "review": {"status": "approved", "approved_by": "Tobi"}}]
+        "posts": [{"post_id": "p02_fb", "channel": "facebook", "review": {"status": "approved", "approved_by": "reviewer"}}]
     }), encoding="utf-8")
 
     # Dựng folder bài P04 (đã kiểm cổng kỹ thuật, đang chờ duyệt Cổng 2)

@@ -70,7 +70,7 @@ Theo triết lý của Charlie Hills:
 
 ## 4. Ràng Buộc Vận Hành Khâu ⑥ Xuất Bản (Publishing Guardrails)
 
-Theo hợp đồng Khâu ⑥ ([`workflows/06_publish.md`](../workflows/06_publish.md)):
+Theo hợp đồng Khâu ⑥ ([`workflows/06_publish.md`](../../workflows/06_publish.md)):
 1. **Lệnh đăng bài bắt buộc có `--comment-id`:**
    ```bash
    python scripts/pipeline/register_publish.py <thư_mục_bài> set --post fb \

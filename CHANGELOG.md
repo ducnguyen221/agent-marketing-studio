@@ -5,7 +5,7 @@ Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject
 
 ## 1.1.11 — 2026-10-14
 
-SPR-13: ví dụ station/video trong tài liệu dùng `<opcos>` và biến `VIDEO_STATION`/`MARKETING_STUDIO_DATA` thay đường cũ; không đổi hành vi.
+SPR-13: ví dụ station/video trong tài liệu dùng `<root>` và biến `VIDEO_STATION`/`MARKETING_STUDIO_DATA` thay đường cũ; không đổi hành vi.
 
 ## 1.1.10 — 2026-10-05
 

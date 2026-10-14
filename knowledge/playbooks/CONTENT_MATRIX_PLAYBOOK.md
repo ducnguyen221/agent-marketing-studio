@@ -52,7 +52,7 @@ Ví dụ cụ thể áp dụng ma trận 4 Trụ cột nội dung cho một chuy
 
 ## 4. Cách Tích Hợp Vào Khâu ② Lập Kế Hoạch (Campaign Planning)
 
-Trong quy trình vận hành `campaign-pipeline` ([`workflows/02_plan_content.md`](../workflows/02_plan_content.md)):
+Trong quy trình vận hành `campaign-pipeline` ([`workflows/02_plan_content.md`](../../workflows/02_plan_content.md)):
 1. **Khởi tạo chiến dịch:** Xác định 3–4 trụ cột nội dung trọng tâm của chiến dịch tại `campaign.md`.
 2. **Quét ma trận:** Chạy ma trận để sinh danh sách đề xuất (proposed content) trải đều qua 8 định dạng. Việc này đảm bảo chiến dịch có sự cân bằng:
    * 40% bài mang lại giá trị thực hành (Actionable, Listicle).

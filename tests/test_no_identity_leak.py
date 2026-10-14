@@ -307,7 +307,6 @@ MIEN_TRU = {
     (".agents/roles/content-strategist.md", "to-chuc"): 1,
     (".agents/roles/creative-producer.md", "to-chuc"): 1,
     (".agents/roles/qa-reviewer.md", "to-chuc"): 1,
-    (".agents/skills/content-production/SKILL.md", "to-chuc"): 1,
     (".agents/skills/hook-writer/SKILL.md", "to-chuc"): 1,
 }
 

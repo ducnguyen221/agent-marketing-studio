@@ -40,11 +40,11 @@ Khi phân tích một video ngắn thành công trên mạng để học hỏi:
 * **TUYỆT ĐỐI KHÔNG:** Chép lại lời thoại hoặc ăn cắp kịch bản nguyên văn.
 * **CÁCH LÀM ĐÚNG:** Bóc tách khung xương cơ học (Skeleton Extraction) rồi điền thịt da bằng kiến thức, số liệu và giọng nói thật của tác giả:
 
-| Yếu tố cơ học | Câu hỏi bóc tách | Cách chuyển thể sang nội dung OpcOS |
+| Yếu tố cơ học | Câu hỏi bóc tách | Cách chuyển thể sang nội dung của bạn |
 |---|---|---|
 | **Cơ chế Hook** | Video mẫu dùng câu hỏi, số liệu gây sốc, hay hành động kỳ lạ? | Thay thế bằng số đo thật từ bài toán nội bộ (vd: thời gian deploy, số lỗi DAX). |
 | **Nhịp cắt (Pacing)** | Bao nhiêu giây đổi khung hình/chữ một lần? | Chuẩn bị các thẻ đồ họa (graphic cards) trong HyperFrames xuất hiện mỗi 2.5–3.5 giây. |
-| **Góc nhìn lật ngược** | Điểm mấu chốt khiến video hấp dẫn là gì? | Dùng bài học thực tế từ dự án khách hàng của KPIM / OpcOS. |
+| **Góc nhìn lật ngược** | Điểm mấu chốt khiến video hấp dẫn là gì? | Dùng bài học thực tế từ dự án khách hàng của KPIM. |
 
 ---
 

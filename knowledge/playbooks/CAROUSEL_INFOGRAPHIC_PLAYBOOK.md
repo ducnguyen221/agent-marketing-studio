@@ -1,7 +1,7 @@
 # Thiết Kế Slide Carousel & Whiteboard Infographic (Carousel & Infographic Playbook)
 
 Cẩm nang biên soạn kịch bản Slide Carousel đa trang và cấu trúc Prompt sinh ảnh Infographic dạng vẽ tay (Whiteboard Style) cho Gemini / AI Visual Generator.
-Tham khảo kiến trúc thiết kế từ Charlie Hills (`charlie947/social-media-skills`, MIT). Viết mới hoàn toàn bằng tiếng Việt, thiết kế kết nối với `agent-slide-studio` và xưởng đồ họa của OpcOS.
+Tham khảo kiến trúc thiết kế từ Charlie Hills (`charlie947/social-media-skills`, MIT). Viết mới hoàn toàn bằng tiếng Việt, thiết kế kết nối với `agent-slide-studio` và xưởng đồ họa của hệ thống.
 
 ---
 

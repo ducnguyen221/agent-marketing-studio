@@ -1,6 +1,6 @@
 # Cẩm Nang Phân Phối Nội Dung Đa Kênh (Multichannel Publishing Playbook)
 
-Cẩm nang chiến lược và vận hành phân phối nội dung đa kênh (Omnichannel Engine) cho hệ thống OpcOS / Marketing Studio.
+Cẩm nang chiến lược và vận hành phân phối nội dung đa kênh (Omnichannel Engine) cho hệ thống Marketing Studio.
 Tham khảo kiến trúc thiết kế từ Charlie Hills (`charlie947/social-media-skills`, MIT). Viết mới hoàn toàn bằng tiếng Việt, tối ưu hoá cho mô hình chuyển hoá 1 ý tưởng lõi thành 5 định dạng trên các nền tảng số.
 
 ---
@@ -82,7 +82,7 @@ Hơn 85% người đọc mạng xã hội lướt bằng điện thoại di đ�
 
 ## 5. Quy Trình Xuất Bản Đồng Bộ (Cross-Platform Cadence)
 
-Theo hợp đồng Khâu ⑥ ([`workflows/06_publish.md`](../workflows/06_publish.md)):
+Theo hợp đồng Khâu ⑥ ([`workflows/06_publish.md`](../../workflows/06_publish.md)):
 1. **Lên sóng nội dung dài trước:** Xuất bản bài viết trên Website/Blog và video dài trên YouTube.
 2. **Kích hoạt mạng xã hội:** Xuất bản bài post rút gọn trên LinkedIn / Facebook, kèm theo:
    - File Slide Carousel hoặc Video Short nhúng kèm.
