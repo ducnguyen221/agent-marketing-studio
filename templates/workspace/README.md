@@ -1,6 +1,6 @@
 # Trạm nội dung — thư mục này là của BẠN
 
-Repo `agent-marketing-studio` chỉ chứa **engine**: script, cổng kiểm, quy trình, khuôn mẫu.
+Repo `agent-marketing-team` chỉ chứa **engine**: script, cổng kiểm, quy trình, khuôn mẫu.
 Thư mục này — gọi là **trạm** — chứa **nội dung của bạn**: kênh, chiến dịch, bài, nhật ký,
 sản phẩm đã dựng. Hai thứ tách nhau để cập nhật engine không bao giờ đụng vào nội dung.
 

@@ -63,7 +63,7 @@ def bo_cuc(tmp_path):
     _viet(mkt / "scripts" / "pipeline" / "campaign_cfg.py")
     (mkt / "scripts" / "lib").mkdir(parents=True)
     _viet(mkt / "install.ps1")
-    _viet(mkt / "pyproject.toml", '[project]\nname = "agent-marketing-studio"\n')
+    _viet(mkt / "pyproject.toml", '[project]\nname = "agent-marketing-team"\n')
     _viet(mkt / "studio.local.json", '{"mode": "embedded"}')
     ws = mkt / "workspace"
     _viet(ws / "CHANNELS.md", "---\nchannels: []\n---\n")

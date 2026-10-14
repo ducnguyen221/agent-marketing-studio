@@ -1,7 +1,7 @@
 # Chiến Lược Bình Luận Ghim & Giữ Tương Tác (Pinned Comment Playbook)
 
 Cẩm nang biên soạn bình luận ghim (Pinned Comment / First Comment) chiến lược trên Facebook, LinkedIn và YouTube.
-Tham khảo kiến trúc thiết kế từ Charlie Hills (`charlie947/social-media-skills`, MIT). Viết mới hoàn toàn bằng tiếng Việt, tích hợp trực tiếp vào quy tắc xuất bản Khâu ⑥ của `agent-marketing-studio` nhằm giải quyết dứt điểm bài toán "bài đăng mồ côi không có đường dẫn chuyển đổi".
+Tham khảo kiến trúc thiết kế từ Charlie Hills (`charlie947/social-media-skills`, MIT). Viết mới hoàn toàn bằng tiếng Việt, tích hợp trực tiếp vào quy tắc xuất bản Khâu ⑥ của `agent-marketing-team` nhằm giải quyết dứt điểm bài toán "bài đăng mồ côi không có đường dẫn chuyển đổi".
 
 ---
 

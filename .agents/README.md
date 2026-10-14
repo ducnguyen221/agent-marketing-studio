@@ -1,6 +1,6 @@
 # Hệ Thống Quản Trị Tác Nhân AI (.agents Control Plane)
 
-Thư mục này quản trị 10 vai trò tác nhân, kỹ năng thực thi và bộ kiểm định chất lượng cho hệ thống `agent-marketing-studio`.
+Thư mục này quản trị 10 vai trò tác nhân, kỹ năng thực thi và bộ kiểm định chất lượng cho hệ thống `agent-marketing-team`.
 Luật vận hành canonical nằm ở [`../AGENTS.md`](../AGENTS.md); bản đồ nạp tài liệu theo nhiệm vụ ở [`../MAP.md`](../MAP.md).
 
 ## 1. Mười Vai Trò Chuyên Trách (`roles/`)

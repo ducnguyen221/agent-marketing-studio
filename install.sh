@@ -1,5 +1,5 @@
 #!/bin/sh
-# Dựng một TRẠM agent-marketing-studio trên macOS / Linux.
+# Dựng một TRẠM agent-marketing-team trên macOS / Linux.
 #
 # Đây là VỎ, không phải bộ cài: nó chỉ tìm Python rồi giao việc cho
 # `scripts/pipeline/init_station.py`. Bản Windows (`install.ps1`) cũng chỉ làm đúng thế.
@@ -55,7 +55,7 @@ if [ -z "$PY" ]; then
   exit 1
 fi
 noi ""
-noi "=== agent-marketing-studio - dung tram noi dung ==="
+noi "=== agent-marketing-team - dung tram noi dung ==="
 noi "Python  : $("$PY" -c 'import sys;print("%d.%d" % sys.version_info[:2])') ($PY)"
 
 # ── 2. Phụ thuộc ─────────────────────────────────────────────────────────────

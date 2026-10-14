@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Hợp đồng gọi giữa ba trạm năng lực: mã thoát, lỗi có tên, một dòng JSON cuối stdout.
 
-Ba repo — `agent-marketing-studio`, `agent-voice-studio`, `agent-video-studio` — gọi qua
+Ba repo — `agent-marketing-team`, `agent-voice-studio`, `agent-video-studio` — gọi qua
 lại nhau bằng tiến trình con. Bên gọi không đọc được ngăn xếp Python của bên kia; thứ duy
 nhất nó thấy là **mã thoát** và **stdout**. Nên hai thứ đó phải là hợp đồng, giống nhau ở
 cả ba repo (bản của trạm giọng: `voice_studio/contract.py`).

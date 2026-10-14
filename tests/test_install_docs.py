@@ -31,7 +31,7 @@ def test_prompt_co_VI_va_EN_moi_ban_toi_da_12_dong():
     for ten, k in (("VI", vi), ("EN", en)):
         dong = k.strip("\n").splitlines()
         assert len(dong) <= 12, f"prompt {ten} dài {len(dong)} dòng (tối đa 12)"
-        assert "INSTALL.md" in k and "github.com/" in k and "/agent-marketing-studio" in k
+        assert "INSTALL.md" in k and "github.com/" in k and "/agent-marketing-team" in k
 
 
 def test_README_chep_dung_prompt_VI():

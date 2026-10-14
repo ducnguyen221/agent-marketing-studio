@@ -1,7 +1,7 @@
 ---
 title: "Offer Brief Template"
 doc: template
-repo: agent-marketing-studio
+repo: agent-marketing-team
 version: "1.1.10"
 ---
 

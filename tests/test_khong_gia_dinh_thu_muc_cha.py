@@ -36,7 +36,7 @@ CHO_PHEP: dict[str, str] = {
         "dữ liệu GIẢ điền chỗ trống mẫu plist (`__REPO__`, `__HOME__`) để kiểm render/thoát "
         "XML — không phải đường mã đọc",
     "tests/test_run_args.py":
-        "mồi nhử: dựng repo ở `<nhà giả>/Code/agent-marketing-studio` (đường lùi cũ) để "
+        "mồi nhử: dựng repo ở `<nhà giả>/Code/agent-marketing-team` (đường lùi cũ) để "
         "CHỨNG MINH run.ps1 không còn dùng nó",
 }
 
@@ -60,8 +60,8 @@ def test_quet_duoc_file():
 
 
 def test_mau_cam_bat_dung_cac_kieu_da_gap():
-    for mau in ("~/Code/agent-marketing-studio", "$HOME/Code/news",
-                "Join-Path $HOME (Join-Path 'Code' 'agent-marketing-studio')",
+    for mau in ("~/Code/agent-marketing-team", "$HOME/Code/news",
+                "Join-Path $HOME (Join-Path 'Code' 'agent-marketing-team')",
                 'Path.home() / "Code"', r"D:\du-an\Code\agent-voice-studio"):
         assert CAM.search(mau), mau
     for sach in ("<thư mục cha chứa các repo>/agent-voice-studio", "`Code`, `Repo`",

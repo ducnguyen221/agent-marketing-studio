@@ -37,9 +37,9 @@ _NHA = "/" + "Users" + "/nguoi-dung"
 
 GIA = {
     "__HOME__": _NHA,
-    "__REPO__": _NHA + "/Code/agent-marketing-studio",
+    "__REPO__": _NHA + "/Code/agent-marketing-team",
     "__STATION__": _NHA + "/noi-dung",
-    "__PY__": _NHA + "/Code/agent-marketing-studio/.venv/bin/python",
+    "__PY__": _NHA + "/Code/agent-marketing-team/.venv/bin/python",
     "__VOICE_STATION__": _NHA + "/tram-giong",
     "__VIDEO_STATION__": _NHA + "/tram-video",
     "__OMNIVOICE_PY__": _NHA + "/tram-giong/omnivoice/.venv/bin/python",

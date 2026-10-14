@@ -1,5 +1,5 @@
 #!/bin/sh
-# Gỡ phần bộ cài agent-marketing-studio sở hữu trên macOS / Linux — GIỮ trạm, .env và repo.
+# Gỡ phần bộ cài agent-marketing-team sở hữu trên macOS / Linux — GIỮ trạm, .env và repo.
 #
 # Vỏ mỏng như `install.sh`: tìm Python rồi giao việc cho `scripts/pipeline/studio.py
 # uninstall`. Bản Windows (`uninstall.ps1`) gọi đúng lõi đó.

@@ -1,4 +1,4 @@
-# agent-marketing-studio với Codex
+# agent-marketing-team với Codex
 
 Muốn agent cài giúp: dán prompt trong [INSTALL.md](../../INSTALL.md#prompt-copy-dán) vào Codex (CLI
 hoặc desktop). Tự cài: làm theo mục 2–9 của [INSTALL.md](../../INSTALL.md).

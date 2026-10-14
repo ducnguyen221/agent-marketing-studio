@@ -351,7 +351,7 @@ def test_khong_khai_MARKETING_STUDIO_PY_van_tim_duoc_Python(tmp_path):
 
 # ── Repo: suy từ vị trí trạm (embedded), KHÔNG từ tên thư mục chứa repo của máy nào ──
 #
-# Bản trước lùi về `<nhà>/Code/agent-marketing-studio` khi không có `MARKETING_STUDIO_HOME`:
+# Bản trước lùi về `<nhà>/Code/agent-marketing-team` khi không có `MARKETING_STUDIO_HOME`:
 # máy clone ở chỗ khác (Mac: `~/Repo`) phải khai biến trong plist mới chạy được, dù ở chế
 # độ embedded `run.ps1` nằm ngay TRONG repo (`<repo>/workspace/<kênh>/<chiến dịch>/`).
 
@@ -387,9 +387,9 @@ def test_embedded_KHONG_khai_MARKETING_STUDIO_HOME_van_tim_ra_repo_la_cha_cua_tr
 
 def test_tram_ngoai_repo_khong_khai_bien_thi_DUNG_khong_doan_thu_muc_nha(tmp_path):
     """Không đi lên được tới repo, không biến ⇒ exit 2 nêu `MARKETING_STUDIO_HOME`. Mồi nhử:
-    một repo ĐẦY ĐỦ ở `<nhà giả>/Code/agent-marketing-studio` — đường lùi cũ — KHÔNG được dùng."""
+    một repo ĐẦY ĐỦ ở `<nhà giả>/Code/agent-marketing-team` — đường lùi cũ — KHÔNG được dùng."""
     campaign = _tram(tmp_path, "-Brand ai")
-    moi = _nha(tmp_path) / "Code" / "agent-marketing-studio" / "scripts" / "pipeline"
+    moi = _nha(tmp_path) / "Code" / "agent-marketing-team" / "scripts" / "pipeline"
     moi.mkdir(parents=True)
     shutil.copyfile(GOC / "scripts" / "pipeline" / "campaign_cfg.py", moi / "campaign_cfg.py")
     r = _chay_khong_HOME_repo(campaign)

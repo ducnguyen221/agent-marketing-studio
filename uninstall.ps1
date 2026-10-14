@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Gỡ phần bộ cài agent-marketing-studio sở hữu — GIỮ trạm nội dung, .env và repo.
+    Gỡ phần bộ cài agent-marketing-team sở hữu — GIỮ trạm nội dung, .env và repo.
 
 .DESCRIPTION
     Vỏ mỏng: tìm Python rồi gọi `scripts/pipeline/studio.py uninstall`. Mọi quyết định gỡ

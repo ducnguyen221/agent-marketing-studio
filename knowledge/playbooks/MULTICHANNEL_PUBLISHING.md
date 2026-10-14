@@ -1,6 +1,6 @@
 # Cẩm Nang Phân Phối Nội Dung Đa Kênh (Multichannel Publishing Playbook)
 
-Cẩm nang chiến lược và vận hành phân phối nội dung đa kênh (Omnichannel Engine) cho hệ thống Marketing Studio.
+Cẩm nang chiến lược và vận hành phân phối nội dung đa kênh (Omnichannel Engine) cho hệ thống Marketing Team.
 Tham khảo kiến trúc thiết kế từ Charlie Hills (`charlie947/social-media-skills`, MIT). Viết mới hoàn toàn bằng tiếng Việt, tối ưu hoá cho mô hình chuyển hoá 1 ý tưởng lõi thành 5 định dạng trên các nền tảng số.
 
 ---

@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-    Dựng một TRẠM (station) agent-marketing-studio: hỏi chỗ đặt, tạo khung, chỉ bước tiếp.
+    Dựng một TRẠM (station) agent-marketing-team: hỏi chỗ đặt, tạo khung, chỉ bước tiếp.
 
 .DESCRIPTION
     Repo này chỉ chứa engine: script, cổng kiểm, quy trình và template.
@@ -95,7 +95,7 @@ function Find-Python {
 }
 
 Say ""
-Say "=== agent-marketing-studio - dung tram noi dung ===" Green
+Say "=== agent-marketing-team - dung tram noi dung ===" Green
 Say ""
 
 # ── 1. Python và phụ thuộc ───────────────────────────────────────────────────

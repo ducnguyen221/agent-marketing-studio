@@ -1,7 +1,7 @@
 ---
 title: "Conversion Rate Optimization Playbook"
 doc: playbook
-repo: agent-marketing-studio
+repo: agent-marketing-team
 version: "1.1.10"
 ---
 

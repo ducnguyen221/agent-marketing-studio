@@ -1,4 +1,4 @@
-# CONTRIBUTING.md — Quy Chuẩn Đóng Góp & Phát Triển agent-marketing-studio
+# CONTRIBUTING.md — Quy Chuẩn Đóng Góp & Phát Triển agent-marketing-team
 
 ## 1. Nguyên Tắc Mở Rộng Hệ Thống
 1. **Thêm Giọng Văn Mới (Brand Output Style):**

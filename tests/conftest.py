@@ -87,7 +87,7 @@ def repo_gia(tmp_path, monkeypatch):
 
     Đặt dưới `tmp_path/xyz/` (tên bất kỳ, không có anh em nào): test cần anh em thì tự dựng
     cạnh nó. Mốc tối thiểu để `repo_root()` nhận: `scripts/lib/` + `install.ps1`."""
-    r = tmp_path / "xyz" / "agent-marketing-studio"
+    r = tmp_path / "xyz" / "agent-marketing-team"
     (r / "scripts" / "lib").mkdir(parents=True)
     (r / "install.ps1").write_text("", encoding="utf-8")
     monkeypatch.setenv("MARKETING_STUDIO_HOME", str(r))

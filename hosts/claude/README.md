@@ -1,4 +1,4 @@
-# agent-marketing-studio với Claude Code
+# agent-marketing-team với Claude Code
 
 Muốn agent cài giúp: dán prompt trong [INSTALL.md](../../INSTALL.md#prompt-copy-dán) vào Claude Code.
 Tự cài: làm theo mục 2–9 của [INSTALL.md](../../INSTALL.md).

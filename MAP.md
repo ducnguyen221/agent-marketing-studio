@@ -1,4 +1,4 @@
-# MAP.md — Task-Based Context Routing Map for agent-marketing-studio
+# MAP.md — Task-Based Context Routing Map for agent-marketing-team
 
 > **Mục đích:** Hướng dẫn tác nhân AI Agent và người điều phối nạp ĐÚNG tài liệu cần thiết cho từng loại nhiệm vụ cụ thể, triệt tiêu tình trạng đọc lan man gây tràn Context Window.
 

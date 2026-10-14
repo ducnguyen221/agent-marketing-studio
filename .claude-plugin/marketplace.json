@@ -1,12 +1,12 @@
 {
-  "name": "agent-marketing-studio",
+  "name": "agent-marketing-team",
   "description": "Multi-channel marketing campaign engine with human approval gates; skills run from the repository.",
   "owner": {
     "name": "Duc Nguyen"
   },
   "plugins": [
     {
-      "name": "agent-marketing-studio",
+      "name": "agent-marketing-team",
       "description": "Multi-channel marketing campaign engine with human approval gates; skills run from the repository.",
       "version": "1.1.11",
       "source": "./",

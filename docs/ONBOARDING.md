@@ -17,8 +17,8 @@ tìm theo chính thư mục cha này.
 
 ```sh
 cd <thư mục cha chứa các repo>
-git clone <repo> agent-marketing-studio
-cd agent-marketing-studio
+git clone <repo> agent-marketing-team
+cd agent-marketing-team
 python -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt      # Windows: .venv\Scripts\python.exe
 ```
@@ -156,7 +156,7 @@ nào bạn chạy một bước thật sự cần giọng (ví dụ `make_podcas
 với **mã 3** và in ra đúng các lệnh dưới đây — không ai phải nhớ trước.
 
 ```sh
-cd <thư mục cha chứa các repo>          # cùng chỗ với agent-marketing-studio
+cd <thư mục cha chứa các repo>          # cùng chỗ với agent-marketing-team
 git clone <repo giọng> agent-voice-studio
 git clone <repo video> agent-video-studio
 

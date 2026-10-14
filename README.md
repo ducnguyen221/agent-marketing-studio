@@ -1,4 +1,6 @@
-# agent-marketing-studio
+# agent-marketing-team
+
+> Tên cũ: agent-marketing-studio (đổi tên thành agent-marketing-team; liên kết cũ vẫn chuyển hướng).
 
 Engine điều hành và tự động hóa chiến dịch marketing đa kênh toàn diện bằng **Multi-Agent AI kết hợp với con người kiểm soát (Human-in-the-Loop)**.
 
@@ -9,10 +11,10 @@ Mở Claude Code, Codex hoặc Google Antigravity rồi dán nguyên văn yêu c
 và trước khi chọn chỗ đặt nội dung, rồi cài, kiểm tra và báo lại từng bước.
 
 ```text
-Hãy cài agent-marketing-studio lên máy này cho chính ứng dụng AI bạn đang chạy.
-Nguồn duy nhất: https://github.com/ducnguyen221/agent-marketing-studio
+Hãy cài agent-marketing-team lên máy này cho chính ứng dụng AI bạn đang chạy.
+Nguồn duy nhất: https://github.com/ducnguyen221/agent-marketing-team
 Đọc trước hướng dẫn cho agent tại
-https://raw.githubusercontent.com/ducnguyen221/agent-marketing-studio/main/INSTALL.md
+https://raw.githubusercontent.com/ducnguyen221/agent-marketing-team/main/INSTALL.md
 (không mở được thì clone repo rồi đọc INSTALL.md trong đó) và làm đúng, đủ các bước:
 kiểm tra máy, hỏi tôi trước khi cài thêm phần mềm, clone về thư mục an toàn (không OneDrive),
 hỏi tôi chọn chỗ đặt trạm nội dung, chạy bộ cài, chạy doctor, kiểm bằng trạm mẫu.
@@ -135,7 +137,7 @@ python scripts/pipeline/check_tree.py   --station "$env:MARKETING_STUDIO_DATA"  
 ### 3.2 Repo — engine và khuôn
 
 ```text
-agent-marketing-studio/
+agent-marketing-team/
 ├── AGENTS.md                  # Quy chuẩn quản trị đa tác nhân (Governance)
 ├── MAP.md                     # Bản đồ định tuyến context nhiệm vụ (Context Router)
 ├── README.md                  # Hướng dẫn tổng quan hệ thống

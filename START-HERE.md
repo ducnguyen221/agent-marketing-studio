@@ -1,6 +1,6 @@
 # Bắt đầu ở đây
 
-agent-marketing-studio là xưởng nội dung cho AI agent: lên chiến dịch, viết bài, chấm 24 cổng,
+agent-marketing-team là xưởng nội dung cho AI agent: lên chiến dịch, viết bài, chấm 24 cổng,
 dựng trang, đăng qua hook của bạn — có cổng duyệt của người. Chạy trên Windows và macOS. Nội dung
 của bạn nằm ở **trạm** — mặc định `workspace/` trong repo, bị git bỏ qua.
 
@@ -9,10 +9,10 @@ của bạn nằm ở **trạm** — mặc định `workspace/` trong repo, bị
 Dán khối này vào Claude Code, Codex hoặc Antigravity (luật và từng bước agent làm: [INSTALL.md](INSTALL.md)):
 
 ```text
-Hãy cài agent-marketing-studio lên máy này cho chính ứng dụng AI bạn đang chạy.
-Nguồn duy nhất: https://github.com/ducnguyen221/agent-marketing-studio
+Hãy cài agent-marketing-team lên máy này cho chính ứng dụng AI bạn đang chạy.
+Nguồn duy nhất: https://github.com/ducnguyen221/agent-marketing-team
 Đọc trước hướng dẫn cho agent tại
-https://raw.githubusercontent.com/ducnguyen221/agent-marketing-studio/main/INSTALL.md
+https://raw.githubusercontent.com/ducnguyen221/agent-marketing-team/main/INSTALL.md
 (không mở được thì clone repo rồi đọc INSTALL.md trong đó) và làm đúng, đủ các bước:
 kiểm tra máy, hỏi tôi trước khi cài thêm phần mềm, clone về thư mục an toàn (không OneDrive),
 hỏi tôi chọn chỗ đặt trạm nội dung, chạy bộ cài, chạy doctor, kiểm bằng trạm mẫu.

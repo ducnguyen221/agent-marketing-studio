@@ -7,6 +7,10 @@ Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject
 
 SPR-13: ví dụ station/video trong tài liệu dùng `<root>` và biến `VIDEO_STATION`/`MARKETING_STUDIO_DATA` thay đường cũ; không đổi hành vi.
 
+### Đổi tên (chưa phát hành, chưa gắn tag; version giữ 1.1.11)
+
+Chuẩn hoá tên dự án `agent-marketing-studio` → `agent-marketing-team` (SPR-15 TK2.3): manifest, pyproject, tài liệu, Pages, script, mẫu, test. Giữ nguyên tên biến `MARKETING_STUDIO_*`, đường trạm `workspaces/marketing`, tên thư mục kho secret `marketing-studio` và các mục lịch sử bên dưới.
+
 ## 1.1.10 — 2026-10-05
 
 P1-27 (Mac mini 04/10, P4-RUNS mục P5-HOT-AI-17H): agy tự cập nhật lên 1.2.16 lúc 03/10 19:00 và đổi

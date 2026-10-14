@@ -1,4 +1,4 @@
-# agent-marketing-studio với Google Antigravity
+# agent-marketing-team với Google Antigravity
 
 Muốn agent cài giúp: dán prompt trong [INSTALL.md](../../INSTALL.md#prompt-copy-dán) vào Antigravity.
 Tự cài: làm theo mục 2–9 của [INSTALL.md](../../INSTALL.md).

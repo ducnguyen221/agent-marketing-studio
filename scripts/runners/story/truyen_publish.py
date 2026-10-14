@@ -76,7 +76,7 @@ def fmt_ts(sec):
 
 
 # Engine cho bước viết hook — 28/09/2026 Đức giao "chạy truyện với agy". Đi qua lớp gọi dùng
-# chung agent_call của agent-marketing-studio (chuỗi lùi theo `order` trong
+# chung agent_call của agent-marketing-team (chuỗi lùi theo `order` trong
 # <trạm>/_agent-call/engines.json khi agy hết hạn mức). Đặt TRUYEN_HOOK_ENGINE=claude-cli để
 # quay về đường cũ. Mọi lỗi ở đây -> rơi xuống `claude -p` như trước, rồi mô tả tĩnh.
 # Mẫu `*` phân giải theo `agy models` lúc chạy (P1-27: agy tự cập nhật đổi tên model).

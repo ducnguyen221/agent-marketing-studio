@@ -51,7 +51,7 @@ function Write-PathWarn {
 
 function Get-StudioRepo {
   <#
-    Gốc bản clone `agent-marketing-studio`. Thứ tự: thư mục CHA của `scripts/runners` (khi
+    Gốc bản clone `agent-marketing-team`. Thứ tự: thư mục CHA của `scripts/runners` (khi
     file này nằm trong repo) -> MARKETING_STUDIO_HOME. Nhận bằng NỘI DUNG
     (`scripts/pipeline/campaign_cfg.py`), không bằng tên thư mục.
     Bản trong trạm cũ (`<trạm>/engine`) không suy ra được repo từ vị trí -> chỉ còn biến.

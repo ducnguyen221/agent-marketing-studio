@@ -53,7 +53,7 @@ def test_changelog_mo_dau_bang_version_hien_tai():
 def test_ten_plugin_trung_ten_repo():
     ten = {_json(".claude-plugin/plugin.json")["name"], _json(".codex-plugin/plugin.json")["name"],
            *(p["name"] for p in _json(".claude-plugin/marketplace.json")["plugins"])}
-    assert ten == {"agent-marketing-studio"}, ten
+    assert ten == {"agent-marketing-team"}, ten
 
 
 def test_manifest_tro_dung_thu_muc_skill_that():
