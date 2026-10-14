@@ -15,7 +15,7 @@ Trạm là một KHÁI NIỆM, không phải một đường dẫn cố định.
 
     embedded   trạm = `<repo>/workspace/`, biến cấu hình ở `<repo>/.env` — "mở một folder
                là thấy hết". MẶC ĐỊNH và là khuyến nghị cho người mới.
-    separate   trạm ngoài repo (thư mục người dùng chọn, gợi ý `<opcos>/workspaces/marketing`), biến đặt
+    separate   trạm ngoài repo (thư mục người dùng chọn), biến đặt
                ở cấp user, bí mật ở kho secret của máy — cho người nhiều máy, hoặc repo
                public của chính họ.
 

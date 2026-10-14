@@ -98,9 +98,9 @@ Tự cài bằng tay: làm theo mục 2–9 của [INSTALL.md](INSTALL.md). Từ
 
 Kênh chứa chiến dịch, chiến dịch chứa bài. Mỗi tầng có **đúng một file giữ sự thật** của
 tầng đó, và cả ba tầng đều là thư mục thật — mở ra là đọc được, không có cơ sở dữ liệu ở giữa.
-(`<opcos>` = gốc OpcOS, biến `OPCOS_ROOT`, mặc định `~/OpcOS`.)
+
 ```text
-<opcos>/workspaces/marketing/                      # TRẠM (ngoài git — chỗ nào là do bạn chọn)
+<thư-mục-trạm>/                      # TRẠM (ngoài git — chỗ nào là do bạn chọn)
 ├── CHANNELS.md                    # sổ kênh: kênh nào ở đâu (cạnh DUY NHẤT trỏ ra ngoài)
 ├── AUTHOR.md                      # tác giả là ai — dùng chung mọi kênh
 └── <kênh>/                        # ① MỘT KÊNH = một giọng, một tập người đọc
