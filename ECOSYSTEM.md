@@ -1,0 +1,8 @@
+# ECOSYSTEM — agent-marketing-team trong hệ thống ACD
+
+## 🤝 ACD Ecosystem Integration
+- **Role in ACD:** Team thuộc Nhóm 1 (Department Team), khối Marketing — giữ playbook và quy trình điều hành chiến dịch nội dung đa kênh: chiến lược, sản xuất nội dung, đo lường, với con người duyệt ở các cổng. Bốn skill trong `.agents/skills` chạy các khâu chiến dịch; `agent-skill-studio` là xưởng nền cấp chuẩn `SKILL.md` và đóng gói skill khi chiến dịch sinh skill mới (viết hook, thread), repo này tự giữ nghiệp vụ marketing.
+- **Upstream Controllers:** `agent-executive-team` (dự kiến, repo chưa tạo) cấp mục tiêu và ngân sách; `agent-design-studio` cấp quy tắc nhận diện cho ấn phẩm; `agent-skill-studio` cấp chuẩn và công cụ kiểm skill.
+- **Downstream Consumers:** Là khách hàng của các Studio: mức Cốt lõi với `agent-video-studio` (Ads/Shorts), `agent-voice-studio` (Podcast/Voice), `agent-writing-studio` (Copy/Blog/PR); mức Thường xuyên với `agent-data-studio` (Funnel/CAC), `agent-design-studio` (Landing/Ads), `agent-slide-studio` (One-Pager). `agent-sales-team` (dự kiến, repo chưa tạo) là đối ứng nhận lead đủ điều kiện.
+- **Recommended Bundles:** Bundle A (Content & Growth Machine) cùng `agent-video-studio`, `agent-voice-studio`, `agent-writing-studio`. Khi chiến dịch cần đóng gói skill thì thêm `agent-skill-studio` (Bundle E).
+- **Handoff Artifacts:** Đầu ra là `production-brief.md` gửi Studio đích (Target Studio, Objective, Raw Context, Technical Specs, Deadline & Priority); đầu vào quay lại là biên nhận và sản phẩm của Studio đó. Giao lead cho Sales dùng `mql-lead.md` (dự kiến, chưa có nơi nhận).

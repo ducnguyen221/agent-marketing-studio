@@ -210,3 +210,7 @@ python -m pytest -q
   biến này trước khi chạy `pytest`.
 - Cổng chống trôi tài liệu (`tests/test_docs_drift.py`) đỏ khi tài liệu gọi lệnh CLI không có,
   khi code đọc biến môi trường chưa khai, hoặc khi luật cũ quay lại.
+
+## 🤝 ACD Ecosystem Integration
+
+Khai báo vai của repo trong hệ thống nhiều repo ACD (Role, Upstream, Downstream, Bundles, Handoff) tại [ECOSYSTEM.md](ECOSYSTEM.md).
