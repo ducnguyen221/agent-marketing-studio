@@ -6,7 +6,7 @@ import re
 import shutil
 import stat
 import subprocess
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -87,7 +87,7 @@ def _safe_repo_path(root: Path, relative: object) -> Path | None:
     if not isinstance(relative, str) or not relative.strip():
         return None
     candidate = Path(relative)
-    if candidate.is_absolute() or ".." in candidate.parts:
+    if candidate.is_absolute() or PureWindowsPath(relative).drive or ".." in candidate.parts:
         return None
     try:
         resolved_root = root.resolve(strict=True)
