@@ -3,6 +3,10 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 1.1.11 — 2026-10-14
+
+SPR-13: ví dụ station/video trong tài liệu dùng `<opcos>` và biến `VIDEO_STATION`/`MARKETING_STUDIO_DATA` thay đường cũ; không đổi hành vi.
+
 ## 1.1.10 — 2026-10-05
 
 P1-27 (Mac mini 04/10, P4-RUNS mục P5-HOT-AI-17H): agy tự cập nhật lên 1.2.16 lúc 03/10 19:00 và đổi
