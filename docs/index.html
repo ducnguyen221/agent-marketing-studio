@@ -619,7 +619,7 @@
       <div class="code-card tree-card reveal">
         <div class="code-top">
           <span class="pv-live" style="gap:6px"><span style="width:11px;height:11px;border-radius:50%;background:#ff5f57;display:inline-block"></span><span style="width:11px;height:11px;border-radius:50%;background:#febc2e;display:inline-block"></span><span style="width:11px;height:11px;border-radius:50%;background:#28c840;display:inline-block"></span></span>
-          <span class="fn">~/.marketing — trạm nội dung</span>
+          <span class="fn">&lt;opcos&gt;/workspaces/marketing — trạm nội dung</span>
         </div>
         <div class="code-scroll">
 <pre><code><span class="dir">CHANNELS.md</span>                  <span class="cm"># sổ kênh: kênh nào nằm ở đâu</span>
@@ -665,7 +665,7 @@
         <div class="lvl">
           <div class="lvl-top"><span class="lvl-tag">KHUÔN</span><h3>Cây mẫu có cùng hình dạng</h3></div>
           <p><code>templates/station/</code> trong repo lồng đúng như trên — <code>_channel/_campaign/_content/</code>. Ba lệnh ở trên chép từ đó ra, nên thứ bạn thấy trong repo chính là thứ sẽ mọc lên trong trạm. Cổng kiểm <code>check_tree.py</code> soi lại cây thật sau mỗi lần thêm và trả về ba trạng thái: xanh · đỏ · <b>thiếu</b>.</p>
-          <span class="cmd">python scripts/pipeline/check_tree.py --station ~/.marketing</span>
+          <span class="cmd">python scripts/pipeline/check_tree.py --station "$env:MARKETING_STUDIO_DATA"</span>
         </div>
       </div>
     </div>

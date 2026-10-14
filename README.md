@@ -98,9 +98,9 @@ Tự cài bằng tay: làm theo mục 2–9 của [INSTALL.md](INSTALL.md). Từ
 
 Kênh chứa chiến dịch, chiến dịch chứa bài. Mỗi tầng có **đúng một file giữ sự thật** của
 tầng đó, và cả ba tầng đều là thư mục thật — mở ra là đọc được, không có cơ sở dữ liệu ở giữa.
-
+(`<opcos>` = gốc OpcOS, biến `OPCOS_ROOT`, mặc định `~/OpcOS`.)
 ```text
-~/.marketing/                      # TRẠM (ngoài git — chỗ nào là do bạn chọn)
+<opcos>/workspaces/marketing/                      # TRẠM (ngoài git — chỗ nào là do bạn chọn)
 ├── CHANNELS.md                    # sổ kênh: kênh nào ở đâu (cạnh DUY NHẤT trỏ ra ngoài)
 ├── AUTHOR.md                      # tác giả là ai — dùng chung mọi kênh
 └── <kênh>/                        # ① MỘT KÊNH = một giọng, một tập người đọc
@@ -126,7 +126,7 @@ Ba lệnh dựng ba tầng, mỗi lệnh chép từ `templates/station/`:
 python scripts/pipeline/new_channel.py  --id <kênh> --label "…" --path ./<kênh>
 python scripts/pipeline/new_campaign.py --channel <kênh> --id <slug> --name "…" --prefix XXX
 python scripts/pipeline/new_post.py     --campaign <slug> --id XXX-001 --slug … --title "…"
-python scripts/pipeline/check_tree.py   --station ~/.marketing      # soi lại cây thật
+python scripts/pipeline/check_tree.py   --station "$env:MARKETING_STUDIO_DATA"      # soi lại cây thật
 ```
 
 **Ba loại file, ba vai — đừng trộn:** `.yml` cho **máy**, `.md` cho **người**, `.txt` cho

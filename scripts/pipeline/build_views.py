@@ -20,7 +20,7 @@ Ba luật của hai file này, mỗi luật đến từ một chỗ đã trả g
    ngồi chờ.
 
 CLI:
-  python build_views.py --station ~/.marketing            # cả STATION: index + mọi campaign
+  python build_views.py --station "$env:MARKETING_STUDIO_DATA"            # cả STATION: index + mọi campaign
   python build_views.py --campaign <đường/dẫn/chiến-dịch> # một chiến dịch
 """
 from __future__ import annotations

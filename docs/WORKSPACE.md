@@ -47,7 +47,7 @@ python scripts/pipeline/studio.py backup --out ~/sao-luu-tram.zip
 Đổi ý muốn tách trạm ra ngoài repo:
 
 ```bash
-python scripts/pipeline/studio.py migrate --to separate [--station ~/.marketing]
+python scripts/pipeline/studio.py migrate --to separate [--station <opcos>/workspaces/marketing]  # <opcos> = gốc OpcOS (biến OPCOS_ROOT, mặc định ~/OpcOS)
 ```
 
 Nó **dời** `workspace/` ra ngoài (không chép rồi để lại bản cũ), dời `.env` về kho secret,

@@ -89,8 +89,8 @@ HyperFrames render HTML/CSS thành MP4 câm; OmniVoice lồng tiếng vào.
 **Một lệnh, ra video hoàn chỉnh** (cách dùng mặc định):
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `
-  -File "$env:USERPROFILE\.video\render_and_narrate.ps1" `
-  -Project "$env:USERPROFILE\.video\<project>" `
+  -File "$env:VIDEO_STATION\render_and_narrate.ps1" `
+  -Project "$env:VIDEO_STATION\<project>" `
   -TextFile script.txt `
   -Out "<folder_path>\video.mp4" `
   -Instruct "female, young adult, moderate pitch" -Speed 1.0 -Mode fit
@@ -102,7 +102,7 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 **Tách bước, khi cần soi kỹ:**
 ```powershell
-cd $env:USERPROFILE\.video\<project>
+cd $env:VIDEO_STATION\<project>
 npx hyperframes lint       # kiểm composition trước
 npx hyperframes preview    # xem trước trên web
 npx hyperframes render -o silent.mp4

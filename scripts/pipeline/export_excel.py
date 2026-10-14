@@ -17,7 +17,7 @@ biểu mẫu và thói quen cũ không phải học lại. Trường nào Markdo
 
 CLI:
   python export_excel.py --campaign <đường/dẫn>            # → <thư mục>/<id>.xlsx
-  python export_excel.py --station ~/.marketing            # xuất mọi chiến dịch
+  python export_excel.py --station "$env:MARKETING_STUDIO_DATA"            # xuất mọi chiến dịch
   python export_excel.py --campaign <đd> --out D:/bao-cao.xlsx
 """
 from __future__ import annotations
