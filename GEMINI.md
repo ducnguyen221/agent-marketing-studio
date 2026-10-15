@@ -1,4 +1,4 @@
-# GEMINI.md — Agent Marketing Studio
+# GEMINI.md — Agent Marketing Team
 
 > Con trỏ để tránh lệch phiên bản: toàn bộ hướng dẫn agent (quy chuẩn quản trị, ranh giới repo và trạm,
 > đường ống chiến dịch, 3 cổng duyệt, quy ước sửa mã) nằm ở **[`AGENTS.md`](./AGENTS.md)** — đọc file đó

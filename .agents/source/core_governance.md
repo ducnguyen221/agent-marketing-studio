@@ -1,4 +1,4 @@
-# Core Governance — Luật Cốt Lõi Của agent-marketing-studio
+# Core Governance — Luật Cốt Lõi Của agent-marketing-team
 
 1. **Markdown Là Nguồn Sự Thật:** mọi trạng thái sống trong `campaign.md` (bảng Content giữa
    marker `<!-- CONTENT:BEGIN/END -->`) và `publish.json` của từng bài. File `.xlsx` là **bản
