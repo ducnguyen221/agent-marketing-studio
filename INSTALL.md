@@ -252,6 +252,7 @@ tên job khi chưa khai kênh/chiến dịch — đó là kết quả đúng c�
   người dùng trước khi gỡ. Claude Code: `claude plugin list` tìm dòng `auto-marketing@…`, rồi
   `claude plugin uninstall auto-marketing@<marketplace>`. Codex/Antigravity: xoá thư mục skill
   cũ của `auto-marketing` trong thư mục skill của host. Không đụng trạm nội dung.
+- **Nâng cấp từ bản 1.x (tên cũ `agent-marketing-studio`):** từ 2.0.0 dự án đổi tên thành `agent-marketing-team`, mã plugin đổi theo nên bản cài cũ không tự nâng cấp được. Cài mã mới trước (mục 8), xác nhận skill đã nạp, rồi gỡ mã cũ — hỏi người dùng trước khi gỡ. Claude Code: `claude plugin uninstall agent-marketing-studio@agent-marketing-studio`, rồi `claude plugin marketplace remove agent-marketing-studio`. Codex: `codex plugin remove agent-marketing-studio@agent-marketing-studio`, rồi `codex plugin marketplace remove agent-marketing-studio`. Antigravity: `agy plugin uninstall agent-marketing-studio`. Checkout git: GitHub tự chuyển hướng địa chỉ cũ; nên đổi địa chỉ `origin` sang repo `agent-marketing-team` cùng tài khoản (`git remote set-url origin <địa chỉ repo mới>`). Biến `MARKETING_STUDIO_*` và tên trạm giữ nguyên, không cần đổi.
 - **Vướng khi cài hay khi chạy** (script bị chặn, repo trong thư mục đám mây, tải ZIP thay vì
   clone, `python3` quá cũ trên Mac, job launchd không thấy lệnh/biến…): tra theo triệu chứng ở
   [docs/troubleshooting.md](docs/troubleshooting.md).
