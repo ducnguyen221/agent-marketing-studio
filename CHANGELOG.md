@@ -3,6 +3,10 @@
 Mỗi mục là một phiên bản. Mục đầu luôn là số trong `pyproject.toml`
 (`tests/test_version_sync.py` giữ điều này). Phiên bản chưa gắn tag ghi rõ "chưa phát hành".
 
+## 2.0.0 — 2026-10-15
+
+Đổi tên dự án `agent-marketing-studio` → `agent-marketing-team` (SPR-15). Mức MAJOR vì đổi mã plugin (`agent-marketing-team@agent-marketing-team`), tên repo và địa chỉ Pages: người đã cài theo bản cũ phải gỡ mã cũ rồi cài mã mới (xem INSTALL). Không đổi hành vi của pipeline; biến `MARKETING_STUDIO_*` và tên trạm giữ nguyên. Địa chỉ cũ của repo và trang Pages vẫn chuyển hướng.
+
 ## 1.1.11 — 2026-10-14
 
 SPR-13: ví dụ station/video trong tài liệu dùng `<root>` và biến `VIDEO_STATION`/`MARKETING_STUDIO_DATA` thay đường cũ; không đổi hành vi.
